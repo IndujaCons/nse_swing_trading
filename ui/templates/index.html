@@ -1,0 +1,2682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nifty 500 RS Screener</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #e8f0f2;
+            --bg-white: #f0f5f7;
+            --bg-card: #e3ecef;
+            --text-primary: #2c3e50;
+            --text-secondary: #546e7a;
+            --text-muted: #78909c;
+            --border-color: #cfd8dc;
+            --green: #27ae60;
+            --green-light: #d5f5e3;
+            --blue: #3498db;
+            --blue-light: #d6eaf8;
+            --red: #e74c3c;
+            --red-light: #fadbd8;
+            --orange: #e67e22;
+            --orange-light: #fdebd0;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Consolas', 'Menlo', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .refresh-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .refresh-btn:hover {
+            background: var(--bg-card);
+        }
+
+        .refresh-btn.loading {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .refresh-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        .refresh-btn.loading .refresh-icon {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--red);
+        }
+
+        .status-dot.connected {
+            background: var(--green);
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            height: calc(100vh - 41px);
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background: var(--bg-white);
+            border-right: 1px solid var(--border-color);
+            padding: 12px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .section {
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 6px 10px;
+            font-family: inherit;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            margin-bottom: 6px;
+            background: var(--bg-white);
+            color: var(--text-primary);
+        }
+
+        .btn:hover {
+            background: var(--bg-card);
+        }
+
+        .btn-primary {
+            background: var(--green);
+            color: white;
+            border-color: var(--green);
+        }
+
+        .btn-primary:hover {
+            background: #43a047;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 6px 8px;
+            font-family: inherit;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 6px;
+            background: var(--bg-white);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            font-size: 11px;
+        }
+
+        .setting-label {
+            color: var(--text-secondary);
+        }
+
+        .setting-value {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .setting-input {
+            width: 60px;
+            padding: 4px 6px;
+            font-family: inherit;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            text-align: right;
+            background: var(--bg-white);
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--green);
+        }
+
+        .setting-select {
+            width: 100px;
+            padding: 4px 6px;
+            font-family: inherit;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            background: var(--bg-white);
+            cursor: pointer;
+        }
+
+        .setting-select:focus {
+            outline: none;
+            border-color: var(--green);
+        }
+
+        .connection-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 8px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .connection-box.connected {
+            background: var(--green-light);
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .toggle {
+            width: 40px;
+            height: 22px;
+            background: #ccc;
+            border-radius: 11px;
+            position: relative;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .toggle.active {
+            background: var(--green);
+        }
+
+        .toggle.active::after {
+            transform: translateX(18px);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 10px 0;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 10px;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .panels {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            min-width: 700px;
+            height: calc(100vh - 60px);
+        }
+
+        .panel {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .panel.fresh .panel-title { color: var(--green); }
+        .panel.sectoral .panel-title { color: var(--orange); }
+        .panel.inrs .panel-title { color: var(--blue); }
+        .panel.exit .panel-title { color: var(--red); }
+
+        .panel-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .panel-body {
+            max-height: calc(50vh - 100px);
+            overflow-y: auto;
+        }
+
+        /* Stock Table */
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .stock-table th {
+            text-align: left;
+            padding: 6px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+        }
+
+        .stock-table td {
+            padding: 5px 8px;
+            font-size: 11px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stock-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .stock-table tr:hover {
+            background: var(--bg-card);
+        }
+
+        .ticker {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .price {
+            color: var(--text-secondary);
+        }
+
+        .rs-value {
+            font-weight: 500;
+        }
+
+        .rs-value.positive {
+            color: var(--green);
+        }
+
+        .rs-value.negative {
+            color: var(--red);
+        }
+
+        .ema-pct {
+            font-size: 12px;
+        }
+
+        .ema-pct.positive {
+            color: var(--green);
+        }
+
+        .ema-pct.negative {
+            color: var(--red);
+        }
+
+        .sector-strength {
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .sector-strength.positive {
+            color: var(--green);
+        }
+
+        .sector-strength.negative {
+            color: var(--red);
+        }
+
+        .trade-btn {
+            padding: 4px 10px;
+            font-family: inherit;
+            font-size: 11px;
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .trade-btn:hover {
+            background: var(--green-light);
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .trade-btn.sell:hover {
+            background: var(--red-light);
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .trade-btn.executed {
+            background: var(--green-light);
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        /* Loading State */
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .loader {
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            margin-top: 8px;
+            color: var(--text-muted);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 16px;
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--green);
+        }
+
+        .toast.error {
+            border-left: 3px solid var(--red);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Strategy Tabs */
+        .strategy-tabs {
+            display: flex;
+            gap: 0;
+            margin-right: 16px;
+        }
+
+        .strategy-tab {
+            padding: 6px 14px;
+            font-family: inherit;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            background: var(--bg-white);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .strategy-tab:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+
+        .strategy-tab:nth-child(2) {
+            border-left: none;
+            border-radius: 0;
+        }
+
+        .strategy-tab:last-child {
+            border-radius: 0 4px 4px 0;
+            border-left: none;
+        }
+
+        .strategy-tab.active {
+            background: var(--green);
+            color: white;
+            border-color: var(--green);
+        }
+
+        /* Strategy I panel colors */
+        .panel.si-entry .panel-title { color: var(--green); }
+        .panel.si-near6m .panel-title { color: var(--orange); }
+        .panel.si-near1y .panel-title { color: var(--blue); }
+        .panel.si-below .panel-title { color: var(--red); }
+
+        .score-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .score-high { background: var(--green-light); color: var(--green); }
+        .score-mid { background: var(--orange-light); color: var(--orange); }
+        .score-low { background: var(--bg-card); color: var(--text-muted); }
+
+        /* Momentum panel colors */
+        .panel.momentum-entry .panel-title { color: var(--green); }
+        .panel.momentum-active .panel-title { color: var(--blue); }
+        .panel.momentum-scan .panel-title { color: var(--orange); }
+        .panel.momentum-exit .panel-title { color: var(--red); }
+
+        .cond-pass { color: var(--green); font-weight: 600; }
+        .cond-fail { color: var(--red); font-weight: 600; }
+
+        .conditions-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .conditions-4 { background: var(--green-light); color: var(--green); }
+        .conditions-3 { background: var(--orange-light); color: var(--orange); }
+        .conditions-2, .conditions-1, .conditions-0 { background: var(--red-light); color: var(--red); }
+
+        .setting-static {
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 5px 0;
+        }
+
+        /* Backtest styles */
+        .backtest-controls {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .backtest-controls .section-title {
+            margin-bottom: 6px;
+        }
+
+        .backtest-select {
+            width: 100%;
+            padding: 5px 6px;
+            font-family: inherit;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            background: var(--bg-white);
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+
+        .backtest-select:focus {
+            outline: none;
+            border-color: var(--green);
+        }
+
+        .btn-backtest {
+            background: var(--blue);
+            color: white;
+            border-color: var(--blue);
+        }
+
+        .btn-backtest:hover {
+            background: #2980b9;
+        }
+
+        .btn-backtest.loading {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .btn-back {
+            background: var(--bg-white);
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+
+        .btn-back:hover {
+            background: var(--bg-card);
+        }
+
+        .backtest-results {
+            height: calc(100vh - 60px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 700px;
+        }
+
+        .backtest-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .summary-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+            text-align: center;
+        }
+
+        .summary-card .label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .summary-card .value {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .summary-card .value.positive { color: var(--green); }
+        .summary-card .value.negative { color: var(--red); }
+
+        .backtest-trades-panel {
+            flex: 1;
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .backtest-trades-panel .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            max-height: none;
+        }
+
+        .pnl-positive { color: var(--green); font-weight: 500; }
+        .pnl-negative { color: var(--red); font-weight: 500; }
+
+        /* Batch backtest matrix styles */
+        .batch-results {
+            height: calc(100vh - 60px);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .batch-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 4px 0;
+        }
+
+        .batch-table-container {
+            flex: 1;
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-white);
+        }
+
+        .batch-table {
+            border-collapse: collapse;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .batch-table thead th {
+            position: sticky;
+            top: 0;
+            background: var(--bg-card);
+            border-bottom: 2px solid var(--border-color);
+            padding: 6px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            z-index: 2;
+        }
+
+        .batch-table thead th.sticky-col {
+            left: 0;
+            z-index: 3;
+        }
+
+        .batch-table td {
+            padding: 4px 8px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: right;
+        }
+
+        .batch-table td.sticky-col {
+            position: sticky;
+            left: 0;
+            background: var(--bg-white);
+            z-index: 1;
+            text-align: left;
+            font-weight: 600;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .batch-table tr:hover td {
+            background: var(--bg-card);
+        }
+
+        .batch-table tr:hover td.sticky-col {
+            background: var(--bg-card);
+        }
+
+        .batch-table tr.batch-total-row td {
+            border-top: 2px solid var(--text-primary);
+            font-weight: 700;
+            font-size: 12px;
+            background: var(--bg-card);
+        }
+
+        .batch-table tr.batch-total-row td.sticky-col {
+            background: var(--bg-card);
+        }
+
+        .batch-cell-good { color: var(--green); font-weight: 600; }
+        .batch-cell-ok { color: #6ab04c; }
+        .batch-cell-bad { color: var(--red); }
+        .batch-cell-na { color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>Nifty 500 Screener</h1>
+        <div class="header-right">
+            <div class="strategy-tabs">
+                <button class="strategy-tab active" onclick="switchStrategy('rs')">RS Screener</button>
+                <button class="strategy-tab" onclick="switchStrategy('strategy_i')">Strategy I</button>
+                <button class="strategy-tab" onclick="switchStrategy('momentum')">Momentum Scanner</button>
+            </div>
+            <span class="last-updated" id="last-updated">--</span>
+            <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
+                <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6M1 20v-6h6"/>
+                    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                </svg>
+                Refresh
+            </button>
+            <div class="status-indicator">
+                <span class="status-dot" id="connection-dot"></span>
+                <span id="connection-status">Disconnected</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="section">
+                <div class="section-title">Login & Settings</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Zerodha Connection</div>
+                <div class="connection-box" id="connection-box">
+                    <span id="connection-text">Not Connected</span>
+                </div>
+                <button class="btn" id="login-btn" onclick="handleLogin()">
+                    Get Link for Request Token
+                </button>
+                <input type="text" class="input-field" id="token-input" placeholder="Paste redirect URL here">
+                <button class="btn btn-primary" onclick="submitToken()">Connect</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section" id="rs-settings">
+                <div class="section-title">RS Settings</div>
+                <div class="toggle-container">
+                    <span class="setting-label">Live Trading</span>
+                    <div class="toggle" title="Disabled - Paper mode only"></div>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Universe</span>
+                    <select class="setting-select" id="stock-universe">
+                        <option value="50">Nifty 50</option>
+                        <option value="100">Nifty 100</option>
+                        <option value="250" selected>Nifty 250</option>
+                        <option value="500">Nifty 500</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">RS Period</span>
+                    <select class="setting-select" id="rs-period">
+                        <option value="21">21 days</option>
+                        <option value="63" selected>63 days</option>
+                        <option value="126">126 days</option>
+                        <option value="252">252 days</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">EMA Period</span>
+                    <select class="setting-select" id="ema-period">
+                        <option value="21">21 days</option>
+                        <option value="63" selected>63 days</option>
+                        <option value="126">126 days</option>
+                        <option value="252">252 days</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save Settings</button>
+            </div>
+
+            <div class="section hidden" id="strategy-i-settings">
+                <div class="section-title">Strategy I Settings</div>
+                <div class="setting-row">
+                    <span class="setting-label">Universe</span>
+                    <select class="setting-select" id="si-universe">
+                        <option value="50" selected>Nifty 50</option>
+                        <option value="100">Nifty 100</option>
+                        <option value="250">Nifty 250</option>
+                        <option value="500">Nifty 500</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save Settings</button>
+                <div style="margin-top: 10px;">
+                    <div class="setting-static">6M Support: 120-day rolling low</div>
+                    <div class="setting-static">1Y Support: 252-day rolling low</div>
+                    <div class="setting-static">Near threshold: 3%</div>
+                    <div class="setting-static">Entry: within 1%, IBS > 0.3, green candle</div>
+                </div>
+            </div>
+
+            <div class="section hidden" id="momentum-settings">
+                <div class="section-title">Momentum Settings</div>
+                <div class="setting-row">
+                    <span class="setting-label">RSI(2) Threshold</span>
+                    <select class="setting-select" id="momentum-rsi2">
+                        <option value="60">60</option>
+                        <option value="65">65</option>
+                        <option value="70">70</option>
+                        <option value="75" selected>75</option>
+                        <option value="80">80</option>
+                        <option value="85">85</option>
+                        <option value="90">90</option>
+                    </select>
+                </div>
+                <div class="setting-static">30m RSI(14) Min: 30 (fixed)</div>
+                <div class="setting-static">Universe: Nifty 50 (fixed)</div>
+                <div class="setting-static">EMA Periods: 50 / 200 (fixed)</div>
+                <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save Settings</button>
+
+                <div class="backtest-controls">
+                    <div class="section-title">Backtest</div>
+                    <select class="backtest-select" id="backtest-strategy" onchange="toggleExitEma()">
+                        <option value="D">Strategy D (RSI reversal)</option>
+                        <option value="E">Strategy E (EMA pullback)</option>
+                        <option value="G">Strategy G (IBS extreme)</option>
+                        <option value="I_gtt">Strategy I — support bounce (GTT)</option>
+                        <option value="I_close">Strategy I — support bounce (3:15 PM)</option>
+                        <option value="I_2wlow">Strategy I — support bounce (2W Low)</option>
+                        <option value="J_gtt">Strategy J — weekly support (GTT)</option>
+                        <option value="J_close">Strategy J — weekly support (3:15 PM)</option>
+                        <option value="J_2wlow">Strategy J — weekly support (2W Low)</option>
+                        <option value="K_gtt">Strategy K — RS trending (GTT)</option>
+                        <option value="K_close">Strategy K — RS trending (3:15 PM)</option>
+                        <option value="K_2wlow">Strategy K — RS trending (2W Low)</option>
+                        <option value="L">Strategy L — Pure RS</option>
+                        <option value="M">Strategy M — EMA 10/20</option>
+                        <option value="P">Strategy P — AVWAP</option>
+                        <option value="Q">Strategy Q — Fib 61.8%</option>
+                    </select>
+                    <select class="backtest-select hidden" id="backtest-exit-ema">
+                        <option value="5">Profit target: EMA(5)</option>
+                        <option value="8">Profit target: EMA(8)</option>
+                        <option value="10">Profit target: EMA(10)</option>
+                        <option value="20">Profit target: EMA(20)</option>
+                        <option value="pct5">Profit target: +5% from entry</option>
+                    </select>
+                    <select class="backtest-select" id="backtest-symbol">
+                        <option value="">-- Select Symbol --</option>
+                        <option value="ADANIENT">ADANIENT</option>
+                        <option value="ADANIPORTS">ADANIPORTS</option>
+                        <option value="APOLLOHOSP">APOLLOHOSP</option>
+                        <option value="ASIANPAINT">ASIANPAINT</option>
+                        <option value="AXISBANK">AXISBANK</option>
+                        <option value="BAJAJ-AUTO">BAJAJ-AUTO</option>
+                        <option value="BAJFINANCE">BAJFINANCE</option>
+                        <option value="BAJAJFINSV">BAJAJFINSV</option>
+                        <option value="BEL">BEL</option>
+                        <option value="BPCL">BPCL</option>
+                        <option value="BHARTIARTL">BHARTIARTL</option>
+                        <option value="BRITANNIA">BRITANNIA</option>
+                        <option value="CIPLA">CIPLA</option>
+                        <option value="COALINDIA">COALINDIA</option>
+                        <option value="DRREDDY">DRREDDY</option>
+                        <option value="EICHERMOT">EICHERMOT</option>
+                        <option value="ETERNAL">ETERNAL</option>
+                        <option value="GRASIM">GRASIM</option>
+                        <option value="HCLTECH">HCLTECH</option>
+                        <option value="HDFCBANK">HDFCBANK</option>
+                        <option value="HDFCLIFE">HDFCLIFE</option>
+                        <option value="HEROMOTOCO">HEROMOTOCO</option>
+                        <option value="HINDALCO">HINDALCO</option>
+                        <option value="HINDUNILVR">HINDUNILVR</option>
+                        <option value="ICICIBANK">ICICIBANK</option>
+                        <option value="ITC">ITC</option>
+                        <option value="INDUSINDBK">INDUSINDBK</option>
+                        <option value="INFY">INFY</option>
+                        <option value="JSWSTEEL">JSWSTEEL</option>
+                        <option value="KOTAKBANK">KOTAKBANK</option>
+                        <option value="LT">LT</option>
+                        <option value="M&M">M&M</option>
+                        <option value="MARUTI">MARUTI</option>
+                        <option value="NTPC">NTPC</option>
+                        <option value="NESTLEIND">NESTLEIND</option>
+                        <option value="ONGC">ONGC</option>
+                        <option value="PIDILITIND">PIDILITIND</option>
+                        <option value="POWERGRID">POWERGRID</option>
+                        <option value="RELIANCE">RELIANCE</option>
+                        <option value="SBILIFE">SBILIFE</option>
+                        <option value="SBIN">SBIN</option>
+                        <option value="SUNPHARMA">SUNPHARMA</option>
+                        <option value="TCS">TCS</option>
+                        <option value="TATACONSUM">TATACONSUM</option>
+                        <option value="TATAMOTORS">TATAMOTORS</option>
+                        <option value="TATASTEEL">TATASTEEL</option>
+                        <option value="TECHM">TECHM</option>
+                        <option value="TITAN">TITAN</option>
+                        <option value="ULTRACEMCO">ULTRACEMCO</option>
+                        <option value="WIPRO">WIPRO</option>
+                    </select>
+                    <select class="backtest-select" id="backtest-period">
+                        <option value="30">1 Month</option>
+                        <option value="90">3 Months</option>
+                        <option value="180">6 Months</option>
+                        <option value="365">1 Year</option>
+                        <option value="730">2 Years</option>
+                    </select>
+                    <button class="btn btn-backtest" id="run-backtest-btn" onclick="runBacktest()">Run Backtest</button>
+                    <div style="margin: 8px 0; height: 1px; background: var(--border-color);"></div>
+                    <div class="section-title">Batch</div>
+                    <button class="btn btn-backtest" id="run-batch-btn" onclick="runBatchBacktest(50)">Backtest All (Nifty 50)</button>
+                    <button class="btn btn-backtest" id="run-batch100-btn" onclick="runBatchBacktest(100)">Backtest All (Nifty 100)</button>
+                    <div style="margin: 8px 0; height: 1px; background: var(--border-color);"></div>
+                    <div class="section-title">Portfolio</div>
+                    <select class="backtest-select" id="portfolio-capital">
+                        <option value="10">10L Capital</option>
+                        <option value="20">20L Capital</option>
+                        <option value="50">50L Capital</option>
+                        <option value="80">80L Capital</option>
+                        <option value="100">1 Cr Capital</option>
+                    </select>
+                    <select class="backtest-select" id="portfolio-per-stock">
+                        <option value="50000">50K / trade</option>
+                        <option value="100000">1L / trade</option>
+                        <option value="200000">2L / trade</option>
+                        <option value="500000">5L / trade</option>
+                    </select>
+                    <select class="backtest-select" id="portfolio-strategy">
+                        <option value="JK">J + K (Both)</option>
+                        <option value="J">J: Weekly Support</option>
+                        <option value="K">K: RS Trending Dip</option>
+                        <option value="L">L: Pure RS</option>
+                        <option value="M">M: EMA 10/20</option>
+                        <option value="P">P: AVWAP</option>
+                        <option value="Q">Q: Fib 61.8%</option>
+                    </select>
+                    <button class="btn btn-backtest" id="run-portfolio50-btn" onclick="runPortfolioBacktest(50)">Backtest (Nifty 50)</button>
+                    <button class="btn btn-backtest" id="run-portfolio100-btn" onclick="runPortfolioBacktest(100)">Backtest (Nifty 100)</button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <div class="section-title">Market Info</div>
+                <div class="setting-row">
+                    <span class="setting-label">Nifty 50 Return</span>
+                    <span class="setting-value" id="nifty-return">--</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Stocks Processed</span>
+                    <span class="setting-value" id="stocks-processed">--</span>
+                </div>
+                <div class="setting-row">
+                    <span class="setting-label">Paper Trades</span>
+                    <span class="setting-value" id="paper-trades-count">0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- RS Screener Panels -->
+            <div class="panels" id="rs-panels">
+                <div class="panel fresh">
+                    <div class="panel-header">
+                        <span class="panel-title">Fresh Entries</span>
+                        <span class="panel-count" id="fresh-count">0</span>
+                    </div>
+                    <div class="panel-body" id="fresh-panel">
+                        <div class="loading-container">
+                            <div class="loader"></div>
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel sectoral">
+                    <div class="panel-header">
+                        <span class="panel-title">Sectoral Indices</span>
+                        <span class="panel-count" id="sectoral-count">0</span>
+                    </div>
+                    <div class="panel-body" id="sectoral-panel">
+                        <div class="loading-container">
+                            <div class="loader"></div>
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel inrs">
+                    <div class="panel-header">
+                        <span class="panel-title">In RS (Holding)</span>
+                        <span class="panel-count" id="inrs-count">0</span>
+                    </div>
+                    <div class="panel-body" id="inrs-panel">
+                        <div class="loading-container">
+                            <div class="loader"></div>
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel exit">
+                    <div class="panel-header">
+                        <span class="panel-title">Exit Signals</span>
+                        <span class="panel-count" id="exit-count">0</span>
+                    </div>
+                    <div class="panel-body" id="exit-panel">
+                        <div class="loading-container">
+                            <div class="loader"></div>
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy I Panels -->
+            <div class="panels hidden" id="strategy-i-panels">
+                <div class="panel si-entry">
+                    <div class="panel-header">
+                        <span class="panel-title">Entry Signals</span>
+                        <span class="panel-count" id="si-entry-count">0</span>
+                    </div>
+                    <div class="panel-body" id="si-entry-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel si-near6m">
+                    <div class="panel-header">
+                        <span class="panel-title">Near 6M Support</span>
+                        <span class="panel-count" id="si-near6m-count">0</span>
+                    </div>
+                    <div class="panel-body" id="si-near6m-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel si-near1y">
+                    <div class="panel-header">
+                        <span class="panel-title">Near 1Y Support</span>
+                        <span class="panel-count" id="si-near1y-count">0</span>
+                    </div>
+                    <div class="panel-body" id="si-near1y-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel si-below">
+                    <div class="panel-header">
+                        <span class="panel-title">Below Support</span>
+                        <span class="panel-count" id="si-below-count">0</span>
+                    </div>
+                    <div class="panel-body" id="si-below-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Momentum Scanner Panels -->
+            <div class="panels hidden" id="momentum-panels">
+                <div class="panel momentum-entry">
+                    <div class="panel-header">
+                        <span class="panel-title">Momentum Entries</span>
+                        <span class="panel-count" id="momentum-entry-count">0</span>
+                    </div>
+                    <div class="panel-body" id="momentum-entry-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel momentum-active">
+                    <div class="panel-header">
+                        <span class="panel-title">Active Momentum</span>
+                        <span class="panel-count" id="momentum-active-count">0</span>
+                    </div>
+                    <div class="panel-body" id="momentum-active-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel momentum-scan">
+                    <div class="panel-header">
+                        <span class="panel-title">Full Scan — Nifty 50</span>
+                        <span class="panel-count" id="momentum-scan-count">0</span>
+                    </div>
+                    <div class="panel-body" id="momentum-scan-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel momentum-exit">
+                    <div class="panel-header">
+                        <span class="panel-title">Exit Signals</span>
+                        <span class="panel-count" id="momentum-exit-count">0</span>
+                    </div>
+                    <div class="panel-body" id="momentum-exit-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Backtest Results -->
+            <div class="batch-results hidden" id="batch-results">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button class="btn btn-back" style="margin-bottom:0;" onclick="closeBatchBacktest()">&larr; Back to Scanner</button>
+                    <div class="batch-title" id="batch-title" style="flex:1;">Batch Backtest Results</div>
+                    <button class="btn hidden" id="batch-download-btn" onclick="downloadBatchCSV()" style="width:auto;padding:5px 12px;">Download CSV</button>
+                </div>
+                <div class="batch-table-container" id="batch-table-container">
+                    <div class="empty-state">Run batch backtest to see results</div>
+                </div>
+            </div>
+
+            <!-- Backtest Results -->
+            <div class="backtest-results hidden" id="backtest-results">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button class="btn btn-back" style="margin-bottom:0;" onclick="closeBacktest()">&larr; Back to Scanner</button>
+                    <div style="flex:1;"></div>
+                    <button class="btn hidden" id="portfolio-download-btn" onclick="downloadPortfolioCSV()" style="width:auto;padding:5px 12px;">Download CSV</button>
+                </div>
+                <div class="backtest-summary" id="backtest-summary"></div>
+                <div class="backtest-trades-panel">
+                    <div class="panel-header">
+                        <span class="panel-title" id="backtest-title">Trade Log</span>
+                        <span class="panel-count" id="backtest-trade-count">0</span>
+                    </div>
+                    <div class="panel-body" id="backtest-trades-body">
+                        <div class="empty-state">Run a backtest to see results</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // State
+        let isConnected = false;
+        let autoRefreshInterval = null;
+        let activeStrategy = 'rs';
+        let strategyIDataLoaded = false;
+        let momentumDataLoaded = false;
+        let batchResultData = null;
+        let portfolioResultData = null;
+        const AUTO_REFRESH_MS = 15 * 60 * 1000;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            checkConnection();
+            loadData();
+            loadPaperTradesCount();
+            startAutoRefresh();
+
+            window.addEventListener('message', (event) => {
+                if (event.data.type === 'ZERODHA_LOGIN_SUCCESS') {
+                    showToast('Connected to Zerodha!', 'success');
+                    checkConnection();
+                } else if (event.data.type === 'ZERODHA_LOGIN_FAILED') {
+                    showToast('Login failed', 'error');
+                }
+            });
+        });
+
+        // ============ Strategy Switching ============
+
+        function switchStrategy(strategy) {
+            activeStrategy = strategy;
+
+            // Update tabs
+            const tabs = document.querySelectorAll('.strategy-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            if (strategy === 'rs') tabs[0].classList.add('active');
+            else if (strategy === 'strategy_i') tabs[1].classList.add('active');
+            else if (strategy === 'momentum') tabs[2].classList.add('active');
+
+            // Toggle panels
+            document.getElementById('rs-panels').classList.toggle('hidden', strategy !== 'rs');
+            document.getElementById('strategy-i-panels').classList.toggle('hidden', strategy !== 'strategy_i');
+            document.getElementById('momentum-panels').classList.toggle('hidden', strategy !== 'momentum');
+            document.getElementById('backtest-results').classList.add('hidden');
+            document.getElementById('batch-results').classList.add('hidden');
+
+            // Toggle sidebar settings
+            document.getElementById('rs-settings').classList.toggle('hidden', strategy !== 'rs');
+            document.getElementById('strategy-i-settings').classList.toggle('hidden', strategy !== 'strategy_i');
+            document.getElementById('momentum-settings').classList.toggle('hidden', strategy !== 'momentum');
+
+            // Lazy-load data on first switch
+            if (strategy === 'strategy_i' && !strategyIDataLoaded) {
+                loadStrategyIData();
+            }
+            if (strategy === 'momentum' && !momentumDataLoaded) {
+                loadMomentumData();
+            }
+        }
+
+        // ============ Settings ============
+
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('stock-universe').value = data.settings.stock_universe || 250;
+                    document.getElementById('rs-period').value = data.settings.rs_period || 63;
+                    document.getElementById('ema-period').value = data.settings.ema_period || 63;
+                    document.getElementById('si-universe').value = data.settings.strategy_i_universe || 50;
+                    document.getElementById('momentum-rsi2').value = data.settings.momentum_rsi2_threshold || 75;
+                }
+            } catch (e) {
+                console.error('Failed to load settings:', e);
+            }
+        }
+
+        async function saveSettings() {
+            const stockUniverse = parseInt(document.getElementById('stock-universe').value);
+            const rsPeriod = parseInt(document.getElementById('rs-period').value);
+            const emaPeriod = parseInt(document.getElementById('ema-period').value);
+            const siUniverse = parseInt(document.getElementById('si-universe').value);
+            const momentumRsi2 = parseInt(document.getElementById('momentum-rsi2').value);
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        stock_universe: stockUniverse,
+                        rs_period: rsPeriod,
+                        ema_period: emaPeriod,
+                        strategy_i_universe: siUniverse,
+                        momentum_rsi2_threshold: momentumRsi2
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Settings saved', 'success');
+                    if (data.needs_refresh && activeStrategy === 'rs') {
+                        refreshData();
+                    }
+                    if (data.needs_strategy_i_refresh && activeStrategy === 'strategy_i') {
+                        refreshStrategyIData();
+                    }
+                    if (data.needs_momentum_refresh && activeStrategy === 'momentum') {
+                        refreshMomentumData();
+                    }
+                } else {
+                    showToast(data.error || 'Failed to save', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to save settings', 'error');
+            }
+        }
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(() => {
+                if (activeStrategy === 'rs') loadData();
+                else if (activeStrategy === 'strategy_i') loadStrategyIData();
+                else if (activeStrategy === 'momentum') loadMomentumData();
+            }, AUTO_REFRESH_MS);
+        }
+
+        // ============ Connection ============
+
+        async function checkConnection() {
+            try {
+                const res = await fetch('/api/connection/status');
+                const data = await res.json();
+                isConnected = data.status.connected;
+                updateConnectionUI(data.status.user_name || null);
+            } catch (e) {
+                console.error('Connection check failed:', e);
+            }
+        }
+
+        function updateConnectionUI(userName = null) {
+            const dot = document.getElementById('connection-dot');
+            const status = document.getElementById('connection-status');
+            const box = document.getElementById('connection-box');
+            const boxText = document.getElementById('connection-text');
+
+            if (isConnected) {
+                dot.classList.add('connected');
+                status.textContent = 'Connected';
+                box.classList.add('connected');
+                boxText.textContent = userName ? `Connected as ${userName}!` : 'Connected!';
+            } else {
+                dot.classList.remove('connected');
+                status.textContent = 'Disconnected';
+                box.classList.remove('connected');
+                boxText.textContent = 'Not Connected';
+            }
+        }
+
+        async function handleLogin() {
+            try {
+                const res = await fetch('/api/login/url');
+                const data = await res.json();
+
+                if (data.success && data.url) {
+                    window.open(data.url, 'Zerodha Login', 'width=600,height=600');
+                } else {
+                    showToast(data.error || 'Configure KITE_API_KEY', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to get login URL', 'error');
+            }
+        }
+
+        async function submitToken() {
+            const input = document.getElementById('token-input').value.trim();
+            if (!input) {
+                showToast('Please paste the redirect URL', 'error');
+                return;
+            }
+
+            let token = input;
+            if (input.includes('request_token=')) {
+                const match = input.match(/request_token=([^&]+)/);
+                token = match ? match[1] : input;
+            }
+
+            try {
+                const res = await fetch('/api/login/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ request_token: token })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Connected to Zerodha!', 'success');
+                    checkConnection();
+                    document.getElementById('token-input').value = '';
+                } else {
+                    showToast(data.error || 'Connection failed', 'error');
+                }
+            } catch (e) {
+                showToast('Connection failed', 'error');
+            }
+        }
+
+        // ============ RS Screener Data ============
+
+        async function loadData() {
+            try {
+                const res = await fetch('/api/screener/data');
+                const data = await res.json();
+
+                if (data.success) {
+                    renderPanels(data.data);
+                    updateStats(data.data);
+                    updateLastUpdated(data.data.last_updated, data.cache_age_minutes);
+                } else {
+                    showError(data.error || 'Unknown error');
+                }
+            } catch (e) {
+                console.error('Load error:', e);
+                showError('Failed to load data');
+            }
+        }
+
+        async function refreshData() {
+            if (activeStrategy === 'strategy_i') {
+                refreshStrategyIData();
+                return;
+            }
+            if (activeStrategy === 'momentum') {
+                refreshMomentumData();
+                return;
+            }
+
+            const btn = document.getElementById('refresh-btn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            ['fresh-panel', 'sectoral-panel', 'inrs-panel', 'exit-panel'].forEach(id => {
+                document.getElementById(id).innerHTML = `
+                    <div class="loading-container">
+                        <div class="loader"></div>
+                        <span>Refreshing...</span>
+                        <span class="progress-text" id="${id}-progress"></span>
+                    </div>
+                `;
+            });
+
+            const progressInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/screener/progress');
+                    const progress = await res.json();
+                    if (progress.in_progress && progress.total > 0) {
+                        const pct = Math.round((progress.current / progress.total) * 100);
+                        const text = `${progress.current}/${progress.total} (${pct}%)`;
+                        document.querySelectorAll('#rs-panels .progress-text').forEach(el => {
+                            el.textContent = text;
+                        });
+                    }
+                } catch (e) {}
+            }, 500);
+
+            try {
+                const res = await fetch('/api/screener/refresh', { method: 'POST' });
+                const data = await res.json();
+                clearInterval(progressInterval);
+
+                if (data.success) {
+                    renderPanels(data.data);
+                    updateStats(data.data);
+                    updateLastUpdated(data.data.last_updated, 0);
+                    showToast('Data refreshed!', 'success');
+                } else {
+                    showToast(data.error || 'Refresh failed', 'error');
+                    loadData();
+                }
+            } catch (e) {
+                clearInterval(progressInterval);
+                showToast('Refresh failed', 'error');
+                loadData();
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        function renderPanels(data) {
+            renderStockTable('fresh-panel', data.fresh_entries, 'buy');
+            renderStockTable('sectoral-panel', data.sectoral_indices, 'index');
+            renderStockTable('inrs-panel', data.in_rs, 'hold');
+            renderStockTable('exit-panel', data.exit_signals, 'sell');
+
+            document.getElementById('fresh-count').textContent = data.fresh_entries.length;
+            document.getElementById('sectoral-count').textContent = data.sectoral_indices?.length || 0;
+            document.getElementById('inrs-count').textContent = data.in_rs.length;
+            document.getElementById('exit-count').textContent = data.exit_signals.length;
+        }
+
+        function renderStockTable(panelId, stocks, type) {
+            const panel = document.getElementById(panelId);
+
+            if (!stocks || stocks.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No stocks</div>';
+                return;
+            }
+
+            const rows = stocks.map(stock => {
+                const rsClass = stock.rs >= 0 ? 'positive' : 'negative';
+                const emaClass = stock.price_vs_ema >= 0 ? 'positive' : 'negative';
+
+                if (type === 'index') {
+                    return `
+                        <tr>
+                            <td class="ticker">${stock.ticker}</td>
+                            <td class="price">${stock.price.toLocaleString()}</td>
+                            <td class="rs-value ${rsClass}">${stock.rs >= 0 ? '+' : ''}${stock.rs.toFixed(1)}</td>
+                            <td class="ema-pct ${emaClass}">${stock.price_vs_ema >= 0 ? '+' : ''}${stock.price_vs_ema.toFixed(1)}%</td>
+                        </tr>
+                    `;
+                }
+
+                if (type === 'buy') {
+                    const sectorRs = stock.sector_rs;
+                    const sectorStrong = sectorRs !== null && sectorRs > 0;
+                    const sectorClass = sectorStrong ? 'positive' : (sectorRs !== null ? 'negative' : '');
+                    const sectorText = sectorRs !== null ? (sectorStrong ? 'Strong' : 'Weak') : '-';
+
+                    return `
+                        <tr>
+                            <td class="ticker">${stock.ticker}</td>
+                            <td class="price">${stock.price.toLocaleString()}</td>
+                            <td class="rs-value ${rsClass}">${stock.rs >= 0 ? '+' : ''}${stock.rs.toFixed(1)}</td>
+                            <td class="ema-pct ${emaClass}">${stock.price_vs_ema >= 0 ? '+' : ''}${stock.price_vs_ema.toFixed(1)}%</td>
+                            <td class="sector-strength ${sectorClass}">${sectorText}</td>
+                            <td><button class="trade-btn" onclick="executePaperTrade('${stock.ticker}', 'BUY', ${stock.price}, this)">Buy</button></td>
+                        </tr>
+                    `;
+                }
+
+                const btnClass = type === 'sell' ? 'trade-btn sell' : 'trade-btn';
+                const btnText = type === 'sell' ? 'Sell' : 'Buy';
+
+                return `
+                    <tr>
+                        <td class="ticker">${stock.ticker}</td>
+                        <td class="price">${stock.price.toLocaleString()}</td>
+                        <td class="rs-value ${rsClass}">${stock.rs >= 0 ? '+' : ''}${stock.rs.toFixed(1)}</td>
+                        <td class="ema-pct ${emaClass}">${stock.price_vs_ema >= 0 ? '+' : ''}${stock.price_vs_ema.toFixed(1)}%</td>
+                        <td><button class="${btnClass}" onclick="executePaperTrade('${stock.ticker}', '${type === 'sell' ? 'SELL' : 'BUY'}', ${stock.price}, this)">${btnText}</button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            let headerHtml;
+            if (type === 'index') {
+                headerHtml = '<th>Index</th><th>Price</th><th>RS</th><th>vs EMA</th>';
+            } else if (type === 'buy') {
+                headerHtml = '<th>Ticker</th><th>Price</th><th>RS</th><th>vs EMA</th><th>Sector</th><th></th>';
+            } else {
+                headerHtml = '<th>Ticker</th><th>Price</th><th>RS</th><th>vs EMA</th><th></th>';
+            }
+
+            panel.innerHTML = `
+                <table class="stock-table">
+                    <thead>
+                        <tr>${headerHtml}</tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function updateStats(data) {
+            document.getElementById('stocks-processed').textContent = data.stats?.total_processed || '--';
+
+            const niftyEl = document.getElementById('nifty-return');
+            const niftyVal = data.nifty50_return;
+            if (niftyVal !== undefined && niftyVal !== null) {
+                niftyEl.textContent = (niftyVal >= 0 ? '+' : '') + niftyVal.toFixed(2) + '%';
+                niftyEl.style.color = niftyVal >= 0 ? 'var(--green)' : 'var(--red)';
+            }
+        }
+
+        function updateLastUpdated(timestamp, cacheAge) {
+            const date = new Date(timestamp);
+            const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            const ageStr = cacheAge !== null ? ` (${Math.round(cacheAge)}m ago)` : '';
+            document.getElementById('last-updated').textContent = `Updated: ${timeStr}${ageStr}`;
+        }
+
+        function showError(message) {
+            ['fresh-panel', 'sectoral-panel', 'inrs-panel', 'exit-panel'].forEach(id => {
+                document.getElementById(id).innerHTML = `
+                    <div class="empty-state" style="color: var(--red);">Error: ${message}</div>
+                `;
+            });
+        }
+
+        // ============ Strategy I Data ============
+
+        async function loadStrategyIData() {
+            try {
+                const res = await fetch('/api/strategy-i/data');
+                const data = await res.json();
+
+                if (data.success) {
+                    renderStrategyIPanels(data.data);
+                    updateLastUpdated(data.data.last_updated, data.cache_age_minutes);
+                    strategyIDataLoaded = true;
+                } else {
+                    showStrategyIError(data.error || 'Unknown error');
+                }
+            } catch (e) {
+                console.error('Strategy I load error:', e);
+                showStrategyIError('Failed to load data. Click Refresh to scan.');
+            }
+        }
+
+        async function refreshStrategyIData() {
+            const btn = document.getElementById('refresh-btn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            const panelIds = ['si-entry-panel', 'si-near6m-panel', 'si-near1y-panel', 'si-below-panel'];
+            panelIds.forEach(id => {
+                document.getElementById(id).innerHTML = `
+                    <div class="loading-container">
+                        <div class="loader"></div>
+                        <span>Scanning Nifty 50...</span>
+                        <span class="progress-text"></span>
+                    </div>
+                `;
+            });
+
+            const progressInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/strategy-i/progress');
+                    const progress = await res.json();
+                    if (progress.in_progress && progress.total > 0) {
+                        const pct = Math.round((progress.current / progress.total) * 100);
+                        const text = `${progress.current}/${progress.total} (${pct}%)`;
+                        document.querySelectorAll('#strategy-i-panels .progress-text').forEach(el => {
+                            el.textContent = text;
+                        });
+                    }
+                } catch (e) {}
+            }, 500);
+
+            try {
+                const res = await fetch('/api/strategy-i/refresh', { method: 'POST' });
+                const data = await res.json();
+                clearInterval(progressInterval);
+
+                if (data.success) {
+                    renderStrategyIPanels(data.data);
+                    updateLastUpdated(data.data.last_updated, 0);
+                    strategyIDataLoaded = true;
+                    showToast('Strategy I data refreshed!', 'success');
+                } else {
+                    showToast(data.error || 'Refresh failed', 'error');
+                    loadStrategyIData();
+                }
+            } catch (e) {
+                clearInterval(progressInterval);
+                showToast('Refresh failed', 'error');
+                loadStrategyIData();
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        function renderStrategyIPanels(data) {
+            renderStrategyITable('si-entry-panel', data.entry_signals, 'entry');
+            renderStrategyITable('si-near6m-panel', data.near_6m_support, 'near6m');
+            renderStrategyITable('si-near1y-panel', data.near_1y_support, 'near1y');
+            renderStrategyITable('si-below-panel', data.below_support, 'below');
+
+            document.getElementById('si-entry-count').textContent = data.entry_signals.length;
+            document.getElementById('si-near6m-count').textContent = data.near_6m_support.length;
+            document.getElementById('si-near1y-count').textContent = data.near_1y_support.length;
+            document.getElementById('si-below-count').textContent = data.below_support.length;
+        }
+
+        function renderStrategyITable(panelId, stocks, type) {
+            const panel = document.getElementById(panelId);
+
+            if (!stocks || stocks.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No stocks</div>';
+                return;
+            }
+
+            let headerHtml, rows;
+
+            if (type === 'entry') {
+                headerHtml = '<th>Ticker</th><th>Price</th><th>Low</th><th>Supp 6M</th><th>Supp 1Y</th><th>IBS</th><th>Near</th><th></th>';
+                rows = stocks.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td class="price">${s.low.toLocaleString()}</td>
+                        <td class="price">${s.support_6m.toLocaleString()}</td>
+                        <td class="price">${s.support_1y.toLocaleString()}</td>
+                        <td class="rs-value positive">${s.ibs.toFixed(2)}</td>
+                        <td>${s.which_support}</td>
+                        <td><button class="trade-btn" onclick="executePaperTrade('${s.ticker}', 'BUY', ${s.price}, this)">Buy</button></td>
+                    </tr>
+                `).join('');
+            } else if (type === 'near6m') {
+                headerHtml = '<th>Ticker</th><th>Price</th><th>Low</th><th>Supp 6M</th><th>Dist%</th><th>IBS</th><th>Green</th>';
+                rows = stocks.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td class="price">${s.low.toLocaleString()}</td>
+                        <td class="price">${s.support_6m.toLocaleString()}</td>
+                        <td class="ema-pct positive">+${s.dist_6m_pct.toFixed(1)}%</td>
+                        <td>${s.ibs.toFixed(2)}</td>
+                        <td>${s.is_green ? '<span class="cond-pass">Y</span>' : '<span class="cond-fail">N</span>'}</td>
+                    </tr>
+                `).join('');
+            } else if (type === 'near1y') {
+                headerHtml = '<th>Ticker</th><th>Price</th><th>Low</th><th>Supp 1Y</th><th>Dist%</th><th>IBS</th><th>Green</th>';
+                rows = stocks.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td class="price">${s.low.toLocaleString()}</td>
+                        <td class="price">${s.support_1y.toLocaleString()}</td>
+                        <td class="ema-pct positive">+${s.dist_1y_pct.toFixed(1)}%</td>
+                        <td>${s.ibs.toFixed(2)}</td>
+                        <td>${s.is_green ? '<span class="cond-pass">Y</span>' : '<span class="cond-fail">N</span>'}</td>
+                    </tr>
+                `).join('');
+            } else if (type === 'below') {
+                headerHtml = '<th>Ticker</th><th>Price</th><th>Supp 6M</th><th>Dist 6M</th><th>Supp 1Y</th><th>Dist 1Y</th>';
+                rows = stocks.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td class="price">${s.support_6m.toLocaleString()}</td>
+                        <td class="ema-pct negative">${s.dist_6m_pct.toFixed(1)}%</td>
+                        <td class="price">${s.support_1y.toLocaleString()}</td>
+                        <td class="ema-pct negative">${s.dist_1y_pct.toFixed(1)}%</td>
+                    </tr>
+                `).join('');
+            }
+
+            panel.innerHTML = `
+                <table class="stock-table">
+                    <thead><tr>${headerHtml}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function showStrategyIError(message) {
+            ['si-entry-panel', 'si-near6m-panel', 'si-near1y-panel', 'si-below-panel'].forEach(id => {
+                document.getElementById(id).innerHTML = `
+                    <div class="empty-state" style="color: var(--text-muted);">${message}</div>
+                `;
+            });
+        }
+
+        // ============ Momentum Scanner Data ============
+
+        async function loadMomentumData() {
+            try {
+                const res = await fetch('/api/momentum/data');
+                const data = await res.json();
+
+                if (data.success) {
+                    renderMomentumPanels(data.data);
+                    updateLastUpdated(data.data.last_updated, data.cache_age_minutes);
+                    momentumDataLoaded = true;
+                } else {
+                    showMomentumError(data.error || 'Unknown error');
+                }
+            } catch (e) {
+                console.error('Momentum load error:', e);
+                showMomentumError('Failed to load data. Click Refresh to scan.');
+            }
+        }
+
+        async function refreshMomentumData() {
+            const btn = document.getElementById('refresh-btn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            const panelIds = ['momentum-entry-panel', 'momentum-active-panel', 'momentum-scan-panel', 'momentum-exit-panel'];
+            panelIds.forEach(id => {
+                document.getElementById(id).innerHTML = `
+                    <div class="loading-container">
+                        <div class="loader"></div>
+                        <span>Scanning...</span>
+                        <span class="progress-text"></span>
+                    </div>
+                `;
+            });
+
+            const progressInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/momentum/progress');
+                    const progress = await res.json();
+                    if (progress.in_progress && progress.total > 0) {
+                        const pct = Math.round((progress.current / progress.total) * 100);
+                        const text = `${progress.current}/${progress.total} (${pct}%)`;
+                        document.querySelectorAll('#momentum-panels .progress-text').forEach(el => {
+                            el.textContent = text;
+                        });
+                    }
+                } catch (e) {}
+            }, 500);
+
+            try {
+                const res = await fetch('/api/momentum/refresh', { method: 'POST' });
+                const data = await res.json();
+                clearInterval(progressInterval);
+
+                if (data.success) {
+                    renderMomentumPanels(data.data);
+                    updateLastUpdated(data.data.last_updated, 0);
+                    momentumDataLoaded = true;
+                    showToast('Momentum data refreshed!', 'success');
+                } else {
+                    showToast(data.error || 'Refresh failed', 'error');
+                    loadMomentumData();
+                }
+            } catch (e) {
+                clearInterval(progressInterval);
+                showToast('Refresh failed', 'error');
+                loadMomentumData();
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        function renderMomentumPanels(data) {
+            renderMomentumTable('momentum-entry-panel', data.momentum_entries, 'entry');
+            renderMomentumTable('momentum-active-panel', data.active_momentum, 'active');
+            renderMomentumTable('momentum-scan-panel', data.full_scan, 'scan');
+            renderMomentumTable('momentum-exit-panel', data.exit_signals, 'exit');
+
+            document.getElementById('momentum-entry-count').textContent = data.momentum_entries.length;
+            document.getElementById('momentum-active-count').textContent = data.active_momentum.length;
+            document.getElementById('momentum-scan-count').textContent = data.full_scan.length;
+            document.getElementById('momentum-exit-count').textContent = data.exit_signals.length;
+        }
+
+        function renderMomentumTable(panelId, stocks, type) {
+            const panel = document.getElementById(panelId);
+
+            if (!stocks || stocks.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No stocks</div>';
+                return;
+            }
+
+            let headerHtml, rows;
+
+            const fmtRsi = (v) => v !== null && v !== undefined ? v.toFixed(1) : '--';
+            const fmtEma = (price, ema) => {
+                if (ema === null || ema === undefined) return '--';
+                const pct = ((price - ema) / ema * 100).toFixed(1);
+                const cls = price > ema ? 'positive' : 'negative';
+                return `<span class="ema-pct ${cls}">${pct > 0 ? '+' : ''}${pct}%</span>`;
+            };
+            const condYN = (v) => v ? '<span class="cond-pass">Y</span>' : '<span class="cond-fail">N</span>';
+
+            if (type === 'entry' || type === 'active') {
+                headerHtml = '<th>Ticker</th><th>Price</th><th>RSI(2)</th><th>30m RSI</th><th>vs EMA50</th><th>vs EMA200</th><th></th>';
+                rows = stocks.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.close.toLocaleString()}</td>
+                        <td class="rs-value positive">${fmtRsi(s.daily_rsi2)}</td>
+                        <td>${fmtRsi(s.intraday_rsi14)}</td>
+                        <td>${fmtEma(s.close, s.ema50)}</td>
+                        <td>${fmtEma(s.close, s.ema200)}</td>
+                        <td><button class="trade-btn" onclick="executePaperTrade('${s.ticker}', 'BUY', ${s.close}, this)">Buy</button></td>
+                    </tr>
+                `).join('');
+            } else if (type === 'scan') {
+                headerHtml = '<th>Ticker</th><th>Price</th><th>RSI(2)</th><th>30m RSI</th><th>>E50</th><th>>E200</th><th>Conds</th>';
+                rows = stocks.map(s => {
+                    const count = (s.cond1_pass ? 1 : 0) + (s.cond2_pass ? 1 : 0) + (s.cond3_pass ? 1 : 0) + (s.cond4_pass ? 1 : 0);
+                    return `
+                        <tr>
+                            <td class="ticker">${s.ticker}</td>
+                            <td class="price">${s.close.toLocaleString()}</td>
+                            <td class="rs-value ${s.cond1_pass ? 'positive' : ''}">${fmtRsi(s.daily_rsi2)}</td>
+                            <td class="${s.cond2_pass ? '' : 'cond-fail'}">${fmtRsi(s.intraday_rsi14)}</td>
+                            <td>${condYN(s.cond3_pass)}</td>
+                            <td>${condYN(s.cond4_pass)}</td>
+                            <td><span class="conditions-badge conditions-${count}">${count}/4</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            } else if (type === 'exit') {
+                headerHtml = '<th>Ticker</th><th>Price</th><th>RSI(2)</th><th>30m RSI</th><th>>E50</th><th>>E200</th><th></th>';
+                rows = stocks.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.close.toLocaleString()}</td>
+                        <td class="rs-value ${(s.daily_rsi2 || 0) >= 50 ? 'positive' : 'negative'}">${fmtRsi(s.daily_rsi2)}</td>
+                        <td>${fmtRsi(s.intraday_rsi14)}</td>
+                        <td>${condYN(s.cond3_pass)}</td>
+                        <td>${condYN(s.cond4_pass)}</td>
+                        <td><button class="trade-btn sell" onclick="executePaperTrade('${s.ticker}', 'SELL', ${s.close}, this)">Sell</button></td>
+                    </tr>
+                `).join('');
+            }
+
+            panel.innerHTML = `
+                <table class="stock-table">
+                    <thead><tr>${headerHtml}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function showMomentumError(message) {
+            ['momentum-entry-panel', 'momentum-active-panel', 'momentum-scan-panel', 'momentum-exit-panel'].forEach(id => {
+                document.getElementById(id).innerHTML = `
+                    <div class="empty-state" style="color: var(--text-muted);">${message}</div>
+                `;
+            });
+        }
+
+        // ============ Momentum Backtest ============
+
+        function toggleExitEma() {
+            const strategy = document.getElementById('backtest-strategy').value;
+            document.getElementById('backtest-exit-ema').classList.toggle('hidden', strategy !== 'D');
+        }
+
+        async function runBacktest() {
+            const symbol = document.getElementById('backtest-symbol').value;
+            const periodDays = parseInt(document.getElementById('backtest-period').value);
+            let rawStrategy = document.getElementById('backtest-strategy').value;
+            let strategy = rawStrategy;
+            let exitEma = null;
+            // Parse compound values like "J_gtt", "K_close"
+            if (rawStrategy.includes('_')) {
+                const parts = rawStrategy.split('_');
+                strategy = parts[0];
+                exitEma = parts[1];
+            }
+            if (strategy === 'D') exitEma = document.getElementById('backtest-exit-ema').value;
+
+            if (!symbol) {
+                showToast('Please select a symbol', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('run-backtest-btn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+
+            // Show backtest results area with loading state
+            document.getElementById('momentum-panels').classList.add('hidden');
+            document.getElementById('backtest-results').classList.remove('hidden');
+            document.getElementById('backtest-summary').innerHTML = '';
+            const loadingMsg = `Running Strategy ${strategy} backtest for ${symbol}...`;
+            document.getElementById('backtest-trades-body').innerHTML = `
+                <div class="loading-container">
+                    <div class="loader"></div>
+                    <span>${loadingMsg}</span>
+                </div>
+            `;
+
+            try {
+                const payload = { symbol: symbol, period_days: periodDays, strategy: strategy, exit_ema: exitEma };
+                const res = await fetch('/api/momentum/backtest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    renderBacktestResults(data.data);
+                    showToast(`Backtest complete: ${data.data.trades.length} trades`, 'success');
+                } else {
+                    document.getElementById('backtest-trades-body').innerHTML = `
+                        <div class="empty-state" style="color: var(--red);">${data.error || 'Backtest failed'}</div>
+                    `;
+                    showToast(data.error || 'Backtest failed', 'error');
+                }
+            } catch (e) {
+                document.getElementById('backtest-trades-body').innerHTML = `
+                    <div class="empty-state" style="color: var(--red);">Backtest request failed</div>
+                `;
+                showToast('Backtest failed', 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                btn.textContent = 'Run Backtest';
+            }
+        }
+
+        function renderBacktestResults(data) {
+            portfolioResultData = null;
+            document.getElementById('portfolio-download-btn').classList.add('hidden');
+            const s = data.summary;
+            const periodLabel = document.getElementById('backtest-period').selectedOptions[0].text;
+            let stratLabel;
+            const stratLabels = {'D': 'Strategy D (RSI reversal)', 'E': 'Strategy E (EMA pullback)', 'G': 'Strategy G (IBS extreme)', 'I': 'Strategy I (6m support bounce)', 'J': 'Strategy J (weekly support)', 'K': 'Strategy K (RS trending)', 'L': 'Strategy L (Pure RS)', 'M': 'Strategy M (EMA 10/20)', 'P': 'Strategy P (AVWAP)', 'Q': 'Strategy Q (Fib 61.8%)'};
+            stratLabel = stratLabels[data.strategy] || data.strategy;
+            if (data.strategy === 'D') {
+                const target = data.exit_target || 'EMA5';
+                stratLabel += ` — ${target}`;
+            } else if (data.exit_target === 'gtt') {
+                stratLabel += ' — GTT';
+            } else if (data.exit_target === 'close') {
+                stratLabel += ' — 3:15 PM';
+            } else if (data.exit_target === '2wlow') {
+                stratLabel += ' — 2W Low';
+            }
+
+            // Title
+            document.getElementById('backtest-title').textContent = `${data.symbol} — ${stratLabel} — ${periodLabel} (${data.start_date} to ${data.end_date})`;
+            document.getElementById('backtest-trade-count').textContent = `${s.total_trades} trades`;
+
+            // Summary cards
+            const pnlClass = s.total_pnl >= 0 ? 'positive' : 'negative';
+            const pnlSign = s.total_pnl >= 0 ? '+' : '';
+            const retSign = s.total_return_pct >= 0 ? '+' : '';
+
+            document.getElementById('backtest-summary').innerHTML = `
+                <div class="summary-card">
+                    <div class="label">Total P&L</div>
+                    <div class="value ${pnlClass}">${pnlSign}${s.total_pnl.toLocaleString()}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Return</div>
+                    <div class="value ${pnlClass}">${retSign}${s.total_return_pct}%</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Win Rate</div>
+                    <div class="value">${s.win_rate}%</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Profit Factor</div>
+                    <div class="value">${s.profit_factor}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Trades</div>
+                    <div class="value">${s.total_trades}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Avg Win</div>
+                    <div class="value positive">+${s.avg_win.toLocaleString()}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Avg Loss</div>
+                    <div class="value negative">${s.avg_loss.toLocaleString()}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Avg Hold Days</div>
+                    <div class="value">${s.avg_holding_days}</div>
+                </div>
+            `;
+
+            // Trade log table
+            if (!data.trades || data.trades.length === 0) {
+                document.getElementById('backtest-trades-body').innerHTML = '<div class="empty-state">No trades in this period</div>';
+                return;
+            }
+
+            const isRotation = false;
+            const rows = data.trades.map((t, i) => {
+                const pnlCls = t.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                const pnlSign = t.pnl >= 0 ? '+' : '';
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        ${isRotation ? `<td><strong>${t.ticker}</strong></td>` : ''}
+                        <td>${t.entry_date}</td>
+                        <td>${t.entry_time}</td>
+                        <td class="price">${t.entry_price.toLocaleString()}</td>
+                        <td>${t.shares}</td>
+                        <td>${t.exit_date}</td>
+                        <td>${t.exit_time}</td>
+                        <td class="price">${t.exit_price.toLocaleString()}</td>
+                        <td class="${pnlCls}">${pnlSign}${t.pnl.toLocaleString()}</td>
+                        <td class="${pnlCls}">${pnlSign}${t.pnl_pct}%</td>
+                        <td>${t.holding_days}d</td>
+                        <td>${t.exit_reason}</td>
+                        ${!isRotation ? `<td>${t.zone_bottom != null ? (t.zone_top != null ? t.zone_bottom.toLocaleString() + ' – ' + t.zone_top.toLocaleString() : t.zone_bottom.toLocaleString()) : '—'}</td>
+                        <td>${t.entry_dist_pct != null ? t.entry_dist_pct + '%' : '—'}</td>` : ''}
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('backtest-trades-body').innerHTML = `
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            ${isRotation ? '<th>Ticker</th>' : ''}
+                            <th>Entry Date</th>
+                            <th>Entry Time</th>
+                            <th>Entry Price</th>
+                            <th>Shares</th>
+                            <th>Exit Date</th>
+                            <th>Exit Time</th>
+                            <th>Exit Price</th>
+                            <th>P&L</th>
+                            <th>P&L %</th>
+                            <th>Hold</th>
+                            <th>Reason</th>
+                            ${!isRotation ? '<th>Support</th><th>Distance</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function closeBacktest() {
+            document.getElementById('backtest-results').classList.add('hidden');
+            document.getElementById('momentum-panels').classList.remove('hidden');
+        }
+
+        // ============ Batch Backtest ============
+
+        async function runBatchBacktest(universe = 50) {
+            const periodDays = parseInt(document.getElementById('backtest-period').value);
+            const periodLabel = document.getElementById('backtest-period').selectedOptions[0].text;
+            const universeLabel = `Nifty ${universe}`;
+
+            const btnId = universe === 100 ? 'run-batch100-btn' : 'run-batch-btn';
+            const btn = document.getElementById(btnId);
+            btn.classList.add('loading');
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+
+            // Disable the other button too
+            const otherBtnId = universe === 100 ? 'run-batch-btn' : 'run-batch100-btn';
+            const otherBtn = document.getElementById(otherBtnId);
+            otherBtn.disabled = true;
+
+            // Show batch results area with loading
+            document.getElementById('momentum-panels').classList.add('hidden');
+            document.getElementById('backtest-results').classList.add('hidden');
+            document.getElementById('batch-results').classList.remove('hidden');
+            document.getElementById('batch-title').textContent = `Batch Backtest — All Strategies × ${universeLabel} — ${periodLabel}`;
+            document.getElementById('batch-table-container').innerHTML = `
+                <div class="loading-container">
+                    <div class="loader"></div>
+                    <span>Starting batch backtest...</span>
+                    <span class="progress-text" id="batch-progress-text"></span>
+                </div>
+            `;
+
+            // Poll progress
+            const progressInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/momentum/backtest-all/progress');
+                    const progress = await res.json();
+                    if (progress.in_progress && progress.total > 0) {
+                        const pct = Math.round((progress.current / progress.total) * 100);
+                        const el = document.getElementById('batch-progress-text');
+                        if (el) el.textContent = `Scanning ${progress.ticker}... ${progress.current}/${progress.total} (${pct}%)`;
+                    }
+                } catch (e) {}
+            }, 1000);
+
+            try {
+                const res = await fetch('/api/momentum/backtest-all', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ period_days: periodDays, universe: universe })
+                });
+                const data = await res.json();
+                clearInterval(progressInterval);
+
+                if (data.success) {
+                    renderBatchResults(data.data);
+                    showToast(`Batch backtest complete: ${data.data.rows.length} stocks × ${data.data.columns.length} strategies`, 'success');
+                } else {
+                    document.getElementById('batch-table-container').innerHTML = `
+                        <div class="empty-state" style="color: var(--red);">${data.error || 'Batch backtest failed'}</div>
+                    `;
+                    showToast(data.error || 'Batch backtest failed', 'error');
+                }
+            } catch (e) {
+                clearInterval(progressInterval);
+                document.getElementById('batch-table-container').innerHTML = `
+                    <div class="empty-state" style="color: var(--red);">Batch backtest request failed</div>
+                `;
+                showToast('Batch backtest failed', 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                btn.textContent = `Backtest All (${universeLabel})`;
+                otherBtn.disabled = false;
+            }
+        }
+
+        function renderBatchResults(data) {
+            batchResultData = data;
+            document.getElementById('batch-download-btn').classList.remove('hidden');
+            const columns = data.columns;
+            const rows = data.rows;
+
+            // Build header
+            let headerHtml = '<th class="sticky-col">Stock</th>';
+            columns.forEach(col => {
+                headerHtml += `<th>${col}</th>`;
+            });
+
+            // Build body rows
+            const colTotals = {};
+            columns.forEach(col => { colTotals[col] = 0; });
+
+            let bodyHtml = '';
+            rows.forEach(row => {
+                bodyHtml += '<tr>';
+                bodyHtml += `<td class="sticky-col">${row.symbol}</td>`;
+                columns.forEach(col => {
+                    const cell = row.results[col];
+                    if (cell === null || cell === undefined) {
+                        bodyHtml += '<td class="batch-cell-na">--</td>';
+                    } else {
+                        const pnl = cell.total_pnl;
+                        colTotals[col] += pnl;
+                        const sign = pnl >= 0 ? '+' : '';
+                        const formatted = sign + Math.round(pnl).toLocaleString('en-IN');
+                        let cls = 'batch-cell-bad';
+                        if (pnl > 0 && cell.return_pct > 5) cls = 'batch-cell-good';
+                        else if (pnl >= 0) cls = 'batch-cell-ok';
+                        const wr = cell.win_rate;
+                        const tooltip = `${cell.trades} trades, ${cell.return_pct >= 0 ? '+' : ''}${cell.return_pct}% return, PF ${cell.profit_factor}`;
+                        bodyHtml += `<td class="${cls}" title="${tooltip}">${formatted}<br><span style="opacity:0.6;font-size:10px">WR: ${wr}%</span></td>`;
+                    }
+                });
+                bodyHtml += '</tr>';
+            });
+
+            // Totals row
+            bodyHtml += '<tr class="batch-total-row">';
+            bodyHtml += '<td class="sticky-col">TOTAL</td>';
+            columns.forEach(col => {
+                const total = colTotals[col];
+                const sign = total >= 0 ? '+' : '';
+                const formatted = sign + Math.round(total).toLocaleString('en-IN');
+                const cls = total >= 0 ? 'batch-cell-good' : 'batch-cell-bad';
+                bodyHtml += `<td class="${cls}">${formatted}</td>`;
+            });
+            bodyHtml += '</tr>';
+
+            document.getElementById('batch-table-container').innerHTML = `
+                <table class="batch-table">
+                    <thead><tr>${headerHtml}</tr></thead>
+                    <tbody>${bodyHtml}</tbody>
+                </table>
+            `;
+        }
+
+        function closeBatchBacktest() {
+            document.getElementById('batch-results').classList.add('hidden');
+            document.getElementById('momentum-panels').classList.remove('hidden');
+        }
+
+        // ============ Portfolio Backtest (10L) ============
+
+        async function runPortfolioBacktest(universe = 50) {
+            const periodDays = parseInt(document.getElementById('backtest-period').value);
+            const periodLabel = document.getElementById('backtest-period').selectedOptions[0].text;
+            const universeLabel = `Nifty ${universe}`;
+            const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
+            const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
+            const stratVal = document.getElementById('portfolio-strategy').value;
+            const stratMap = {'JK': ['J','K']};
+            const strategies = stratMap[stratVal] || [stratVal];
+
+            const btnId = universe === 100 ? 'run-portfolio100-btn' : 'run-portfolio50-btn';
+            const btn = document.getElementById(btnId);
+            btn.classList.add('loading');
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+
+            // Disable the other portfolio button too
+            const otherBtnId = universe === 100 ? 'run-portfolio50-btn' : 'run-portfolio100-btn';
+            const otherBtn = document.getElementById(otherBtnId);
+            otherBtn.disabled = true;
+
+            // Show backtest results area with loading
+            document.getElementById('momentum-panels').classList.add('hidden');
+            document.getElementById('batch-results').classList.add('hidden');
+            document.getElementById('backtest-results').classList.remove('hidden');
+            document.getElementById('backtest-summary').innerHTML = '';
+            document.getElementById('backtest-trades-body').innerHTML = `
+                <div class="loading-container">
+                    <div class="loader"></div>
+                    <span>Starting portfolio backtest...</span>
+                    <span class="progress-text" id="portfolio-progress-text"></span>
+                </div>
+            `;
+
+            // Poll progress
+            const progressInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/momentum/backtest-portfolio/progress');
+                    const progress = await res.json();
+                    if (progress.in_progress && progress.total > 0) {
+                        const pct = Math.round((progress.current / progress.total) * 100);
+                        const el = document.getElementById('portfolio-progress-text');
+                        if (el) el.textContent = `${progress.ticker}... ${progress.current}/${progress.total} (${pct}%)`;
+                    }
+                } catch (e) {}
+            }, 1000);
+
+            try {
+                const res = await fetch('/api/momentum/backtest-portfolio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ period_days: periodDays, universe: universe,
+                        capital_lakhs: capitalLakhs, per_stock: perStock, strategies: strategies })
+                });
+                const data = await res.json();
+                clearInterval(progressInterval);
+
+                if (data.success) {
+                    renderPortfolioResults(data.data, universeLabel, periodLabel);
+                    showToast(`Portfolio backtest complete: ${data.data.trades.length} trades`, 'success');
+                } else {
+                    document.getElementById('backtest-trades-body').innerHTML = `
+                        <div class="empty-state" style="color: var(--red);">${data.error || 'Portfolio backtest failed'}</div>
+                    `;
+                    showToast(data.error || 'Portfolio backtest failed', 'error');
+                }
+            } catch (e) {
+                clearInterval(progressInterval);
+                document.getElementById('backtest-trades-body').innerHTML = `
+                    <div class="empty-state" style="color: var(--red);">Portfolio backtest request failed</div>
+                `;
+                showToast('Portfolio backtest failed', 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                btn.textContent = `Backtest (${universeLabel})`;
+                otherBtn.disabled = false;
+            }
+        }
+
+        function renderPortfolioResults(data, universeLabel, periodLabel) {
+            portfolioResultData = data;
+            document.getElementById('portfolio-download-btn').classList.remove('hidden');
+            const s = data.summary;
+            const capLabel = `${data.capital_lakhs}L`;
+            const stratLabel = data.strategies_label || 'J+K';
+
+            // Title
+            document.getElementById('backtest-title').textContent =
+                `Portfolio ${capLabel} — ${stratLabel} — ${universeLabel} — ${periodLabel} (${data.start_date} to ${data.end_date})`;
+            document.getElementById('backtest-trade-count').textContent = `${s.total_trades} trades`;
+
+            // Summary cards
+            const pnlClass = s.total_pnl >= 0 ? 'positive' : 'negative';
+            const pnlSign = s.total_pnl >= 0 ? '+' : '';
+            const retSign = s.total_return_pct >= 0 ? '+' : '';
+
+            document.getElementById('backtest-summary').innerHTML = `
+                <div class="summary-card">
+                    <div class="label">Total P&L</div>
+                    <div class="value ${pnlClass}">${pnlSign}${s.total_pnl.toLocaleString()}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Return (on ${data.effective_capital_lakhs || data.capital_lakhs}L)</div>
+                    <div class="value ${pnlClass}">${retSign}${s.total_return_pct}%</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Win Rate</div>
+                    <div class="value">${s.win_rate}%</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Profit Factor</div>
+                    <div class="value">${s.profit_factor}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Trades</div>
+                    <div class="value">${s.total_trades}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Max Positions</div>
+                    <div class="value">${data.max_positions_used}/${data.max_positions}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Signals Missed</div>
+                    <div class="value">${data.missed_signals}/${data.total_signals}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Avg Hold Days</div>
+                    <div class="value">${s.avg_holding_days}</div>
+                </div>
+            `;
+
+            // Trade log table
+            if (!data.trades || data.trades.length === 0) {
+                document.getElementById('backtest-trades-body').innerHTML = '<div class="empty-state">No trades in this period</div>';
+                return;
+            }
+
+            const rows = data.trades.map((t, i) => {
+                const pnlCls = t.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                const pnlSign = t.pnl >= 0 ? '+' : '';
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${t.symbol}</strong></td>
+                        <td>${t.strategy}</td>
+                        <td>${t.entry_date}</td>
+                        <td class="price">${t.entry_price.toLocaleString()}</td>
+                        <td>${t.shares}</td>
+                        <td>${t.exit_date}</td>
+                        <td class="price">${t.exit_price.toLocaleString()}</td>
+                        <td class="${pnlCls}">${pnlSign}${t.pnl.toLocaleString()}</td>
+                        <td class="${pnlCls}">${pnlSign}${t.pnl_pct}%</td>
+                        <td>${t.holding_days}d</td>
+                        <td>${t.exit_reason}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('backtest-trades-body').innerHTML = `
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Symbol</th>
+                            <th>Strategy</th>
+                            <th>Entry Date</th>
+                            <th>Entry Price</th>
+                            <th>Shares</th>
+                            <th>Exit Date</th>
+                            <th>Exit Price</th>
+                            <th>P&L</th>
+                            <th>P&L %</th>
+                            <th>Hold</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function downloadPortfolioCSV() {
+            if (!portfolioResultData) return;
+            const data = portfolioResultData;
+            const s = data.summary;
+            const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+
+            const header = ['#','Symbol','Strategy','Entry Date','Entry Price','Shares','Exit Date','Exit Price','P&L','P&L %','Hold Days','Reason'].map(q);
+            const csvRows = [header.join(',')];
+
+            data.trades.forEach((t, i) => {
+                const sign = t.pnl >= 0 ? '+' : '';
+                csvRows.push([
+                    i + 1, q(t.symbol), q(t.strategy), q(t.entry_date),
+                    t.entry_price, t.shares, q(t.exit_date), t.exit_price,
+                    `${sign}${t.pnl}`, `${sign}${t.pnl_pct}%`, t.holding_days, q(t.exit_reason)
+                ].join(','));
+            });
+
+            // Summary row
+            csvRows.push('');
+            csvRows.push(`Total P&L,${s.total_pnl}`);
+            csvRows.push(`Return %,${s.total_return_pct}%`);
+            csvRows.push(`Win Rate,${s.win_rate}%`);
+            csvRows.push(`Profit Factor,${s.profit_factor}`);
+            csvRows.push(`Total Trades,${s.total_trades}`);
+            csvRows.push(`Max Positions,${data.max_positions_used}/${data.max_positions}`);
+            csvRows.push(`Signals Missed,${data.missed_signals}/${data.total_signals}`);
+
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const date = new Date().toISOString().slice(0, 10);
+            a.download = `portfolio_backtest_${data.capital_lakhs}L_${date}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadBatchCSV() {
+            if (!batchResultData) return;
+            const cols = batchResultData.columns;
+            const rows = batchResultData.rows;
+
+            const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+
+            // Header: Stock, then one column per strategy
+            let header = [q('Stock')];
+            cols.forEach(col => { header.push(q(col)); });
+
+            const csvRows = [header.join(',')];
+
+            // Data rows — each cell: "P&L (WR: xx%)"
+            const colTotals = {};
+            cols.forEach(col => { colTotals[col] = 0; });
+
+            rows.forEach(row => {
+                const line = [q(row.symbol)];
+                cols.forEach(col => {
+                    const cell = row.results[col];
+                    if (cell === null || cell === undefined) {
+                        line.push(q('--'));
+                    } else {
+                        colTotals[col] += cell.total_pnl;
+                        const pnl = Math.round(cell.total_pnl);
+                        const sign = pnl >= 0 ? '+' : '';
+                        line.push(q(`${sign}${pnl} (WR: ${cell.win_rate}%)`));
+                    }
+                });
+                csvRows.push(line.join(','));
+            });
+
+            // Totals row
+            const totalLine = [q('TOTAL')];
+            cols.forEach(col => {
+                const total = Math.round(colTotals[col]);
+                const sign = total >= 0 ? '+' : '';
+                totalLine.push(q(`${sign}${total}`));
+            });
+            csvRows.push(totalLine.join(','));
+
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const date = new Date().toISOString().slice(0, 10);
+            a.download = `batch_backtest_${date}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ============ Paper Trading ============
+
+        async function executePaperTrade(ticker, action, price, btn) {
+            try {
+                const res = await fetch('/api/trade/paper', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticker, action, price, quantity: 1 })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(`Paper ${action}: ${ticker} @ ₹${price}`, 'success');
+                    loadPaperTradesCount();
+                    btn.classList.add('executed');
+                    btn.textContent = 'Done';
+                    setTimeout(() => {
+                        btn.classList.remove('executed');
+                        btn.textContent = action === 'SELL' ? 'Sell' : 'Buy';
+                    }, 2000);
+                } else {
+                    showToast(data.error || 'Trade failed', 'error');
+                }
+            } catch (e) {
+                showToast('Trade failed', 'error');
+            }
+        }
+
+        async function loadPaperTradesCount() {
+            try {
+                const res = await fetch('/api/trade/paper/portfolio');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('paper-trades-count').textContent = data.portfolio.total_trades;
+                }
+            } catch (e) {}
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
