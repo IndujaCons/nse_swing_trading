@@ -13,6 +13,9 @@ DAILY_STATE_FILE = os.path.join(DATA_STORE_PATH, "daily_state.json")
 SCREENER_CACHE_FILE = os.path.join(DATA_STORE_PATH, "screener_cache.json")
 HAMMER_CACHE_FILE = os.path.join(DATA_STORE_PATH, "hammer_cache.json")
 STRATEGY_I_CACHE_FILE = os.path.join(DATA_STORE_PATH, "strategy_i_cache.json")
+LIVE_SIGNALS_CACHE_FILE = os.path.join(DATA_STORE_PATH, "live_signals_cache.json")
+LIVE_POSITIONS_FILE = os.path.join(DATA_STORE_PATH, "live_positions.json")
+LIVE_SIGNALS_HISTORY_FILE = os.path.join(DATA_STORE_PATH, "live_signals_history.csv")
 MOMENTUM_CACHE_FILE = os.path.join(DATA_STORE_PATH, "momentum_cache.json")
 MOMENTUM_STATE_FILE = os.path.join(DATA_STORE_PATH, "momentum_state.json")
 
@@ -29,6 +32,7 @@ DEFAULTS = {
     "hammer_upper_shadow_max_pct": 0.10,
     "momentum_rsi2_threshold": 75,
     "strategy_i_universe": 50,
+    "live_signals_universe": 50,
 }
 
 # Flask settings

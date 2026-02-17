@@ -250,18 +250,22 @@ class MomentumBacktester:
             except Exception:
                 pass
 
-        # Weekly close support for Strategy J
-        # Support = lowest weekly CLOSE of last 26 weeks
+        # Weekly support for Strategy J
+        # Entry: lowest weekly CLOSE of last 26 weeks
+        # Stop: lowest weekly LOW of last 26 weeks
         weekly_support_series = None
+        weekly_low_stop_series = None
         if strategy == "J":
-            weekly = daily.resample("W").agg({
+            weekly = daily.resample("W-FRI").agg({
                 "Open": "first", "High": "max", "Low": "min",
                 "Close": "last", "Volume": "sum"
             }).dropna()
-            # 26-week rolling min of weekly CLOSE, shifted to exclude current week
-            w_support = weekly["Close"].rolling(window=26, min_periods=26).min().shift(1)
-            # Map weekly support back to daily bars
+            # 26-week rolling min of weekly CLOSE (W-FRI: ffill naturally excludes current incomplete week)
+            w_support = weekly["Close"].rolling(window=26, min_periods=26).min()
             weekly_support_series = w_support.reindex(daily.index, method="ffill")
+            # 26-week rolling min of weekly LOW (for stop-loss)
+            w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min()
+            weekly_low_stop_series = w_low_stop.reindex(daily.index, method="ffill")
 
 
         # Resolve Strategy D exit target
@@ -504,22 +508,20 @@ class MomentumBacktester:
 
             elif strategy == "J":
                 # Strategy J: Weekly Close Support Bounce (scale-out)
-                # Entry: weekly open support (lowest weekly open of 26 weeks)
-                # Stop: close < weekly open support (same level as entry)
+                # Entry: daily low within 1% of 26-week min weekly CLOSE
+                # Stop: close < 26-week min weekly LOW
                 # Exit 1: +5% → sell 50%   Exit 2: +10% → sell remaining
 
                 w_support = float(weekly_support_series.iloc[i]) if weekly_support_series is not None and not pd.isna(weekly_support_series.iloc[i]) else None
+                w_low_stop = float(weekly_low_stop_series.iloc[i]) if weekly_low_stop_series is not None and not pd.isna(weekly_low_stop_series.iloc[i]) else None
 
                 entry_signal = False
                 if w_support is not None and not in_position:
-                    dist_pct = ((price - w_support) / w_support) * 100 if w_support > 0 else 999
-                    low_near = ((low - w_support) / w_support) * 100 if w_support > 0 else 999
-                    # rs_ok = rs_filter_series is None or (rs_filter_series.iloc[i] if not pd.isna(rs_filter_series.iloc[i]) else False)
-                    entry_signal = (low_near <= 1.0       # daily low within 1% of support
-                                    and price > w_support  # close above support
+                    close_near = ((price - w_support) / w_support) * 100 if w_support > 0 else 999
+                    entry_signal = (close_near >= 0        # close above support
+                                    and close_near <= 3.0  # close within +3% of support
                                     and ibs > 0.5          # bounce
                                     and price > open_price) # green candle
-                                    # and rs_ok)            # RS Rating > 50
 
                 # Exits (scale-out: 50% at +5%, remaining at +8%)
                 t1_price = entry_price * 1.05 if in_position else 0
@@ -541,7 +543,20 @@ class MomentumBacktester:
                 below_2w = tw_low is not None and price < tw_low
 
                 def _j_stop(sz):
-                    """Check stop for current mode, return True if stopped."""
+                    """Check stop for current mode, return True if stopped.
+                    Skip support break if Nifty fell same or more since entry."""
+                    # Nifty drop shield
+                    nifty_shields = False
+                    if nifty_at_entry > 0 and nifty_close is not None:
+                        nifty_now = float(nifty_close.iloc[i])
+                        nifty_pct = (nifty_now - nifty_at_entry) / nifty_at_entry
+                        stock_pct = (price - entry_price) / entry_price
+                        if nifty_pct <= stock_pct and nifty_pct < 0:
+                            nifty_shields = True
+
+                    if nifty_shields:
+                        return False  # Ignore stop — market-wide fall
+
                     if j_mode == "gtt":
                         if low <= entry_stop_j:
                             _j_trade(entry_price, sz, day, entry_stop_j, "GTT_SUPPORT_BREAK")
@@ -592,6 +607,19 @@ class MomentumBacktester:
                         in_position = False
                         partial_exit_done = False
                         continue
+                    # Exit remaining: Close < 3-day low (skip if Nifty weak)
+                    if i >= 3:
+                        three_day_low = float(lows.iloc[max(0, i-3):i].min())
+                        nifty_weak = False
+                        if nifty_close is not None:
+                            nifty_today = float(nifty_close.iloc[i])
+                            nifty_3day_low_close = float(nifty_close.iloc[max(0, i-3):i].min())
+                            nifty_weak = nifty_today < nifty_3day_low_close
+                        if not nifty_weak and price < three_day_low:
+                            _j_trade(entry_price, remaining_shares, day, price, "BELOW_3DAY_LOW")
+                            in_position = False
+                            partial_exit_done = False
+                            continue
                     if j_mode == "gtt":
                         if high >= t2_price:
                             _j_trade(entry_price, remaining_shares, day, t2_price, "GTT_10PCT")
@@ -613,7 +641,8 @@ class MomentumBacktester:
                         entry_date = day
                         entry_bar = i
                         entry_support_j = w_support  # Weekly close support (for display)
-                        entry_stop_j = w_support  # Stop at weekly close support
+                        entry_stop_j = w_low_stop if w_low_stop is not None else w_support  # Stop at 26-week weekly low
+                        nifty_at_entry = float(nifty_close.iloc[i]) if nifty_close is not None else 0.0
                         in_position = True
                         partial_exit_done = False
                 continue
@@ -1421,7 +1450,8 @@ class MomentumBacktester:
 
     def run_portfolio_backtest(self, period_days, universe=50,
                               capital_lakhs=10, per_stock=50000,
-                              strategies=None, progress_callback=None):
+                              strategies=None, entries_per_day=1,
+                              progress_callback=None):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -1493,13 +1523,15 @@ class MomentumBacktester:
             support_1y = lows.rolling(window=252, min_periods=252).min().shift(1)
             two_week_low = lows.rolling(window=10, min_periods=10).min().shift(1)
 
-            # Weekly close support for Strategy J
-            weekly = daily.resample("W").agg({
+            # Weekly support for Strategy J
+            weekly = daily.resample("W-FRI").agg({
                 "Open": "first", "High": "max", "Low": "min",
                 "Close": "last", "Volume": "sum"
             }).dropna()
-            w_support = weekly["Close"].rolling(window=26, min_periods=26).min().shift(1)
+            w_support = weekly["Close"].rolling(window=26, min_periods=26).min()
             weekly_support_series = w_support.reindex(daily.index, method="ffill")
+            w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min()
+            weekly_low_stop_series = w_low_stop.reindex(daily.index, method="ffill")
 
             # Volume
             vol_series = daily["Volume"].astype(float)
@@ -1552,6 +1584,7 @@ class MomentumBacktester:
                 "support_1y": support_1y,
                 "two_week_low": two_week_low,
                 "weekly_support": weekly_support_series,
+                "weekly_low_stop": weekly_low_stop_series,
                 "rsi2": rsi2_series,
                 "volume": vol_series,
                 "vol_avg20": vol_avg20,
@@ -1611,8 +1644,8 @@ class MomentumBacktester:
 
             # Check if Nifty is weak today (close < 3-day low close)
             nifty_weak_today = False
+            nifty_today_close = nifty_close_by_date.get(day, 0.0)
             if day in nifty_close_by_date and day_idx >= 3:
-                nifty_today_close = nifty_close_by_date[day]
                 past_nifty_closes = [nifty_close_by_date[d]
                                      for d in all_dates[max(0, day_idx-3):day_idx]
                                      if d in nifty_close_by_date]
@@ -1643,9 +1676,18 @@ class MomentumBacktester:
                     t1 = pos["entry_price"] * 1.05
                     t2 = pos["entry_price"] * 1.10
 
+                    # Nifty drop shield: skip support break if Nifty fell same or more
+                    j_nifty_shields = False
+                    j_nifty_entry = pos.get("nifty_at_entry", 0.0)
+                    if j_nifty_entry > 0 and nifty_today_close > 0:
+                        nifty_pct = (nifty_today_close - j_nifty_entry) / j_nifty_entry
+                        stock_pct = (price - pos["entry_price"]) / pos["entry_price"]
+                        if nifty_pct <= stock_pct and nifty_pct < 0:
+                            j_nifty_shields = True
+
                     if not pos["partial_exit_done"]:
                         # Stop check
-                        if price < entry_stop:
+                        if not j_nifty_shields and price < entry_stop:
                             trades.append(self._make_portfolio_trade(
                                 pos, pos["shares"], day, price,
                                 "SUPPORT_BREAK"))
@@ -1663,12 +1705,20 @@ class MomentumBacktester:
                                 exited = True
                     else:
                         # Remaining shares
-                        if price < entry_stop:
+                        if not j_nifty_shields and price < entry_stop:
                             trades.append(self._make_portfolio_trade(
                                 pos, pos["remaining_shares"], day, price,
                                 "SUPPORT_BREAK"))
                             exited = True
-                        elif price >= t2:
+                        # Exit remaining: Close < 3-day low (skip if Nifty weak)
+                        elif not nifty_weak_today and day_idx >= 3:
+                            three_day_low = float(ind["lows"].iloc[max(0, i-3):i].min())
+                            if price < three_day_low:
+                                trades.append(self._make_portfolio_trade(
+                                    pos, pos["remaining_shares"], day, price,
+                                    "BELOW_3DAY_LOW"))
+                                exited = True
+                        if not exited and price >= t2:
                             trades.append(self._make_portfolio_trade(
                                 pos, pos["remaining_shares"], day, price,
                                 "10PCT"))
@@ -1848,21 +1898,24 @@ class MomentumBacktester:
                 if pd.isna(rsi2):
                     continue
 
-                # Strategy J entry: low near weekly support, close > support, IBS > 0.3, green
+                # Strategy J entry: close within 0-3% above weekly support, IBS > 0.5, green
                 if "J" in strategies:
                     w_support = ind["weekly_support"]
+                    w_low_stop = ind["weekly_low_stop"]
                     if w_support is not None and not pd.isna(w_support.iloc[i]):
                         ws = float(w_support.iloc[i])
+                        wls = float(w_low_stop.iloc[i]) if w_low_stop is not None and not pd.isna(w_low_stop.iloc[i]) else ws
                         if ws > 0:
-                            low_near = ((low - ws) / ws) * 100
-                            if (low_near <= 1.0 and price > ws
+                            close_near = ((price - ws) / ws) * 100
+                            if (close_near >= 0 and close_near <= 3.0
                                     and ibs > 0.5 and is_green):
                                 signals.append({
                                     "symbol": ticker,
                                     "strategy": "J",
                                     "price": price,
+                                    "ibs": ibs,
                                     "entry_support_j": ws,
-                                    "entry_stop_j": ws,  # Stop at weekly close support
+                                    "entry_stop_j": wls,  # Stop at 26-week weekly low
                                 })
 
                 # Strategy K entry: RS > 0, prev RSI(2) < 20, today RSI(2) >= 20, Close > EMA(50)
@@ -1963,12 +2016,14 @@ class MomentumBacktester:
 
             total_signals += len(signals)
 
-            # === 3. Allocate capital (max 1 entry per day) ===
+            # === 3. Allocate capital (max entries_per_day) ===
             available_slots = MAX_POSITIONS - len(positions)
-            if signals and available_slots > 0:
+            max_today = min(entries_per_day, available_slots)
+            if signals and max_today > 0:
                 random.shuffle(signals)
-                missed_signals += len(signals) - 1
-                signals = signals[:1]
+                taken = min(len(signals), max_today)
+                missed_signals += len(signals) - taken
+                signals = signals[:taken]
 
                 for sig in signals:
                     shares = int(PER_STOCK // sig["price"])
@@ -1985,6 +2040,7 @@ class MomentumBacktester:
                         if sig["strategy"] == "J":
                             pos["entry_support_j"] = sig["entry_support_j"]
                             pos["entry_stop_j"] = sig["entry_stop_j"]
+                            pos["nifty_at_entry"] = nifty_close_by_date.get(day, 0.0)
                         elif sig["strategy"] == "K":
                             pos["entry_stop_j"] = 0
                             pos["entry_support_j"] = 0
@@ -2011,7 +2067,14 @@ class MomentumBacktester:
                 i = date_to_idx[ticker][last_day]
                 price = float(indicators[ticker]["closes"].iloc[i])
             else:
-                price = pos["entry_price"]  # fallback
+                # Fallback: use the most recent available close price
+                ticker_dates = date_to_idx.get(ticker, {})
+                recent = [d for d in ticker_dates if d <= last_day]
+                if recent:
+                    i = ticker_dates[max(recent)]
+                    price = float(indicators[ticker]["closes"].iloc[i])
+                else:
+                    price = pos["entry_price"]
             sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
             trades.append(self._make_portfolio_trade(
                 pos, sz, last_day, price, "BACKTEST_END"))

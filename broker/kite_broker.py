@@ -219,19 +219,76 @@ class KiteBroker:
         """Clear all paper trades."""
         self._save_paper_trades([])
 
-    # Live Trading Functions (Disabled)
+    # Live Order Placement
 
-    def execute_live_trade(self, ticker: str, action: str, quantity: int) -> Dict:
+    def place_buy_order(self, ticker: str, quantity: int, price: float = None) -> Dict:
         """
-        Execute a live trade.
-        Currently disabled - paper trading only.
+        Place a CNC BUY order on Zerodha.
+
+        Args:
+            ticker: NSE trading symbol (e.g. "INFY", "M&M")
+            quantity: Number of shares
+            price: Limit price. If None, places MARKET order.
+
+        Returns:
+            Dict with order_id on success.
+
+        Raises:
+            RuntimeError if not connected.
         """
-        if PAPER_TRADING_ONLY:
-            raise RuntimeError("Live trading is disabled. Paper trading mode only.")
+        if not self.is_connected() or self._kite is None:
+            raise RuntimeError("Not connected to Zerodha. Please login first.")
 
-        if not self.is_connected():
-            raise RuntimeError("Not connected to Zerodha")
+        order_params = {
+            "variety": self._kite.VARIETY_REGULAR,
+            "exchange": self._kite.EXCHANGE_NSE,
+            "tradingsymbol": ticker,
+            "transaction_type": self._kite.TRANSACTION_TYPE_BUY,
+            "quantity": quantity,
+            "product": self._kite.PRODUCT_CNC,
+        }
 
-        # Live trading implementation would go here
-        # Currently disabled for safety
-        raise NotImplementedError("Live trading not implemented")
+        if price is not None:
+            order_params["order_type"] = self._kite.ORDER_TYPE_LIMIT
+            order_params["price"] = price
+        else:
+            order_params["order_type"] = self._kite.ORDER_TYPE_MARKET
+
+        order_id = self._kite.place_order(**order_params)
+        return {"order_id": order_id, "status": "PLACED"}
+
+    def place_sell_order(self, ticker: str, quantity: int, price: float = None) -> Dict:
+        """
+        Place a CNC SELL order on Zerodha.
+
+        Args:
+            ticker: NSE trading symbol
+            quantity: Number of shares
+            price: Limit price. If None, places MARKET order.
+
+        Returns:
+            Dict with order_id on success.
+
+        Raises:
+            RuntimeError if not connected.
+        """
+        if not self.is_connected() or self._kite is None:
+            raise RuntimeError("Not connected to Zerodha. Please login first.")
+
+        order_params = {
+            "variety": self._kite.VARIETY_REGULAR,
+            "exchange": self._kite.EXCHANGE_NSE,
+            "tradingsymbol": ticker,
+            "transaction_type": self._kite.TRANSACTION_TYPE_SELL,
+            "quantity": quantity,
+            "product": self._kite.PRODUCT_CNC,
+        }
+
+        if price is not None:
+            order_params["order_type"] = self._kite.ORDER_TYPE_LIMIT
+            order_params["price"] = price
+        else:
+            order_params["order_type"] = self._kite.ORDER_TYPE_MARKET
+
+        order_id = self._kite.place_order(**order_params)
+        return {"order_id": order_id, "status": "PLACED"}

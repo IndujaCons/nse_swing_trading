@@ -602,11 +602,21 @@
             border-color: var(--green);
         }
 
-        /* Strategy I panel colors */
-        .panel.si-entry .panel-title { color: var(--green); }
-        .panel.si-near6m .panel-title { color: var(--orange); }
-        .panel.si-near1y .panel-title { color: var(--blue); }
-        .panel.si-below .panel-title { color: var(--red); }
+        /* Live Signals panel colors */
+        .panel.ls-j-signals .panel-title { color: var(--green); }
+        .panel.ls-k-signals .panel-title { color: var(--blue); }
+        .panel.ls-positions .panel-title { color: var(--orange); }
+        .panel.ls-exits .panel-title { color: var(--red); }
+
+        .buy-input {
+            width: 70px;
+            padding: 3px 6px;
+            font-family: inherit;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            text-align: right;
+        }
 
         .score-badge {
             display: inline-block;
@@ -853,7 +863,7 @@
         <div class="header-right">
             <div class="strategy-tabs">
                 <button class="strategy-tab active" onclick="switchStrategy('rs')">RS Screener</button>
-                <button class="strategy-tab" onclick="switchStrategy('strategy_i')">Strategy I</button>
+                <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
                 <button class="strategy-tab" onclick="switchStrategy('momentum')">Momentum Scanner</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
@@ -928,23 +938,19 @@
                 <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save Settings</button>
             </div>
 
-            <div class="section hidden" id="strategy-i-settings">
-                <div class="section-title">Strategy I Settings</div>
+            <div class="section hidden" id="live-signals-settings">
+                <div class="section-title">Live Signals Settings</div>
                 <div class="setting-row">
                     <span class="setting-label">Universe</span>
-                    <select class="setting-select" id="si-universe">
+                    <select class="setting-select" id="ls-universe">
                         <option value="50" selected>Nifty 50</option>
                         <option value="100">Nifty 100</option>
-                        <option value="250">Nifty 250</option>
-                        <option value="500">Nifty 500</option>
                     </select>
                 </div>
                 <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save Settings</button>
                 <div style="margin-top: 10px;">
-                    <div class="setting-static">6M Support: 120-day rolling low</div>
-                    <div class="setting-static">1Y Support: 252-day rolling low</div>
-                    <div class="setting-static">Near threshold: 3%</div>
-                    <div class="setting-static">Entry: within 1%, IBS > 0.3, green candle</div>
+                    <div class="setting-static">J: Weekly close support, low within 1%, IBS > 0.5, green</div>
+                    <div class="setting-static">K: RS > 0, RSI(2) cross 20, close > EMA50, vol up</div>
                 </div>
             </div>
 
@@ -1083,6 +1089,10 @@
                         <option value="P">P: AVWAP</option>
                         <option value="Q">Q: Fib 61.8%</option>
                     </select>
+                    <select class="backtest-select" id="portfolio-entries-per-day">
+                        <option value="1">1 trade / day</option>
+                        <option value="2">2 trades / day</option>
+                    </select>
                     <button class="btn btn-backtest" id="run-portfolio50-btn" onclick="runPortfolioBacktest(50)">Backtest (Nifty 50)</button>
                     <button class="btn btn-backtest" id="run-portfolio100-btn" onclick="runPortfolioBacktest(100)">Backtest (Nifty 100)</button>
                 </div>
@@ -1164,45 +1174,45 @@
                 </div>
             </div>
 
-            <!-- Strategy I Panels -->
-            <div class="panels hidden" id="strategy-i-panels">
-                <div class="panel si-entry">
+            <!-- Live Signals Panels -->
+            <div class="panels hidden" id="live-signals-panels">
+                <div class="panel ls-j-signals">
                     <div class="panel-header">
-                        <span class="panel-title">Entry Signals</span>
-                        <span class="panel-count" id="si-entry-count">0</span>
+                        <span class="panel-title">J Entry Signals</span>
+                        <span class="panel-count" id="ls-j-count">0</span>
                     </div>
-                    <div class="panel-body" id="si-entry-panel">
+                    <div class="panel-body" id="ls-j-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
 
-                <div class="panel si-near6m">
+                <div class="panel ls-k-signals">
                     <div class="panel-header">
-                        <span class="panel-title">Near 6M Support</span>
-                        <span class="panel-count" id="si-near6m-count">0</span>
+                        <span class="panel-title">K Entry Signals</span>
+                        <span class="panel-count" id="ls-k-count">0</span>
                     </div>
-                    <div class="panel-body" id="si-near6m-panel">
+                    <div class="panel-body" id="ls-k-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
 
-                <div class="panel si-near1y">
+                <div class="panel ls-positions">
                     <div class="panel-header">
-                        <span class="panel-title">Near 1Y Support</span>
-                        <span class="panel-count" id="si-near1y-count">0</span>
+                        <span class="panel-title">Entered Signals</span>
+                        <span class="panel-count" id="ls-positions-count">0</span>
                     </div>
-                    <div class="panel-body" id="si-near1y-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
+                    <div class="panel-body" id="ls-positions-panel">
+                        <div class="empty-state">No active positions</div>
                     </div>
                 </div>
 
-                <div class="panel si-below">
+                <div class="panel ls-exits">
                     <div class="panel-header">
-                        <span class="panel-title">Below Support</span>
-                        <span class="panel-count" id="si-below-count">0</span>
+                        <span class="panel-title">Exit Signals</span>
+                        <span class="panel-count" id="ls-exits-count">0</span>
                     </div>
-                    <div class="panel-body" id="si-below-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
+                    <div class="panel-body" id="ls-exits-panel">
+                        <div class="empty-state">No exit signals</div>
                     </div>
                 </div>
             </div>
@@ -1291,11 +1301,38 @@
         let isConnected = false;
         let autoRefreshInterval = null;
         let activeStrategy = 'rs';
-        let strategyIDataLoaded = false;
+        let liveSignalsDataLoaded = false;
         let momentumDataLoaded = false;
         let batchResultData = null;
         let portfolioResultData = null;
         const AUTO_REFRESH_MS = 15 * 60 * 1000;
+
+        // Indian number formatting helpers
+        function parseIndian(str) {
+            return parseInt(String(str).replace(/,/g, ''), 10) || 0;
+        }
+
+        function toIndian(num) {
+            num = parseInt(num, 10);
+            if (isNaN(num)) return '';
+            const s = num.toString();
+            if (s.length <= 3) return s;
+            let last3 = s.slice(-3);
+            let rest = s.slice(0, -3);
+            rest = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',');
+            return rest + ',' + last3;
+        }
+
+        function formatIndian(el) {
+            const pos = el.selectionStart;
+            const oldLen = el.value.length;
+            const raw = parseIndian(el.value);
+            if (raw > 0) {
+                el.value = toIndian(raw);
+            }
+            const newLen = el.value.length;
+            el.setSelectionRange(pos + newLen - oldLen, pos + newLen - oldLen);
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -1324,24 +1361,25 @@
             const tabs = document.querySelectorAll('.strategy-tab');
             tabs.forEach(tab => tab.classList.remove('active'));
             if (strategy === 'rs') tabs[0].classList.add('active');
-            else if (strategy === 'strategy_i') tabs[1].classList.add('active');
+            else if (strategy === 'live_signals') tabs[1].classList.add('active');
             else if (strategy === 'momentum') tabs[2].classList.add('active');
 
             // Toggle panels
             document.getElementById('rs-panels').classList.toggle('hidden', strategy !== 'rs');
-            document.getElementById('strategy-i-panels').classList.toggle('hidden', strategy !== 'strategy_i');
+            document.getElementById('live-signals-panels').classList.toggle('hidden', strategy !== 'live_signals');
             document.getElementById('momentum-panels').classList.toggle('hidden', strategy !== 'momentum');
             document.getElementById('backtest-results').classList.add('hidden');
             document.getElementById('batch-results').classList.add('hidden');
 
             // Toggle sidebar settings
             document.getElementById('rs-settings').classList.toggle('hidden', strategy !== 'rs');
-            document.getElementById('strategy-i-settings').classList.toggle('hidden', strategy !== 'strategy_i');
+            document.getElementById('live-signals-settings').classList.toggle('hidden', strategy !== 'live_signals');
             document.getElementById('momentum-settings').classList.toggle('hidden', strategy !== 'momentum');
 
             // Lazy-load data on first switch
-            if (strategy === 'strategy_i' && !strategyIDataLoaded) {
-                loadStrategyIData();
+            if (strategy === 'live_signals' && !liveSignalsDataLoaded) {
+                loadLiveSignalsData();
+                loadLivePositions();
             }
             if (strategy === 'momentum' && !momentumDataLoaded) {
                 loadMomentumData();
@@ -1358,7 +1396,7 @@
                     document.getElementById('stock-universe').value = data.settings.stock_universe || 250;
                     document.getElementById('rs-period').value = data.settings.rs_period || 63;
                     document.getElementById('ema-period').value = data.settings.ema_period || 63;
-                    document.getElementById('si-universe').value = data.settings.strategy_i_universe || 50;
+                    document.getElementById('ls-universe').value = data.settings.live_signals_universe || 50;
                     document.getElementById('momentum-rsi2').value = data.settings.momentum_rsi2_threshold || 75;
                 }
             } catch (e) {
@@ -1370,7 +1408,7 @@
             const stockUniverse = parseInt(document.getElementById('stock-universe').value);
             const rsPeriod = parseInt(document.getElementById('rs-period').value);
             const emaPeriod = parseInt(document.getElementById('ema-period').value);
-            const siUniverse = parseInt(document.getElementById('si-universe').value);
+            const lsUniverse = parseInt(document.getElementById('ls-universe').value);
             const momentumRsi2 = parseInt(document.getElementById('momentum-rsi2').value);
 
             try {
@@ -1381,7 +1419,7 @@
                         stock_universe: stockUniverse,
                         rs_period: rsPeriod,
                         ema_period: emaPeriod,
-                        strategy_i_universe: siUniverse,
+                        live_signals_universe: lsUniverse,
                         momentum_rsi2_threshold: momentumRsi2
                     })
                 });
@@ -1392,8 +1430,8 @@
                     if (data.needs_refresh && activeStrategy === 'rs') {
                         refreshData();
                     }
-                    if (data.needs_strategy_i_refresh && activeStrategy === 'strategy_i') {
-                        refreshStrategyIData();
+                    if (data.needs_live_signals_refresh && activeStrategy === 'live_signals') {
+                        refreshLiveSignalsData();
                     }
                     if (data.needs_momentum_refresh && activeStrategy === 'momentum') {
                         refreshMomentumData();
@@ -1410,7 +1448,7 @@
             if (autoRefreshInterval) clearInterval(autoRefreshInterval);
             autoRefreshInterval = setInterval(() => {
                 if (activeStrategy === 'rs') loadData();
-                else if (activeStrategy === 'strategy_i') loadStrategyIData();
+                else if (activeStrategy === 'live_signals') loadLiveSignalsData();
                 else if (activeStrategy === 'momentum') loadMomentumData();
             }, AUTO_REFRESH_MS);
         }
@@ -1516,8 +1554,8 @@
         }
 
         async function refreshData() {
-            if (activeStrategy === 'strategy_i') {
-                refreshStrategyIData();
+            if (activeStrategy === 'live_signals') {
+                refreshLiveSignalsData();
                 return;
             }
             if (activeStrategy === 'momentum') {
@@ -1689,37 +1727,36 @@
             });
         }
 
-        // ============ Strategy I Data ============
+        // ============ Live Signals Data ============
 
-        async function loadStrategyIData() {
+        async function loadLiveSignalsData() {
             try {
-                const res = await fetch('/api/strategy-i/data');
+                const res = await fetch('/api/live-signals/data');
                 const data = await res.json();
 
                 if (data.success) {
-                    renderStrategyIPanels(data.data);
+                    renderEntrySignals(data.data);
                     updateLastUpdated(data.data.last_updated, data.cache_age_minutes);
-                    strategyIDataLoaded = true;
+                    liveSignalsDataLoaded = true;
                 } else {
-                    showStrategyIError(data.error || 'Unknown error');
+                    showLiveSignalsError(data.error || 'Unknown error');
                 }
             } catch (e) {
-                console.error('Strategy I load error:', e);
-                showStrategyIError('Failed to load data. Click Refresh to scan.');
+                console.error('Live Signals load error:', e);
+                showLiveSignalsError('Click Refresh to scan for signals.');
             }
         }
 
-        async function refreshStrategyIData() {
+        async function refreshLiveSignalsData() {
             const btn = document.getElementById('refresh-btn');
             btn.classList.add('loading');
             btn.disabled = true;
 
-            const panelIds = ['si-entry-panel', 'si-near6m-panel', 'si-near1y-panel', 'si-below-panel'];
-            panelIds.forEach(id => {
+            ['ls-j-panel', 'ls-k-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="loading-container">
                         <div class="loader"></div>
-                        <span>Scanning Nifty 50...</span>
+                        <span>Scanning...</span>
                         <span class="progress-text"></span>
                     </div>
                 `;
@@ -1727,12 +1764,12 @@
 
             const progressInterval = setInterval(async () => {
                 try {
-                    const res = await fetch('/api/strategy-i/progress');
+                    const res = await fetch('/api/live-signals/progress');
                     const progress = await res.json();
                     if (progress.in_progress && progress.total > 0) {
                         const pct = Math.round((progress.current / progress.total) * 100);
                         const text = `${progress.current}/${progress.total} (${pct}%)`;
-                        document.querySelectorAll('#strategy-i-panels .progress-text').forEach(el => {
+                        document.querySelectorAll('#live-signals-panels .progress-text').forEach(el => {
                             el.textContent = text;
                         });
                     }
@@ -1740,115 +1777,284 @@
             }, 500);
 
             try {
-                const res = await fetch('/api/strategy-i/refresh', { method: 'POST' });
+                const res = await fetch('/api/live-signals/refresh', { method: 'POST' });
                 const data = await res.json();
                 clearInterval(progressInterval);
 
                 if (data.success) {
-                    renderStrategyIPanels(data.data);
+                    renderEntrySignals(data.data);
                     updateLastUpdated(data.data.last_updated, 0);
-                    strategyIDataLoaded = true;
-                    showToast('Strategy I data refreshed!', 'success');
+                    liveSignalsDataLoaded = true;
+                    showToast('Live signals refreshed!', 'success');
+                    // Also check exits after refresh
+                    loadExitSignals();
                 } else {
                     showToast(data.error || 'Refresh failed', 'error');
-                    loadStrategyIData();
+                    loadLiveSignalsData();
                 }
             } catch (e) {
                 clearInterval(progressInterval);
                 showToast('Refresh failed', 'error');
-                loadStrategyIData();
+                loadLiveSignalsData();
             } finally {
                 btn.classList.remove('loading');
                 btn.disabled = false;
             }
         }
 
-        function renderStrategyIPanels(data) {
-            renderStrategyITable('si-entry-panel', data.entry_signals, 'entry');
-            renderStrategyITable('si-near6m-panel', data.near_6m_support, 'near6m');
-            renderStrategyITable('si-near1y-panel', data.near_1y_support, 'near1y');
-            renderStrategyITable('si-below-panel', data.below_support, 'below');
+        function renderEntrySignals(data) {
+            // J signals
+            const jPanel = document.getElementById('ls-j-panel');
+            const jSignals = data.j_signals || [];
+            document.getElementById('ls-j-count').textContent = jSignals.length;
 
-            document.getElementById('si-entry-count').textContent = data.entry_signals.length;
-            document.getElementById('si-near6m-count').textContent = data.near_6m_support.length;
-            document.getElementById('si-near1y-count').textContent = data.near_1y_support.length;
-            document.getElementById('si-below-count').textContent = data.below_support.length;
+            if (jSignals.length === 0) {
+                jPanel.innerHTML = '<div class="empty-state">No J signals</div>';
+            } else {
+                const rows = jSignals.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td class="price">${s.support.toLocaleString()}</td>
+                        <td class="price">${s.stop.toLocaleString()}</td>
+                        <td>${s.close_near_pct.toFixed(1)}%</td>
+                        <td class="rs-value positive">${s.ibs.toFixed(2)}</td>
+                        <td style="white-space:nowrap;">
+                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-j-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
+                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'J', ${s.price}, ${s.stop}, ${s.ibs}, this)">Buy</button>
+                        </td>
+                    </tr>
+                `).join('');
+                jPanel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr><th>Stock</th><th>Close</th><th>Supp</th><th>Stop</th><th>ClNr%</th><th>IBS</th><th></th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+
+            // K signals
+            const kPanel = document.getElementById('ls-k-panel');
+            const kSignals = data.k_signals || [];
+            document.getElementById('ls-k-count').textContent = kSignals.length;
+
+            if (kSignals.length === 0) {
+                kPanel.innerHTML = '<div class="empty-state">No K signals</div>';
+            } else {
+                const rows = kSignals.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td class="rs-value positive">${s.rs_pct.toFixed(1)}%</td>
+                        <td>${s.rsi2.toFixed(0)}</td>
+                        <td>${s.vol_ratio.toFixed(1)}x</td>
+                        <td style="white-space:nowrap;">
+                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-k-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
+                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'K', ${s.price}, 0, ${s.ibs}, this)">Buy</button>
+                        </td>
+                    </tr>
+                `).join('');
+                kPanel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr><th>Stock</th><th>Close</th><th>RS%</th><th>RSI2</th><th>Vol</th><th></th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
         }
 
-        function renderStrategyITable(panelId, stocks, type) {
-            const panel = document.getElementById(panelId);
+        async function buyLiveSignal(ticker, strategy, price, support, ibs, btn) {
+            const amtInput = document.getElementById(`amt-${strategy.toLowerCase()}-${ticker}`);
+            const amount = amtInput ? parseIndian(amtInput.value) : 100000;
 
-            if (!stocks || stocks.length === 0) {
-                panel.innerHTML = '<div class="empty-state">No stocks</div>';
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                const res = await fetch('/api/live-signals/buy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ticker, strategy, price, amount, support, ibs,
+                        metadata: { nifty_at_entry: 0 }
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Bought ${data.position.shares} shares of ${ticker}`, 'success');
+                    loadLivePositions();
+                } else {
+                    showToast(data.error || 'Buy failed', 'error');
+                }
+            } catch (e) {
+                showToast('Buy failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Buy';
+            }
+        }
+
+        async function loadLivePositions() {
+            try {
+                const res = await fetch('/api/live-signals/positions');
+                const data = await res.json();
+                if (data.success) {
+                    renderPositions(data.positions);
+                }
+            } catch (e) {
+                console.error('Positions load error:', e);
+            }
+        }
+
+        function renderPositions(positions) {
+            const panel = document.getElementById('ls-positions-panel');
+            document.getElementById('ls-positions-count').textContent = positions.length;
+
+            if (!positions || positions.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No active positions</div>';
                 return;
             }
 
-            let headerHtml, rows;
-
-            if (type === 'entry') {
-                headerHtml = '<th>Ticker</th><th>Price</th><th>Low</th><th>Supp 6M</th><th>Supp 1Y</th><th>IBS</th><th>Near</th><th></th>';
-                rows = stocks.map(s => `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td class="price">${s.low.toLocaleString()}</td>
-                        <td class="price">${s.support_6m.toLocaleString()}</td>
-                        <td class="price">${s.support_1y.toLocaleString()}</td>
-                        <td class="rs-value positive">${s.ibs.toFixed(2)}</td>
-                        <td>${s.which_support}</td>
-                        <td><button class="trade-btn" onclick="executePaperTrade('${s.ticker}', 'BUY', ${s.price}, this)">Buy</button></td>
-                    </tr>
-                `).join('');
-            } else if (type === 'near6m') {
-                headerHtml = '<th>Ticker</th><th>Price</th><th>Low</th><th>Supp 6M</th><th>Dist%</th><th>IBS</th><th>Green</th>';
-                rows = stocks.map(s => `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td class="price">${s.low.toLocaleString()}</td>
-                        <td class="price">${s.support_6m.toLocaleString()}</td>
-                        <td class="ema-pct positive">+${s.dist_6m_pct.toFixed(1)}%</td>
-                        <td>${s.ibs.toFixed(2)}</td>
-                        <td>${s.is_green ? '<span class="cond-pass">Y</span>' : '<span class="cond-fail">N</span>'}</td>
-                    </tr>
-                `).join('');
-            } else if (type === 'near1y') {
-                headerHtml = '<th>Ticker</th><th>Price</th><th>Low</th><th>Supp 1Y</th><th>Dist%</th><th>IBS</th><th>Green</th>';
-                rows = stocks.map(s => `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td class="price">${s.low.toLocaleString()}</td>
-                        <td class="price">${s.support_1y.toLocaleString()}</td>
-                        <td class="ema-pct positive">+${s.dist_1y_pct.toFixed(1)}%</td>
-                        <td>${s.ibs.toFixed(2)}</td>
-                        <td>${s.is_green ? '<span class="cond-pass">Y</span>' : '<span class="cond-fail">N</span>'}</td>
-                    </tr>
-                `).join('');
-            } else if (type === 'below') {
-                headerHtml = '<th>Ticker</th><th>Price</th><th>Supp 6M</th><th>Dist 6M</th><th>Supp 1Y</th><th>Dist 1Y</th>';
-                rows = stocks.map(s => `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td class="price">${s.support_6m.toLocaleString()}</td>
-                        <td class="ema-pct negative">${s.dist_6m_pct.toFixed(1)}%</td>
-                        <td class="price">${s.support_1y.toLocaleString()}</td>
-                        <td class="ema-pct negative">${s.dist_1y_pct.toFixed(1)}%</td>
-                    </tr>
-                `).join('');
-            }
+            const rows = positions.map(p => `
+                <tr>
+                    <td class="ticker">${p.ticker}</td>
+                    <td>${p.strategy}</td>
+                    <td>${p.entry_date}</td>
+                    <td class="price">${p.entry_price.toLocaleString()}</td>
+                    <td>${p.remaining_shares}${p.partial_exit_done ? ' (partial)' : ''}</td>
+                    <td class="price">&#8377;${toIndian(p.amount_invested)}</td>
+                    <td><button class="trade-btn" style="background:var(--red);color:#fff;padding:2px 7px;" onclick="forceExitPosition('${p.id}', this)" title="Sell on Zerodha & remove">Exit</button></td>
+                </tr>
+            `).join('');
 
             panel.innerHTML = `
                 <table class="stock-table">
-                    <thead><tr>${headerHtml}</tr></thead>
+                    <thead><tr><th>Stock</th><th>Strat</th><th>Entry</th><th>Price</th><th>Shares</th><th>Amt</th><th></th></tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
             `;
         }
 
-        function showStrategyIError(message) {
-            ['si-entry-panel', 'si-near6m-panel', 'si-near1y-panel', 'si-below-panel'].forEach(id => {
+        function forceExitPosition(posId, btn) {
+            if (btn.dataset.confirm === 'yes') {
+                // Second click — sell on Zerodha & remove
+                btn.disabled = true;
+                btn.textContent = '...';
+                fetch('/api/live-signals/force-exit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ position_id: posId })
+                }).then(r => r.json()).then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        loadLivePositions();
+                    } else {
+                        showToast(data.error || 'Exit failed', 'error');
+                        btn.disabled = false;
+                        btn.textContent = 'Exit';
+                        btn.dataset.confirm = '';
+                        btn.style.background = 'var(--red)';
+                    }
+                }).catch(() => {
+                    showToast('Exit failed', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Exit';
+                    btn.dataset.confirm = '';
+                    btn.style.background = 'var(--red)';
+                });
+            } else {
+                // First click — ask for confirmation
+                btn.dataset.confirm = 'yes';
+                btn.textContent = 'Sure?';
+                btn.style.background = '#c0392b';
+                setTimeout(() => {
+                    if (btn.dataset.confirm === 'yes') {
+                        btn.textContent = 'Exit';
+                        btn.dataset.confirm = '';
+                        btn.style.background = 'var(--red)';
+                    }
+                }, 3000);
+            }
+        }
+
+        async function loadExitSignals() {
+            try {
+                const res = await fetch('/api/live-signals/exits');
+                const data = await res.json();
+                if (data.success) {
+                    renderExitSignals(data.exits);
+                }
+            } catch (e) {
+                console.error('Exit signals load error:', e);
+            }
+        }
+
+        function renderExitSignals(exits) {
+            const panel = document.getElementById('ls-exits-panel');
+            document.getElementById('ls-exits-count').textContent = exits.length;
+
+            if (!exits || exits.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No exit signals</div>';
+                return;
+            }
+
+            const rows = exits.map(e => {
+                const pnlClass = e.pnl_pct >= 0 ? 'positive' : 'negative';
+                const pnlSign = e.pnl_pct >= 0 ? '+' : '';
+                return `
+                    <tr>
+                        <td class="ticker">${e.ticker}</td>
+                        <td>${e.strategy}</td>
+                        <td>${e.reason}</td>
+                        <td class="rs-value ${pnlClass}">${pnlSign}${e.pnl_pct.toFixed(1)}%</td>
+                        <td>${e.shares_to_exit}</td>
+                        <td><button class="trade-btn" onclick="executeExit('${e.position_id}', ${e.current_price}, '${e.reason}', ${e.shares_to_exit}, this)">Exit</button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            panel.innerHTML = `
+                <table class="stock-table">
+                    <thead><tr><th>Stock</th><th>Strat</th><th>Reason</th><th>P&L%</th><th>Shares</th><th></th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        async function executeExit(posId, price, reason, shares, btn) {
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                const res = await fetch('/api/live-signals/execute-exit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        position_id: posId,
+                        exit_price: price,
+                        reason: reason,
+                        shares: shares
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const pnl = data.closed.pnl_pct >= 0 ? `+${data.closed.pnl_pct}%` : `${data.closed.pnl_pct}%`;
+                    showToast(`Exited ${data.closed.ticker}: ${pnl}`, data.closed.pnl_pct >= 0 ? 'success' : 'error');
+                    loadLivePositions();
+                    loadExitSignals();
+                } else {
+                    showToast(data.error || 'Exit failed', 'error');
+                }
+            } catch (e) {
+                showToast('Exit failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Exit';
+            }
+        }
+
+        function showLiveSignalsError(message) {
+            ['ls-j-panel', 'ls-k-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="empty-state" style="color: var(--text-muted);">${message}</div>
                 `;
@@ -2369,6 +2575,7 @@
             const stratVal = document.getElementById('portfolio-strategy').value;
             const stratMap = {'JK': ['J','K']};
             const strategies = stratMap[stratVal] || [stratVal];
+            const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
 
             const btnId = universe === 100 ? 'run-portfolio100-btn' : 'run-portfolio50-btn';
             const btn = document.getElementById(btnId);
@@ -2412,7 +2619,8 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ period_days: periodDays, universe: universe,
-                        capital_lakhs: capitalLakhs, per_stock: perStock, strategies: strategies })
+                        capital_lakhs: capitalLakhs, per_stock: perStock, strategies: strategies,
+                        entries_per_day: entriesPerDay })
                 });
                 const data = await res.json();
                 clearInterval(progressInterval);

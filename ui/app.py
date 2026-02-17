@@ -22,7 +22,7 @@ from config.settings import (
     PAPER_TRADING_ONLY, load_config, save_config, get_cache_ttl
 )
 from data.screener_engine import ScreenerEngine
-from data.strategy_i_engine import StrategyIEngine
+from data.live_signals_engine import LiveSignalsEngine
 from data.momentum_engine import MomentumEngine
 from data.momentum_backtest import MomentumBacktester
 from broker.kite_broker import KiteBroker
@@ -32,7 +32,7 @@ app.secret_key = os.urandom(24)
 
 # Global instances
 screener_engine = ScreenerEngine()
-strategy_i_engine = StrategyIEngine()
+live_signals_engine = LiveSignalsEngine()
 momentum_engine = MomentumEngine()
 kite_broker = KiteBroker()
 
@@ -41,10 +41,10 @@ refresh_lock = threading.Lock()
 refresh_in_progress = False
 refresh_progress = {"current": 0, "total": 0, "ticker": ""}
 
-# Strategy I refresh state
-strategy_i_refresh_lock = threading.Lock()
-strategy_i_refresh_in_progress = False
-strategy_i_refresh_progress = {"current": 0, "total": 0, "ticker": ""}
+# Live Signals refresh state
+live_signals_refresh_lock = threading.Lock()
+live_signals_refresh_in_progress = False
+live_signals_refresh_progress = {"current": 0, "total": 0, "ticker": ""}
 
 # Momentum refresh state
 momentum_refresh_lock = threading.Lock()
@@ -74,16 +74,16 @@ def update_progress(current, total, ticker):
     refresh_progress = {"current": current, "total": total, "ticker": ticker}
 
 
-def get_strategy_i_refresh_progress():
-    """Get current Strategy I refresh progress."""
-    global strategy_i_refresh_progress
-    return strategy_i_refresh_progress.copy()
+def get_live_signals_refresh_progress():
+    """Get current Live Signals refresh progress."""
+    global live_signals_refresh_progress
+    return live_signals_refresh_progress.copy()
 
 
-def update_strategy_i_progress(current, total, ticker):
-    """Update progress callback for Strategy I screener."""
-    global strategy_i_refresh_progress
-    strategy_i_refresh_progress = {"current": current, "total": total, "ticker": ticker}
+def update_live_signals_progress(current, total, ticker):
+    """Update progress callback for Live Signals scanner."""
+    global live_signals_refresh_progress
+    live_signals_refresh_progress = {"current": current, "total": total, "ticker": ticker}
 
 
 def get_momentum_refresh_progress():
@@ -172,14 +172,14 @@ def get_progress():
     return jsonify(progress)
 
 
-# ============ Strategy I API Routes ============
+# ============ Live Signals API Routes ============
 
-@app.route("/api/strategy-i/data", methods=["GET"])
-def get_strategy_i_data():
-    """Get cached Strategy I results."""
+@app.route("/api/live-signals/data", methods=["GET"])
+def get_live_signals_data():
+    """Get cached J+K scan results."""
     try:
-        data = strategy_i_engine.run_screener(force_refresh=False)
-        cache_age = strategy_i_engine.get_cache_age_minutes()
+        data = live_signals_engine.scan_entry_signals(force_refresh=False)
+        cache_age = live_signals_engine.get_cache_age_minutes()
 
         return jsonify({
             "success": True,
@@ -194,30 +194,30 @@ def get_strategy_i_data():
         }), 500
 
 
-@app.route("/api/strategy-i/refresh", methods=["POST"])
-def refresh_strategy_i():
-    """Force refresh Strategy I screener data."""
-    global strategy_i_refresh_in_progress
+@app.route("/api/live-signals/refresh", methods=["POST"])
+def refresh_live_signals():
+    """Force re-scan J+K entry signals."""
+    global live_signals_refresh_in_progress
 
-    with strategy_i_refresh_lock:
-        if strategy_i_refresh_in_progress:
+    with live_signals_refresh_lock:
+        if live_signals_refresh_in_progress:
             return jsonify({
                 "success": False,
                 "error": "Refresh already in progress"
             }), 409
 
-        strategy_i_refresh_in_progress = True
+        live_signals_refresh_in_progress = True
 
     try:
-        data = strategy_i_engine.run_screener(
+        data = live_signals_engine.scan_entry_signals(
             force_refresh=True,
-            progress_callback=update_strategy_i_progress
+            progress_callback=update_live_signals_progress
         )
 
         return jsonify({
             "success": True,
             "data": data,
-            "message": "Strategy I data refreshed successfully"
+            "message": "Live signals refreshed successfully"
         })
     except Exception as e:
         return jsonify({
@@ -225,17 +225,171 @@ def refresh_strategy_i():
             "error": str(e)
         }), 500
     finally:
-        with strategy_i_refresh_lock:
-            strategy_i_refresh_in_progress = False
+        with live_signals_refresh_lock:
+            live_signals_refresh_in_progress = False
 
 
-@app.route("/api/strategy-i/progress", methods=["GET"])
-def get_strategy_i_progress():
-    """Get current Strategy I refresh progress."""
-    global strategy_i_refresh_in_progress
-    progress = get_strategy_i_refresh_progress()
-    progress["in_progress"] = strategy_i_refresh_in_progress
+@app.route("/api/live-signals/progress", methods=["GET"])
+def get_live_signals_progress():
+    """Poll scan progress."""
+    global live_signals_refresh_in_progress
+    progress = get_live_signals_refresh_progress()
+    progress["in_progress"] = live_signals_refresh_in_progress
     return jsonify(progress)
+
+
+@app.route("/api/live-signals/positions", methods=["GET"])
+def get_live_positions():
+    """Get active positions."""
+    try:
+        positions = live_signals_engine.get_positions()
+        return jsonify({"success": True, "positions": positions})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/live-signals/force-exit", methods=["POST"])
+def force_exit_position():
+    """Force-exit: sell all remaining shares on Zerodha, then remove locally."""
+    data = request.get_json()
+    position_id = data.get("position_id")
+    if not position_id:
+        return jsonify({"success": False, "error": "position_id required"}), 400
+
+    # Look up position
+    positions = live_signals_engine.get_positions()
+    pos = next((p for p in positions if p["id"] == position_id), None)
+    if pos is None:
+        return jsonify({"success": False, "error": "Position not found"}), 400
+
+    # Sell on Zerodha
+    try:
+        order_result = kite_broker.place_sell_order(
+            pos["ticker"], pos["remaining_shares"])
+    except RuntimeError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Sell order failed: {e}"}), 500
+
+    # Order placed — record as closed with reason MANUAL_FORCE_EXIT
+    result = live_signals_engine.close_position(
+        position_id, pos["entry_price"], "MANUAL_FORCE_EXIT",
+        pos["remaining_shares"])
+    if "error" in result:
+        return jsonify({"success": False, "error": result["error"]}), 400
+
+    return jsonify({
+        "success": True,
+        "message": f"Sold {pos['remaining_shares']} shares of {pos['ticker']}",
+        "order_id": order_result.get("order_id"),
+        "closed": result,
+    })
+
+
+@app.route("/api/live-signals/buy", methods=["POST"])
+def buy_live_signal():
+    """Place BUY order on Zerodha, then record position locally on success."""
+    data = request.get_json()
+    ticker = data.get("ticker")
+    strategy = data.get("strategy")
+    price = data.get("price")
+    amount = data.get("amount", 100000)
+    support = data.get("support", 0)
+    ibs = data.get("ibs", 0)
+    metadata = data.get("metadata", {})
+
+    if not ticker or not strategy or not price:
+        return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
+
+    if strategy not in ("J", "K"):
+        return jsonify({"success": False, "error": "strategy must be J or K"}), 400
+
+    try:
+        amount = float(amount)
+        price = float(price)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "Invalid amount or price"}), 400
+
+    shares = int(amount // price)
+    if shares <= 0:
+        return jsonify({"success": False, "error": "Amount too small for even 1 share"}), 400
+
+    # Place real order on Zerodha
+    try:
+        order_result = kite_broker.place_buy_order(ticker, shares)
+    except RuntimeError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Order failed: {e}"}), 500
+
+    # Order placed — now record locally
+    metadata["order_id"] = order_result.get("order_id")
+    # Store Nifty close at entry for drop shield (J and K)
+    try:
+        import yfinance as yf
+        nifty = yf.Ticker("^NSEI").history(period="5d")
+        if not nifty.empty:
+            metadata["nifty_at_entry"] = float(nifty["Close"].iloc[-1])
+    except Exception:
+        pass
+    result = live_signals_engine.add_position(
+        ticker, strategy, price, amount, support, ibs, metadata)
+
+    if "error" in result:
+        return jsonify({"success": False, "error": result["error"]}), 400
+
+    return jsonify({"success": True, "position": result,
+                    "order_id": order_result.get("order_id")})
+
+
+@app.route("/api/live-signals/exits", methods=["GET"])
+def get_live_exit_signals():
+    """Check exit conditions for all active positions."""
+    try:
+        exits = live_signals_engine.check_exit_signals()
+        return jsonify({"success": True, "exits": exits})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/live-signals/execute-exit", methods=["POST"])
+def execute_live_exit():
+    """Place SELL order on Zerodha, then close/partial-close position locally."""
+    data = request.get_json()
+    position_id = data.get("position_id")
+    exit_price = data.get("exit_price")
+    reason = data.get("reason", "MANUAL")
+    shares = data.get("shares")
+
+    if not position_id or exit_price is None or shares is None:
+        return jsonify({"success": False, "error": "position_id, exit_price, shares required"}), 400
+
+    shares = int(shares)
+
+    # Look up ticker from position
+    positions = live_signals_engine.get_positions()
+    pos = next((p for p in positions if p["id"] == position_id), None)
+    if pos is None:
+        return jsonify({"success": False, "error": "Position not found"}), 400
+
+    # Place real sell order on Zerodha
+    try:
+        order_result = kite_broker.place_sell_order(pos["ticker"], shares)
+    except RuntimeError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Sell order failed: {e}"}), 500
+
+    # Order placed — now record locally
+    try:
+        result = live_signals_engine.close_position(
+            position_id, float(exit_price), reason, shares)
+        if "error" in result:
+            return jsonify({"success": False, "error": result["error"]}), 400
+        result["order_id"] = order_result.get("order_id")
+        return jsonify({"success": True, "closed": result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # ============ Momentum API Routes ============
@@ -432,6 +586,9 @@ def run_portfolio_backtest():
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
         strategies = ["J", "K"]
+    entries_per_day = int(data.get("entries_per_day", 1))
+    if entries_per_day not in (1, 2):
+        entries_per_day = 1
 
     try:
         backtester = MomentumBacktester()
@@ -441,6 +598,7 @@ def run_portfolio_backtest():
             capital_lakhs=capital_lakhs,
             per_stock=per_stock,
             strategies=strategies,
+            entries_per_day=entries_per_day,
             progress_callback=update_portfolio_backtest_progress
         )
         if "error" in result:
@@ -564,7 +722,7 @@ def get_settings():
             "support_lookback_days": config.get("support_lookback_days", 120),
             "support_proximity_pct": config.get("support_proximity_pct", 3.0),
             "momentum_rsi2_threshold": config.get("momentum_rsi2_threshold", 75),
-            "strategy_i_universe": config.get("strategy_i_universe", 50),
+            "live_signals_universe": config.get("live_signals_universe", 50),
         }
     })
 
@@ -601,14 +759,14 @@ def update_settings():
         if 1 <= val <= 60:
             config["cache_ttl_minutes"] = val
 
-    # Strategy I settings
-    strategy_i_changed = False
+    # Live Signals settings
+    live_signals_changed = False
 
-    if "strategy_i_universe" in data:
-        val = int(data["strategy_i_universe"])
-        if val in [50, 100, 250, 500] and val != config.get("strategy_i_universe"):
-            config["strategy_i_universe"] = val
-            strategy_i_changed = True
+    if "live_signals_universe" in data:
+        val = int(data["live_signals_universe"])
+        if val in [50, 100] and val != config.get("live_signals_universe"):
+            config["live_signals_universe"] = val
+            live_signals_changed = True
 
     # Momentum settings
     momentum_changed = False
@@ -625,18 +783,18 @@ def update_settings():
     if settings_changed:
         screener_engine.clear_cache()
 
-    if strategy_i_changed:
-        strategy_i_engine.clear_cache()
+    if live_signals_changed:
+        pass  # Cache will be refreshed on next scan
 
     if momentum_changed:
         momentum_engine.clear_cache()
 
     return jsonify({
         "success": True,
-        "message": "Settings saved" + (" - cache cleared, refreshing..." if settings_changed or strategy_i_changed or momentum_changed else ""),
+        "message": "Settings saved" + (" - cache cleared, refreshing..." if settings_changed or live_signals_changed or momentum_changed else ""),
         "settings": config,
         "needs_refresh": settings_changed,
-        "needs_strategy_i_refresh": strategy_i_changed,
+        "needs_live_signals_refresh": live_signals_changed,
         "needs_momentum_refresh": momentum_changed
     })
 
