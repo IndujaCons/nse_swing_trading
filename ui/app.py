@@ -301,8 +301,8 @@ def buy_live_signal():
     if not ticker or not strategy or not price:
         return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
 
-    if strategy not in ("J", "K"):
-        return jsonify({"success": False, "error": "strategy must be J or K"}), 400
+    if strategy not in ("J", "K", "N"):
+        return jsonify({"success": False, "error": "strategy must be J, K, or N"}), 400
 
     try:
         amount = float(amount)
@@ -460,22 +460,36 @@ def get_momentum_progress():
 
 # ============ Momentum Backtest Routes ============
 
+def _parse_date_range(data):
+    """Parse from_date/to_date from request, return (period_days, end_date)."""
+    from_date = data.get("from_date")
+    to_date = data.get("to_date")
+    if from_date and to_date:
+        from datetime import datetime as dt
+        fd = dt.strptime(from_date, "%Y-%m-%d")
+        td = dt.strptime(to_date, "%Y-%m-%d")
+        period_days = (td - fd).days
+        if period_days < 1:
+            period_days = 30
+        return period_days, td
+    # Fallback to period_days
+    period_days = int(data.get("period_days", 365))
+    return period_days, None
+
+
 @app.route("/api/momentum/backtest", methods=["POST"])
 def run_momentum_backtest():
     """Run momentum backtest for a single symbol."""
     data = request.get_json()
     symbol = data.get("symbol")
-    period_days = data.get("period_days", 30)
+    period_days, end_date = _parse_date_range(data)
     strategy = data.get("strategy", "B")
     exit_ema = data.get("exit_ema")
 
     if not symbol:
         return jsonify({"success": False, "error": "Symbol required"}), 400
 
-    period_map = {30: 30, 90: 90, 180: 180, 365: 365, 730: 730}
-    period_days = period_map.get(int(period_days), 30)
-
-    if strategy not in ("D", "E", "G", "I", "J", "K", "L", "M", "P", "Q"):
+    if strategy not in ("D", "E", "G", "I", "J", "K", "L", "M", "N", "P", "Q"):
         strategy = "D"
 
     # exit_ema can be "5","8","10","20" (EMA) or "pct5" (% target)
@@ -486,7 +500,7 @@ def run_momentum_backtest():
     try:
         backtester = MomentumBacktester()
         result = backtester.run(symbol, period_days, strategy=strategy,
-                                exit_target=exit_ema)
+                                exit_target=exit_ema, end_date=end_date)
 
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]})
@@ -516,9 +530,7 @@ def run_batch_backtest():
         batch_backtest_in_progress = True
 
     data = request.get_json() or {}
-    period_days = data.get("period_days", 365)
-    period_map = {30: 30, 90: 90, 180: 180, 365: 365, 730: 730}
-    period_days = period_map.get(int(period_days), 365)
+    period_days, end_date = _parse_date_range(data)
     universe = int(data.get("universe", 50))
     if universe not in (50, 100):
         universe = 50
@@ -528,7 +540,8 @@ def run_batch_backtest():
         result = backtester.run_all_stocks(
             period_days,
             progress_callback=update_batch_progress,
-            universe=universe
+            universe=universe,
+            end_date=end_date
         )
         return jsonify({"success": True, "data": result})
     except Exception as e:
@@ -569,9 +582,7 @@ def run_portfolio_backtest():
         portfolio_backtest_in_progress = True
 
     data = request.get_json() or {}
-    period_days = data.get("period_days", 365)
-    period_map = {30: 30, 90: 90, 180: 180, 365: 365, 730: 730}
-    period_days = period_map.get(int(period_days), 365)
+    period_days, end_date = _parse_date_range(data)
     universe = int(data.get("universe", 50))
     if universe not in (50, 100):
         universe = 50
@@ -582,7 +593,7 @@ def run_portfolio_backtest():
     if per_stock not in (50000, 100000, 200000, 500000):
         per_stock = 50000
     strategies = data.get("strategies", ["J", "K"])
-    valid_strats = {"J", "K", "L", "M", "P", "Q"}
+    valid_strats = {"J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U"}
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
         strategies = ["J", "K"]
@@ -599,7 +610,8 @@ def run_portfolio_backtest():
             per_stock=per_stock,
             strategies=strategies,
             entries_per_day=entries_per_day,
-            progress_callback=update_portfolio_backtest_progress
+            progress_callback=update_portfolio_backtest_progress,
+            end_date=end_date
         )
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]})

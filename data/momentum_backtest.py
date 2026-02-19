@@ -48,7 +48,8 @@ Strategy I — 6-Month Support Bounce:
 Strategy J — Weekly Close Support Bounce:
   Entry support: Lowest weekly CLOSE of last 26 weeks (~6 months)
   Stop support: Lowest daily LOW of 120 days (same as Strategy I)
-  Entry: Daily low within 1% of weekly close support AND close > support AND IBS > 0.3 AND RS > 50
+  Entry: Daily low within 1% of weekly close support AND close > support AND IBS > 0.5
+         AND green candle AND CCI(20) > -100
   Exit 1: Close >= Entry+5% → sell 50%
   Exit 2: Close >= Entry+10% → sell remaining
   Stop: Close < daily low support (6-month low)
@@ -60,6 +61,39 @@ Strategy K — RS Trending Dip (scale-out):
   Exit 2: RS drops below 0 → sell remaining (stock stops outperforming)
   Stop: Close < Entry-3% → sell all
   No max hold — stay in as long as RS > 0
+
+Strategy N — CCI Momentum:
+  Entry: CCI(20) crosses above 100 (prev day < 100, today > 100)
+  Exit: CCI(20) < -100
+
+Strategy O — Connors RSI(2) Mean Reversion:
+  Entry: Price > SMA(200) AND RSI(2) < 5
+  Exit: Close > EMA(5)
+  Stop: 3% hard SL
+
+Strategy R — RSI Momentum:
+  Entry: RSI(14) crosses above 60 AND Price > EMA(200) AND green candle
+  Exit 1: Close >= Entry+5% → sell 50%
+  Exit 2: RSI(14) < 50 → sell remaining
+  Stop: 5% hard SL
+
+Strategy S — MACD + RSI Combo:
+  Entry: MACD crosses signal above 0 AND RSI(14) > 50 AND green candle
+  Exit 1: Close >= Entry+5% → sell 50%
+  Exit 2: MACD crosses below signal OR RSI(14) < 40 → sell remaining
+  Stop: 5% hard SL
+
+Strategy T — Keltner Channel Pullback:
+  Entry: Price pulls back to EMA(20) midline (was at upper Keltner in last 10 days) AND green candle
+  Exit 1: Close >= Entry+5% → sell 50%
+  Exit 2: Price >= upper Keltner (EMA20 + 2*ATR14) → sell remaining
+  Stop: 5% hard SL
+
+Strategy U — Stochastic RSI:
+  Entry: StochRSI %K crosses above %D, both < 30 AND Price > EMA(200)
+  Exit 1: Close >= Entry+5% → sell 50%
+  Exit 2: StochRSI %K crosses below %D, both > 70 → sell remaining
+  Stop: 5% hard SL
 """
 
 import os
@@ -107,11 +141,17 @@ BATCH_VARIANTS = [
     ("M", None, "M: EMA 10/20"),
     ("P", None, "P: AVWAP"),
     ("Q", None, "Q: Fib 61.8%"),
+    ("N", None, "N: CCI Momentum"),
+    ("O", None, "O: Connors RSI(2)"),
+    ("R", None, "R: RSI Momentum"),
+    ("S", None, "S: MACD+RSI"),
+    ("T", None, "T: Keltner Pullback"),
+    ("U", None, "U: StochRSI"),
 ]
 
 
 class MomentumBacktester:
-    """Single-stock daily backtest for momentum EOD strategy (B, C, D, E, F, G, H, M)."""
+    """Single-stock daily backtest for momentum EOD strategy (B, C, D, E, F, G, H, M, O, R, S, T, U)."""
 
     def _calculate_avwap_series(self, highs: pd.Series, lows: pd.Series,
                                 closes: pd.Series, volumes: pd.Series,
@@ -152,9 +192,19 @@ class MomentumBacktester:
         rsi = 100 - (100 / (1 + rs))
         return rsi
 
+    @staticmethod
+    def _calculate_cci_series(highs: pd.Series, lows: pd.Series, closes: pd.Series, period: int = 20) -> pd.Series:
+        """Calculate Commodity Channel Index (CCI) series."""
+        tp = (highs + lows + closes) / 3
+        sma_tp = tp.rolling(window=period, min_periods=period).mean()
+        mean_dev = tp.rolling(window=period, min_periods=period).apply(
+            lambda x: np.mean(np.abs(x - x.mean())), raw=True)
+        cci = (tp - sma_tp) / (0.015 * mean_dev)
+        return cci
+
     def run(self, symbol: str, period_days: int, strategy: str = "B",
             capital: int = 100000, exit_target: str = None,
-            _daily_data=None) -> Dict:
+            _daily_data=None, end_date=None) -> Dict:
         """
         Run daily-only backtest for a single symbol.
 
@@ -172,7 +222,7 @@ class MomentumBacktester:
         config = load_config()
         rsi2_entry = config.get("momentum_rsi2_threshold", 75)
 
-        end_date = datetime.now()
+        end_date = end_date or datetime.now()
 
         if _daily_data is not None:
             daily = _daily_data
@@ -218,12 +268,21 @@ class MomentumBacktester:
         rs_filter_series = None  # True/False: outperforming Nifty (for I, J)
         rs_spread_series = None  # Stock 3M return minus Nifty 3M return (for K)
         rs_spread_6m_series = None  # Stock 6M return minus Nifty 6M return (for L)
-        if strategy in ("I", "J", "K", "L", "P", "Q"):
+        nifty_cci_series = None  # Nifty CCI(20) for Strategy N regime filter
+        if strategy in ("I", "J", "K", "L", "N", "P", "Q"):
             try:
                 nifty_data = yf.Ticker("^NSEI").history(
                     start=daily.index[0], end=end_date)
                 if not nifty_data.empty:
                     nifty_close = nifty_data["Close"].reindex(daily.index, method="ffill")
+
+                    if strategy == "N":
+                        # Nifty CCI(20) for regime filter
+                        n_tp = (nifty_data["High"] + nifty_data["Low"] + nifty_data["Close"]) / 3
+                        n_sma = n_tp.rolling(window=20, min_periods=20).mean()
+                        n_md = n_tp.rolling(window=20, min_periods=20).apply(
+                            lambda x: np.mean(np.abs(x - x.mean())), raw=True)
+                        nifty_cci_series = ((n_tp - n_sma) / (0.015 * n_md)).reindex(daily.index, method="ffill")
 
                     if strategy in ("I", "J"):
                         def _weighted_rs_score(stock_closes):
@@ -236,7 +295,7 @@ class MomentumBacktester:
                         nifty_ws = _weighted_rs_score(nifty_close)
                         rs_filter_series = stock_ws > nifty_ws
 
-                    if strategy == "K":
+                    if strategy in ("K", "N"):
                         # Simple 3-month return spread: stock vs Nifty
                         stock_3m = closes.pct_change(periods=63)
                         nifty_3m = nifty_close.pct_change(periods=63)
@@ -292,6 +351,7 @@ class MomentumBacktester:
         ema50_series = closes.ewm(span=50, adjust=False).mean()
         ema200_series = closes.ewm(span=200, adjust=False).mean()
         vol_avg20_series = volumes.rolling(window=20, min_periods=20).mean()
+        cci20_series = self._calculate_cci_series(highs, lows, closes, 20)
 
         # AVWAP anchored from 6-month swing low (for Strategy P)
         avwap_series, avwap_age_series = self._calculate_avwap_series(highs, lows, closes, volumes, lookback=120)
@@ -303,6 +363,48 @@ class MomentumBacktester:
         fib_618 = fib_high_6m - 0.618 * fib_range   # 61.8% retracement
         fib_786 = fib_high_6m - 0.70 * fib_range   # 70% retracement (stop)
         fib_ext_121 = fib_high_6m + 0.21 * fib_range  # 121% extension (target)
+
+        # --- New indicators for strategies O, R, S, T, U ---
+        # RSI(14) for strategies O, R, S, U
+        rsi14_series = self._calculate_rsi_series(closes, 14)
+
+        # SMA(200) and SMA(5) for Strategy O
+        sma200_series = closes.rolling(window=200, min_periods=200).mean()
+        sma5_series = closes.rolling(window=5, min_periods=5).mean()
+
+        # MACD(12,26,9) for Strategy S
+        ema12_series = closes.ewm(span=12, adjust=False).mean()
+        ema26_series = closes.ewm(span=26, adjust=False).mean()
+        macd_line_series = ema12_series - ema26_series
+        macd_signal_series = macd_line_series.ewm(span=9, adjust=False).mean()
+
+        # ATR(14) for Strategy T (Keltner Channel)
+        prev_close_series = closes.shift(1)
+        tr1 = highs - lows
+        tr2 = (highs - prev_close_series).abs()
+        tr3 = (lows - prev_close_series).abs()
+        true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        atr14_series = true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+
+        # Stochastic RSI(14,14,3,3) for Strategy U
+        rsi14_min = rsi14_series.rolling(window=14, min_periods=14).min()
+        rsi14_max = rsi14_series.rolling(window=14, min_periods=14).max()
+        stoch_rsi_raw = (rsi14_series - rsi14_min) / (rsi14_max - rsi14_min)
+        stoch_rsi_raw = stoch_rsi_raw.fillna(0.5)
+        stoch_k_series = stoch_rsi_raw.rolling(window=3, min_periods=3).mean() * 100
+        stoch_d_series = stoch_k_series.rolling(window=3, min_periods=3).mean()
+
+        # Tracking variables for new strategies
+        o_partial_done = False
+        o_remaining = 0
+        r_partial_done = False
+        r_remaining = 0
+        s_partial_done = False
+        s_remaining = 0
+        t_partial_done = False
+        t_remaining = 0
+        u_partial_done = False
+        u_remaining = 0
 
         # Determine backtest start index (need 200+ bars warmup)
         bt_start_date = (end_date - timedelta(days=period_days)).date()
@@ -328,6 +430,8 @@ class MomentumBacktester:
         q_remaining = 0  # Strategy Q: remaining shares after partial
         q_fib_stop = 0.0  # Strategy Q: 70% fib level at entry
         q_fib_target = 0.0  # Strategy Q: 121% extension at entry
+        n_partial_done = False  # Strategy N: partial exit tracking
+        n_remaining = 0  # Strategy N: remaining shares after partial
         trades = []
         was_below_exit_ema = False
         days_below_ema20 = 0  # For Strategy E: consecutive days below EMA(20)
@@ -518,10 +622,12 @@ class MomentumBacktester:
                 entry_signal = False
                 if w_support is not None and not in_position:
                     close_near = ((price - w_support) / w_support) * 100 if w_support > 0 else 999
+                    cci_val = float(cci20_series.iloc[i]) if not pd.isna(cci20_series.iloc[i]) else 0.0
                     entry_signal = (close_near >= 0        # close above support
                                     and close_near <= 3.0  # close within +3% of support
                                     and ibs > 0.5          # bounce
-                                    and price > open_price) # green candle
+                                    and price > open_price # green candle
+                                    and cci_val > -100)    # CCI(20) not deeply oversold
 
                 # Exits (scale-out: 50% at +5%, remaining at +8%)
                 t1_price = entry_price * 1.05 if in_position else 0
@@ -641,7 +747,7 @@ class MomentumBacktester:
                         entry_date = day
                         entry_bar = i
                         entry_support_j = w_support  # Weekly close support (for display)
-                        entry_stop_j = w_low_stop if w_low_stop is not None else w_support  # Stop at 26-week weekly low
+                        entry_stop_j = w_low_stop if w_low_stop is not None else w_support
                         nifty_at_entry = float(nifty_close.iloc[i]) if nifty_close is not None else 0.0
                         in_position = True
                         partial_exit_done = False
@@ -852,6 +958,69 @@ class MomentumBacktester:
                             m_remaining = shares
                 continue
 
+            elif strategy == "N":
+                # Strategy N: CCI Momentum
+                # Entry: CCI(20) crosses above 100 (prev < 100, today > 100)
+                # Exit: CCI(20) < 100
+                cci_val = float(cci20_series.iloc[i]) if not pd.isna(cci20_series.iloc[i]) else 0.0
+                cci_prev = float(cci20_series.iloc[i-1]) if i > 0 and not pd.isna(cci20_series.iloc[i-1]) else 0.0
+
+                if in_position and not n_partial_done:
+                    # Hard stop-loss: 3%
+                    if price <= entry_price * 0.97:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "HARD_SL_3PCT"))
+                        in_position = False
+                        n_partial_done = False
+                        continue
+                    # Partial: +5% → sell 50%
+                    if price >= entry_price * 1.05:
+                        half = shares // 2
+                        if half > 0:
+                            trades.append(self._make_trade(
+                                entry_date, entry_price, half, day,
+                                price, "PARTIAL_5PCT"))
+                            n_remaining = shares - half
+                            n_partial_done = True
+                    # CCI exit (full)
+                    elif cci_val < -100 and price < open_price:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "CCI_RED_EXIT"))
+                        in_position = False
+                        n_partial_done = False
+                        continue
+
+                if in_position and n_partial_done:
+                    # Hard stop-loss: 3% on remaining
+                    if price <= entry_price * 0.97:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, n_remaining, day,
+                            price, "HARD_SL_3PCT"))
+                        in_position = False
+                        n_partial_done = False
+                        continue
+                    # CCI exit (remaining)
+                    if cci_val < -100 and price < open_price:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, n_remaining, day,
+                            price, "CCI_RED_EXIT"))
+                        in_position = False
+                        n_partial_done = False
+                        continue
+
+                if not in_position:
+                    if cci_val > 100 and cci_prev <= 100 and price > open_price:
+                        shares = int(capital // price)
+                        if shares > 0:
+                            entry_price = price
+                            entry_date = day
+                            in_position = True
+                            n_partial_done = False
+                            n_remaining = shares
+                continue
+
             elif strategy == "P":
                 # Strategy P: AVWAP from Swing Low Bounce
                 # Anchor: AVWAP from 6-month swing low date
@@ -1010,6 +1179,305 @@ class MomentumBacktester:
                             q_remaining = shares
                             q_fib_stop = f786
                             q_fib_target = f121
+                continue
+
+            elif strategy == "O":
+                # Strategy O: Connors RSI(2) Mean Reversion
+                # Entry: Price > SMA(200) AND RSI(2) < 5
+                # Exit: Close > EMA(5)
+                # Stop: 3% hard SL
+                sma200 = float(sma200_series.iloc[i]) if not pd.isna(sma200_series.iloc[i]) else None
+                ema5 = float(ema5_series.iloc[i])
+
+                if in_position:
+                    if price <= entry_price * 0.97:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "HARD_SL_3PCT"))
+                        in_position = False
+                        continue
+                    if price > ema5:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "EMA5_EXIT"))
+                        in_position = False
+                        continue
+
+                if not in_position and sma200 is not None and rsi2 < 5 and price > sma200:
+                    shares = int(capital // price)
+                    if shares > 0:
+                        entry_price = price
+                        entry_date = day
+                        in_position = True
+                continue
+
+            elif strategy == "R":
+                # Strategy R: RSI Momentum
+                # Entry: RSI(14) crosses above 60 AND Price > EMA(200) AND green candle
+                # Partial: +5% → sell 50%
+                # Exit: RSI(14) < 50 → sell remaining
+                # Stop: 5% hard SL
+                rsi14 = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 50.0
+                rsi14_prev = float(rsi14_series.iloc[i - 1]) if i > 0 and not pd.isna(rsi14_series.iloc[i - 1]) else 50.0
+
+                if in_position and not r_partial_done:
+                    if price <= entry_price * 0.95:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "HARD_SL_5PCT"))
+                        in_position = False
+                        r_partial_done = False
+                        continue
+                    if price >= entry_price * 1.05:
+                        half = shares // 2
+                        if half > 0:
+                            trades.append(self._make_trade(
+                                entry_date, entry_price, half, day,
+                                price, "PARTIAL_5PCT"))
+                            r_remaining = shares - half
+                            r_partial_done = True
+                    elif rsi14 < 50:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "RSI14_EXIT"))
+                        in_position = False
+                        r_partial_done = False
+                        continue
+
+                if in_position and r_partial_done:
+                    if price <= entry_price * 0.95:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, r_remaining, day,
+                            price, "HARD_SL_5PCT"))
+                        in_position = False
+                        r_partial_done = False
+                        continue
+                    if rsi14 < 50:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, r_remaining, day,
+                            price, "RSI14_EXIT"))
+                        in_position = False
+                        r_partial_done = False
+                        continue
+
+                if not in_position:
+                    if (rsi14_prev <= 60 and rsi14 > 60
+                            and price > ema200 and price > open_price):
+                        shares = int(capital // price)
+                        if shares > 0:
+                            entry_price = price
+                            entry_date = day
+                            in_position = True
+                            r_partial_done = False
+                            r_remaining = shares
+                continue
+
+            elif strategy == "S":
+                # Strategy S: MACD + RSI Combo
+                # Entry: MACD crosses above signal AND MACD > 0 AND RSI(14) > 50 AND green candle
+                # Partial: +5% → sell 50%
+                # Exit: MACD crosses below signal OR RSI(14) < 40 → sell remaining
+                # Stop: 5% hard SL
+                rsi14 = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 50.0
+                macd_val = float(macd_line_series.iloc[i]) if not pd.isna(macd_line_series.iloc[i]) else 0.0
+                macd_sig = float(macd_signal_series.iloc[i]) if not pd.isna(macd_signal_series.iloc[i]) else 0.0
+                macd_prev = float(macd_line_series.iloc[i - 1]) if i > 0 and not pd.isna(macd_line_series.iloc[i - 1]) else 0.0
+                macd_sig_prev = float(macd_signal_series.iloc[i - 1]) if i > 0 and not pd.isna(macd_signal_series.iloc[i - 1]) else 0.0
+
+                macd_cross_up = (macd_prev <= macd_sig_prev and macd_val > macd_sig)
+                macd_cross_down = (macd_prev >= macd_sig_prev and macd_val < macd_sig)
+
+                if in_position and not s_partial_done:
+                    if price <= entry_price * 0.95:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "HARD_SL_5PCT"))
+                        in_position = False
+                        s_partial_done = False
+                        continue
+                    if price >= entry_price * 1.05:
+                        half = shares // 2
+                        if half > 0:
+                            trades.append(self._make_trade(
+                                entry_date, entry_price, half, day,
+                                price, "PARTIAL_5PCT"))
+                            s_remaining = shares - half
+                            s_partial_done = True
+                    elif macd_cross_down or rsi14 < 40:
+                        reason = "MACD_CROSS_DOWN" if macd_cross_down else "RSI14_EXIT"
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, reason))
+                        in_position = False
+                        s_partial_done = False
+                        continue
+
+                if in_position and s_partial_done:
+                    if price <= entry_price * 0.95:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, s_remaining, day,
+                            price, "HARD_SL_5PCT"))
+                        in_position = False
+                        s_partial_done = False
+                        continue
+                    if macd_cross_down or rsi14 < 40:
+                        reason = "MACD_CROSS_DOWN" if macd_cross_down else "RSI14_EXIT"
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, s_remaining, day,
+                            price, reason))
+                        in_position = False
+                        s_partial_done = False
+                        continue
+
+                if not in_position:
+                    if (macd_cross_up and macd_val > 0
+                            and rsi14 > 50 and price > open_price):
+                        shares = int(capital // price)
+                        if shares > 0:
+                            entry_price = price
+                            entry_date = day
+                            in_position = True
+                            s_partial_done = False
+                            s_remaining = shares
+                continue
+
+            elif strategy == "T":
+                # Strategy T: Keltner Channel Pullback
+                # Entry: Price near EMA(20) (within 1%) AND was above upper Keltner in last 10 bars AND green candle
+                # Partial: +5% → sell 50%
+                # Exit: Price >= upper Keltner → sell remaining
+                # Stop: 5% hard SL
+                atr14 = float(atr14_series.iloc[i]) if not pd.isna(atr14_series.iloc[i]) else 0.0
+                upper_keltner = ema20 + 2 * atr14
+                t_entry_upper_keltner = 0.0  # will be set at entry
+
+                if in_position and not t_partial_done:
+                    current_upper = ema20 + 2 * atr14
+                    if price <= entry_price * 0.95:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "HARD_SL_5PCT"))
+                        in_position = False
+                        t_partial_done = False
+                        continue
+                    if price >= entry_price * 1.05:
+                        half = shares // 2
+                        if half > 0:
+                            trades.append(self._make_trade(
+                                entry_date, entry_price, half, day,
+                                price, "PARTIAL_5PCT"))
+                            t_remaining = shares - half
+                            t_partial_done = True
+                    elif price >= current_upper:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "KELTNER_UPPER_EXIT"))
+                        in_position = False
+                        t_partial_done = False
+                        continue
+
+                if in_position and t_partial_done:
+                    current_upper = ema20 + 2 * atr14
+                    if price <= entry_price * 0.95:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, t_remaining, day,
+                            price, "HARD_SL_5PCT"))
+                        in_position = False
+                        t_partial_done = False
+                        continue
+                    if price >= current_upper:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, t_remaining, day,
+                            price, "KELTNER_UPPER_EXIT"))
+                        in_position = False
+                        t_partial_done = False
+                        continue
+
+                if not in_position and atr14 > 0:
+                    near_ema20 = abs(price - ema20) / ema20 <= 0.01
+                    was_at_upper = False
+                    for lookback_j in range(max(0, i - 10), i):
+                        past_high = float(highs.iloc[lookback_j])
+                        past_ema20 = float(ema20_series.iloc[lookback_j])
+                        past_atr14 = float(atr14_series.iloc[lookback_j]) if not pd.isna(atr14_series.iloc[lookback_j]) else 0.0
+                        past_upper = past_ema20 + 2 * past_atr14
+                        if past_high >= past_upper:
+                            was_at_upper = True
+                            break
+                    if near_ema20 and was_at_upper and price > open_price:
+                        shares = int(capital // price)
+                        if shares > 0:
+                            entry_price = price
+                            entry_date = day
+                            in_position = True
+                            t_partial_done = False
+                            t_remaining = shares
+                continue
+
+            elif strategy == "U":
+                # Strategy U: Stochastic RSI
+                # Entry: StochRSI %K crosses above %D, both < 30 AND Price > EMA(200)
+                # Partial: +5% → sell 50%
+                # Exit: StochRSI %K crosses below %D, both > 70 → sell remaining
+                # Stop: 5% hard SL
+                stoch_k = float(stoch_k_series.iloc[i]) if not pd.isna(stoch_k_series.iloc[i]) else 50.0
+                stoch_d = float(stoch_d_series.iloc[i]) if not pd.isna(stoch_d_series.iloc[i]) else 50.0
+                stoch_k_prev = float(stoch_k_series.iloc[i - 1]) if i > 0 and not pd.isna(stoch_k_series.iloc[i - 1]) else 50.0
+                stoch_d_prev = float(stoch_d_series.iloc[i - 1]) if i > 0 and not pd.isna(stoch_d_series.iloc[i - 1]) else 50.0
+
+                k_cross_up = (stoch_k_prev <= stoch_d_prev and stoch_k > stoch_d)
+                k_cross_down = (stoch_k_prev >= stoch_d_prev and stoch_k < stoch_d)
+
+                if in_position and not u_partial_done:
+                    if price <= entry_price * 0.95:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "HARD_SL_5PCT"))
+                        in_position = False
+                        u_partial_done = False
+                        continue
+                    if price >= entry_price * 1.05:
+                        half = shares // 2
+                        if half > 0:
+                            trades.append(self._make_trade(
+                                entry_date, entry_price, half, day,
+                                price, "PARTIAL_5PCT"))
+                            u_remaining = shares - half
+                            u_partial_done = True
+                    elif k_cross_down and stoch_k > 70 and stoch_d > 70:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "STOCHRSI_EXIT"))
+                        in_position = False
+                        u_partial_done = False
+                        continue
+
+                if in_position and u_partial_done:
+                    if price <= entry_price * 0.95:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, u_remaining, day,
+                            price, "HARD_SL_5PCT"))
+                        in_position = False
+                        u_partial_done = False
+                        continue
+                    if k_cross_down and stoch_k > 70 and stoch_d > 70:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, u_remaining, day,
+                            price, "STOCHRSI_EXIT"))
+                        in_position = False
+                        u_partial_done = False
+                        continue
+
+                if not in_position:
+                    if (k_cross_up and stoch_k < 30 and stoch_d < 30
+                            and price > ema200):
+                        shares = int(capital // price)
+                        if shares > 0:
+                            entry_price = price
+                            entry_date = day
+                            in_position = True
+                            u_partial_done = False
+                            u_remaining = shares
                 continue
 
             elif strategy == "E":
@@ -1451,7 +1919,7 @@ class MomentumBacktester:
     def run_portfolio_backtest(self, period_days, universe=50,
                               capital_lakhs=10, per_stock=50000,
                               strategies=None, entries_per_day=1,
-                              progress_callback=None):
+                              progress_callback=None, end_date=None):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -1473,7 +1941,7 @@ class MomentumBacktester:
         else:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
 
-        end_date = datetime.now()
+        end_date = end_date or datetime.now()
         daily_start = end_date - timedelta(days=period_days + 500)
         bt_start_date = (end_date - timedelta(days=period_days)).date()
 
@@ -1538,13 +2006,16 @@ class MomentumBacktester:
             vol_avg20 = vol_series.rolling(window=20, min_periods=20).mean()
 
             # EMAs
+            ema5_series = closes.ewm(span=5, adjust=False).mean()
+            ema8_series = closes.ewm(span=8, adjust=False).mean()
             ema10_series = closes.ewm(span=10, adjust=False).mean()
             ema20_series = closes.ewm(span=20, adjust=False).mean()
             ema50_series = closes.ewm(span=50, adjust=False).mean()
             ema200_series = closes.ewm(span=200, adjust=False).mean()
 
-            # RSI(2)
+            # RSI(2) and RSI(3)
             rsi2_series = self._calculate_rsi_series(closes, 2)
+            rsi3_series = self._calculate_rsi_series(closes, 3)
 
             # RS spread for Strategy K (3M) and L (6M)
             rs_spread_series = None
@@ -1561,6 +2032,12 @@ class MomentumBacktester:
             # AVWAP anchored from 6-month swing low (for Strategy P)
             avwap_series, avwap_age_series = self._calculate_avwap_series(highs, lows, closes, vol_series, lookback=120)
 
+            # CCI(20) for Strategy J entry confirmation
+            cci20_series = self._calculate_cci_series(highs, lows, closes, 20)
+
+            # 20-day rolling high of Highs for Strategy N (excluding current bar)
+            high_20d = highs.rolling(window=20, min_periods=20).max().shift(1)
+
             # Fibonacci levels from 6-month high/low (for Strategy Q)
             fib_high_6m = highs.rolling(window=120, min_periods=120).max()
             fib_low_6m = lows.rolling(window=120, min_periods=120).min()
@@ -1568,6 +2045,36 @@ class MomentumBacktester:
             fib_618_series = fib_high_6m - 0.618 * fib_range
             fib_786_series = fib_high_6m - 0.70 * fib_range
             fib_ext_121_series = fib_high_6m + 0.21 * fib_range
+
+            # --- New indicators for O, R, S, T, U ---
+            # RSI(14) for strategies O, R, S, U
+            rsi14_series = self._calculate_rsi_series(closes, 14)
+
+            # SMA(200) and SMA(5) for Strategy O
+            sma200_series = closes.rolling(window=200, min_periods=200).mean()
+            sma5_series = closes.rolling(window=5, min_periods=5).mean()
+
+            # MACD(12,26,9) for Strategy S
+            ema12_series = closes.ewm(span=12, adjust=False).mean()
+            ema26_series = closes.ewm(span=26, adjust=False).mean()
+            macd_line_series = ema12_series - ema26_series
+            macd_signal_series = macd_line_series.ewm(span=9, adjust=False).mean()
+
+            # ATR(14) for Strategy T (Keltner Channel)
+            prev_close_s = closes.shift(1)
+            tr1 = highs - lows
+            tr2 = (highs - prev_close_s).abs()
+            tr3 = (lows - prev_close_s).abs()
+            true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+            atr14_series = true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+
+            # Stochastic RSI(14,14,3,3) for Strategy U
+            rsi14_min = rsi14_series.rolling(window=14, min_periods=14).min()
+            rsi14_max = rsi14_series.rolling(window=14, min_periods=14).max()
+            stoch_rsi_raw = (rsi14_series - rsi14_min) / (rsi14_max - rsi14_min)
+            stoch_rsi_raw = stoch_rsi_raw.fillna(0.5)
+            stoch_k_series = stoch_rsi_raw.rolling(window=3, min_periods=3).mean() * 100
+            stoch_d_series = stoch_k_series.rolling(window=3, min_periods=3).mean()
 
             # Backtest indices (need 200+ bars warmup)
             bt_indices = [i for i, ts in enumerate(daily.index)
@@ -1586,6 +2093,9 @@ class MomentumBacktester:
                 "weekly_support": weekly_support_series,
                 "weekly_low_stop": weekly_low_stop_series,
                 "rsi2": rsi2_series,
+                "rsi3": rsi3_series,
+                "rsi14": rsi14_series,
+                "cci20": cci20_series,
                 "volume": vol_series,
                 "vol_avg20": vol_avg20,
                 "avwap": avwap_series,
@@ -1593,6 +2103,16 @@ class MomentumBacktester:
                 "fib_618": fib_618_series,
                 "fib_786": fib_786_series,
                 "fib_ext_121": fib_ext_121_series,
+                "high_20d": high_20d,
+                "sma200": sma200_series,
+                "sma5": sma5_series,
+                "macd_line": macd_line_series,
+                "macd_signal": macd_signal_series,
+                "atr14": atr14_series,
+                "stoch_k": stoch_k_series,
+                "stoch_d": stoch_d_series,
+                "ema5": ema5_series,
+                "ema8": ema8_series,
                 "ema10": ema10_series,
                 "ema20": ema20_series,
                 "ema50": ema50_series,
@@ -1615,9 +2135,20 @@ class MomentumBacktester:
 
         # Build Nifty close lookup by date (for SL filter & 3-day low weakness)
         nifty_close_by_date = {}  # date -> close price
+        nifty_above_ema200_by_date = {}  # date -> bool (Nifty > EMA200)
+        nifty_cci_by_date = {}  # date -> CCI(20) value (for Strategy N regime filter)
         if not nifty_raw.empty:
+            nifty_ema200 = nifty_raw["Close"].ewm(span=200, adjust=False).mean()
+            # Nifty CCI(20)
+            nifty_tp = (nifty_raw["High"] + nifty_raw["Low"] + nifty_raw["Close"]) / 3
+            nifty_sma_tp = nifty_tp.rolling(window=20, min_periods=20).mean()
+            nifty_mean_dev = nifty_tp.rolling(window=20, min_periods=20).apply(
+                lambda x: np.mean(np.abs(x - x.mean())), raw=True)
+            nifty_cci_series = (nifty_tp - nifty_sma_tp) / (0.015 * nifty_mean_dev)
             for ts, row in nifty_raw.iterrows():
                 nifty_close_by_date[ts.date()] = float(row["Close"])
+                nifty_above_ema200_by_date[ts.date()] = float(row["Close"]) > float(nifty_ema200.loc[ts])
+                nifty_cci_by_date[ts.date()] = float(nifty_cci_series.loc[ts]) if not pd.isna(nifty_cci_series.loc[ts]) else 0.0
 
         # Build per-stock date->index mapping
         date_to_idx = {}  # ticker -> {date: iloc_index}
@@ -1671,7 +2202,7 @@ class MomentumBacktester:
                 exited = False
 
                 if pos["strategy"] == "J":
-                    # J exits (close mode): support break, +5% partial, +10% remaining
+                    # J exits (close mode): CCI exit, support break, +5% partial, +10% remaining
                     entry_stop = pos["entry_stop_j"]
                     t1 = pos["entry_price"] * 1.05
                     t2 = pos["entry_price"] * 1.10
@@ -1871,6 +2402,140 @@ class MomentumBacktester:
                                             pos, pos["remaining_shares"], day, price, "BELOW_3DAY_LOW"))
                                     exited = True
 
+                elif pos["strategy"] == "N":
+                    cci_val = float(ind["cci20"].iloc[i]) if not pd.isna(ind["cci20"].iloc[i]) else 0.0
+                    # N hard stop-loss: 3%
+                    if price <= pos["entry_price"] * 0.97:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "HARD_SL_3PCT"))
+                        exited = True
+                    # N partial: +5% → sell 50%
+                    if not exited and not pos["partial_exit_done"] and price >= pos["entry_price"] * 1.05:
+                        half = pos["shares"] // 2
+                        if half > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, half, day, price, "PARTIAL_5PCT"))
+                            pos["remaining_shares"] = pos["shares"] - half
+                            pos["partial_exit_done"] = True
+                    # N CCI exit: CCI < -100 AND red candle
+                    if not exited and cci_val < -100 and price < open_price:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "CCI_RED_EXIT"))
+                        exited = True
+
+                elif pos["strategy"] == "O":
+                    # O exits: 3% hard SL, Close > EMA(5)
+                    ema5_val = float(ind["ema5"].iloc[i]) if not pd.isna(ind["ema5"].iloc[i]) else None
+                    if price <= pos["entry_price"] * 0.97:
+                        trades.append(self._make_portfolio_trade(
+                            pos, pos["shares"], day, price, "HARD_SL_3PCT"))
+                        exited = True
+                    if not exited and ema5_val is not None and price > ema5_val:
+                        trades.append(self._make_portfolio_trade(
+                            pos, pos["shares"], day, price, "EMA5_EXIT"))
+                        exited = True
+
+                elif pos["strategy"] == "R":
+                    # R exits: 5% hard SL, +5% partial, RSI(14) < 50 remaining
+                    rsi14_val = float(ind["rsi14"].iloc[i]) if not pd.isna(ind["rsi14"].iloc[i]) else 50.0
+                    if price <= pos["entry_price"] * 0.95:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "HARD_SL_5PCT"))
+                        exited = True
+                    if not exited and not pos["partial_exit_done"] and price >= pos["entry_price"] * 1.05:
+                        half = pos["shares"] // 2
+                        if half > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, half, day, price, "PARTIAL_5PCT"))
+                            pos["remaining_shares"] = pos["shares"] - half
+                            pos["partial_exit_done"] = True
+                    if not exited and rsi14_val < 50:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "RSI14_EXIT"))
+                        exited = True
+
+                elif pos["strategy"] == "S":
+                    # S exits: 5% hard SL, +5% partial, MACD cross down OR RSI(14) < 40
+                    rsi14_val = float(ind["rsi14"].iloc[i]) if not pd.isna(ind["rsi14"].iloc[i]) else 50.0
+                    macd_val = float(ind["macd_line"].iloc[i]) if not pd.isna(ind["macd_line"].iloc[i]) else 0.0
+                    macd_sig = float(ind["macd_signal"].iloc[i]) if not pd.isna(ind["macd_signal"].iloc[i]) else 0.0
+                    macd_prev_val = float(ind["macd_line"].iloc[i - 1]) if i > 0 and not pd.isna(ind["macd_line"].iloc[i - 1]) else 0.0
+                    macd_sig_prev = float(ind["macd_signal"].iloc[i - 1]) if i > 0 and not pd.isna(ind["macd_signal"].iloc[i - 1]) else 0.0
+                    macd_cross_dn = (macd_prev_val >= macd_sig_prev and macd_val < macd_sig)
+
+                    if price <= pos["entry_price"] * 0.95:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "HARD_SL_5PCT"))
+                        exited = True
+                    if not exited and not pos["partial_exit_done"] and price >= pos["entry_price"] * 1.05:
+                        half = pos["shares"] // 2
+                        if half > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, half, day, price, "PARTIAL_5PCT"))
+                            pos["remaining_shares"] = pos["shares"] - half
+                            pos["partial_exit_done"] = True
+                    if not exited and (macd_cross_dn or rsi14_val < 40):
+                        reason = "MACD_CROSS_DOWN" if macd_cross_dn else "RSI14_EXIT"
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, reason))
+                        exited = True
+
+                elif pos["strategy"] == "T":
+                    # T exits: 5% hard SL, +5% partial, price >= upper Keltner remaining
+                    ema20_val = float(ind["ema20"].iloc[i])
+                    atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
+                    upper_keltner = ema20_val + 2 * atr14_val
+
+                    if price <= pos["entry_price"] * 0.95:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "HARD_SL_5PCT"))
+                        exited = True
+                    if not exited and not pos["partial_exit_done"] and price >= pos["entry_price"] * 1.05:
+                        half = pos["shares"] // 2
+                        if half > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, half, day, price, "PARTIAL_5PCT"))
+                            pos["remaining_shares"] = pos["shares"] - half
+                            pos["partial_exit_done"] = True
+                    if not exited and price >= upper_keltner:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "KELTNER_UPPER_EXIT"))
+                        exited = True
+
+                elif pos["strategy"] == "U":
+                    # U exits: 5% hard SL, +5% partial, StochRSI %K crosses below %D both > 70
+                    stk = float(ind["stoch_k"].iloc[i]) if not pd.isna(ind["stoch_k"].iloc[i]) else 50.0
+                    std = float(ind["stoch_d"].iloc[i]) if not pd.isna(ind["stoch_d"].iloc[i]) else 50.0
+                    stk_prev = float(ind["stoch_k"].iloc[i - 1]) if i > 0 and not pd.isna(ind["stoch_k"].iloc[i - 1]) else 50.0
+                    std_prev = float(ind["stoch_d"].iloc[i - 1]) if i > 0 and not pd.isna(ind["stoch_d"].iloc[i - 1]) else 50.0
+                    k_cross_dn = (stk_prev >= std_prev and stk < std)
+
+                    if price <= pos["entry_price"] * 0.95:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "HARD_SL_5PCT"))
+                        exited = True
+                    if not exited and not pos["partial_exit_done"] and price >= pos["entry_price"] * 1.05:
+                        half = pos["shares"] // 2
+                        if half > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, half, day, price, "PARTIAL_5PCT"))
+                            pos["remaining_shares"] = pos["shares"] - half
+                            pos["partial_exit_done"] = True
+                    if not exited and k_cross_dn and stk > 70 and std > 70:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "STOCHRSI_EXIT"))
+                        exited = True
+
                 if not exited:
                     still_open.append(pos)
 
@@ -1892,6 +2557,7 @@ class MomentumBacktester:
                 low = float(ind["lows"].iloc[i])
                 high = float(ind["highs"].iloc[i])
                 rsi2 = float(ind["rsi2"].iloc[i])
+                rsi3 = float(ind["rsi3"].iloc[i])
                 ibs = float(ind["ibs"].iloc[i])
                 is_green = price > open_price
 
@@ -1907,15 +2573,17 @@ class MomentumBacktester:
                         wls = float(w_low_stop.iloc[i]) if w_low_stop is not None and not pd.isna(w_low_stop.iloc[i]) else ws
                         if ws > 0:
                             close_near = ((price - ws) / ws) * 100
+                            cci_val = float(ind["cci20"].iloc[i]) if not pd.isna(ind["cci20"].iloc[i]) else 0.0
                             if (close_near >= 0 and close_near <= 3.0
-                                    and ibs > 0.5 and is_green):
+                                    and ibs > 0.5 and is_green
+                                    and cci_val > -100):
                                 signals.append({
                                     "symbol": ticker,
                                     "strategy": "J",
                                     "price": price,
                                     "ibs": ibs,
                                     "entry_support_j": ws,
-                                    "entry_stop_j": wls,  # Stop at 26-week weekly low
+                                    "entry_stop_j": wls,
                                 })
 
                 # Strategy K entry: RS > 0, prev RSI(2) < 20, today RSI(2) >= 20, Close > EMA(50)
@@ -2014,6 +2682,105 @@ class MomentumBacktester:
                                     "q_fib_target": f121,
                                 })
 
+                # Strategy N entry: CCI(20) crosses above 100, Nifty CCI > 0
+                if "N" in strategies:
+                    cci_val = float(ind["cci20"].iloc[i]) if not pd.isna(ind["cci20"].iloc[i]) else 0.0
+                    cci_prev = float(ind["cci20"].iloc[i-1]) if i > 0 and not pd.isna(ind["cci20"].iloc[i-1]) else 0.0
+                    nifty_cci = nifty_cci_by_date.get(day, 0.0)
+                    if cci_val > 100 and cci_prev <= 100 and is_green:
+                        rs_val = float(ind["rs_spread"].iloc[i]) if ind["rs_spread"] is not None and not pd.isna(ind["rs_spread"].iloc[i]) else 0.0
+                        already_n = any(s["symbol"] == ticker and s["strategy"] == "N" for s in signals)
+                        if not already_n:
+                            signals.append({
+                                "symbol": ticker,
+                                "strategy": "N",
+                                "price": price,
+                                "rs_spread": rs_val,
+                            })
+
+                # Strategy O entry: Price > SMA(200) AND RSI(2) < 5
+                if "O" in strategies:
+                    sma200_val = float(ind["sma200"].iloc[i]) if not pd.isna(ind["sma200"].iloc[i]) else None
+                    if sma200_val is not None and rsi2 < 5 and price > sma200_val:
+                        already = any(s["symbol"] == ticker for s in signals)
+                        if not already:
+                            signals.append({
+                                "symbol": ticker,
+                                "strategy": "O",
+                                "price": price,
+                            })
+
+                # Strategy R entry: RSI(14) crosses above 60 AND Price > EMA(200) AND green candle
+                if "R" in strategies:
+                    rsi14_val = float(ind["rsi14"].iloc[i]) if not pd.isna(ind["rsi14"].iloc[i]) else 50.0
+                    rsi14_prev = float(ind["rsi14"].iloc[i - 1]) if i > 0 and not pd.isna(ind["rsi14"].iloc[i - 1]) else 50.0
+                    ema200_val = float(ind["ema200"].iloc[i])
+                    if rsi14_prev <= 60 and rsi14_val > 60 and price > ema200_val and is_green:
+                        already = any(s["symbol"] == ticker for s in signals)
+                        if not already:
+                            signals.append({
+                                "symbol": ticker,
+                                "strategy": "R",
+                                "price": price,
+                            })
+
+                # Strategy S entry: MACD crosses signal above 0 AND RSI(14) > 50 AND green candle
+                if "S" in strategies:
+                    rsi14_val = float(ind["rsi14"].iloc[i]) if not pd.isna(ind["rsi14"].iloc[i]) else 50.0
+                    macd_val = float(ind["macd_line"].iloc[i]) if not pd.isna(ind["macd_line"].iloc[i]) else 0.0
+                    macd_sig_val = float(ind["macd_signal"].iloc[i]) if not pd.isna(ind["macd_signal"].iloc[i]) else 0.0
+                    macd_prev_val = float(ind["macd_line"].iloc[i - 1]) if i > 0 and not pd.isna(ind["macd_line"].iloc[i - 1]) else 0.0
+                    macd_sig_prev = float(ind["macd_signal"].iloc[i - 1]) if i > 0 and not pd.isna(ind["macd_signal"].iloc[i - 1]) else 0.0
+                    macd_cross_up = (macd_prev_val <= macd_sig_prev and macd_val > macd_sig_val)
+                    if macd_cross_up and macd_val > 0 and rsi14_val > 50 and is_green:
+                        already = any(s["symbol"] == ticker for s in signals)
+                        if not already:
+                            signals.append({
+                                "symbol": ticker,
+                                "strategy": "S",
+                                "price": price,
+                            })
+
+                # Strategy T entry: Price near EMA(20) (within 1%) AND was at upper Keltner in last 10 bars AND green
+                if "T" in strategies:
+                    ema20_val = float(ind["ema20"].iloc[i])
+                    atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
+                    if atr14_val > 0:
+                        near_ema20 = abs(price - ema20_val) / ema20_val <= 0.01
+                        was_at_upper = False
+                        for lb_j in range(max(0, i - 10), i):
+                            past_high = float(ind["highs"].iloc[lb_j])
+                            past_ema20 = float(ind["ema20"].iloc[lb_j])
+                            past_atr14 = float(ind["atr14"].iloc[lb_j]) if not pd.isna(ind["atr14"].iloc[lb_j]) else 0.0
+                            if past_high >= past_ema20 + 2 * past_atr14:
+                                was_at_upper = True
+                                break
+                        if near_ema20 and was_at_upper and is_green:
+                            already = any(s["symbol"] == ticker for s in signals)
+                            if not already:
+                                signals.append({
+                                    "symbol": ticker,
+                                    "strategy": "T",
+                                    "price": price,
+                                })
+
+                # Strategy U entry: StochRSI %K crosses above %D, both < 30 AND Price > EMA(200)
+                if "U" in strategies:
+                    stk = float(ind["stoch_k"].iloc[i]) if not pd.isna(ind["stoch_k"].iloc[i]) else 50.0
+                    std = float(ind["stoch_d"].iloc[i]) if not pd.isna(ind["stoch_d"].iloc[i]) else 50.0
+                    stk_prev = float(ind["stoch_k"].iloc[i - 1]) if i > 0 and not pd.isna(ind["stoch_k"].iloc[i - 1]) else 50.0
+                    std_prev = float(ind["stoch_d"].iloc[i - 1]) if i > 0 and not pd.isna(ind["stoch_d"].iloc[i - 1]) else 50.0
+                    ema200_val = float(ind["ema200"].iloc[i])
+                    k_cross_up = (stk_prev <= std_prev and stk > std)
+                    if k_cross_up and stk < 30 and std < 30 and price > ema200_val:
+                        already = any(s["symbol"] == ticker for s in signals)
+                        if not already:
+                            signals.append({
+                                "symbol": ticker,
+                                "strategy": "U",
+                                "price": price,
+                            })
+
             total_signals += len(signals)
 
             # === 3. Allocate capital (max entries_per_day) ===
@@ -2044,6 +2811,8 @@ class MomentumBacktester:
                         elif sig["strategy"] == "K":
                             pos["entry_stop_j"] = 0
                             pos["entry_support_j"] = 0
+                            pos["nifty_at_entry"] = nifty_close_by_date.get(day, 0.0)
+                        elif sig["strategy"] == "N":
                             pos["nifty_at_entry"] = nifty_close_by_date.get(day, 0.0)
                         elif sig["strategy"] == "Q":
                             pos["q_fib_stop"] = sig["q_fib_stop"]
@@ -2084,7 +2853,7 @@ class MomentumBacktester:
         effective_capital = max_positions_used * PER_STOCK if max_positions_used > 0 else TOTAL_CAPITAL
         summary = self._calculate_summary(trades, effective_capital)
 
-        strat_labels = {"J": "J(3:15)", "K": "K(3:15)", "L": "L(Pure RS)", "M": "M(EMA 10/20)", "P": "P(AVWAP)", "Q": "Q(Fib 61.8)"}
+        strat_labels = {"J": "J(3:15)", "K": "K(3:15)", "L": "L(Pure RS)", "M": "M(EMA 10/20)", "N": "N(CCI)", "P": "P(AVWAP)", "Q": "Q(Fib 61.8)", "O": "O(Connors RSI2)", "R": "R(RSI Mom)", "S": "S(MACD+RSI)", "T": "T(Keltner)", "U": "U(StochRSI)"}
         strat_label = " + ".join(strat_labels.get(s, s) for s in strategies)
 
         return {
@@ -2116,7 +2885,7 @@ class MomentumBacktester:
         trade["strategy"] = pos["strategy"]
         return trade
 
-    def run_all_stocks(self, period_days, capital=100000, progress_callback=None, universe=50):
+    def run_all_stocks(self, period_days, capital=100000, progress_callback=None, universe=50, end_date=None):
         """Run all strategy variants across stocks (Nifty 50 or 100)."""
         from data.momentum_engine import NIFTY_50_TICKERS
 
@@ -2134,10 +2903,10 @@ class MomentumBacktester:
 
             # Fetch data ONCE per stock
             nse_symbol = f"{ticker}.NS"
-            end_date = datetime.now()
-            daily_start = end_date - timedelta(days=period_days + 500)
+            _end = end_date or datetime.now()
+            daily_start = _end - timedelta(days=period_days + 500)
             try:
-                daily = yf.Ticker(nse_symbol).history(start=daily_start, end=end_date)
+                daily = yf.Ticker(nse_symbol).history(start=daily_start, end=_end)
             except Exception:
                 daily = pd.DataFrame()
 
@@ -2146,7 +2915,7 @@ class MomentumBacktester:
             for strat, exit_tgt, label in BATCH_VARIANTS:
                 result = self.run(ticker, period_days, strategy=strat,
                                   capital=capital, exit_target=exit_tgt,
-                                  _daily_data=daily)
+                                  _daily_data=daily, end_date=_end)
                 if "error" not in result:
                     row["results"][label] = {
                         "total_pnl": result["summary"]["total_pnl"],

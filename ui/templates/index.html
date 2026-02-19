@@ -992,6 +992,12 @@
                         <option value="M">Strategy M — EMA 10/20</option>
                         <option value="P">Strategy P — AVWAP</option>
                         <option value="Q">Strategy Q — Fib 61.8%</option>
+                        <option value="N">Strategy N — CCI momentum</option>
+                        <option value="O">Strategy O — Connors RSI(2)</option>
+                        <option value="R">Strategy R — RSI momentum</option>
+                        <option value="S">Strategy S — MACD + RSI</option>
+                        <option value="T">Strategy T — Keltner pullback</option>
+                        <option value="U">Strategy U — Stochastic RSI</option>
                     </select>
                     <select class="backtest-select hidden" id="backtest-exit-ema">
                         <option value="5">Profit target: EMA(5)</option>
@@ -1053,13 +1059,14 @@
                         <option value="ULTRACEMCO">ULTRACEMCO</option>
                         <option value="WIPRO">WIPRO</option>
                     </select>
-                    <select class="backtest-select" id="backtest-period">
-                        <option value="30">1 Month</option>
-                        <option value="90">3 Months</option>
-                        <option value="180">6 Months</option>
-                        <option value="365">1 Year</option>
-                        <option value="730">2 Years</option>
-                    </select>
+                    <div style="display:flex; gap:4px; align-items:center; margin:4px 0;">
+                        <label style="font-size:11px; color:var(--text-secondary); width:32px;">From</label>
+                        <input type="date" class="backtest-select" id="backtest-from" style="flex:1;">
+                    </div>
+                    <div style="display:flex; gap:4px; align-items:center; margin:4px 0;">
+                        <label style="font-size:11px; color:var(--text-secondary); width:32px;">To</label>
+                        <input type="date" class="backtest-select" id="backtest-to" style="flex:1;">
+                    </div>
                     <button class="btn btn-backtest" id="run-backtest-btn" onclick="runBacktest()">Run Backtest</button>
                     <div style="margin: 8px 0; height: 1px; background: var(--border-color);"></div>
                     <div class="section-title">Batch</div>
@@ -1081,13 +1088,22 @@
                         <option value="500000">5L / trade</option>
                     </select>
                     <select class="backtest-select" id="portfolio-strategy">
-                        <option value="JK">J + K (Both)</option>
+                        <option value="JTU">J + T + U</option>
+                        <option value="JT">J + T</option>
+                        <option value="JK">J + K</option>
+                        <option value="JKN">J + K + N</option>
                         <option value="J">J: Weekly Support</option>
                         <option value="K">K: RS Trending Dip</option>
+                        <option value="N">N: CCI Momentum</option>
                         <option value="L">L: Pure RS</option>
                         <option value="M">M: EMA 10/20</option>
                         <option value="P">P: AVWAP</option>
                         <option value="Q">Q: Fib 61.8%</option>
+                        <option value="O">O: Connors RSI(2)</option>
+                        <option value="R">R: RSI Momentum</option>
+                        <option value="S">S: MACD + RSI</option>
+                        <option value="T">T: Keltner Pullback</option>
+                        <option value="U">U: Stochastic RSI</option>
                     </select>
                     <select class="backtest-select" id="portfolio-entries-per-day">
                         <option value="1">1 trade / day</option>
@@ -1336,6 +1352,13 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Set default backtest date range (last 1 year)
+            const today = new Date();
+            const oneYearAgo = new Date(today);
+            oneYearAgo.setFullYear(today.getFullYear() - 1);
+            document.getElementById('backtest-to').value = today.toISOString().split('T')[0];
+            document.getElementById('backtest-from').value = oneYearAgo.toISOString().split('T')[0];
+
             loadSettings();
             checkConnection();
             loadData();
@@ -2235,7 +2258,8 @@
 
         async function runBacktest() {
             const symbol = document.getElementById('backtest-symbol').value;
-            const periodDays = parseInt(document.getElementById('backtest-period').value);
+            const fromDate = document.getElementById('backtest-from').value;
+            const toDate = document.getElementById('backtest-to').value;
             let rawStrategy = document.getElementById('backtest-strategy').value;
             let strategy = rawStrategy;
             let exitEma = null;
@@ -2270,7 +2294,7 @@
             `;
 
             try {
-                const payload = { symbol: symbol, period_days: periodDays, strategy: strategy, exit_ema: exitEma };
+                const payload = { symbol: symbol, from_date: fromDate, to_date: toDate, strategy: strategy, exit_ema: exitEma };
                 const res = await fetch('/api/momentum/backtest', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2303,7 +2327,7 @@
             portfolioResultData = null;
             document.getElementById('portfolio-download-btn').classList.add('hidden');
             const s = data.summary;
-            const periodLabel = document.getElementById('backtest-period').selectedOptions[0].text;
+            const periodLabel = document.getElementById('backtest-from').value + ' to ' + document.getElementById('backtest-to').value;
             let stratLabel;
             const stratLabels = {'D': 'Strategy D (RSI reversal)', 'E': 'Strategy E (EMA pullback)', 'G': 'Strategy G (IBS extreme)', 'I': 'Strategy I (6m support bounce)', 'J': 'Strategy J (weekly support)', 'K': 'Strategy K (RS trending)', 'L': 'Strategy L (Pure RS)', 'M': 'Strategy M (EMA 10/20)', 'P': 'Strategy P (AVWAP)', 'Q': 'Strategy Q (Fib 61.8%)'};
             stratLabel = stratLabels[data.strategy] || data.strategy;
@@ -2426,8 +2450,9 @@
         // ============ Batch Backtest ============
 
         async function runBatchBacktest(universe = 50) {
-            const periodDays = parseInt(document.getElementById('backtest-period').value);
-            const periodLabel = document.getElementById('backtest-period').selectedOptions[0].text;
+            const fromDate = document.getElementById('backtest-from').value;
+            const toDate = document.getElementById('backtest-to').value;
+            const periodLabel = document.getElementById('backtest-from').value + ' to ' + document.getElementById('backtest-to').value;
             const universeLabel = `Nifty ${universe}`;
 
             const btnId = universe === 100 ? 'run-batch100-btn' : 'run-batch-btn';
@@ -2471,7 +2496,7 @@
                 const res = await fetch('/api/momentum/backtest-all', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ period_days: periodDays, universe: universe })
+                    body: JSON.stringify({ from_date: fromDate, to_date: toDate, universe: universe })
                 });
                 const data = await res.json();
                 clearInterval(progressInterval);
@@ -2567,13 +2592,14 @@
         // ============ Portfolio Backtest (10L) ============
 
         async function runPortfolioBacktest(universe = 50) {
-            const periodDays = parseInt(document.getElementById('backtest-period').value);
-            const periodLabel = document.getElementById('backtest-period').selectedOptions[0].text;
+            const fromDate = document.getElementById('backtest-from').value;
+            const toDate = document.getElementById('backtest-to').value;
+            const periodLabel = document.getElementById('backtest-from').value + ' to ' + document.getElementById('backtest-to').value;
             const universeLabel = `Nifty ${universe}`;
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'JK': ['J','K']};
+            const stratMap = {'JTU': ['J','T','U'], 'JT': ['J','T'], 'JK': ['J','K'], 'JKN': ['J','K','N']};
             const strategies = stratMap[stratVal] || [stratVal];
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
 
@@ -2618,7 +2644,7 @@
                 const res = await fetch('/api/momentum/backtest-portfolio', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ period_days: periodDays, universe: universe,
+                    body: JSON.stringify({ from_date: fromDate, to_date: toDate, universe: universe,
                         capital_lakhs: capitalLakhs, per_stock: perStock, strategies: strategies,
                         entries_per_day: entriesPerDay })
                 });
