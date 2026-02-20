@@ -20,6 +20,7 @@ from config.settings import (
     LIVE_SIGNALS_CACHE_FILE, LIVE_POSITIONS_FILE, LIVE_SIGNALS_HISTORY_FILE,
     get_cache_ttl, load_config
 )
+from nifty500_tickers import NIFTY_500_TICKERS
 
 # Actual Nifty 50 constituents
 NIFTY_50_TICKERS = [
@@ -60,11 +61,16 @@ def _calculate_rsi_series(closes: pd.Series, period: int) -> pd.Series:
 
 
 class LiveSignalsEngine:
-    """Scans J/K/N/O/R/S/T/U entry signals, manages positions, checks exit conditions."""
+    """Scans J/K/N/O/R/S/T/U/V entry signals, manages positions, checks exit conditions."""
 
-    def __init__(self):
+    def __init__(self, user_id=None):
+        self.user_id = user_id
         self.cache_file = LIVE_SIGNALS_CACHE_FILE
-        self.positions_file = LIVE_POSITIONS_FILE
+        if user_id:
+            data_dir = os.path.dirname(LIVE_POSITIONS_FILE)
+            self.positions_file = os.path.join(data_dir, f"live_positions_{user_id}.json")
+        else:
+            self.positions_file = LIVE_POSITIONS_FILE
         self._ensure_dirs()
 
     def _ensure_dirs(self):
@@ -85,8 +91,13 @@ class LiveSignalsEngine:
 
         if universe <= 50:
             tickers = NIFTY_50_TICKERS
-        else:
+        elif universe <= 100:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
+        else:
+            # Midcap 150: Nifty 500 tickers 101-250 (by market cap ranking)
+            nifty100_set = set(NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS)
+            midcap = [t for t in NIFTY_500_TICKERS if t not in nifty100_set][:150]
+            tickers = midcap
 
         total = len(tickers)
         end_date = datetime.now()
@@ -116,6 +127,7 @@ class LiveSignalsEngine:
         s_signals = []
         t_signals = []
         u_signals = []
+        v_signals = []
 
         for idx, ticker in enumerate(tickers):
             if progress_callback:
@@ -373,6 +385,26 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
+            # Strategy V: Donchian Breakout with Volume
+            try:
+                high_20d = float(highs.rolling(window=20, min_periods=20).max().shift(1).iloc[i])
+                ema200_val = float(closes.ewm(span=200, adjust=False).mean().iloc[i])
+                vol_today = float(volumes.iloc[i])
+                vol_avg20 = float(volumes.rolling(
+                    window=20, min_periods=20).mean().iloc[i]) if len(volumes) >= 20 else 0.0
+                vol_ratio = round(vol_today / vol_avg20, 2) if vol_avg20 > 0 else 0.0
+                if (not np.isnan(high_20d) and price > high_20d
+                        and vol_avg20 > 0 and vol_today > 1.5 * vol_avg20
+                        and price > ema200_val and is_green):
+                    v_signals.append({
+                        "ticker": ticker,
+                        "price": round(price, 2),
+                        "high_20d": round(high_20d, 2),
+                        "vol_ratio": vol_ratio,
+                    })
+            except Exception:
+                pass
+
         # Sort N signals by RS spread (strongest outperformer first)
         n_signals.sort(key=lambda s: s.get("rs_pct", 0), reverse=True)
 
@@ -385,6 +417,7 @@ class LiveSignalsEngine:
             "s_signals": s_signals,
             "t_signals": t_signals,
             "u_signals": u_signals,
+            "v_signals": v_signals,
             "last_updated": datetime.now().isoformat(),
             "universe": universe,
         }
@@ -392,7 +425,7 @@ class LiveSignalsEngine:
         self._save_cache(result)
         self._append_signals_history(j_signals, k_signals, n_signals,
                                      o_signals, r_signals, s_signals,
-                                     t_signals, u_signals)
+                                     t_signals, u_signals, v_signals)
         return result
 
     def get_cache_age_minutes(self):
@@ -422,7 +455,7 @@ class LiveSignalsEngine:
 
     def _append_signals_history(self, j_signals, k_signals, n_signals=None,
                                o_signals=None, r_signals=None, s_signals=None,
-                               t_signals=None, u_signals=None):
+                               t_signals=None, u_signals=None, v_signals=None):
         """Append today's scan results to the history CSV."""
         history_file = LIVE_SIGNALS_HISTORY_FILE
         scan_date = datetime.now().strftime("%Y-%m-%d")
@@ -495,6 +528,13 @@ class LiveSignalsEngine:
                     "", "", "",
                 ])
 
+            for s in (v_signals or []):
+                writer.writerow([
+                    scan_date, scan_time, "V", s["ticker"], s["price"],
+                    "", "", "",
+                    "", "", s.get("vol_ratio", ""),
+                ])
+
     # ==================== Position Management ====================
 
     def _load_positions_data(self):
@@ -531,6 +571,8 @@ class LiveSignalsEngine:
             "remaining_shares": shares,
             "metadata": metadata or {},
         }
+        if self.user_id:
+            pos["user_id"] = self.user_id
 
         data = self._load_positions_data()
         data["active"].append(pos)
@@ -863,6 +905,23 @@ class LiveSignalsEngine:
                     sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
                     exit_signals.append(self._make_exit_signal(
                         pos, current_price, pnl_pct, "STOCHRSI_EXIT", sz))
+
+            elif pos["strategy"] == "V":
+                # V: 5% hard SL, +5% partial, Close < 10-day low trailing exit
+                if current_price <= entry_price * 0.95:
+                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "HARD_SL_5PCT", sz))
+                    continue
+                low_10d = float(lows.rolling(window=10, min_periods=10).min().shift(1).iloc[-1])
+                if not pos["partial_exit_done"] and current_price >= entry_price * 1.05:
+                    half = pos["shares"] // 2
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "5PCT_PARTIAL", half))
+                elif not np.isnan(low_10d) and low_10d > 0 and current_price < low_10d:
+                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "DONCHIAN_LOW_EXIT", sz))
 
         return exit_signals
 

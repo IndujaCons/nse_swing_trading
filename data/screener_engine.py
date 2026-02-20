@@ -1,6 +1,6 @@
 """
-RS/EMA Screener Engine
-Calculates relative strength and EMA positions for Nifty 500 stocks
+Watchlist Engine
+Calculates relative strength and EMA positions for Nifty 50 / Next 50 / Midcap 150 stocks
 """
 
 import json
@@ -16,10 +16,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config.settings import (
     NIFTY_50_SYMBOL, SCREENER_CACHE_FILE,
-    get_stock_universe, get_rs_period, get_ema_period, get_cache_ttl
+    get_rs_period, get_ema_period, get_cache_ttl
 )
 from nifty500_tickers import NIFTY_500_TICKERS
-from sector_mapping import STOCK_SECTOR_MAP
 
 # Sectoral Indices (Yahoo Finance symbols)
 SECTORAL_INDICES = {
@@ -42,14 +41,43 @@ SECTORAL_INDICES = {
     "NIFTY MNC": "^CNXMNC",
     "NIFTY PSE": "^CNXPSE",
 }
-from data.state_tracker import StateTracker
+
+# Actual Nifty 50 constituents
+NIFTY_50_TICKERS = [
+    "ADANIENT", "ADANIPORTS", "APOLLOHOSP", "ASIANPAINT", "AXISBANK",
+    "BAJAJ-AUTO", "BAJFINANCE", "BAJAJFINSV", "BEL", "BPCL",
+    "BHARTIARTL", "BRITANNIA", "CIPLA", "COALINDIA", "DRREDDY",
+    "EICHERMOT", "ETERNAL", "GRASIM", "HCLTECH", "HDFCBANK",
+    "HDFCLIFE", "HEROMOTOCO", "HINDALCO", "HINDUNILVR", "ICICIBANK",
+    "ITC", "INDUSINDBK", "INFY", "JSWSTEEL", "KOTAKBANK",
+    "LT", "M&M", "MARUTI", "NTPC", "NESTLEIND",
+    "ONGC", "PIDILITIND", "POWERGRID", "RELIANCE", "SBILIFE",
+    "SBIN", "SUNPHARMA", "TCS", "TATACONSUM",
+    "TATASTEEL", "TECHM", "TITAN", "ULTRACEMCO", "WIPRO",
+]
+
+NIFTY_NEXT50_TICKERS = [
+    "ABB", "ADANIENSOL", "ADANIGREEN", "ADANIPOWER", "AMBUJACEM",
+    "ATGL", "AUROPHARMA", "BAJAJHLDNG", "BANKBARODA", "BHEL",
+    "BOSCHLTD", "CANBK", "CHOLAFIN", "COLPAL", "DABUR",
+    "DLF", "GAIL", "GODREJCP", "HAL", "HAVELLS",
+    "ICICIPRULI", "ICICIGI", "INDIGO", "INDUSTOWER", "IOC",
+    "IRFC", "JIOFIN", "JSWENERGY", "LICI", "LODHA",
+    "LUPIN", "MANKIND", "MARICO", "MOTHERSON", "NAUKRI",
+    "NHPC", "PFC", "PNB", "POLYCAB", "RECLTD",
+    "SHREECEM", "SIEMENS", "SRF", "TATAPOWER", "TORNTPHARM",
+    "TRENT", "TVSMOTOR", "UNITDSPR", "VEDL", "ZOMATO",
+]
+
+# Midcap 150: Nifty 500 stocks outside the top 100
+_nifty100_set = set(NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS)
+MIDCAP_150_TICKERS = [t for t in NIFTY_500_TICKERS if t not in _nifty100_set][:150]
 
 
 class ScreenerEngine:
-    """Core engine for RS screening calculations."""
+    """Core engine for watchlist RS calculations."""
 
     def __init__(self):
-        self.state_tracker = StateTracker()
         self.cache_file = SCREENER_CACHE_FILE
         self._ensure_cache_dir()
 
@@ -82,16 +110,13 @@ class ScreenerEngine:
 
     def _calculate_ema_data(self, prices: pd.DataFrame, period: int) -> Dict:
         """
-        Calculate EMA and related data including yesterday's position.
+        Calculate EMA and related data.
 
         Returns dict with:
             - current_price
             - ema_value
             - price_vs_ema_percent
-            - today_above_ema
-            - yesterday_above_ema
-            - yesterday_close
-            - yesterday_ema
+            - pct_change (today vs yesterday)
         """
         if len(prices) < period + 1:
             return None
@@ -103,21 +128,16 @@ class ScreenerEngine:
         current_price = close_prices.iloc[-1]
         current_ema = ema.iloc[-1]
         price_vs_ema = ((current_price - current_ema) / current_ema) * 100
-        today_above_ema = current_price > current_ema
 
-        # Yesterday's values
+        # Pct change: today vs yesterday
         yesterday_close = close_prices.iloc[-2]
-        yesterday_ema = ema.iloc[-2]
-        yesterday_above_ema = yesterday_close > yesterday_ema
+        pct_change = ((current_price - yesterday_close) / yesterday_close) * 100
 
         return {
             "current_price": float(current_price),
             "ema_value": float(current_ema),
             "price_vs_ema_percent": float(price_vs_ema),
-            "today_above_ema": bool(today_above_ema),
-            "yesterday_above_ema": bool(yesterday_above_ema),
-            "yesterday_close": float(yesterday_close),
-            "yesterday_ema": float(yesterday_ema)
+            "pct_change": float(pct_change),
         }
 
     def _is_cache_valid(self) -> bool:
@@ -155,21 +175,48 @@ class ScreenerEngine:
         with open(self.cache_file, 'w') as f:
             json.dump(cache, f)
 
+    def _scan_group(self, tickers, nifty50_return, rs_period, ema_period, progress_callback, progress_offset, total_all):
+        """Scan a group of tickers and return stock dicts + failed count."""
+        results = []
+        failed = 0
+
+        for i, ticker in enumerate(tickers):
+            nse_symbol = f"{ticker}.NS"
+
+            if progress_callback:
+                progress_callback(progress_offset + i + 1, total_all, ticker)
+
+            try:
+                stock_data = self._fetch_price_data(nse_symbol)
+                stock_return = self._calculate_return(stock_data, rs_period)
+                ema_data = self._calculate_ema_data(stock_data, ema_period)
+
+                if stock_return is None or ema_data is None:
+                    failed += 1
+                    continue
+
+                rs = stock_return - nifty50_return
+
+                results.append({
+                    "ticker": ticker,
+                    "price": round(ema_data["current_price"], 2),
+                    "pct_change": round(ema_data["pct_change"], 2),
+                    "rs": round(rs, 2),
+                    "price_vs_ema": round(ema_data["price_vs_ema_percent"], 2),
+                })
+            except Exception:
+                failed += 1
+
+        # Sort by RS descending
+        results.sort(key=lambda x: x["rs"], reverse=True)
+        return results, failed
+
     def run_screener(self, force_refresh: bool = False, progress_callback=None) -> Dict:
         """
-        Run the screener and categorize stocks.
-
-        Args:
-            force_refresh: Force refresh even if cache is valid
-            progress_callback: Optional callback for progress updates (current, total, ticker)
+        Run the watchlist screener across all 3 groups + sectoral indices.
 
         Returns:
-            Dict with categorized stocks:
-                - fresh_entries: Stocks that just crossed above EMA with RS > 0
-                - in_rs: Stocks already above EMA with RS > 0
-                - exit_signals: Stocks that just crossed below EMA
-                - nifty50_return: Index return for reference
-                - last_updated: Timestamp
+            Dict with nifty50, nifty100, midcap150, sectoral_indices lists
         """
         # Check cache first
         if not force_refresh:
@@ -177,24 +224,18 @@ class ScreenerEngine:
             if cache:
                 return cache["data"]
 
-        # Get current settings
-        stock_universe = get_stock_universe()
         rs_period = get_rs_period()
         ema_period = get_ema_period()
 
-        # Limit tickers based on universe setting
-        tickers = NIFTY_500_TICKERS[:stock_universe]
-
-        # Fetch Nifty 50 data
+        # Fetch Nifty 50 index data
         nifty50_data = self._fetch_price_data(NIFTY_50_SYMBOL)
         nifty50_return = self._calculate_return(nifty50_data, rs_period)
 
         if nifty50_return is None:
             raise RuntimeError("Could not fetch Nifty 50 data")
 
-        # Calculate sectoral indices FIRST (needed for sector strength lookup)
+        # Calculate sectoral indices
         sectoral_indices = []
-        sector_rs_lookup = {}
         for name, symbol in SECTORAL_INDICES.items():
             try:
                 index_data = self._fetch_price_data(symbol)
@@ -203,106 +244,51 @@ class ScreenerEngine:
 
                 if index_return is not None and index_ema is not None:
                     rs = index_return - nifty50_return
-                    sector_rs_lookup[name] = round(rs, 2)
                     sectoral_indices.append({
                         "ticker": name,
                         "price": round(index_ema["current_price"], 2),
-                        "ema": round(index_ema["ema_value"], 2),
+                        "pct_change": round(index_ema["pct_change"], 2),
+                        "rs": round(rs, 2),
                         "price_vs_ema": round(index_ema["price_vs_ema_percent"], 2),
-                        "stock_return": round(index_return, 2),
-                        "rs": round(rs, 2)
                     })
-            except:
+            except Exception:
                 pass
 
-        # Sort sectoral indices by RS (highest first)
         sectoral_indices.sort(key=lambda x: x["rs"], reverse=True)
 
-        fresh_entries = []
-        in_rs = []
-        exit_signals = []
-        failed_tickers = []
+        # Scan all 3 stock groups
+        total_all = len(NIFTY_50_TICKERS) + len(NIFTY_NEXT50_TICKERS) + len(MIDCAP_150_TICKERS)
+        total_failed = 0
 
-        total = len(tickers)
-        today_positions = {}
+        nifty50, f1 = self._scan_group(
+            NIFTY_50_TICKERS, nifty50_return, rs_period, ema_period,
+            progress_callback, 0, total_all)
+        total_failed += f1
 
-        for i, ticker in enumerate(tickers):
-            nse_symbol = f"{ticker}.NS"
+        nifty100, f2 = self._scan_group(
+            NIFTY_NEXT50_TICKERS, nifty50_return, rs_period, ema_period,
+            progress_callback, len(NIFTY_50_TICKERS), total_all)
+        total_failed += f2
 
-            if progress_callback:
-                progress_callback(i + 1, total, ticker)
-
-            try:
-                stock_data = self._fetch_price_data(nse_symbol)
-                stock_return = self._calculate_return(stock_data, rs_period)
-                ema_data = self._calculate_ema_data(stock_data, ema_period)
-
-                if stock_return is None or ema_data is None:
-                    failed_tickers.append(ticker)
-                    continue
-
-                rs = stock_return - nifty50_return
-
-                # Save today's position for state tracking
-                today_positions[ticker] = ema_data["today_above_ema"]
-
-                # Get sector info
-                sector_name = STOCK_SECTOR_MAP.get(ticker, None)
-                sector_rs = sector_rs_lookup.get(sector_name, None) if sector_name else None
-
-                stock_info = {
-                    "ticker": ticker,
-                    "price": round(ema_data["current_price"], 2),
-                    "ema": round(ema_data["ema_value"], 2),
-                    "price_vs_ema": round(ema_data["price_vs_ema_percent"], 2),
-                    "stock_return": round(stock_return, 2),
-                    "rs": round(rs, 2),
-                    "sector": sector_name,
-                    "sector_rs": sector_rs
-                }
-
-                today_above = ema_data["today_above_ema"]
-                yesterday_above = ema_data["yesterday_above_ema"]
-
-                # Categorize based on state transitions
-                if today_above and not yesterday_above and rs > 0:
-                    # Fresh entry: just crossed above EMA with positive RS
-                    fresh_entries.append(stock_info)
-                elif today_above and yesterday_above and rs > 0:
-                    # In RS: already above EMA with positive RS
-                    in_rs.append(stock_info)
-                elif not today_above and yesterday_above:
-                    # Exit signal: just crossed below EMA (show regardless of RS)
-                    exit_signals.append(stock_info)
-                # Stocks with RS <= 0 that are above EMA are not shown
-                # Stocks that were below and remain below are not shown
-
-            except Exception as e:
-                failed_tickers.append(ticker)
-
-        # Sort all panels by RS (highest first)
-        fresh_entries.sort(key=lambda x: x["rs"], reverse=True)
-        in_rs.sort(key=lambda x: x["rs"], reverse=True)
-        exit_signals.sort(key=lambda x: x["rs"], reverse=True)
-
-        # Save today's positions for tomorrow's comparison
-        self.state_tracker.save_state(today_positions)
+        midcap150, f3 = self._scan_group(
+            MIDCAP_150_TICKERS, nifty50_return, rs_period, ema_period,
+            progress_callback, len(NIFTY_50_TICKERS) + len(NIFTY_NEXT50_TICKERS), total_all)
+        total_failed += f3
 
         result = {
-            "fresh_entries": fresh_entries,
             "sectoral_indices": sectoral_indices,
-            "in_rs": in_rs,
-            "exit_signals": exit_signals,
+            "nifty50": nifty50,
+            "nifty100": nifty100,
+            "midcap150": midcap150,
             "nifty50_return": round(nifty50_return, 2),
             "last_updated": datetime.now().isoformat(),
             "settings": {
-                "stock_universe": stock_universe,
                 "rs_period": rs_period,
                 "ema_period": ema_period
             },
             "stats": {
-                "total_processed": total - len(failed_tickers),
-                "failed": len(failed_tickers)
+                "total_processed": total_all - total_failed,
+                "failed": total_failed
             }
         }
 

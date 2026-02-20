@@ -1,53 +1,10 @@
 """
 Momentum Scanner Backtest Engine
-Daily-only EOD backtest with three strategy variants (B, C, D).
-
-Strategy B & C — Momentum (entry: RSI(2) >= 75):
-  Exit B: Close < EMA(10) / EMA(50) / EMA(200)
-  Exit C: RSI(2) < 30 / Close < EMA(50) / EMA(200)
-
-Strategy D — RSI Reversal (mean reversion):
-  Entry: Close > EMA(50) AND Close > EMA(200)
-         AND RSI(2) was < 10 yesterday AND RSI(2) > 10 today
-  Exit (priority): Close > EMA(5) / 3% stop-loss / Close < EMA(50) / Close < EMA(200)
-
-Strategy E — EMA Pullback (scale-out):
-  Entry: EMA(50) > EMA(200) (uptrend)
-         AND Close was < EMA(20) yesterday AND Close > EMA(20) today
-  Exit 1: Close >= Entry+5% → sell 50%
-  Exit 2: Close < EMA(20) → sell all remaining
-  Global: Close < EMA(50) → sell all remaining
-
-Strategy F — NR7 Squeeze (scale-out):
-  NR7 = today's High-Low is the smallest of last 7 days
-  Entry: NR7 day AND RSI(2) < 30 AND Close > EMA(50) AND EMA(50) > EMA(200)
-  Exit 1: Close >= Entry+5% → sell 50%
-  Exit 2: Close > EMA(10) → sell remaining
-  Stop: 3% from entry OR Close < EMA(50)
-
-Strategy G — IBS Extreme (scale-out):
-  IBS = (Close - Low) / (High - Low)
-  Entry: IBS < 0.2 AND Close > EMA(50) AND EMA(50) > EMA(200)
-  Exit 1: Close >= Entry+5% → sell 50%
-  Exit 2: IBS > 0.8 → sell remaining
-  Stop: 3% from entry OR Close < EMA(50)
-
-Strategy H — Consecutive Down Days (scale-out):
-  Entry: 4 consecutive lower closes AND Close > EMA(50) AND EMA(50) > EMA(200)
-  Exit 1: Close >= Entry+5% → sell 50%
-  Exit 2: First up close (Close > previous Close) → sell remaining
-  Stop: 3% from entry OR Close < EMA(50)
-
-Strategy I — 6-Month Support Bounce:
-  Support = Lowest Low of last 120 trading days
-  Entry: Today's Low within 1% of Support AND Close > Support AND RS Rating > 50
-  Exit (default): Close >= Entry+5% → sell all
-  Exit (5%+8%):   50% at +5%, remaining 50% at +8%
-  Hard stop: Close < Support → sell all
+EOD backtest engine for swing trading strategies.
 
 Strategy J — Weekly Close Support Bounce:
   Entry support: Lowest weekly CLOSE of last 26 weeks (~6 months)
-  Stop support: Lowest daily LOW of 120 days (same as Strategy I)
+  Stop support: Lowest daily LOW of 120 days
   Entry: Daily low within 1% of weekly close support AND close > support AND IBS > 0.5
          AND green candle AND CCI(20) > -100
   Exit 1: Close >= Entry+5% → sell 50%
@@ -94,6 +51,12 @@ Strategy U — Stochastic RSI:
   Exit 1: Close >= Entry+5% → sell 50%
   Exit 2: StochRSI %K crosses below %D, both > 70 → sell remaining
   Stop: 5% hard SL
+
+Strategy V — Donchian Breakout with Volume:
+  Entry: Close > 20-day high (shifted) AND Volume > 1.5x avg(20) AND Price > EMA(200) AND green candle
+  Exit 1: Close >= Entry+5% → sell 50%
+  Exit 2: Close < 10-day low → sell remaining (trailing channel exit)
+  Stop: 5% hard SL
 """
 
 import os
@@ -125,61 +88,20 @@ NIFTY_NEXT50_TICKERS = [
 ]
 
 BATCH_VARIANTS = [
-    ("I", "gtt", "I: Support Bounce (GTT)"),
-    ("I", "close", "I: Support Bounce (3:15)"),
-    ("I", "2wlow", "I: Support Bounce (2W Low)"),
-    ("J", "gtt", "J: Weekly Support (GTT)"),
-    ("J", "close", "J: Weekly Support (3:15)"),
-    ("J", "2wlow", "J: Weekly Support (2W Low)"),
-    ("E", None, "E: EMA Pullback"),
-    ("G", None, "G: IBS Extreme"),
-    ("D", "pct5", "D: RSI Rev +5%"),
-    ("K", "gtt", "K: RS Trending (GTT)"),
-    ("K", "close", "K: RS Trending (3:15)"),
-    ("K", "2wlow", "K: RS Trending (2W Low)"),
-    ("L", None, "L: Pure RS"),
-    ("M", None, "M: EMA 10/20"),
-    ("P", None, "P: AVWAP"),
-    ("Q", None, "Q: Fib 61.8%"),
+    ("J", None, "J: Weekly Support"),
+    ("K", None, "K: RS Trending"),
     ("N", None, "N: CCI Momentum"),
     ("O", None, "O: Connors RSI(2)"),
     ("R", None, "R: RSI Momentum"),
     ("S", None, "S: MACD+RSI"),
     ("T", None, "T: Keltner Pullback"),
     ("U", None, "U: StochRSI"),
+    ("V", None, "V: Donchian Breakout"),
 ]
 
 
 class MomentumBacktester:
-    """Single-stock daily backtest for momentum EOD strategy (B, C, D, E, F, G, H, M, O, R, S, T, U)."""
-
-    def _calculate_avwap_series(self, highs: pd.Series, lows: pd.Series,
-                                closes: pd.Series, volumes: pd.Series,
-                                lookback: int = 120):
-        """Calculate AVWAP anchored from rolling 6-month swing low date.
-        Returns: (avwap, anchor_age) — anchor_age = bars since swing low."""
-        n = len(closes)
-        avwap = pd.Series(index=closes.index, dtype=float)
-        anchor_age = pd.Series(index=closes.index, dtype=float)
-        typical = (highs + lows + closes) / 3.0
-
-        for i in range(lookback, n):
-            # Find the index position of the minimum low in past `lookback` bars
-            window = lows.iloc[i - lookback + 1:i + 1]
-            anchor_pos = i - lookback + 1 + window.values.argmin()
-
-            # Calculate AVWAP from anchor to current bar
-            tp_slice = typical.values[anchor_pos:i + 1]
-            vol_slice = volumes.values[anchor_pos:i + 1]
-            cum_vol = vol_slice.sum()
-            if cum_vol > 0:
-                avwap.iloc[i] = (tp_slice * vol_slice).sum() / cum_vol
-            else:
-                avwap.iloc[i] = closes.iloc[i]
-
-            anchor_age.iloc[i] = i - anchor_pos
-
-        return avwap, anchor_age
+    """Single-stock daily backtest for swing trading strategies (J, K, N, O, R, S, T, U, V)."""
 
     def _calculate_rsi_series(self, closes: pd.Series, period: int) -> pd.Series:
         """Calculate full RSI series using Wilder's smoothing."""
@@ -211,10 +133,9 @@ class MomentumBacktester:
         Args:
             symbol: NSE ticker (e.g. "ICICIBANK")
             period_days: backtest lookback in calendar days (30, 90, 180, 365)
-            strategy: "B" (EMA10 exit), "C" (RSI2 < 30 exit), or "D" (RSI reversal)
+            strategy: "J","K","N","O","R","S","T","U"
             capital: starting capital in INR
-            exit_target: profit target for Strategy D — "5","8","10","20" (EMA)
-                         or "pct5","pct6" (percentage from entry)
+            exit_target: profit target for Strategy J/K variants
 
         Returns:
             Dict with trades list, summary stats, and metadata.
@@ -252,24 +173,19 @@ class MomentumBacktester:
         rolling_min_range = hl_range.rolling(window=7, min_periods=7).min()
         nr7_series = (hl_range == rolling_min_range) & (hl_range > 0)
 
-        # Support levels for Strategy I (exclude current bar via shift)
+        # Support levels (exclude current bar via shift)
         support_6m = lows.rolling(window=120, min_periods=120).min().shift(1)   # 6-month
         support_1y = lows.rolling(window=252, min_periods=252).min().shift(1)   # 1-year
-
-        # 2-week low (10 trading days), excluding current bar
-        two_week_low = lows.rolling(window=10, min_periods=10).min().shift(1)
 
         # Volume for daily use
         volumes = daily["Volume"].astype(float)
 
-        # RS Rating filter for Strategy I, J, and K
-        # For I/J: weighted RS outperformance (commented out in entry logic)
+        # RS Rating filter for Strategy J and K
         # For K: simple 3-month return vs Nifty (RS > 0 = outperforming)
-        rs_filter_series = None  # True/False: outperforming Nifty (for I, J)
+        rs_filter_series = None  # True/False: outperforming Nifty (for J)
         rs_spread_series = None  # Stock 3M return minus Nifty 3M return (for K)
-        rs_spread_6m_series = None  # Stock 6M return minus Nifty 6M return (for L)
         nifty_cci_series = None  # Nifty CCI(20) for Strategy N regime filter
-        if strategy in ("I", "J", "K", "L", "N", "P", "Q"):
+        if strategy in ("J", "K", "N"):
             try:
                 nifty_data = yf.Ticker("^NSEI").history(
                     start=daily.index[0], end=end_date)
@@ -277,14 +193,13 @@ class MomentumBacktester:
                     nifty_close = nifty_data["Close"].reindex(daily.index, method="ffill")
 
                     if strategy == "N":
-                        # Nifty CCI(20) for regime filter
                         n_tp = (nifty_data["High"] + nifty_data["Low"] + nifty_data["Close"]) / 3
                         n_sma = n_tp.rolling(window=20, min_periods=20).mean()
                         n_md = n_tp.rolling(window=20, min_periods=20).apply(
                             lambda x: np.mean(np.abs(x - x.mean())), raw=True)
                         nifty_cci_series = ((n_tp - n_sma) / (0.015 * n_md)).reindex(daily.index, method="ffill")
 
-                    if strategy in ("I", "J"):
+                    if strategy in ("J",):
                         def _weighted_rs_score(stock_closes):
                             r3m = stock_closes.pct_change(periods=63)
                             r6m = stock_closes.pct_change(periods=126)
@@ -301,11 +216,6 @@ class MomentumBacktester:
                         nifty_3m = nifty_close.pct_change(periods=63)
                         rs_spread_series = stock_3m - nifty_3m  # >0 = outperforming
 
-                    if strategy == "L":
-                        # 6-month return spread: stock vs Nifty
-                        stock_6m = closes.pct_change(periods=126)
-                        nifty_6m = nifty_close.pct_change(periods=126)
-                        rs_spread_6m_series = stock_6m - nifty_6m
             except Exception:
                 pass
 
@@ -327,23 +237,9 @@ class MomentumBacktester:
             weekly_low_stop_series = w_low_stop.reindex(daily.index, method="ffill")
 
 
-        # Resolve Strategy D exit target
-        target_str = str(exit_target) if exit_target else "5"
-        use_pct_target = target_str.startswith("pct")
-        if use_pct_target:
-            pct_target = int(target_str.replace("pct", "")) / 100.0
-            d_exit_period = None
-            target_label = f"+{int(pct_target*100)}%"
-        else:
-            d_exit_period = int(target_str) if target_str in ("5","8","10","20") else 5
-            pct_target = None
-            target_label = f"EMA{d_exit_period}"
-
         # Pre-compute indicator series over entire dataset
         rsi2_series = self._calculate_rsi_series(closes, 2)
         rsi3_series = self._calculate_rsi_series(closes, 3)
-        ema_exit_series = (closes.ewm(span=d_exit_period, adjust=False).mean()
-                           if d_exit_period else None)
         ema5_series = closes.ewm(span=5, adjust=False).mean()
         ema8_series = closes.ewm(span=8, adjust=False).mean()
         ema10_series = closes.ewm(span=10, adjust=False).mean()
@@ -352,17 +248,6 @@ class MomentumBacktester:
         ema200_series = closes.ewm(span=200, adjust=False).mean()
         vol_avg20_series = volumes.rolling(window=20, min_periods=20).mean()
         cci20_series = self._calculate_cci_series(highs, lows, closes, 20)
-
-        # AVWAP anchored from 6-month swing low (for Strategy P)
-        avwap_series, avwap_age_series = self._calculate_avwap_series(highs, lows, closes, volumes, lookback=120)
-
-        # Fibonacci levels from 6-month high/low (for Strategy Q)
-        fib_high_6m = highs.rolling(window=120, min_periods=120).max()
-        fib_low_6m = lows.rolling(window=120, min_periods=120).min()
-        fib_range = fib_high_6m - fib_low_6m
-        fib_618 = fib_high_6m - 0.618 * fib_range   # 61.8% retracement
-        fib_786 = fib_high_6m - 0.70 * fib_range   # 70% retracement (stop)
-        fib_ext_121 = fib_high_6m + 0.21 * fib_range  # 121% extension (target)
 
         # --- New indicators for strategies O, R, S, T, U ---
         # RSI(14) for strategies O, R, S, U
@@ -394,6 +279,12 @@ class MomentumBacktester:
         stoch_k_series = stoch_rsi_raw.rolling(window=3, min_periods=3).mean() * 100
         stoch_d_series = stoch_k_series.rolling(window=3, min_periods=3).mean()
 
+        # Donchian channels for Strategy V
+        high_20d_v = highs.rolling(window=20, min_periods=20).max().shift(1)
+        low_10d_v = lows.rolling(window=10, min_periods=10).min().shift(1)
+        volumes = daily["Volume"].astype(float)
+        vol_avg20_v = volumes.rolling(window=20, min_periods=20).mean()
+
         # Tracking variables for new strategies
         o_partial_done = False
         o_remaining = 0
@@ -405,6 +296,8 @@ class MomentumBacktester:
         t_remaining = 0
         u_partial_done = False
         u_remaining = 0
+        v_partial_done = False
+        v_remaining = 0
 
         # Determine backtest start index (need 200+ bars warmup)
         bt_start_date = (end_date - timedelta(days=period_days)).date()
@@ -422,20 +315,9 @@ class MomentumBacktester:
         shares = 0
         remaining_shares = 0  # For scale-out: shares left after partial exit
         partial_exit_done = False  # For scale-out: has first leg exited?
-        m_partial_done = False  # Strategy M: partial exit tracking
-        m_remaining = 0  # Strategy M: remaining shares after partial
-        p_partial_done = False  # Strategy P: partial exit tracking
-        p_remaining = 0  # Strategy P: remaining shares after partial
-        q_partial_done = False  # Strategy Q: partial exit tracking
-        q_remaining = 0  # Strategy Q: remaining shares after partial
-        q_fib_stop = 0.0  # Strategy Q: 70% fib level at entry
-        q_fib_target = 0.0  # Strategy Q: 121% extension at entry
         n_partial_done = False  # Strategy N: partial exit tracking
         n_remaining = 0  # Strategy N: remaining shares after partial
         trades = []
-        was_below_exit_ema = False
-        days_below_ema20 = 0  # For Strategy E: consecutive days below EMA(20)
-        entry_support = 0.0  # For Strategy I: support level locked at entry
         entry_support_j = 0.0    # For Strategy J: weekly open support (entry level)
         entry_stop_j = 0.0       # For Strategy J: weekly open support (stop level)
         entry_bar = 0            # For Strategy J: bar index at entry
@@ -447,7 +329,6 @@ class MomentumBacktester:
             rsi2_prev = float(rsi2_series.iloc[i - 1]) if i > 0 else np.nan
             rsi3 = float(rsi3_series.iloc[i])
             rsi3_prev = float(rsi3_series.iloc[i - 1]) if i > 0 else np.nan
-            ema_exit = float(ema_exit_series.iloc[i]) if ema_exit_series is not None else None
             ema5 = float(ema5_series.iloc[i])
             ema8 = float(ema8_series.iloc[i])
             ema10 = float(ema10_series.iloc[i])
@@ -467,7 +348,6 @@ class MomentumBacktester:
             is_green_candle = price > open_price
             sup_6m = min(prior_sup_6m, low) if (is_green_candle and prior_sup_6m is not None) else prior_sup_6m
             sup_1y = min(prior_sup_1y, low) if (is_green_candle and prior_sup_1y is not None) else prior_sup_1y
-            tw_low = float(two_week_low.iloc[i]) if not pd.isna(two_week_low.iloc[i]) else None
             day = daily.index[i].date()
 
             if pd.isna(rsi2):
@@ -477,140 +357,7 @@ class MomentumBacktester:
             prev_close = float(closes.iloc[i - 1]) if i > 0 else None
             prev_ema20 = float(ema20_series.iloc[i - 1]) if i > 0 else None
 
-            if strategy == "I":
-                # Strategy I: 6-Month Support Bounce
-                # Support = lowest Low of last 120 trading days
-                # Entry: Low within 1% of support AND Close > support
-                #   + Bounce confirmation: IBS > 0.3 (buyers showed up)
-                # Check proximity to either 6M or 1Y support
-                near_6m = (sup_6m is not None
-                           and low <= sup_6m * 1.01
-                           and low >= sup_6m)
-                near_1y = (sup_1y is not None
-                           and low <= sup_1y * 1.01
-                           and low >= sup_1y)
-
-                if not near_6m and not near_1y:
-                    # Not near any support — skip entry check but still check exits
-                    support = sup_6m if sup_6m is not None else sup_1y
-                else:
-                    # Use whichever support level triggered
-                    support = sup_6m if near_6m else sup_1y
-
-                if support is None:
-                    continue
-
-                # rs_ok = rs_filter_series is None or (rs_filter_series.iloc[i] if not pd.isna(rs_filter_series.iloc[i]) else False)
-                entry_signal = ((near_6m or near_1y)
-                                and price > support
-                                and ibs > 0.5
-                                and price > open_price)
-                                # and rs_ok)  # RS Rating > 50
-
-                # 50% at +5%, remaining 50% at +10%
-                i_mode = str(exit_target) if exit_target else "gtt"
-                t1_price = entry_price * 1.05 if in_position else 0
-                t2_price = entry_price * 1.10 if in_position else 0
-                is_red = price < open_price
-                below_2w = tw_low is not None and price < tw_low
-
-                def _i_stop(sz):
-                    """Check stop for current mode, return True if stopped."""
-                    if i_mode == "gtt":
-                        if low <= entry_support:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, sz, day,
-                                entry_support, "GTT_SUPPORT_BREAK"))
-                            return True
-                    elif i_mode == "2wlow":
-                        if price < entry_support:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, sz, day, price,
-                                "SUPPORT_BREAK"))
-                            return True
-                        if is_red and below_2w:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, sz, day, price,
-                                "2WLOW_EXIT"))
-                            return True
-                    else:  # close
-                        if price < entry_support:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, sz, day, price,
-                                "SUPPORT_BREAK"))
-                            return True
-                    return False
-
-                if in_position and not partial_exit_done:
-                    if _i_stop(shares):
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    if i_mode == "gtt":
-                        if high >= t1_price:
-                            half = shares // 2
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, half, day,
-                                t1_price, "GTT_5PCT_PARTIAL"))
-                            remaining_shares = shares - half
-                            partial_exit_done = True
-                            if high >= t2_price:
-                                trades.append(self._make_trade(
-                                    entry_date, entry_price, remaining_shares,
-                                    day, t2_price, "GTT_10PCT"))
-                                in_position = False
-                                partial_exit_done = False
-                            continue
-                    else:  # close or 2wlow — targets on Close
-                        if price >= t1_price:
-                            half = shares // 2
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, half, day, price,
-                                "5PCT_PARTIAL"))
-                            remaining_shares = shares - half
-                            partial_exit_done = True
-                            if price >= t2_price:
-                                trades.append(self._make_trade(
-                                    entry_date, entry_price, remaining_shares,
-                                    day, price, "10PCT"))
-                                in_position = False
-                                partial_exit_done = False
-                            continue
-
-                if in_position and partial_exit_done:
-                    if _i_stop(remaining_shares):
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    if i_mode == "gtt":
-                        if high >= t2_price:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, remaining_shares,
-                                day, t2_price, "GTT_10PCT"))
-                            in_position = False
-                            partial_exit_done = False
-                            continue
-                    else:
-                        if price >= t2_price:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, remaining_shares,
-                                day, price, "10PCT"))
-                            in_position = False
-                            partial_exit_done = False
-                            continue
-
-                # Entry (only when fully out)
-                if entry_signal and not in_position:
-                    shares = int(capital // price)
-                    if shares > 0:
-                        entry_price = price
-                        entry_date = day
-                        entry_support = support  # Lock support at entry
-                        in_position = True
-                        partial_exit_done = False
-                continue
-
-            elif strategy == "J":
+            if strategy == "J":
                 # Strategy J: Weekly Close Support Bounce (scale-out)
                 # Entry: daily low within 1% of 26-week min weekly CLOSE
                 # Stop: close < 26-week min weekly LOW
@@ -644,14 +391,9 @@ class MomentumBacktester:
                     t["entry_dist_pct"] = round(((ep - entry_support_j) / entry_support_j) * 100, 2) if entry_support_j > 0 else 0
                     trades.append(t)
 
-                j_mode = str(exit_target) if exit_target else "gtt"
-                is_red = price < open_price
-                below_2w = tw_low is not None and price < tw_low
-
                 def _j_stop(sz):
-                    """Check stop for current mode, return True if stopped.
+                    """Check stop, return True if stopped.
                     Skip support break if Nifty fell same or more since entry."""
-                    # Nifty drop shield
                     nifty_shields = False
                     if nifty_at_entry > 0 and nifty_close is not None:
                         nifty_now = float(nifty_close.iloc[i])
@@ -663,21 +405,9 @@ class MomentumBacktester:
                     if nifty_shields:
                         return False  # Ignore stop — market-wide fall
 
-                    if j_mode == "gtt":
-                        if low <= entry_stop_j:
-                            _j_trade(entry_price, sz, day, entry_stop_j, "GTT_SUPPORT_BREAK")
-                            return True
-                    elif j_mode == "2wlow":
-                        if price < entry_stop_j:
-                            _j_trade(entry_price, sz, day, price, "SUPPORT_BREAK")
-                            return True
-                        if is_red and below_2w:
-                            _j_trade(entry_price, sz, day, price, "2WLOW_EXIT")
-                            return True
-                    else:  # close
-                        if price < entry_stop_j:
-                            _j_trade(entry_price, sz, day, price, "SUPPORT_BREAK")
-                            return True
+                    if price < entry_stop_j:
+                        _j_trade(entry_price, sz, day, price, "SUPPORT_BREAK")
+                        return True
                     return False
 
                 if in_position and not partial_exit_done:
@@ -685,28 +415,16 @@ class MomentumBacktester:
                         in_position = False
                         partial_exit_done = False
                         continue
-                    if j_mode == "gtt":
-                        if high >= t1_price:
-                            half = shares // 2
-                            _j_trade(entry_price, half, day, t1_price, "GTT_5PCT_PARTIAL")
-                            remaining_shares = shares - half
-                            partial_exit_done = True
-                            if high >= t2_price:
-                                _j_trade(entry_price, remaining_shares, day, t2_price, "GTT_10PCT")
-                                in_position = False
-                                partial_exit_done = False
-                            continue
-                    else:  # close or 2wlow — targets on Close
-                        if price >= t1_price:
-                            half = shares // 2
-                            _j_trade(entry_price, half, day, price, "5PCT_PARTIAL")
-                            remaining_shares = shares - half
-                            partial_exit_done = True
-                            if price >= t2_price:
-                                _j_trade(entry_price, remaining_shares, day, price, "10PCT")
-                                in_position = False
-                                partial_exit_done = False
-                            continue
+                    if price >= t1_price:
+                        half = shares // 2
+                        _j_trade(entry_price, half, day, price, "5PCT_PARTIAL")
+                        remaining_shares = shares - half
+                        partial_exit_done = True
+                        if price >= t2_price:
+                            _j_trade(entry_price, remaining_shares, day, price, "10PCT")
+                            in_position = False
+                            partial_exit_done = False
+                        continue
 
                 if in_position and partial_exit_done:
                     if _j_stop(remaining_shares):
@@ -726,18 +444,11 @@ class MomentumBacktester:
                             in_position = False
                             partial_exit_done = False
                             continue
-                    if j_mode == "gtt":
-                        if high >= t2_price:
-                            _j_trade(entry_price, remaining_shares, day, t2_price, "GTT_10PCT")
-                            in_position = False
-                            partial_exit_done = False
-                            continue
-                    else:
-                        if price >= t2_price:
-                            _j_trade(entry_price, remaining_shares, day, price, "10PCT")
-                            in_position = False
-                            partial_exit_done = False
-                            continue
+                    if price >= t2_price:
+                        _j_trade(entry_price, remaining_shares, day, price, "10PCT")
+                        in_position = False
+                        partial_exit_done = False
+                        continue
 
                 # Entry (only when fully out)
                 if entry_signal and not in_position:
@@ -773,12 +484,8 @@ class MomentumBacktester:
                 t1_price = entry_price * 1.05 if in_position else 0
                 stop_3pct = entry_price * 0.97 if in_position else 0
 
-                k_mode = str(exit_target) if exit_target else "gtt"
-                is_red = price < open_price
-                below_2w = tw_low is not None and price < tw_low
-
                 def _k_stop(sz):
-                    """Check stop for current mode, return True if stopped.
+                    """Check stop, return True if stopped.
                     Skip 3% SL if Nifty has fallen same or more since entry."""
                     nifty_drop_shields = False
                     if nifty_at_entry > 0 and nifty_close is not None:
@@ -791,29 +498,11 @@ class MomentumBacktester:
                     if nifty_drop_shields:
                         return False  # Ignore SL — market-wide fall
 
-                    if k_mode == "gtt":
-                        if low <= stop_3pct:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, sz, day,
-                                stop_3pct, "GTT_STOP_3PCT"))
-                            return True
-                    elif k_mode == "2wlow":
-                        if price < stop_3pct:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, sz, day,
-                                price, "STOP_3PCT"))
-                            return True
-                        if is_red and below_2w:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, sz, day,
-                                price, "2WLOW_EXIT"))
-                            return True
-                    else:  # close
-                        if price < stop_3pct:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, sz, day,
-                                price, "STOP_3PCT"))
-                            return True
+                    if price < stop_3pct:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, sz, day,
+                            price, "STOP_3PCT"))
+                        return True
                     return False
 
                 if in_position and not partial_exit_done:
@@ -821,24 +510,14 @@ class MomentumBacktester:
                         in_position = False
                         partial_exit_done = False
                         continue
-                    if k_mode == "gtt":
-                        if high >= t1_price:
-                            half = shares // 2
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, half, day,
-                                t1_price, "GTT_5PCT_PARTIAL"))
-                            remaining_shares = shares - half
-                            partial_exit_done = True
-                            continue
-                    else:  # close or 2wlow — targets on Close
-                        if price >= t1_price:
-                            half = shares // 2
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, half, day,
-                                price, "5PCT_PARTIAL"))
-                            remaining_shares = shares - half
-                            partial_exit_done = True
-                            continue
+                    if price >= t1_price:
+                        half = shares // 2
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, half, day,
+                            price, "5PCT_PARTIAL"))
+                        remaining_shares = shares - half
+                        partial_exit_done = True
+                        continue
 
                 if in_position and partial_exit_done:
                     if _k_stop(remaining_shares):
@@ -870,92 +549,6 @@ class MomentumBacktester:
                         in_position = True
                         partial_exit_done = False
                         nifty_at_entry = float(nifty_close.iloc[i]) if nifty_close is not None else 0.0
-                continue
-
-            elif strategy == "L":
-                # Strategy L: Pure RS System (6-month) with buffer zone
-                # Entry: Yesterday RS < +2%, Today RS > +2%
-                # Exit: RS drops below -2% OR Close < EMA(50)
-                # Min hold: 5 days (no RS exit before day 5)
-
-                RS_ENTRY_THRESH = 0.02   # +2%
-                RS_EXIT_THRESH = -0.02   # -2%
-                MIN_HOLD_DAYS = 5
-
-                rs_val = float(rs_spread_6m_series.iloc[i]) if (
-                    rs_spread_6m_series is not None
-                    and not pd.isna(rs_spread_6m_series.iloc[i])) else 0.0
-                rs_prev = float(rs_spread_6m_series.iloc[i - 1]) if (
-                    i > 0 and rs_spread_6m_series is not None
-                    and not pd.isna(rs_spread_6m_series.iloc[i - 1])) else 0.0
-
-                if in_position:
-                    hold_days = (day - entry_date).days
-                    if price < ema50:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day,
-                            price, "EMA50_EXIT"))
-                        in_position = False
-                        continue
-                    if hold_days >= MIN_HOLD_DAYS and rs_val < RS_EXIT_THRESH:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day,
-                            price, "RS_NEGATIVE"))
-                        in_position = False
-                        continue
-
-                if not in_position and rs_prev < RS_ENTRY_THRESH and rs_val > RS_ENTRY_THRESH:
-                    shares = int(capital // price)
-                    if shares > 0:
-                        entry_price = price
-                        entry_date = day
-                        in_position = True
-                continue
-
-            elif strategy == "M":
-                # Strategy M: EMA Crossover (10/20)
-                # Entry: EMA(10) crosses above EMA(20) AND Close > EMA(50)
-                #        AND EMA(20) rising
-                # Partial: Close >= Entry + 5% → sell 50%
-                # Exit: EMA(10) crosses below EMA(20) → sell remaining
-
-                prev_ema10 = float(ema10_series.iloc[i - 1]) if i > 0 else None
-                prev_ema20_val = float(ema20_series.iloc[i - 1]) if i > 0 else None
-
-                if in_position:
-                    # Partial: +5% → sell 50%
-                    if not m_partial_done and price >= entry_price * 1.05:
-                        partial_shares = shares // 2
-                        if partial_shares > 0:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, partial_shares, day,
-                                price, "PARTIAL_5PCT"))
-                            m_remaining = shares - partial_shares
-                            m_partial_done = True
-
-                    # Exit: EMA(10) crosses below EMA(20)
-                    if (prev_ema10 is not None and prev_ema20_val is not None
-                            and prev_ema10 >= prev_ema20_val and ema10 < ema20):
-                        sz = m_remaining if m_partial_done else shares
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, sz, day,
-                            price, "EMA10_BELOW_EMA20"))
-                        in_position = False
-                        m_partial_done = False
-                        continue
-
-                if not in_position:
-                    ema20_rising = (prev_ema20_val is not None and ema20 > prev_ema20_val)
-                    if (prev_ema10 is not None and prev_ema20_val is not None
-                            and prev_ema10 < prev_ema20_val and ema10 > ema20
-                            and price > ema50 and ema20_rising):
-                        shares = int(capital // price)
-                        if shares > 0:
-                            entry_price = price
-                            entry_date = day
-                            in_position = True
-                            m_partial_done = False
-                            m_remaining = shares
                 continue
 
             elif strategy == "N":
@@ -1019,166 +612,6 @@ class MomentumBacktester:
                             in_position = True
                             n_partial_done = False
                             n_remaining = shares
-                continue
-
-            elif strategy == "P":
-                # Strategy P: AVWAP from Swing Low Bounce
-                # Anchor: AVWAP from 6-month swing low date
-                # Entry: Price within 1% of AVWAP from above AND Close > AVWAP
-                #        AND IBS > 0.3 AND Close > Open
-                # Exit 1: Close >= Entry + 5% → sell 50%
-                # Exit 2: Close < AVWAP → sell remaining
-                # Stop: Close < Entry - 3%
-
-                avwap = float(avwap_series.iloc[i]) if not pd.isna(avwap_series.iloc[i]) else None
-                ibs = float(ibs_series.iloc[i])
-                open_price = float(opens.iloc[i])
-
-                if in_position and avwap is not None:
-                    # Stop: 3% below entry
-                    if price < entry_price * 0.97:
-                        sz = p_remaining if p_partial_done else shares
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, sz, day,
-                            price, "STOP_3PCT"))
-                        in_position = False
-                        p_partial_done = False
-                        continue
-
-                    # Partial: +5% → sell 50%
-                    if not p_partial_done and price >= entry_price * 1.05:
-                        partial_shares = shares // 2
-                        if partial_shares > 0:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, partial_shares, day,
-                                price, "PARTIAL_5PCT"))
-                            p_remaining = shares - partial_shares
-                            p_partial_done = True
-
-                    # Exit remaining 50%: Close < 3-day low (after partial)
-                    # Skip if Nifty itself is weak (Nifty close < Nifty 3-day low close)
-                    if p_partial_done:
-                        three_day_low = float(lows.iloc[max(0, i-3):i].min()) if i >= 3 else float(lows.iloc[i])
-                        nifty_weak = False
-                        if nifty_close is not None and i >= 3:
-                            nifty_today = float(nifty_close.iloc[i])
-                            nifty_3day_low_close = float(nifty_close.iloc[max(0, i-3):i].min())
-                            nifty_weak = nifty_today < nifty_3day_low_close
-                        if not nifty_weak and price < three_day_low:
-                            if p_remaining > 0:
-                                trades.append(self._make_trade(
-                                    entry_date, entry_price, p_remaining, day,
-                                    price, "BELOW_3DAY_LOW"))
-                            in_position = False
-                            p_partial_done = False
-                            continue
-
-
-                if not in_position and avwap is not None:
-                    within_1pct = (price <= avwap * 1.01)
-                    if (price > avwap and within_1pct
-                            and ibs > 0.5 and price > open_price):
-                        shares = int(capital // price)
-                        if shares > 0:
-                            entry_price = price
-                            entry_date = day
-                            in_position = True
-                            p_partial_done = False
-                            p_remaining = shares
-                continue
-
-            elif strategy == "Q":
-                # Strategy Q: Fibonacci Retracement Bounce (61.8%)
-                # Entry: Price within 1% of 61.8% fib from above, Close > 61.8%,
-                #        IBS > 0.3, Close > Open
-                # Partial: Close >= Entry + 5% → sell 50%
-                # Target: 121% extension → sell remaining
-                # Stop: Close < 70% retracement
-
-                f618 = float(fib_618.iloc[i]) if not pd.isna(fib_618.iloc[i]) else None
-                f786 = float(fib_786.iloc[i]) if not pd.isna(fib_786.iloc[i]) else None
-                f121 = float(fib_ext_121.iloc[i]) if not pd.isna(fib_ext_121.iloc[i]) else None
-                ibs = float(ibs_series.iloc[i])
-                open_price = float(opens.iloc[i])
-
-                if in_position:
-                    # Stop: Close < 70% fib level (locked at entry)
-                    if price < q_fib_stop:
-                        sz = q_remaining if q_partial_done else shares
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, sz, day,
-                            price, "FIB_STOP_70"))
-                        in_position = False
-                        q_partial_done = False
-                        continue
-
-                    # 3-day low exit before partial (skip if Nifty weak)
-                    if not q_partial_done and i >= 3:
-                        three_day_low = float(lows.iloc[max(0, i-3):i].min())
-                        nifty_weak = False
-                        if nifty_close is not None:
-                            nifty_today = float(nifty_close.iloc[i])
-                            nifty_3day_low_close = float(nifty_close.iloc[max(0, i-3):i].min())
-                            nifty_weak = nifty_today < nifty_3day_low_close
-                        if not nifty_weak and price < three_day_low:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, shares, day,
-                                price, "BELOW_3DAY_LOW"))
-                            in_position = False
-                            q_partial_done = False
-                            continue
-
-                    # Partial: +5% → sell 50%
-                    if not q_partial_done and price >= entry_price * 1.05:
-                        partial_shares = shares // 2
-                        if partial_shares > 0:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, partial_shares, day,
-                                price, "PARTIAL_5PCT"))
-                            q_remaining = shares - partial_shares
-                            q_partial_done = True
-
-                    # Target/Exit remaining: 121% extension OR 3-day low (after partial)
-                    # 3-day low skipped if Nifty itself is weak (Nifty close < Nifty 3-day low close)
-                    if q_partial_done:
-                        if price >= q_fib_target:
-                            if q_remaining > 0:
-                                trades.append(self._make_trade(
-                                    entry_date, entry_price, q_remaining, day,
-                                    price, "FIB_TARGET_121"))
-                            in_position = False
-                            q_partial_done = False
-                            continue
-                        three_day_low = float(lows.iloc[max(0, i-3):i].min()) if i >= 3 else float(lows.iloc[i])
-                        nifty_weak = False
-                        if nifty_close is not None and i >= 3:
-                            nifty_today = float(nifty_close.iloc[i])
-                            nifty_3day_low_close = float(nifty_close.iloc[max(0, i-3):i].min())
-                            nifty_weak = nifty_today < nifty_3day_low_close
-                        if not nifty_weak and price < three_day_low:
-                            if q_remaining > 0:
-                                trades.append(self._make_trade(
-                                    entry_date, entry_price, q_remaining, day,
-                                    price, "BELOW_3DAY_LOW"))
-                            in_position = False
-                            q_partial_done = False
-                            continue
-
-                if not in_position and f618 is not None and f786 is not None and f121 is not None:
-                    within_1pct = (price <= f618 * 1.01)
-                    vol_spike = vol_avg20 > 0 and vol_today > 1.5 * vol_avg20
-                    if (price > f618 and within_1pct
-                            and ibs > 0.5 and price > open_price
-                            and vol_spike):
-                        shares = int(capital // price)
-                        if shares > 0:
-                            entry_price = price
-                            entry_date = day
-                            in_position = True
-                            q_partial_done = False
-                            q_remaining = shares
-                            q_fib_stop = f786
-                            q_fib_target = f121
                 continue
 
             elif strategy == "O":
@@ -1480,354 +913,69 @@ class MomentumBacktester:
                             u_remaining = shares
                 continue
 
-            elif strategy == "E":
-                # Strategy E: EMA Pullback (scale-out)
-                # Entry: EMA(50) > EMA(200) + Close crossed back above EMA(20)
-                entry_signal = (ema50 > ema200
-                                and prev_close is not None
-                                and prev_ema20 is not None
-                                and prev_close < prev_ema20
-                                and price > ema20)
+            elif strategy == "V":
+                # Strategy V: Donchian Breakout with Volume
+                # Entry: Close > 20-day high AND Vol > 1.5x avg(20) AND Price > EMA(200) AND green
+                # Partial: +5% → sell 50%
+                # Exit: Close < 10-day low → sell remaining
+                # Stop: 5% hard SL
+                h20 = float(high_20d_v.iloc[i]) if not pd.isna(high_20d_v.iloc[i]) else None
+                l10 = float(low_10d_v.iloc[i]) if not pd.isna(low_10d_v.iloc[i]) else None
+                vol_val = float(volumes.iloc[i])
+                vol_avg = float(vol_avg20_v.iloc[i]) if not pd.isna(vol_avg20_v.iloc[i]) else 0.0
 
-                if in_position and not partial_exit_done:
-                    # Exit 1: +5% from entry → sell 50%
+                if in_position and not v_partial_done:
+                    if price <= entry_price * 0.95:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, shares, day,
+                            price, "HARD_SL_5PCT"))
+                        in_position = False
+                        v_partial_done = False
+                        continue
                     if price >= entry_price * 1.05:
                         half = shares // 2
+                        if half > 0:
+                            trades.append(self._make_trade(
+                                entry_date, entry_price, half, day,
+                                price, "PARTIAL_5PCT"))
+                            v_remaining = shares - half
+                            v_partial_done = True
+                    elif l10 is not None and l10 > 0 and price < l10:
                         trades.append(self._make_trade(
-                            entry_date, entry_price, half, day, price,
-                            "5PCT_PARTIAL"))
-                        remaining_shares = shares - half
-                        partial_exit_done = True
-                        continue
-                    # Exit 2: Close < EMA(20) → sell all
-                    elif price < ema20:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day, price,
-                            "EMA20_EXIT"))
+                            entry_date, entry_price, shares, day,
+                            price, "DONCHIAN_LOW_EXIT"))
                         in_position = False
-                        partial_exit_done = False
-                        continue
-                    # Global: Close < EMA(50) → sell all
-                    elif price < ema50:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day, price,
-                            "EMA50_EXIT"))
-                        in_position = False
-                        partial_exit_done = False
+                        v_partial_done = False
                         continue
 
-                if in_position and partial_exit_done:
-                    # Second leg: remaining shares exit at EMA(20) or EMA(50)
-                    if price < ema20:
+                if in_position and v_partial_done:
+                    if price <= entry_price * 0.95:
                         trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "EMA20_EXIT"))
+                            entry_date, entry_price, v_remaining, day,
+                            price, "HARD_SL_5PCT"))
                         in_position = False
-                        partial_exit_done = False
+                        v_partial_done = False
                         continue
-                    elif price < ema50:
+                    if l10 is not None and l10 > 0 and price < l10:
                         trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "EMA50_EXIT"))
+                            entry_date, entry_price, v_remaining, day,
+                            price, "DONCHIAN_LOW_EXIT"))
                         in_position = False
-                        partial_exit_done = False
+                        v_partial_done = False
                         continue
 
-                # Entry (only when fully out)
-                if entry_signal and not in_position:
-                    shares = int(capital // price)
-                    if shares > 0:
-                        entry_price = price
-                        entry_date = day
-                        in_position = True
-                        partial_exit_done = False
+                if not in_position:
+                    if (h20 is not None and price > h20
+                            and vol_avg > 0 and vol_val > 1.5 * vol_avg
+                            and price > ema200 and is_green):
+                        shares = int(capital // price)
+                        if shares > 0:
+                            entry_price = price
+                            entry_date = day
+                            in_position = True
+                            v_partial_done = False
+                            v_remaining = shares
                 continue
-
-            elif strategy == "F":
-                # Strategy F: NR7 Squeeze (scale-out)
-                # Entry: NR7 AND RSI(2) < 30 AND Close > EMA(50) AND EMA(50) > EMA(200)
-                entry_signal = (nr7
-                                and rsi2 < 30
-                                and price > ema50
-                                and ema50 > ema200)
-
-                stop_hit = in_position and price < entry_price * 0.97
-
-                if in_position and not partial_exit_done:
-                    # Exit 1: +5% from entry → sell 50%
-                    if price >= entry_price * 1.05:
-                        half = shares // 2
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, half, day, price,
-                            "5PCT_PARTIAL"))
-                        remaining_shares = shares - half
-                        partial_exit_done = True
-                        continue
-                    # Stop: 3% or Close < EMA(50) → sell all
-                    elif stop_hit:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day, price,
-                            "STOP_3PCT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    elif price < ema50:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day, price,
-                            "EMA50_EXIT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-
-                if in_position and partial_exit_done:
-                    # Exit 2: Close > EMA(10) → sell remaining
-                    if price > ema10:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "EMA10_TARGET"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    # Stop still applies to remaining
-                    elif stop_hit:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "STOP_3PCT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    elif price < ema50:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "EMA50_EXIT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-
-                # Entry (only when fully out)
-                if entry_signal and not in_position:
-                    shares = int(capital // price)
-                    if shares > 0:
-                        entry_price = price
-                        entry_date = day
-                        in_position = True
-                        partial_exit_done = False
-                continue
-
-            elif strategy == "G":
-                # Strategy G: IBS Extreme (scale-out)
-                # Entry: IBS < 0.2 AND Close > EMA(50) AND EMA(50) > EMA(200)
-                entry_signal = (ibs < 0.2
-                                and price > ema50
-                                and ema50 > ema200)
-
-                stop_hit = in_position and price < entry_price * 0.97
-
-                if in_position and not partial_exit_done:
-                    # Exit 1: +5% from entry → sell 50%
-                    if price >= entry_price * 1.05:
-                        half = shares // 2
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, half, day, price,
-                            "5PCT_PARTIAL"))
-                        remaining_shares = shares - half
-                        partial_exit_done = True
-                        continue
-                    # Stop: 3% or Close < EMA(50) → sell all
-                    elif stop_hit:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day, price,
-                            "STOP_3PCT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    elif price < ema50:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day, price,
-                            "EMA50_EXIT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-
-                if in_position and partial_exit_done:
-                    # Exit 2: IBS > 0.8 → sell remaining
-                    if ibs > 0.8:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "IBS_HIGH"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    # Stop still applies to remaining
-                    elif stop_hit:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "STOP_3PCT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    elif price < ema50:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "EMA50_EXIT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-
-                # Entry (only when fully out)
-                if entry_signal and not in_position:
-                    shares = int(capital // price)
-                    if shares > 0:
-                        entry_price = price
-                        entry_date = day
-                        in_position = True
-                        partial_exit_done = False
-                continue
-
-            elif strategy == "H":
-                # Strategy H: Consecutive Down Days (scale-out)
-                # Check 4 consecutive lower closes: C[i] < C[i-1] < C[i-2] < C[i-3]
-                has_4_down = (i >= 4
-                              and closes.iloc[i] < closes.iloc[i-1]
-                              and closes.iloc[i-1] < closes.iloc[i-2]
-                              and closes.iloc[i-2] < closes.iloc[i-3]
-                              and closes.iloc[i-3] < closes.iloc[i-4])
-                entry_signal = (has_4_down
-                                and price > ema50
-                                and ema50 > ema200)
-
-                stop_hit = in_position and price < entry_price * 0.97
-
-                if in_position and not partial_exit_done:
-                    # Exit 1: +5% from entry → sell 50%
-                    if price >= entry_price * 1.05:
-                        half = shares // 2
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, half, day, price,
-                            "5PCT_PARTIAL"))
-                        remaining_shares = shares - half
-                        partial_exit_done = True
-                        continue
-                    # Stop: 3% or Close < EMA(50) → sell all
-                    elif stop_hit:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day, price,
-                            "STOP_3PCT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    elif price < ema50:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day, price,
-                            "EMA50_EXIT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-
-                if in_position and partial_exit_done:
-                    # Exit 2: first up close → sell remaining
-                    if prev_close is not None and price > prev_close:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "UP_CLOSE"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    # Stop still applies
-                    elif stop_hit:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "STOP_3PCT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    elif price < ema50:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, remaining_shares,
-                            day, price, "EMA50_EXIT"))
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-
-                # Entry (only when fully out)
-                if entry_signal and not in_position:
-                    shares = int(capital // price)
-                    if shares > 0:
-                        entry_price = price
-                        entry_date = day
-                        in_position = True
-                        partial_exit_done = False
-                continue
-
-            elif strategy == "D":
-                # Strategy D: RSI Reversal
-                entry_signal = (price > ema50
-                                and price > ema200
-                                and not pd.isna(rsi2_prev)
-                                and rsi2_prev < 10
-                                and rsi2 > 10)
-
-                # --- Single exit mode (EMA or %) ---
-                if in_position and not use_pct_target and ema_exit is not None:
-                    if price <= ema_exit:
-                        was_below_exit_ema = True
-
-                stop_hit = in_position and price < entry_price * 0.97
-                if use_pct_target:
-                    target_hit = in_position and price >= entry_price * (1 + pct_target)
-                else:
-                    target_hit = was_below_exit_ema and price > ema_exit
-                if target_hit:
-                    exit_signal = True
-                    exit_reason = f"{target_label}_TARGET"
-                elif stop_hit:
-                    exit_signal = True
-                    exit_reason = "STOP_3PCT"
-                elif price < ema50:
-                    exit_signal = True
-                    exit_reason = "EMA50_EXIT"
-                elif price < ema200:
-                    exit_signal = True
-                    exit_reason = "EMA200_EXIT"
-                else:
-                    exit_signal = False
-                    exit_reason = ""
-            else:
-                # Entry conditions (same for B and C)
-                entry_signal = (rsi2 >= rsi2_entry
-                                and price > ema50
-                                and price > ema200)
-                # Exit conditions
-                if strategy == "B":
-                    exit_signal = (price < ema10
-                                   or price < ema50
-                                   or price < ema200)
-                    exit_reason = "EMA10_EXIT" if price < ema10 else (
-                        "EMA50_EXIT" if price < ema50 else "EMA200_EXIT")
-                else:  # Strategy C
-                    exit_signal = (rsi2 < 30
-                                   or price < ema50
-                                   or price < ema200)
-                    exit_reason = "RSI2_EXIT" if rsi2 < 30 else (
-                        "EMA50_EXIT" if price < ema50 else "EMA200_EXIT")
-
-            # Signal logic (for non-scale-out modes)
-            if entry_signal and not in_position:
-                shares = int(capital // price)
-                if shares > 0:
-                    entry_price = price
-                    entry_date = day
-                    in_position = True
-                    was_below_exit_ema = False
-                    days_below_ema20 = 0
-
-            elif exit_signal and in_position:
-                trades.append(self._make_trade(
-                    entry_date, entry_price, shares, day, price, exit_reason
-                ))
-                in_position = False
-                was_below_exit_ema = False
-                days_below_ema20 = 0
 
         # Close open position at end of backtest
         if in_position:
@@ -1848,8 +996,7 @@ class MomentumBacktester:
         return {
             "symbol": symbol,
             "strategy": strategy,
-            "exit_target": target_label if strategy == "D" else (
-                str(exit_target) if strategy in ("I", "J", "K") and exit_target else None),
+            "exit_target": str(exit_target) if strategy in ("J", "K") and exit_target else None,
             "start_date": trading_days_dates[0].isoformat(),
             "end_date": trading_days_dates[-1].isoformat(),
             "trading_days": len(bt_indices),
@@ -1989,8 +1136,6 @@ class MomentumBacktester:
             # Support levels
             support_6m = lows.rolling(window=120, min_periods=120).min().shift(1)
             support_1y = lows.rolling(window=252, min_periods=252).min().shift(1)
-            two_week_low = lows.rolling(window=10, min_periods=10).min().shift(1)
-
             # Weekly support for Strategy J
             weekly = daily.resample("W-FRI").agg({
                 "Open": "first", "High": "max", "Low": "min",
@@ -2019,32 +1164,17 @@ class MomentumBacktester:
 
             # RS spread for Strategy K (3M) and L (6M)
             rs_spread_series = None
-            rs_spread_6m_series = None
             if not nifty_raw.empty:
                 nifty_close = nifty_raw["Close"].reindex(daily.index, method="ffill")
                 stock_3m = closes.pct_change(periods=63)
                 nifty_3m = nifty_close.pct_change(periods=63)
                 rs_spread_series = stock_3m - nifty_3m
-                stock_6m = closes.pct_change(periods=126)
-                nifty_6m = nifty_close.pct_change(periods=126)
-                rs_spread_6m_series = stock_6m - nifty_6m
-
-            # AVWAP anchored from 6-month swing low (for Strategy P)
-            avwap_series, avwap_age_series = self._calculate_avwap_series(highs, lows, closes, vol_series, lookback=120)
 
             # CCI(20) for Strategy J entry confirmation
             cci20_series = self._calculate_cci_series(highs, lows, closes, 20)
 
             # 20-day rolling high of Highs for Strategy N (excluding current bar)
             high_20d = highs.rolling(window=20, min_periods=20).max().shift(1)
-
-            # Fibonacci levels from 6-month high/low (for Strategy Q)
-            fib_high_6m = highs.rolling(window=120, min_periods=120).max()
-            fib_low_6m = lows.rolling(window=120, min_periods=120).min()
-            fib_range = fib_high_6m - fib_low_6m
-            fib_618_series = fib_high_6m - 0.618 * fib_range
-            fib_786_series = fib_high_6m - 0.70 * fib_range
-            fib_ext_121_series = fib_high_6m + 0.21 * fib_range
 
             # --- New indicators for O, R, S, T, U ---
             # RSI(14) for strategies O, R, S, U
@@ -2076,6 +1206,10 @@ class MomentumBacktester:
             stoch_k_series = stoch_rsi_raw.rolling(window=3, min_periods=3).mean() * 100
             stoch_d_series = stoch_k_series.rolling(window=3, min_periods=3).mean()
 
+            # Donchian channels for Strategy V
+            high_20d_v = highs.rolling(window=20, min_periods=20).max().shift(1)  # prev 20-day high
+            low_10d_v = lows.rolling(window=10, min_periods=10).min().shift(1)    # prev 10-day low
+
             # Backtest indices (need 200+ bars warmup)
             bt_indices = [i for i, ts in enumerate(daily.index)
                           if ts.date() >= bt_start_date and i >= 200]
@@ -2089,7 +1223,6 @@ class MomentumBacktester:
                 "ibs": ibs_series,
                 "support_6m": support_6m,
                 "support_1y": support_1y,
-                "two_week_low": two_week_low,
                 "weekly_support": weekly_support_series,
                 "weekly_low_stop": weekly_low_stop_series,
                 "rsi2": rsi2_series,
@@ -2098,11 +1231,6 @@ class MomentumBacktester:
                 "cci20": cci20_series,
                 "volume": vol_series,
                 "vol_avg20": vol_avg20,
-                "avwap": avwap_series,
-                "avwap_age": avwap_age_series,
-                "fib_618": fib_618_series,
-                "fib_786": fib_786_series,
-                "fib_ext_121": fib_ext_121_series,
                 "high_20d": high_20d,
                 "sma200": sma200_series,
                 "sma5": sma5_series,
@@ -2111,6 +1239,8 @@ class MomentumBacktester:
                 "atr14": atr14_series,
                 "stoch_k": stoch_k_series,
                 "stoch_d": stoch_d_series,
+                "high_20d_v": high_20d_v,
+                "low_10d_v": low_10d_v,
                 "ema5": ema5_series,
                 "ema8": ema8_series,
                 "ema10": ema10_series,
@@ -2118,7 +1248,6 @@ class MomentumBacktester:
                 "ema50": ema50_series,
                 "ema200": ema200_series,
                 "rs_spread": rs_spread_series,
-                "rs_spread_6m": rs_spread_6m_series,
                 "bt_indices": bt_indices,
             }
 
@@ -2202,10 +1331,7 @@ class MomentumBacktester:
                 exited = False
 
                 if pos["strategy"] == "J":
-                    # J exits (close mode): CCI exit, support break, +5% partial, +10% remaining
                     entry_stop = pos["entry_stop_j"]
-                    t1 = pos["entry_price"] * 1.05
-                    t2 = pos["entry_price"] * 1.10
 
                     # Nifty drop shield: skip support break if Nifty fell same or more
                     j_nifty_shields = False
@@ -2216,12 +1342,13 @@ class MomentumBacktester:
                         if nifty_pct <= stock_pct and nifty_pct < 0:
                             j_nifty_shields = True
 
+                    # J exits: +5% partial, +10% full, support break stop
+                    t1 = pos["entry_price"] * 1.05
+                    t2 = pos["entry_price"] * 1.10
                     if not pos["partial_exit_done"]:
-                        # Stop check
                         if not j_nifty_shields and price < entry_stop:
                             trades.append(self._make_portfolio_trade(
-                                pos, pos["shares"], day, price,
-                                "SUPPORT_BREAK"))
+                                pos, pos["shares"], day, price, "SUPPORT_BREAK"))
                             exited = True
                         elif price >= t1:
                             half = pos["shares"] // 2
@@ -2231,29 +1358,23 @@ class MomentumBacktester:
                             pos["partial_exit_done"] = True
                             if price >= t2:
                                 trades.append(self._make_portfolio_trade(
-                                    pos, pos["remaining_shares"], day, price,
-                                    "10PCT"))
+                                    pos, pos["remaining_shares"], day, price, "10PCT"))
                                 exited = True
                     else:
-                        # Remaining shares
                         if not j_nifty_shields and price < entry_stop:
                             trades.append(self._make_portfolio_trade(
-                                pos, pos["remaining_shares"], day, price,
-                                "SUPPORT_BREAK"))
+                                pos, pos["remaining_shares"], day, price, "SUPPORT_BREAK"))
                             exited = True
-                        # Exit remaining: Close < 3-day low (skip if Nifty weak)
                         elif not nifty_weak_today and day_idx >= 3:
                             three_day_low = float(ind["lows"].iloc[max(0, i-3):i].min())
                             if price < three_day_low:
+                                    trades.append(self._make_portfolio_trade(
+                                        pos, pos["remaining_shares"], day, price, "BELOW_3DAY_LOW"))
+                                    exited = True
+                            if not exited and price >= t2:
                                 trades.append(self._make_portfolio_trade(
-                                    pos, pos["remaining_shares"], day, price,
-                                    "BELOW_3DAY_LOW"))
+                                    pos, pos["remaining_shares"], day, price, "10PCT"))
                                 exited = True
-                        if not exited and price >= t2:
-                            trades.append(self._make_portfolio_trade(
-                                pos, pos["remaining_shares"], day, price,
-                                "10PCT"))
-                            exited = True
 
                 elif pos["strategy"] == "K":
                     # K exits (close mode): 3% stop, +5% partial, 3-day low remaining
@@ -2298,109 +1419,6 @@ class MomentumBacktester:
                                     pos, pos["remaining_shares"], day, price,
                                     "BELOW_3DAY_LOW"))
                                 exited = True
-
-                elif pos["strategy"] == "L":
-                    # L exits: RS < -2% (with 5-day min hold) OR Close < EMA(50)
-                    rs_val = 0.0
-                    if ind["rs_spread_6m"] is not None and not pd.isna(ind["rs_spread_6m"].iloc[i]):
-                        rs_val = float(ind["rs_spread_6m"].iloc[i])
-                    ema50 = float(ind["ema50"].iloc[i])
-                    hold_days = (day - pos["entry_date"]).days
-                    if price < ema50:
-                        trades.append(self._make_portfolio_trade(
-                            pos, pos["shares"], day, price, "EMA50_EXIT"))
-                        exited = True
-                    elif hold_days >= 5 and rs_val < -0.02:
-                        trades.append(self._make_portfolio_trade(
-                            pos, pos["shares"], day, price, "RS_NEGATIVE"))
-                        exited = True
-
-                elif pos["strategy"] == "M":
-                    ema10_val = float(ind["ema10"].iloc[i])
-                    ema20_val = float(ind["ema20"].iloc[i])
-                    prev_e10 = float(ind["ema10"].iloc[i - 1]) if i > 0 else ema10_val
-                    prev_e20 = float(ind["ema20"].iloc[i - 1]) if i > 0 else ema20_val
-                    # M partial: +5% → sell 50%
-                    if not pos["partial_exit_done"] and price >= pos["entry_price"] * 1.05:
-                        partial_shares = pos["shares"] // 2
-                        if partial_shares > 0:
-                            trades.append(self._make_portfolio_trade(
-                                pos, partial_shares, day, price, "PARTIAL_5PCT"))
-                            pos["remaining_shares"] = pos["shares"] - partial_shares
-                            pos["partial_exit_done"] = True
-                    # M exit: EMA(10) crosses below EMA(20)
-                    if prev_e10 >= prev_e20 and ema10_val < ema20_val:
-                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                        trades.append(self._make_portfolio_trade(
-                            pos, sz, day, price, "EMA10_BELOW_EMA20"))
-                        exited = True
-
-                elif pos["strategy"] == "P":
-                    avwap_val = float(ind["avwap"].iloc[i]) if not pd.isna(ind["avwap"].iloc[i]) else None
-                    if avwap_val is not None:
-                        # P stop: 3% below entry
-                        if price < pos["entry_price"] * 0.97:
-                            sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                            trades.append(self._make_portfolio_trade(
-                                pos, sz, day, price, "STOP_3PCT"))
-                            exited = True
-                        else:
-                            # P partial: +5% → sell 50%
-                            if not pos["partial_exit_done"] and price >= pos["entry_price"] * 1.05:
-                                partial_shares = pos["shares"] // 2
-                                if partial_shares > 0:
-                                    trades.append(self._make_portfolio_trade(
-                                        pos, partial_shares, day, price, "PARTIAL_5PCT"))
-                                    pos["remaining_shares"] = pos["shares"] - partial_shares
-                                    pos["partial_exit_done"] = True
-                            # Exit remaining 50%: Close < 3-day low (after partial)
-                            # Skip if Nifty itself is weak (Nifty close < Nifty 3-day low close)
-                            if pos["partial_exit_done"] and not nifty_weak_today:
-                                three_day_low = float(ind["lows"].iloc[max(0, i-3):i].min()) if i >= 3 else low
-                                if price < three_day_low:
-                                    if pos["remaining_shares"] > 0:
-                                        trades.append(self._make_portfolio_trade(
-                                            pos, pos["remaining_shares"], day, price, "BELOW_3DAY_LOW"))
-                                    exited = True
-
-                elif pos["strategy"] == "Q":
-                    # Q stop: Close < 70% fib level (locked at entry)
-                    if price < pos.get("q_fib_stop", 0):
-                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                        trades.append(self._make_portfolio_trade(
-                            pos, sz, day, price, "FIB_STOP_70"))
-                        exited = True
-                    else:
-                        # 3-day low exit before partial (skip if Nifty weak)
-                        if not pos["partial_exit_done"] and not nifty_weak_today and i >= 3:
-                            three_day_low = float(ind["lows"].iloc[max(0, i-3):i].min())
-                            if price < three_day_low:
-                                trades.append(self._make_portfolio_trade(
-                                    pos, pos["shares"], day, price, "BELOW_3DAY_LOW"))
-                                exited = True
-                        # Q partial: +5% → sell 50%
-                        if not exited and not pos["partial_exit_done"] and price >= pos["entry_price"] * 1.05:
-                            partial_shares = pos["shares"] // 2
-                            if partial_shares > 0:
-                                trades.append(self._make_portfolio_trade(
-                                    pos, partial_shares, day, price, "PARTIAL_5PCT"))
-                                pos["remaining_shares"] = pos["shares"] - partial_shares
-                                pos["partial_exit_done"] = True
-                        # Q target/exit remaining: 121% extension OR 3-day low (after partial)
-                        # 3-day low skipped if Nifty itself is weak
-                        if pos["partial_exit_done"]:
-                            if price >= pos.get("q_fib_target", float("inf")):
-                                if pos["remaining_shares"] > 0:
-                                    trades.append(self._make_portfolio_trade(
-                                        pos, pos["remaining_shares"], day, price, "FIB_TARGET_121"))
-                                exited = True
-                            elif not nifty_weak_today:
-                                three_day_low = float(ind["lows"].iloc[max(0, i-3):i].min()) if i >= 3 else low
-                                if price < three_day_low:
-                                    if pos["remaining_shares"] > 0:
-                                        trades.append(self._make_portfolio_trade(
-                                            pos, pos["remaining_shares"], day, price, "BELOW_3DAY_LOW"))
-                                    exited = True
 
                 elif pos["strategy"] == "N":
                     cci_val = float(ind["cci20"].iloc[i]) if not pd.isna(ind["cci20"].iloc[i]) else 0.0
@@ -2487,11 +1505,10 @@ class MomentumBacktester:
                         exited = True
 
                 elif pos["strategy"] == "T":
-                    # T exits: 5% hard SL, +5% partial, price >= upper Keltner remaining
+                    # T exits: 5% SL, +5% partial, upper Keltner remaining
                     ema20_val = float(ind["ema20"].iloc[i])
                     atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
                     upper_keltner = ema20_val + 2 * atr14_val
-
                     if price <= pos["entry_price"] * 0.95:
                         sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
                         trades.append(self._make_portfolio_trade(
@@ -2511,13 +1528,12 @@ class MomentumBacktester:
                         exited = True
 
                 elif pos["strategy"] == "U":
-                    # U exits: 5% hard SL, +5% partial, StochRSI %K crosses below %D both > 70
+                    # U exits: 5% SL, +5% partial, StochRSI overbought exit
                     stk = float(ind["stoch_k"].iloc[i]) if not pd.isna(ind["stoch_k"].iloc[i]) else 50.0
                     std = float(ind["stoch_d"].iloc[i]) if not pd.isna(ind["stoch_d"].iloc[i]) else 50.0
                     stk_prev = float(ind["stoch_k"].iloc[i - 1]) if i > 0 and not pd.isna(ind["stoch_k"].iloc[i - 1]) else 50.0
                     std_prev = float(ind["stoch_d"].iloc[i - 1]) if i > 0 and not pd.isna(ind["stoch_d"].iloc[i - 1]) else 50.0
                     k_cross_dn = (stk_prev >= std_prev and stk < std)
-
                     if price <= pos["entry_price"] * 0.95:
                         sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
                         trades.append(self._make_portfolio_trade(
@@ -2534,6 +1550,28 @@ class MomentumBacktester:
                         sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
                         trades.append(self._make_portfolio_trade(
                             pos, sz, day, price, "STOCHRSI_EXIT"))
+                        exited = True
+
+                elif pos["strategy"] == "V":
+                    # V exits: 5% hard SL, +5% partial, Close < 10-day low (trailing channel)
+                    low_10d = float(ind["low_10d_v"].iloc[i]) if not pd.isna(ind["low_10d_v"].iloc[i]) else 0.0
+
+                    if price <= pos["entry_price"] * 0.95:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "HARD_SL_5PCT"))
+                        exited = True
+                    if not exited and not pos["partial_exit_done"] and price >= pos["entry_price"] * 1.05:
+                        half = pos["shares"] // 2
+                        if half > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, half, day, price, "PARTIAL_5PCT"))
+                            pos["remaining_shares"] = pos["shares"] - half
+                            pos["partial_exit_done"] = True
+                    if not exited and low_10d > 0 and price < low_10d:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "DONCHIAN_LOW_EXIT"))
                         exited = True
 
                 if not exited:
@@ -2602,84 +1640,6 @@ class MomentumBacktester:
                                     "symbol": ticker,
                                     "strategy": "K",
                                     "price": price,
-                                })
-
-                # Strategy L entry: 6M RS crosses above +2% buffer
-                if "L" in strategies:
-                    if ind["rs_spread_6m"] is not None and not pd.isna(ind["rs_spread_6m"].iloc[i]):
-                        rs_val = float(ind["rs_spread_6m"].iloc[i])
-                        rs_prev_l = 0.0
-                        if i > 0 and not pd.isna(ind["rs_spread_6m"].iloc[i - 1]):
-                            rs_prev_l = float(ind["rs_spread_6m"].iloc[i - 1])
-                        if rs_prev_l < 0.02 and rs_val > 0.02:
-                            already = any(s["symbol"] == ticker for s in signals)
-                            if not already:
-                                signals.append({
-                                    "symbol": ticker,
-                                    "strategy": "L",
-                                    "price": price,
-                                })
-
-                # Strategy M entry: EMA(10) crosses above EMA(20)
-                #   + Close > EMA(50) + EMA(20) rising
-                if "M" in strategies:
-                    ema10_val = float(ind["ema10"].iloc[i])
-                    ema20_val = float(ind["ema20"].iloc[i])
-                    ema50_val = float(ind["ema50"].iloc[i])
-                    prev_e10 = float(ind["ema10"].iloc[i - 1]) if i > 0 else ema10_val
-                    prev_e20 = float(ind["ema20"].iloc[i - 1]) if i > 0 else ema20_val
-                    ema20_rising = (ema20_val > prev_e20)
-                    if (prev_e10 < prev_e20 and ema10_val > ema20_val
-                            and price > ema50_val and ema20_rising):
-                        already = any(s["symbol"] == ticker for s in signals)
-                        if not already:
-                            signals.append({
-                                "symbol": ticker,
-                                "strategy": "M",
-                                "price": price,
-                            })
-
-                # Strategy P entry: AVWAP bounce
-                #   Close > AVWAP, within 1% of AVWAP, IBS > 0.3, green candle
-                if "P" in strategies:
-                    avwap_val = float(ind["avwap"].iloc[i]) if not pd.isna(ind["avwap"].iloc[i]) else None
-                    if avwap_val is not None:
-                        ibs_val = float(ind["ibs"].iloc[i])
-                        open_price = float(ind["opens"].iloc[i])
-                        within_1pct = (price <= avwap_val * 1.01)
-                        if (price > avwap_val and within_1pct
-                                and ibs_val > 0.5 and price > open_price):
-                            already = any(s["symbol"] == ticker for s in signals)
-                            if not already:
-                                signals.append({
-                                    "symbol": ticker,
-                                    "strategy": "P",
-                                    "price": price,
-                                })
-
-                # Strategy Q entry: Fibonacci 61.8% bounce
-                if "Q" in strategies:
-                    f618 = float(ind["fib_618"].iloc[i]) if not pd.isna(ind["fib_618"].iloc[i]) else None
-                    f786 = float(ind["fib_786"].iloc[i]) if not pd.isna(ind["fib_786"].iloc[i]) else None
-                    f121 = float(ind["fib_ext_121"].iloc[i]) if not pd.isna(ind["fib_ext_121"].iloc[i]) else None
-                    if f618 is not None and f786 is not None and f121 is not None:
-                        ibs_val = float(ind["ibs"].iloc[i])
-                        open_price = float(ind["opens"].iloc[i])
-                        vol_now = float(ind["volume"].iloc[i])
-                        vol_avg = float(ind["vol_avg20"].iloc[i]) if not pd.isna(ind["vol_avg20"].iloc[i]) else 0.0
-                        within_1pct = (price <= f618 * 1.01)
-                        vol_spike = vol_avg > 0 and vol_now > 1.5 * vol_avg
-                        if (price > f618 and within_1pct
-                                and ibs_val > 0.5 and price > open_price
-                                and vol_spike):
-                            already = any(s["symbol"] == ticker for s in signals)
-                            if not already:
-                                signals.append({
-                                    "symbol": ticker,
-                                    "strategy": "Q",
-                                    "price": price,
-                                    "q_fib_stop": f786,
-                                    "q_fib_target": f121,
                                 })
 
                 # Strategy N entry: CCI(20) crosses above 100, Nifty CCI > 0
@@ -2781,6 +1741,23 @@ class MomentumBacktester:
                                 "price": price,
                             })
 
+                # Strategy V entry: Close > 20-day high AND Vol > 1.5x avg(20) AND Price > EMA(200) AND green
+                if "V" in strategies:
+                    high_20d_val = float(ind["high_20d_v"].iloc[i]) if not pd.isna(ind["high_20d_v"].iloc[i]) else None
+                    ema200_val = float(ind["ema200"].iloc[i])
+                    vol_val = float(ind["volume"].iloc[i])
+                    vol_avg = float(ind["vol_avg20"].iloc[i]) if not pd.isna(ind["vol_avg20"].iloc[i]) else 0.0
+                    if (high_20d_val is not None and price > high_20d_val
+                            and vol_avg > 0 and vol_val > 1.5 * vol_avg
+                            and price > ema200_val and is_green):
+                        already = any(s["symbol"] == ticker for s in signals)
+                        if not already:
+                            signals.append({
+                                "symbol": ticker,
+                                "strategy": "V",
+                                "price": price,
+                            })
+
             total_signals += len(signals)
 
             # === 3. Allocate capital (max entries_per_day) ===
@@ -2814,9 +1791,6 @@ class MomentumBacktester:
                             pos["nifty_at_entry"] = nifty_close_by_date.get(day, 0.0)
                         elif sig["strategy"] == "N":
                             pos["nifty_at_entry"] = nifty_close_by_date.get(day, 0.0)
-                        elif sig["strategy"] == "Q":
-                            pos["q_fib_stop"] = sig["q_fib_stop"]
-                            pos["q_fib_target"] = sig["q_fib_target"]
                         positions.append(pos)
             elif signals and available_slots <= 0:
                 missed_signals += len(signals)
@@ -2853,14 +1827,14 @@ class MomentumBacktester:
         effective_capital = max_positions_used * PER_STOCK if max_positions_used > 0 else TOTAL_CAPITAL
         summary = self._calculate_summary(trades, effective_capital)
 
-        strat_labels = {"J": "J(3:15)", "K": "K(3:15)", "L": "L(Pure RS)", "M": "M(EMA 10/20)", "N": "N(CCI)", "P": "P(AVWAP)", "Q": "Q(Fib 61.8)", "O": "O(Connors RSI2)", "R": "R(RSI Mom)", "S": "S(MACD+RSI)", "T": "T(Keltner)", "U": "U(StochRSI)"}
+        strat_labels = {"J": "J(3:15)", "K": "K(3:15)", "N": "N(CCI)", "O": "O(Connors RSI2)", "R": "R(RSI Mom)", "S": "S(MACD+RSI)", "T": "T(Keltner)", "U": "U(StochRSI)", "V": "V(Donchian)"}
         strat_label = " + ".join(strat_labels.get(s, s) for s in strategies)
 
         return {
             "strategy": "Portfolio",
             "strategies": strategies,
             "strategies_label": strat_label,
-            "exit_target": "close",
+            "exit_target": None,
             "start_date": all_dates[0].isoformat(),
             "end_date": all_dates[-1].isoformat(),
             "trading_days": len(all_dates),

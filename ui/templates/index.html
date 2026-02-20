@@ -255,6 +255,71 @@
             color: var(--green);
         }
 
+        .user-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+
+        .user-card .user-card-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .user-card .user-card-header .status-dot {
+            width: 7px;
+            height: 7px;
+        }
+
+        .user-card .user-card-name {
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .user-card .user-card-status {
+            color: var(--text-muted);
+            font-size: 10px;
+        }
+
+        .user-card.connected {
+            border-color: var(--green);
+        }
+
+        .user-card.connected .user-card-status {
+            color: var(--green);
+        }
+
+        .user-card .user-card-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .user-card .user-card-actions .btn {
+            font-size: 10px;
+            padding: 3px 8px;
+        }
+
+        .user-card .token-row {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .user-card .token-row input {
+            flex: 1;
+            font-size: 10px;
+            padding: 3px 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            font-family: inherit;
+        }
+
         .toggle-container {
             display: flex;
             justify-content: space-between;
@@ -372,6 +437,31 @@
             border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
+        }
+
+        .stock-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .stock-table th.sortable:hover {
+            color: var(--text-primary);
+        }
+
+        .stock-table th.sortable::after {
+            content: ' \25B8';
+            font-size: 8px;
+            opacity: 0.3;
+        }
+
+        .stock-table th.sortable.asc::after {
+            content: ' \25B4';
+            opacity: 1;
+        }
+
+        .stock-table th.sortable.desc::after {
+            content: ' \25BE';
+            opacity: 1;
         }
 
         .stock-table td {
@@ -604,9 +694,26 @@
 
         /* Live Signals panel colors */
         .panel.ls-j-signals .panel-title { color: var(--green); }
-        .panel.ls-k-signals .panel-title { color: var(--blue); }
-        .panel.ls-positions .panel-title { color: var(--orange); }
+        .panel.ls-t-signals .panel-title { color: var(--blue); }
+        .panel.ls-u-signals .panel-title { color: var(--orange); }
+        .panel.ls-v-signals .panel-title { color: #8e44ad; }
+        .panel.ls-positions .panel-title { color: var(--green); }
         .panel.ls-exits .panel-title { color: var(--red); }
+
+        .ls-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            min-width: 700px;
+            height: calc(100vh - 60px);
+        }
+        .ls-bottom-row {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
 
         .buy-input {
             width: 70px;
@@ -629,12 +736,6 @@
         .score-high { background: var(--green-light); color: var(--green); }
         .score-mid { background: var(--orange-light); color: var(--orange); }
         .score-low { background: var(--bg-card); color: var(--text-muted); }
-
-        /* Momentum panel colors */
-        .panel.momentum-entry .panel-title { color: var(--green); }
-        .panel.momentum-active .panel-title { color: var(--blue); }
-        .panel.momentum-scan .panel-title { color: var(--orange); }
-        .panel.momentum-exit .panel-title { color: var(--red); }
 
         .cond-pass { color: var(--green); font-weight: 600; }
         .cond-fail { color: var(--red); font-weight: 600; }
@@ -862,9 +963,9 @@
         <h1>Nifty 500 Screener</h1>
         <div class="header-right">
             <div class="strategy-tabs">
-                <button class="strategy-tab active" onclick="switchStrategy('rs')">RS Screener</button>
+                <button class="strategy-tab active" onclick="switchStrategy('rs')">Watchlist</button>
                 <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
-                <button class="strategy-tab" onclick="switchStrategy('momentum')">Momentum Scanner</button>
+                <button class="strategy-tab" onclick="switchStrategy('momentum')">Backtest</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -874,7 +975,7 @@
                 </svg>
                 Refresh
             </button>
-            <div class="status-indicator">
+            <div class="status-indicator" id="header-status">
                 <span class="status-dot" id="connection-dot"></span>
                 <span id="connection-status">Disconnected</span>
             </div>
@@ -884,39 +985,22 @@
     <div class="container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="section">
-                <div class="section-title">Login & Settings</div>
-            </div>
-
-            <div class="section">
-                <div class="section-title">Zerodha Connection</div>
-                <div class="connection-box" id="connection-box">
-                    <span id="connection-text">Not Connected</span>
+            <div class="section" id="zerodha-section">
+                <div class="section-title">Zerodha</div>
+                <div id="user-cards-container">
+                    <!-- Per-user cards rendered by JS -->
                 </div>
-                <button class="btn" id="login-btn" onclick="handleLogin()">
-                    Get Link for Request Token
-                </button>
-                <input type="text" class="input-field" id="token-input" placeholder="Paste redirect URL here">
-                <button class="btn btn-primary" onclick="submitToken()">Connect</button>
+                <div style="margin-top:8px;">
+                    <label style="font-size:11px;color:var(--text-muted);">Trade as:</label>
+                    <select class="setting-select" id="trade-as-select" style="width:100%;margin-top:2px;">
+                    </select>
+                </div>
             </div>
 
             <div class="divider"></div>
 
             <div class="section" id="rs-settings">
-                <div class="section-title">RS Settings</div>
-                <div class="toggle-container">
-                    <span class="setting-label">Live Trading</span>
-                    <div class="toggle" title="Disabled - Paper mode only"></div>
-                </div>
-                <div class="setting-row">
-                    <span class="setting-label">Universe</span>
-                    <select class="setting-select" id="stock-universe">
-                        <option value="50">Nifty 50</option>
-                        <option value="100">Nifty 100</option>
-                        <option value="250" selected>Nifty 250</option>
-                        <option value="500">Nifty 500</option>
-                    </select>
-                </div>
+                <div class="section-title">Watchlist Settings</div>
                 <div class="setting-row">
                     <span class="setting-label">RS Period</span>
                     <select class="setting-select" id="rs-period">
@@ -939,72 +1023,31 @@
             </div>
 
             <div class="section hidden" id="live-signals-settings">
-                <div class="section-title">Live Signals Settings</div>
+                <div class="section-title">Scan Universe</div>
                 <div class="setting-row">
                     <span class="setting-label">Universe</span>
                     <select class="setting-select" id="ls-universe">
                         <option value="50" selected>Nifty 50</option>
                         <option value="100">Nifty 100</option>
+                        <option value="150">Midcap 150</option>
                     </select>
                 </div>
-                <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save Settings</button>
-                <div style="margin-top: 10px;">
-                    <div class="setting-static">J: Weekly close support, low within 1%, IBS > 0.5, green</div>
-                    <div class="setting-static">K: RS > 0, RSI(2) cross 20, close > EMA50, vol up</div>
-                </div>
+                <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save</button>
             </div>
 
             <div class="section hidden" id="momentum-settings">
-                <div class="section-title">Momentum Settings</div>
-                <div class="setting-row">
-                    <span class="setting-label">RSI(2) Threshold</span>
-                    <select class="setting-select" id="momentum-rsi2">
-                        <option value="60">60</option>
-                        <option value="65">65</option>
-                        <option value="70">70</option>
-                        <option value="75" selected>75</option>
-                        <option value="80">80</option>
-                        <option value="85">85</option>
-                        <option value="90">90</option>
-                    </select>
-                </div>
-                <div class="setting-static">30m RSI(14) Min: 30 (fixed)</div>
-                <div class="setting-static">Universe: Nifty 50 (fixed)</div>
-                <div class="setting-static">EMA Periods: 50 / 200 (fixed)</div>
-                <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save Settings</button>
-
                 <div class="backtest-controls">
                     <div class="section-title">Backtest</div>
-                    <select class="backtest-select" id="backtest-strategy" onchange="toggleExitEma()">
-                        <option value="D">Strategy D (RSI reversal)</option>
-                        <option value="E">Strategy E (EMA pullback)</option>
-                        <option value="G">Strategy G (IBS extreme)</option>
-                        <option value="I_gtt">Strategy I — support bounce (GTT)</option>
-                        <option value="I_close">Strategy I — support bounce (3:15 PM)</option>
-                        <option value="I_2wlow">Strategy I — support bounce (2W Low)</option>
-                        <option value="J_gtt">Strategy J — weekly support (GTT)</option>
-                        <option value="J_close">Strategy J — weekly support (3:15 PM)</option>
-                        <option value="J_2wlow">Strategy J — weekly support (2W Low)</option>
-                        <option value="K_gtt">Strategy K — RS trending (GTT)</option>
-                        <option value="K_close">Strategy K — RS trending (3:15 PM)</option>
-                        <option value="K_2wlow">Strategy K — RS trending (2W Low)</option>
-                        <option value="L">Strategy L — Pure RS</option>
-                        <option value="M">Strategy M — EMA 10/20</option>
-                        <option value="P">Strategy P — AVWAP</option>
-                        <option value="Q">Strategy Q — Fib 61.8%</option>
+                    <select class="backtest-select" id="backtest-strategy">
+                        <option value="J">Strategy J — weekly support</option>
+                        <option value="K">Strategy K — RS trending</option>
                         <option value="N">Strategy N — CCI momentum</option>
                         <option value="O">Strategy O — Connors RSI(2)</option>
                         <option value="R">Strategy R — RSI momentum</option>
                         <option value="S">Strategy S — MACD + RSI</option>
                         <option value="T">Strategy T — Keltner pullback</option>
                         <option value="U">Strategy U — Stochastic RSI</option>
-                    </select>
-                    <select class="backtest-select hidden" id="backtest-exit-ema">
-                        <option value="5">Profit target: EMA(5)</option>
-                        <option value="8">Profit target: EMA(8)</option>
-                        <option value="10">Profit target: EMA(10)</option>
-                        <option value="20">Profit target: EMA(20)</option>
-                        <option value="pct5">Profit target: +5% from entry</option>
+                        <option value="V">Strategy V — Donchian Breakout</option>
                     </select>
                     <select class="backtest-select" id="backtest-symbol">
                         <option value="">-- Select Symbol --</option>
@@ -1088,6 +1131,8 @@
                         <option value="500000">5L / trade</option>
                     </select>
                     <select class="backtest-select" id="portfolio-strategy">
+                        <option value="JTUOV">J + T + U + O + V</option>
+                        <option value="JTUO">J + T + U + O</option>
                         <option value="JTU">J + T + U</option>
                         <option value="JT">J + T</option>
                         <option value="JK">J + K</option>
@@ -1095,15 +1140,12 @@
                         <option value="J">J: Weekly Support</option>
                         <option value="K">K: RS Trending Dip</option>
                         <option value="N">N: CCI Momentum</option>
-                        <option value="L">L: Pure RS</option>
-                        <option value="M">M: EMA 10/20</option>
-                        <option value="P">P: AVWAP</option>
-                        <option value="Q">Q: Fib 61.8%</option>
                         <option value="O">O: Connors RSI(2)</option>
                         <option value="R">R: RSI Momentum</option>
                         <option value="S">S: MACD + RSI</option>
                         <option value="T">T: Keltner Pullback</option>
                         <option value="U">U: Stochastic RSI</option>
+                        <option value="V">V: Donchian Breakout</option>
                     </select>
                     <select class="backtest-select" id="portfolio-entries-per-day">
                         <option value="1">1 trade / day</option>
@@ -1135,21 +1177,8 @@
 
         <!-- Main Content -->
         <main class="main">
-            <!-- RS Screener Panels -->
+            <!-- Watchlist Panels -->
             <div class="panels" id="rs-panels">
-                <div class="panel fresh">
-                    <div class="panel-header">
-                        <span class="panel-title">Fresh Entries</span>
-                        <span class="panel-count" id="fresh-count">0</span>
-                    </div>
-                    <div class="panel-body" id="fresh-panel">
-                        <div class="loading-container">
-                            <div class="loader"></div>
-                            <span>Loading...</span>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="panel sectoral">
                     <div class="panel-header">
                         <span class="panel-title">Sectoral Indices</span>
@@ -1163,12 +1192,25 @@
                     </div>
                 </div>
 
+                <div class="panel fresh">
+                    <div class="panel-header">
+                        <span class="panel-title">Nifty 50</span>
+                        <span class="panel-count" id="nifty50-count">0</span>
+                    </div>
+                    <div class="panel-body" id="nifty50-panel">
+                        <div class="loading-container">
+                            <div class="loader"></div>
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="panel inrs">
                     <div class="panel-header">
-                        <span class="panel-title">In RS (Holding)</span>
-                        <span class="panel-count" id="inrs-count">0</span>
+                        <span class="panel-title">Nifty 100</span>
+                        <span class="panel-count" id="nifty100-count">0</span>
                     </div>
-                    <div class="panel-body" id="inrs-panel">
+                    <div class="panel-body" id="nifty100-panel">
                         <div class="loading-container">
                             <div class="loader"></div>
                             <span>Loading...</span>
@@ -1178,10 +1220,10 @@
 
                 <div class="panel exit">
                     <div class="panel-header">
-                        <span class="panel-title">Exit Signals</span>
-                        <span class="panel-count" id="exit-count">0</span>
+                        <span class="panel-title">Midcap 150</span>
+                        <span class="panel-count" id="midcap150-count">0</span>
                     </div>
-                    <div class="panel-body" id="exit-panel">
+                    <div class="panel-body" id="midcap150-panel">
                         <div class="loading-container">
                             <div class="loader"></div>
                             <span>Loading...</span>
@@ -1191,10 +1233,10 @@
             </div>
 
             <!-- Live Signals Panels -->
-            <div class="panels hidden" id="live-signals-panels">
+            <div class="ls-grid hidden" id="live-signals-panels">
                 <div class="panel ls-j-signals">
                     <div class="panel-header">
-                        <span class="panel-title">J Entry Signals</span>
+                        <span class="panel-title">J — Weekly Support</span>
                         <span class="panel-count" id="ls-j-count">0</span>
                     </div>
                     <div class="panel-body" id="ls-j-panel">
@@ -1202,76 +1244,55 @@
                     </div>
                 </div>
 
-                <div class="panel ls-k-signals">
+                <div class="panel ls-t-signals">
                     <div class="panel-header">
-                        <span class="panel-title">K Entry Signals</span>
-                        <span class="panel-count" id="ls-k-count">0</span>
+                        <span class="panel-title">T — Keltner Pullback</span>
+                        <span class="panel-count" id="ls-t-count">0</span>
                     </div>
-                    <div class="panel-body" id="ls-k-panel">
+                    <div class="panel-body" id="ls-t-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
 
-                <div class="panel ls-positions">
+                <div class="panel ls-u-signals">
                     <div class="panel-header">
-                        <span class="panel-title">Entered Signals</span>
-                        <span class="panel-count" id="ls-positions-count">0</span>
+                        <span class="panel-title">U — Stochastic RSI</span>
+                        <span class="panel-count" id="ls-u-count">0</span>
                     </div>
-                    <div class="panel-body" id="ls-positions-panel">
-                        <div class="empty-state">No active positions</div>
-                    </div>
-                </div>
-
-                <div class="panel ls-exits">
-                    <div class="panel-header">
-                        <span class="panel-title">Exit Signals</span>
-                        <span class="panel-count" id="ls-exits-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-exits-panel">
-                        <div class="empty-state">No exit signals</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Momentum Scanner Panels -->
-            <div class="panels hidden" id="momentum-panels">
-                <div class="panel momentum-entry">
-                    <div class="panel-header">
-                        <span class="panel-title">Momentum Entries</span>
-                        <span class="panel-count" id="momentum-entry-count">0</span>
-                    </div>
-                    <div class="panel-body" id="momentum-entry-panel">
+                    <div class="panel-body" id="ls-u-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
 
-                <div class="panel momentum-active">
+                <div class="panel ls-v-signals">
                     <div class="panel-header">
-                        <span class="panel-title">Active Momentum</span>
-                        <span class="panel-count" id="momentum-active-count">0</span>
+                        <span class="panel-title">V — Donchian Breakout</span>
+                        <span class="panel-count" id="ls-v-count">0</span>
                     </div>
-                    <div class="panel-body" id="momentum-active-panel">
+                    <div class="panel-body" id="ls-v-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
 
-                <div class="panel momentum-scan">
-                    <div class="panel-header">
-                        <span class="panel-title">Full Scan — Nifty 50</span>
-                        <span class="panel-count" id="momentum-scan-count">0</span>
+                <div class="ls-bottom-row">
+                    <div class="panel ls-positions">
+                        <div class="panel-header">
+                            <span class="panel-title">Entered Signals</span>
+                            <span class="panel-count" id="ls-positions-count">0</span>
+                        </div>
+                        <div class="panel-body" id="ls-positions-panel">
+                            <div class="empty-state">No active positions</div>
+                        </div>
                     </div>
-                    <div class="panel-body" id="momentum-scan-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
 
-                <div class="panel momentum-exit">
-                    <div class="panel-header">
-                        <span class="panel-title">Exit Signals</span>
-                        <span class="panel-count" id="momentum-exit-count">0</span>
-                    </div>
-                    <div class="panel-body" id="momentum-exit-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
+                    <div class="panel ls-exits">
+                        <div class="panel-header">
+                            <span class="panel-title">Exit Signals</span>
+                            <span class="panel-count" id="ls-exits-count">0</span>
+                        </div>
+                        <div class="panel-body" id="ls-exits-panel">
+                            <div class="empty-state">No exit signals</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1279,7 +1300,7 @@
             <!-- Batch Backtest Results -->
             <div class="batch-results hidden" id="batch-results">
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <button class="btn btn-back" style="margin-bottom:0;" onclick="closeBatchBacktest()">&larr; Back to Scanner</button>
+                    <button class="btn btn-back" style="margin-bottom:0;" onclick="closeBatchBacktest()">&larr; Back</button>
                     <div class="batch-title" id="batch-title" style="flex:1;">Batch Backtest Results</div>
                     <button class="btn hidden" id="batch-download-btn" onclick="downloadBatchCSV()" style="width:auto;padding:5px 12px;">Download CSV</button>
                 </div>
@@ -1291,7 +1312,7 @@
             <!-- Backtest Results -->
             <div class="backtest-results hidden" id="backtest-results">
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <button class="btn btn-back" style="margin-bottom:0;" onclick="closeBacktest()">&larr; Back to Scanner</button>
+                    <button class="btn btn-back" style="margin-bottom:0;" onclick="closeBacktest()">&larr; Back</button>
                     <div style="flex:1;"></div>
                     <button class="btn hidden" id="portfolio-download-btn" onclick="downloadPortfolioCSV()" style="width:auto;padding:5px 12px;">Download CSV</button>
                 </div>
@@ -1314,11 +1335,11 @@
 
     <script>
         // State
-        let isConnected = false;
+        let kiteUsers = [];
+        let selectedTradeUser = null;
         let autoRefreshInterval = null;
         let activeStrategy = 'rs';
         let liveSignalsDataLoaded = false;
-        let momentumDataLoaded = false;
         let batchResultData = null;
         let portfolioResultData = null;
         const AUTO_REFRESH_MS = 15 * 60 * 1000;
@@ -1390,7 +1411,6 @@
             // Toggle panels
             document.getElementById('rs-panels').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-panels').classList.toggle('hidden', strategy !== 'live_signals');
-            document.getElementById('momentum-panels').classList.toggle('hidden', strategy !== 'momentum');
             document.getElementById('backtest-results').classList.add('hidden');
             document.getElementById('batch-results').classList.add('hidden');
 
@@ -1404,9 +1424,6 @@
                 loadLiveSignalsData();
                 loadLivePositions();
             }
-            if (strategy === 'momentum' && !momentumDataLoaded) {
-                loadMomentumData();
-            }
         }
 
         // ============ Settings ============
@@ -1416,11 +1433,9 @@
                 const res = await fetch('/api/settings');
                 const data = await res.json();
                 if (data.success) {
-                    document.getElementById('stock-universe').value = data.settings.stock_universe || 250;
                     document.getElementById('rs-period').value = data.settings.rs_period || 63;
                     document.getElementById('ema-period').value = data.settings.ema_period || 63;
                     document.getElementById('ls-universe').value = data.settings.live_signals_universe || 50;
-                    document.getElementById('momentum-rsi2').value = data.settings.momentum_rsi2_threshold || 75;
                 }
             } catch (e) {
                 console.error('Failed to load settings:', e);
@@ -1428,22 +1443,17 @@
         }
 
         async function saveSettings() {
-            const stockUniverse = parseInt(document.getElementById('stock-universe').value);
             const rsPeriod = parseInt(document.getElementById('rs-period').value);
             const emaPeriod = parseInt(document.getElementById('ema-period').value);
             const lsUniverse = parseInt(document.getElementById('ls-universe').value);
-            const momentumRsi2 = parseInt(document.getElementById('momentum-rsi2').value);
-
             try {
                 const res = await fetch('/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        stock_universe: stockUniverse,
                         rs_period: rsPeriod,
                         ema_period: emaPeriod,
-                        live_signals_universe: lsUniverse,
-                        momentum_rsi2_threshold: momentumRsi2
+                        live_signals_universe: lsUniverse
                     })
                 });
                 const data = await res.json();
@@ -1455,9 +1465,6 @@
                     }
                     if (data.needs_live_signals_refresh && activeStrategy === 'live_signals') {
                         refreshLiveSignalsData();
-                    }
-                    if (data.needs_momentum_refresh && activeStrategy === 'momentum') {
-                        refreshMomentumData();
                     }
                 } else {
                     showToast(data.error || 'Failed to save', 'error');
@@ -1472,7 +1479,6 @@
             autoRefreshInterval = setInterval(() => {
                 if (activeStrategy === 'rs') loadData();
                 else if (activeStrategy === 'live_signals') loadLiveSignalsData();
-                else if (activeStrategy === 'momentum') loadMomentumData();
             }, AUTO_REFRESH_MS);
         }
 
@@ -1480,51 +1486,125 @@
 
         async function checkConnection() {
             try {
-                const res = await fetch('/api/connection/status');
+                const res = await fetch('/api/users');
                 const data = await res.json();
-                isConnected = data.status.connected;
-                updateConnectionUI(data.status.user_name || null);
+                if (data.success) {
+                    kiteUsers = data.users;
+                    updateConnectionUI();
+                }
             } catch (e) {
                 console.error('Connection check failed:', e);
             }
         }
 
-        function updateConnectionUI(userName = null) {
-            const dot = document.getElementById('connection-dot');
-            const status = document.getElementById('connection-status');
-            const box = document.getElementById('connection-box');
-            const boxText = document.getElementById('connection-text');
-
-            if (isConnected) {
-                dot.classList.add('connected');
-                status.textContent = 'Connected';
-                box.classList.add('connected');
-                boxText.textContent = userName ? `Connected as ${userName}!` : 'Connected!';
+        function updateConnectionUI() {
+            // Header dots
+            const headerStatus = document.getElementById('header-status');
+            if (kiteUsers.length === 0) {
+                headerStatus.innerHTML = '<span class="status-dot"></span><span>No users</span>';
             } else {
-                dot.classList.remove('connected');
-                status.textContent = 'Disconnected';
-                box.classList.remove('connected');
-                boxText.textContent = 'Not Connected';
+                const dots = kiteUsers.map(u => {
+                    const cls = u.connected ? 'status-dot connected' : 'status-dot';
+                    return `<span class="${cls}" title="${u.config_name}"></span>`;
+                }).join('');
+                const anyConnected = kiteUsers.some(u => u.connected);
+                const label = anyConnected
+                    ? kiteUsers.filter(u => u.connected).map(u => u.config_name).join(', ')
+                    : 'Disconnected';
+                headerStatus.innerHTML = dots + `<span>${label}</span>`;
             }
+
+            // Sidebar user cards
+            const container = document.getElementById('user-cards-container');
+            container.innerHTML = kiteUsers.map(u => {
+                const connClass = u.connected ? 'user-card connected' : 'user-card';
+                const statusText = u.connected
+                    ? (u.user_name ? `Connected as ${u.user_name}` : 'Connected')
+                    : (u.api_key_configured ? 'Not connected' : 'API key missing');
+                const dotClass = u.connected ? 'status-dot connected' : 'status-dot';
+
+                let actions = '';
+                if (u.connected) {
+                    actions = `<button class="btn" onclick="disconnectUser('${u.config_user_id}')" style="font-size:10px;padding:3px 8px;">Disconnect</button>`;
+                } else if (u.api_key_configured) {
+                    actions = `
+                        <button class="btn" onclick="handleLogin('${u.config_user_id}')" style="font-size:10px;padding:3px 8px;">Get Token</button>
+                        <div class="token-row">
+                            <input type="text" id="token-${u.config_user_id}" placeholder="Paste redirect URL">
+                            <button class="btn btn-primary" onclick="submitToken('${u.config_user_id}')" style="font-size:10px;padding:3px 8px;">Go</button>
+                        </div>`;
+                }
+
+                return `
+                    <div class="${connClass}">
+                        <div class="user-card-header">
+                            <span class="${dotClass}"></span>
+                            <span class="user-card-name">${u.config_name}</span>
+                        </div>
+                        <div class="user-card-status">${statusText}</div>
+                        <div class="user-card-actions">${actions}</div>
+                    </div>`;
+            }).join('');
+
+            // Trade-as selector
+            const sel = document.getElementById('trade-as-select');
+            const connectedUsers = kiteUsers.filter(u => u.connected);
+            sel.innerHTML = connectedUsers.length === 0
+                ? '<option value="">No connected users</option>'
+                : connectedUsers.map(u =>
+                    `<option value="${u.config_user_id}">${u.config_name}</option>`
+                ).join('');
+
+            // Preserve or set selectedTradeUser
+            if (connectedUsers.length > 0) {
+                if (!selectedTradeUser || !connectedUsers.find(u => u.config_user_id === selectedTradeUser)) {
+                    selectedTradeUser = connectedUsers[0].config_user_id;
+                }
+                sel.value = selectedTradeUser;
+            } else {
+                selectedTradeUser = null;
+            }
+
+            sel.onchange = () => { selectedTradeUser = sel.value; };
         }
 
-        async function handleLogin() {
+        async function handleLogin(userId) {
             try {
-                const res = await fetch('/api/login/url');
+                const res = await fetch(`/api/login/url?user_id=${encodeURIComponent(userId)}`);
                 const data = await res.json();
 
                 if (data.success && data.url) {
                     window.open(data.url, 'Zerodha Login', 'width=600,height=600');
                 } else {
-                    showToast(data.error || 'Configure KITE_API_KEY', 'error');
+                    showToast(data.error || 'Configure API key', 'error');
                 }
             } catch (e) {
                 showToast('Failed to get login URL', 'error');
             }
         }
 
-        async function submitToken() {
-            const input = document.getElementById('token-input').value.trim();
+        async function disconnectUser(userId) {
+            try {
+                const res = await fetch('/api/connection/disconnect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    checkConnection();
+                } else {
+                    showToast(data.error || 'Disconnect failed', 'error');
+                }
+            } catch (e) {
+                showToast('Disconnect failed', 'error');
+            }
+        }
+
+        async function submitToken(userId) {
+            const inputEl = document.getElementById(`token-${userId}`);
+            const input = inputEl ? inputEl.value.trim() : '';
             if (!input) {
                 showToast('Please paste the redirect URL', 'error');
                 return;
@@ -1540,14 +1620,14 @@
                 const res = await fetch('/api/login/token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ request_token: token })
+                    body: JSON.stringify({ request_token: token, user_id: userId })
                 });
                 const data = await res.json();
 
                 if (data.success) {
-                    showToast('Connected to Zerodha!', 'success');
+                    showToast(data.message || 'Connected!', 'success');
                     checkConnection();
-                    document.getElementById('token-input').value = '';
+                    if (inputEl) inputEl.value = '';
                 } else {
                     showToast(data.error || 'Connection failed', 'error');
                 }
@@ -1582,7 +1662,6 @@
                 return;
             }
             if (activeStrategy === 'momentum') {
-                refreshMomentumData();
                 return;
             }
 
@@ -1590,7 +1669,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['fresh-panel', 'sectoral-panel', 'inrs-panel', 'exit-panel'].forEach(id => {
+            ['sectoral-panel', 'nifty50-panel', 'nifty100-panel', 'midcap150-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="loading-container">
                         <div class="loader"></div>
@@ -1639,18 +1718,21 @@
         }
 
         function renderPanels(data) {
-            renderStockTable('fresh-panel', data.fresh_entries, 'buy');
-            renderStockTable('sectoral-panel', data.sectoral_indices, 'index');
-            renderStockTable('inrs-panel', data.in_rs, 'hold');
-            renderStockTable('exit-panel', data.exit_signals, 'sell');
+            renderStockTable('sectoral-panel', data.sectoral_indices);
+            renderStockTable('nifty50-panel', data.nifty50);
+            renderStockTable('nifty100-panel', data.nifty100);
+            renderStockTable('midcap150-panel', data.midcap150);
 
-            document.getElementById('fresh-count').textContent = data.fresh_entries.length;
             document.getElementById('sectoral-count').textContent = data.sectoral_indices?.length || 0;
-            document.getElementById('inrs-count').textContent = data.in_rs.length;
-            document.getElementById('exit-count').textContent = data.exit_signals.length;
+            document.getElementById('nifty50-count').textContent = data.nifty50?.length || 0;
+            document.getElementById('nifty100-count').textContent = data.nifty100?.length || 0;
+            document.getElementById('midcap150-count').textContent = data.midcap150?.length || 0;
         }
 
-        function renderStockTable(panelId, stocks, type) {
+        // Track sort state per panel: { field, dir }
+        const panelSortState = {};
+
+        function renderStockTable(panelId, stocks) {
             const panel = document.getElementById(panelId);
 
             if (!stocks || stocks.length === 0) {
@@ -1658,70 +1740,74 @@
                 return;
             }
 
-            const rows = stocks.map(stock => {
+            // Store raw data on the panel for re-sorting
+            panel._stockData = stocks;
+
+            // Apply current sort if any
+            const sort = panelSortState[panelId];
+            const sorted = [...stocks];
+            if (sort) {
+                sorted.sort((a, b) => sort.dir === 'asc'
+                    ? a[sort.field] - b[sort.field]
+                    : b[sort.field] - a[sort.field]);
+            }
+
+            _renderSortedTable(panel, panelId, sorted, sort);
+        }
+
+        function _renderSortedTable(panel, panelId, sorted, sort) {
+            const rows = sorted.map(stock => {
                 const rsClass = stock.rs >= 0 ? 'positive' : 'negative';
                 const emaClass = stock.price_vs_ema >= 0 ? 'positive' : 'negative';
-
-                if (type === 'index') {
-                    return `
-                        <tr>
-                            <td class="ticker">${stock.ticker}</td>
-                            <td class="price">${stock.price.toLocaleString()}</td>
-                            <td class="rs-value ${rsClass}">${stock.rs >= 0 ? '+' : ''}${stock.rs.toFixed(1)}</td>
-                            <td class="ema-pct ${emaClass}">${stock.price_vs_ema >= 0 ? '+' : ''}${stock.price_vs_ema.toFixed(1)}%</td>
-                        </tr>
-                    `;
-                }
-
-                if (type === 'buy') {
-                    const sectorRs = stock.sector_rs;
-                    const sectorStrong = sectorRs !== null && sectorRs > 0;
-                    const sectorClass = sectorStrong ? 'positive' : (sectorRs !== null ? 'negative' : '');
-                    const sectorText = sectorRs !== null ? (sectorStrong ? 'Strong' : 'Weak') : '-';
-
-                    return `
-                        <tr>
-                            <td class="ticker">${stock.ticker}</td>
-                            <td class="price">${stock.price.toLocaleString()}</td>
-                            <td class="rs-value ${rsClass}">${stock.rs >= 0 ? '+' : ''}${stock.rs.toFixed(1)}</td>
-                            <td class="ema-pct ${emaClass}">${stock.price_vs_ema >= 0 ? '+' : ''}${stock.price_vs_ema.toFixed(1)}%</td>
-                            <td class="sector-strength ${sectorClass}">${sectorText}</td>
-                            <td><button class="trade-btn" onclick="executePaperTrade('${stock.ticker}', 'BUY', ${stock.price}, this)">Buy</button></td>
-                        </tr>
-                    `;
-                }
-
-                const btnClass = type === 'sell' ? 'trade-btn sell' : 'trade-btn';
-                const btnText = type === 'sell' ? 'Sell' : 'Buy';
+                const chgClass = stock.pct_change >= 0 ? 'positive' : 'negative';
 
                 return `
                     <tr>
                         <td class="ticker">${stock.ticker}</td>
                         <td class="price">${stock.price.toLocaleString()}</td>
+                        <td class="ema-pct ${chgClass}">${stock.pct_change >= 0 ? '+' : ''}${stock.pct_change.toFixed(1)}%</td>
                         <td class="rs-value ${rsClass}">${stock.rs >= 0 ? '+' : ''}${stock.rs.toFixed(1)}</td>
                         <td class="ema-pct ${emaClass}">${stock.price_vs_ema >= 0 ? '+' : ''}${stock.price_vs_ema.toFixed(1)}%</td>
-                        <td><button class="${btnClass}" onclick="executePaperTrade('${stock.ticker}', '${type === 'sell' ? 'SELL' : 'BUY'}', ${stock.price}, this)">${btnText}</button></td>
                     </tr>
                 `;
             }).join('');
 
-            let headerHtml;
-            if (type === 'index') {
-                headerHtml = '<th>Index</th><th>Price</th><th>RS</th><th>vs EMA</th>';
-            } else if (type === 'buy') {
-                headerHtml = '<th>Ticker</th><th>Price</th><th>RS</th><th>vs EMA</th><th>Sector</th><th></th>';
-            } else {
-                headerHtml = '<th>Ticker</th><th>Price</th><th>RS</th><th>vs EMA</th><th></th>';
-            }
+            const sortCols = [
+                { label: '%Chg', field: 'pct_change' },
+                { label: 'RS', field: 'rs' },
+                { label: 'vs EMA', field: 'price_vs_ema' },
+            ];
+
+            const thSortable = sortCols.map(col => {
+                let cls = 'sortable';
+                if (sort && sort.field === col.field) cls += ' ' + sort.dir;
+                return `<th class="${cls}" data-field="${col.field}">${col.label}</th>`;
+            }).join('');
 
             panel.innerHTML = `
                 <table class="stock-table">
                     <thead>
-                        <tr>${headerHtml}</tr>
+                        <tr><th>Name</th><th>Price</th>${thSortable}</tr>
                     </thead>
                     <tbody>${rows}</tbody>
                 </table>
             `;
+
+            // Attach click handlers for sortable headers
+            panel.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const field = th.dataset.field;
+                    const prev = panelSortState[panelId];
+                    if (prev && prev.field === field) {
+                        // Toggle: desc -> asc -> clear
+                        if (prev.dir === 'desc') panelSortState[panelId] = { field, dir: 'asc' };
+                        else delete panelSortState[panelId];
+                    } else {
+                        panelSortState[panelId] = { field, dir: 'desc' };
+                    }
+                    renderStockTable(panelId, panel._stockData);
+                });
+            });
         }
 
         function updateStats(data) {
@@ -1743,7 +1829,7 @@
         }
 
         function showError(message) {
-            ['fresh-panel', 'sectoral-panel', 'inrs-panel', 'exit-panel'].forEach(id => {
+            ['sectoral-panel', 'nifty50-panel', 'nifty100-panel', 'midcap150-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="empty-state" style="color: var(--red);">Error: ${message}</div>
                 `;
@@ -1775,7 +1861,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-k-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-u-panel', 'ls-v-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="loading-container">
                         <div class="loader"></div>
@@ -1839,7 +1925,6 @@
                         <td class="ticker">${s.ticker}</td>
                         <td class="price">${s.price.toLocaleString()}</td>
                         <td class="price">${s.support.toLocaleString()}</td>
-                        <td class="price">${s.stop.toLocaleString()}</td>
                         <td>${s.close_near_pct.toFixed(1)}%</td>
                         <td class="rs-value positive">${s.ibs.toFixed(2)}</td>
                         <td style="white-space:nowrap;">
@@ -1850,36 +1935,91 @@
                 `).join('');
                 jPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>Supp</th><th>Stop</th><th>ClNr%</th><th>IBS</th><th></th></tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>Supp</th><th>Dist%</th><th>IBS</th><th></th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
             }
 
-            // K signals
-            const kPanel = document.getElementById('ls-k-panel');
-            const kSignals = data.k_signals || [];
-            document.getElementById('ls-k-count').textContent = kSignals.length;
+            // T signals
+            const tPanel = document.getElementById('ls-t-panel');
+            const tSignals = data.t_signals || [];
+            document.getElementById('ls-t-count').textContent = tSignals.length;
 
-            if (kSignals.length === 0) {
-                kPanel.innerHTML = '<div class="empty-state">No K signals</div>';
+            if (tSignals.length === 0) {
+                tPanel.innerHTML = '<div class="empty-state">No T signals</div>';
             } else {
-                const rows = kSignals.map(s => `
+                const rows = tSignals.map(s => `
                     <tr>
                         <td class="ticker">${s.ticker}</td>
                         <td class="price">${s.price.toLocaleString()}</td>
-                        <td class="rs-value positive">${s.rs_pct.toFixed(1)}%</td>
-                        <td>${s.rsi2.toFixed(0)}</td>
-                        <td>${s.vol_ratio.toFixed(1)}x</td>
+                        <td class="price">${s.ema20.toLocaleString()}</td>
+                        <td class="price">${s.upper_keltner.toLocaleString()}</td>
                         <td style="white-space:nowrap;">
-                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-k-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
-                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'K', ${s.price}, 0, ${s.ibs}, this)">Buy</button>
+                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-t-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
+                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'T', ${s.price}, 0, 0, this)">Buy</button>
                         </td>
                     </tr>
                 `).join('');
-                kPanel.innerHTML = `
+                tPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>RS%</th><th>RSI2</th><th>Vol</th><th></th></tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>EMA20</th><th>UpKelt</th><th></th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+
+            // U signals
+            const uPanel = document.getElementById('ls-u-panel');
+            const uSignals = data.u_signals || [];
+            document.getElementById('ls-u-count').textContent = uSignals.length;
+
+            if (uSignals.length === 0) {
+                uPanel.innerHTML = '<div class="empty-state">No U signals</div>';
+            } else {
+                const rows = uSignals.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td>${s.stoch_k.toFixed(1)}</td>
+                        <td>${s.stoch_d.toFixed(1)}</td>
+                        <td style="white-space:nowrap;">
+                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-u-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
+                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'U', ${s.price}, 0, 0, this)">Buy</button>
+                        </td>
+                    </tr>
+                `).join('');
+                uPanel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr><th>Stock</th><th>Close</th><th>%K</th><th>%D</th><th></th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+
+            // V signals
+            const vPanel = document.getElementById('ls-v-panel');
+            const vSignals = data.v_signals || [];
+            document.getElementById('ls-v-count').textContent = vSignals.length;
+
+            if (vSignals.length === 0) {
+                vPanel.innerHTML = '<div class="empty-state">No V signals</div>';
+            } else {
+                const rows = vSignals.map(s => `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td class="price">${s.high_20d.toLocaleString()}</td>
+                        <td>${s.vol_ratio}x</td>
+                        <td style="white-space:nowrap;">
+                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-v-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
+                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'V', ${s.price}, 0, 0, this)">Buy</button>
+                        </td>
+                    </tr>
+                `).join('');
+                vPanel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr><th>Stock</th><th>Close</th><th>20D Hi</th><th>Vol</th><th></th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -1887,6 +2027,11 @@
         }
 
         async function buyLiveSignal(ticker, strategy, price, support, ibs, btn) {
+            if (!selectedTradeUser) {
+                showToast('Select a connected user to trade as', 'error');
+                return;
+            }
+
             const amtInput = document.getElementById(`amt-${strategy.toLowerCase()}-${ticker}`);
             const amount = amtInput ? parseIndian(amtInput.value) : 100000;
 
@@ -1899,12 +2044,14 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         ticker, strategy, price, amount, support, ibs,
+                        user_id: selectedTradeUser,
                         metadata: { nifty_at_entry: 0 }
                     })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast(`Bought ${data.position.shares} shares of ${ticker}`, 'success');
+                    const userName = (kiteUsers.find(u => u.config_user_id === selectedTradeUser) || {}).config_name || selectedTradeUser;
+                    showToast(`Bought ${data.position.shares} shares of ${ticker} [${userName}]`, 'success');
                     loadLivePositions();
                 } else {
                     showToast(data.error || 'Buy failed', 'error');
@@ -1938,21 +2085,26 @@
                 return;
             }
 
-            const rows = positions.map(p => `
+            const rows = positions.map(p => {
+                const userName = p.user_id
+                    ? ((kiteUsers.find(u => u.config_user_id === p.user_id) || {}).config_name || p.user_id)
+                    : '';
+                return `
                 <tr>
                     <td class="ticker">${p.ticker}</td>
                     <td>${p.strategy}</td>
+                    <td style="font-size:10px;color:var(--text-muted);">${userName}</td>
                     <td>${p.entry_date}</td>
                     <td class="price">${p.entry_price.toLocaleString()}</td>
                     <td>${p.remaining_shares}${p.partial_exit_done ? ' (partial)' : ''}</td>
                     <td class="price">&#8377;${toIndian(p.amount_invested)}</td>
                     <td><button class="trade-btn" style="background:var(--red);color:#fff;padding:2px 7px;" onclick="forceExitPosition('${p.id}', this)" title="Sell on Zerodha & remove">Exit</button></td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
 
             panel.innerHTML = `
                 <table class="stock-table">
-                    <thead><tr><th>Stock</th><th>Strat</th><th>Entry</th><th>Price</th><th>Shares</th><th>Amt</th><th></th></tr></thead>
+                    <thead><tr><th>Stock</th><th>Strat</th><th>User</th><th>Entry</th><th>Price</th><th>Shares</th><th>Amt</th><th></th></tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
             `;
@@ -2077,184 +2229,15 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-k-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-u-panel', 'ls-v-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="empty-state" style="color: var(--text-muted);">${message}</div>
                 `;
             });
         }
 
-        // ============ Momentum Scanner Data ============
+        // ============ Backtest ============
 
-        async function loadMomentumData() {
-            try {
-                const res = await fetch('/api/momentum/data');
-                const data = await res.json();
-
-                if (data.success) {
-                    renderMomentumPanels(data.data);
-                    updateLastUpdated(data.data.last_updated, data.cache_age_minutes);
-                    momentumDataLoaded = true;
-                } else {
-                    showMomentumError(data.error || 'Unknown error');
-                }
-            } catch (e) {
-                console.error('Momentum load error:', e);
-                showMomentumError('Failed to load data. Click Refresh to scan.');
-            }
-        }
-
-        async function refreshMomentumData() {
-            const btn = document.getElementById('refresh-btn');
-            btn.classList.add('loading');
-            btn.disabled = true;
-
-            const panelIds = ['momentum-entry-panel', 'momentum-active-panel', 'momentum-scan-panel', 'momentum-exit-panel'];
-            panelIds.forEach(id => {
-                document.getElementById(id).innerHTML = `
-                    <div class="loading-container">
-                        <div class="loader"></div>
-                        <span>Scanning...</span>
-                        <span class="progress-text"></span>
-                    </div>
-                `;
-            });
-
-            const progressInterval = setInterval(async () => {
-                try {
-                    const res = await fetch('/api/momentum/progress');
-                    const progress = await res.json();
-                    if (progress.in_progress && progress.total > 0) {
-                        const pct = Math.round((progress.current / progress.total) * 100);
-                        const text = `${progress.current}/${progress.total} (${pct}%)`;
-                        document.querySelectorAll('#momentum-panels .progress-text').forEach(el => {
-                            el.textContent = text;
-                        });
-                    }
-                } catch (e) {}
-            }, 500);
-
-            try {
-                const res = await fetch('/api/momentum/refresh', { method: 'POST' });
-                const data = await res.json();
-                clearInterval(progressInterval);
-
-                if (data.success) {
-                    renderMomentumPanels(data.data);
-                    updateLastUpdated(data.data.last_updated, 0);
-                    momentumDataLoaded = true;
-                    showToast('Momentum data refreshed!', 'success');
-                } else {
-                    showToast(data.error || 'Refresh failed', 'error');
-                    loadMomentumData();
-                }
-            } catch (e) {
-                clearInterval(progressInterval);
-                showToast('Refresh failed', 'error');
-                loadMomentumData();
-            } finally {
-                btn.classList.remove('loading');
-                btn.disabled = false;
-            }
-        }
-
-        function renderMomentumPanels(data) {
-            renderMomentumTable('momentum-entry-panel', data.momentum_entries, 'entry');
-            renderMomentumTable('momentum-active-panel', data.active_momentum, 'active');
-            renderMomentumTable('momentum-scan-panel', data.full_scan, 'scan');
-            renderMomentumTable('momentum-exit-panel', data.exit_signals, 'exit');
-
-            document.getElementById('momentum-entry-count').textContent = data.momentum_entries.length;
-            document.getElementById('momentum-active-count').textContent = data.active_momentum.length;
-            document.getElementById('momentum-scan-count').textContent = data.full_scan.length;
-            document.getElementById('momentum-exit-count').textContent = data.exit_signals.length;
-        }
-
-        function renderMomentumTable(panelId, stocks, type) {
-            const panel = document.getElementById(panelId);
-
-            if (!stocks || stocks.length === 0) {
-                panel.innerHTML = '<div class="empty-state">No stocks</div>';
-                return;
-            }
-
-            let headerHtml, rows;
-
-            const fmtRsi = (v) => v !== null && v !== undefined ? v.toFixed(1) : '--';
-            const fmtEma = (price, ema) => {
-                if (ema === null || ema === undefined) return '--';
-                const pct = ((price - ema) / ema * 100).toFixed(1);
-                const cls = price > ema ? 'positive' : 'negative';
-                return `<span class="ema-pct ${cls}">${pct > 0 ? '+' : ''}${pct}%</span>`;
-            };
-            const condYN = (v) => v ? '<span class="cond-pass">Y</span>' : '<span class="cond-fail">N</span>';
-
-            if (type === 'entry' || type === 'active') {
-                headerHtml = '<th>Ticker</th><th>Price</th><th>RSI(2)</th><th>30m RSI</th><th>vs EMA50</th><th>vs EMA200</th><th></th>';
-                rows = stocks.map(s => `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.close.toLocaleString()}</td>
-                        <td class="rs-value positive">${fmtRsi(s.daily_rsi2)}</td>
-                        <td>${fmtRsi(s.intraday_rsi14)}</td>
-                        <td>${fmtEma(s.close, s.ema50)}</td>
-                        <td>${fmtEma(s.close, s.ema200)}</td>
-                        <td><button class="trade-btn" onclick="executePaperTrade('${s.ticker}', 'BUY', ${s.close}, this)">Buy</button></td>
-                    </tr>
-                `).join('');
-            } else if (type === 'scan') {
-                headerHtml = '<th>Ticker</th><th>Price</th><th>RSI(2)</th><th>30m RSI</th><th>>E50</th><th>>E200</th><th>Conds</th>';
-                rows = stocks.map(s => {
-                    const count = (s.cond1_pass ? 1 : 0) + (s.cond2_pass ? 1 : 0) + (s.cond3_pass ? 1 : 0) + (s.cond4_pass ? 1 : 0);
-                    return `
-                        <tr>
-                            <td class="ticker">${s.ticker}</td>
-                            <td class="price">${s.close.toLocaleString()}</td>
-                            <td class="rs-value ${s.cond1_pass ? 'positive' : ''}">${fmtRsi(s.daily_rsi2)}</td>
-                            <td class="${s.cond2_pass ? '' : 'cond-fail'}">${fmtRsi(s.intraday_rsi14)}</td>
-                            <td>${condYN(s.cond3_pass)}</td>
-                            <td>${condYN(s.cond4_pass)}</td>
-                            <td><span class="conditions-badge conditions-${count}">${count}/4</span></td>
-                        </tr>
-                    `;
-                }).join('');
-            } else if (type === 'exit') {
-                headerHtml = '<th>Ticker</th><th>Price</th><th>RSI(2)</th><th>30m RSI</th><th>>E50</th><th>>E200</th><th></th>';
-                rows = stocks.map(s => `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.close.toLocaleString()}</td>
-                        <td class="rs-value ${(s.daily_rsi2 || 0) >= 50 ? 'positive' : 'negative'}">${fmtRsi(s.daily_rsi2)}</td>
-                        <td>${fmtRsi(s.intraday_rsi14)}</td>
-                        <td>${condYN(s.cond3_pass)}</td>
-                        <td>${condYN(s.cond4_pass)}</td>
-                        <td><button class="trade-btn sell" onclick="executePaperTrade('${s.ticker}', 'SELL', ${s.close}, this)">Sell</button></td>
-                    </tr>
-                `).join('');
-            }
-
-            panel.innerHTML = `
-                <table class="stock-table">
-                    <thead><tr>${headerHtml}</tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            `;
-        }
-
-        function showMomentumError(message) {
-            ['momentum-entry-panel', 'momentum-active-panel', 'momentum-scan-panel', 'momentum-exit-panel'].forEach(id => {
-                document.getElementById(id).innerHTML = `
-                    <div class="empty-state" style="color: var(--text-muted);">${message}</div>
-                `;
-            });
-        }
-
-        // ============ Momentum Backtest ============
-
-        function toggleExitEma() {
-            const strategy = document.getElementById('backtest-strategy').value;
-            document.getElementById('backtest-exit-ema').classList.toggle('hidden', strategy !== 'D');
-        }
 
         async function runBacktest() {
             const symbol = document.getElementById('backtest-symbol').value;
@@ -2263,13 +2246,13 @@
             let rawStrategy = document.getElementById('backtest-strategy').value;
             let strategy = rawStrategy;
             let exitEma = null;
-            // Parse compound values like "J_gtt", "K_close"
+            // Parse compound values like "J_close"
             if (rawStrategy.includes('_')) {
                 const parts = rawStrategy.split('_');
                 strategy = parts[0];
                 exitEma = parts[1];
             }
-            if (strategy === 'D') exitEma = document.getElementById('backtest-exit-ema').value;
+
 
             if (!symbol) {
                 showToast('Please select a symbol', 'error');
@@ -2282,8 +2265,7 @@
             btn.textContent = 'Running...';
 
             // Show backtest results area with loading state
-            document.getElementById('momentum-panels').classList.add('hidden');
-            document.getElementById('backtest-results').classList.remove('hidden');
+                        document.getElementById('backtest-results').classList.remove('hidden');
             document.getElementById('backtest-summary').innerHTML = '';
             const loadingMsg = `Running Strategy ${strategy} backtest for ${symbol}...`;
             document.getElementById('backtest-trades-body').innerHTML = `
@@ -2329,18 +2311,8 @@
             const s = data.summary;
             const periodLabel = document.getElementById('backtest-from').value + ' to ' + document.getElementById('backtest-to').value;
             let stratLabel;
-            const stratLabels = {'D': 'Strategy D (RSI reversal)', 'E': 'Strategy E (EMA pullback)', 'G': 'Strategy G (IBS extreme)', 'I': 'Strategy I (6m support bounce)', 'J': 'Strategy J (weekly support)', 'K': 'Strategy K (RS trending)', 'L': 'Strategy L (Pure RS)', 'M': 'Strategy M (EMA 10/20)', 'P': 'Strategy P (AVWAP)', 'Q': 'Strategy Q (Fib 61.8%)'};
+            const stratLabels = {'J': 'Strategy J (weekly support)', 'K': 'Strategy K (RS trending)', 'N': 'Strategy N (CCI)', 'O': 'Strategy O (Connors RSI2)', 'R': 'Strategy R (RSI momentum)', 'S': 'Strategy S (MACD+RSI)', 'T': 'Strategy T (Keltner)', 'U': 'Strategy U (StochRSI)'};
             stratLabel = stratLabels[data.strategy] || data.strategy;
-            if (data.strategy === 'D') {
-                const target = data.exit_target || 'EMA5';
-                stratLabel += ` — ${target}`;
-            } else if (data.exit_target === 'gtt') {
-                stratLabel += ' — GTT';
-            } else if (data.exit_target === 'close') {
-                stratLabel += ' — 3:15 PM';
-            } else if (data.exit_target === '2wlow') {
-                stratLabel += ' — 2W Low';
-            }
 
             // Title
             document.getElementById('backtest-title').textContent = `${data.symbol} — ${stratLabel} — ${periodLabel} (${data.start_date} to ${data.end_date})`;
@@ -2444,7 +2416,6 @@
 
         function closeBacktest() {
             document.getElementById('backtest-results').classList.add('hidden');
-            document.getElementById('momentum-panels').classList.remove('hidden');
         }
 
         // ============ Batch Backtest ============
@@ -2467,8 +2438,7 @@
             otherBtn.disabled = true;
 
             // Show batch results area with loading
-            document.getElementById('momentum-panels').classList.add('hidden');
-            document.getElementById('backtest-results').classList.add('hidden');
+                        document.getElementById('backtest-results').classList.add('hidden');
             document.getElementById('batch-results').classList.remove('hidden');
             document.getElementById('batch-title').textContent = `Batch Backtest — All Strategies × ${universeLabel} — ${periodLabel}`;
             document.getElementById('batch-table-container').innerHTML = `
@@ -2586,7 +2556,6 @@
 
         function closeBatchBacktest() {
             document.getElementById('batch-results').classList.add('hidden');
-            document.getElementById('momentum-panels').classList.remove('hidden');
         }
 
         // ============ Portfolio Backtest (10L) ============
@@ -2599,7 +2568,7 @@
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'JTU': ['J','T','U'], 'JT': ['J','T'], 'JK': ['J','K'], 'JKN': ['J','K','N']};
+            const stratMap = {'JTUOV': ['J','T','U','O','V'], 'JTUO': ['J','T','U','O'], 'JTU': ['J','T','U'], 'JT': ['J','T'], 'JK': ['J','K'], 'JKN': ['J','K','N']};
             const strategies = stratMap[stratVal] || [stratVal];
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
 
@@ -2615,8 +2584,7 @@
             otherBtn.disabled = true;
 
             // Show backtest results area with loading
-            document.getElementById('momentum-panels').classList.add('hidden');
-            document.getElementById('batch-results').classList.add('hidden');
+                        document.getElementById('batch-results').classList.add('hidden');
             document.getElementById('backtest-results').classList.remove('hidden');
             document.getElementById('backtest-summary').innerHTML = '';
             document.getElementById('backtest-trades-body').innerHTML = `

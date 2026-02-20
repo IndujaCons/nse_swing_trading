@@ -10,8 +10,7 @@ from typing import Dict, Optional, List
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config.settings import (
-    KITE_API_KEY, KITE_API_SECRET, KITE_REDIRECT_URL,
-    PAPER_TRADING_ONLY, DATA_STORE_PATH
+    KITE_REDIRECT_URL, PAPER_TRADING_ONLY, DATA_STORE_PATH
 )
 
 
@@ -44,15 +43,18 @@ class KiteBroker:
     Currently supports paper trading only - live trading is disabled.
     """
 
-    def __init__(self):
-        self.api_key = KITE_API_KEY
-        self.api_secret = KITE_API_SECRET
+    def __init__(self, user_id="default", name="", api_key="", api_secret=""):
+        self.config_user_id = user_id
+        self.config_name = name
+        self.api_key = api_key
+        self.api_secret = api_secret
         self.redirect_url = KITE_REDIRECT_URL
         self.access_token = None
         self.user_id = None
         self.user_name = None
         self._kite = None
-        self._paper_trades_file = os.path.join(DATA_STORE_PATH, "paper_trades.json")
+        suffix = f"_{user_id}" if user_id != "default" else ""
+        self._paper_trades_file = os.path.join(DATA_STORE_PATH, f"paper_trades{suffix}.json")
         self._ensure_data_dir()
 
     def _ensure_data_dir(self):
@@ -115,6 +117,8 @@ class KiteBroker:
         """Get current connection status."""
         return {
             "connected": self.is_connected(),
+            "config_user_id": self.config_user_id,
+            "config_name": self.config_name,
             "user_id": self.user_id,
             "user_name": self.user_name,
             "api_key_configured": bool(self.api_key),

@@ -12,7 +12,6 @@ CONFIG_FILE = os.path.join(DATA_STORE_PATH, "config.json")
 DAILY_STATE_FILE = os.path.join(DATA_STORE_PATH, "daily_state.json")
 SCREENER_CACHE_FILE = os.path.join(DATA_STORE_PATH, "screener_cache.json")
 HAMMER_CACHE_FILE = os.path.join(DATA_STORE_PATH, "hammer_cache.json")
-STRATEGY_I_CACHE_FILE = os.path.join(DATA_STORE_PATH, "strategy_i_cache.json")
 LIVE_SIGNALS_CACHE_FILE = os.path.join(DATA_STORE_PATH, "live_signals_cache.json")
 LIVE_POSITIONS_FILE = os.path.join(DATA_STORE_PATH, "live_positions.json")
 LIVE_SIGNALS_HISTORY_FILE = os.path.join(DATA_STORE_PATH, "live_signals_history.csv")
@@ -31,7 +30,6 @@ DEFAULTS = {
     "hammer_lower_shadow_ratio": 2.0,
     "hammer_upper_shadow_max_pct": 0.10,
     "momentum_rsi2_threshold": 75,
-    "strategy_i_universe": 50,
     "live_signals_universe": 50,
 }
 
@@ -111,6 +109,40 @@ def get_ema_period():
 
 def get_cache_ttl():
     return get_setting("cache_ttl_minutes")
+
+
+def get_kite_users():
+    """Discover KITE_USER{N}_* env vars. Returns list of user config dicts.
+
+    Falls back to legacy KITE_API_KEY / KITE_API_SECRET if no numbered vars exist.
+    """
+    users = []
+    n = 1
+    while True:
+        api_key = os.environ.get(f"KITE_USER{n}_API_KEY")
+        if api_key is None:
+            break
+        users.append({
+            "id": os.environ.get(f"KITE_USER{n}_ID", f"user{n}"),
+            "name": os.environ.get(f"KITE_USER{n}_NAME", f"User{n}"),
+            "api_key": api_key,
+            "api_secret": os.environ.get(f"KITE_USER{n}_API_SECRET", ""),
+        })
+        n += 1
+
+    if not users:
+        # Legacy fallback
+        legacy_key = os.environ.get("KITE_API_KEY", "")
+        legacy_secret = os.environ.get("KITE_API_SECRET", "")
+        if legacy_key:
+            users.append({
+                "id": "default",
+                "name": "Default",
+                "api_key": legacy_key,
+                "api_secret": legacy_secret,
+            })
+
+    return users
 
 
 # Legacy constants (use functions above for dynamic values)

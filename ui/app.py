@@ -19,7 +19,8 @@ from flask import Flask, render_template, jsonify, request, session
 
 from config.settings import (
     FLASK_HOST, FLASK_PORT, DEBUG_MODE,
-    PAPER_TRADING_ONLY, load_config, save_config, get_cache_ttl
+    PAPER_TRADING_ONLY, load_config, save_config, get_cache_ttl,
+    get_kite_users, DATA_STORE_PATH, LIVE_POSITIONS_FILE,
 )
 from data.screener_engine import ScreenerEngine
 from data.live_signals_engine import LiveSignalsEngine
@@ -32,9 +33,46 @@ app.secret_key = os.urandom(24)
 
 # Global instances
 screener_engine = ScreenerEngine()
-live_signals_engine = LiveSignalsEngine()
 momentum_engine = MomentumEngine()
-kite_broker = KiteBroker()
+
+# Shared scanner (no user_id — uses shared cache, no per-user positions)
+live_signals_scanner = LiveSignalsEngine()
+
+# Per-user brokers and position engines
+kite_users = get_kite_users()
+brokers = {}       # {user_id: KiteBroker}
+user_engines = {}  # {user_id: LiveSignalsEngine}
+
+for _u in kite_users:
+    brokers[_u["id"]] = KiteBroker(
+        user_id=_u["id"], name=_u["name"],
+        api_key=_u["api_key"], api_secret=_u["api_secret"])
+    user_engines[_u["id"]] = LiveSignalsEngine(user_id=_u["id"])
+
+# Track which user_id initiated the most recent login popup (for OAuth callback)
+_pending_login_user_id = None
+
+
+def _migrate_legacy_data():
+    """One-time: copy live_positions.json -> live_positions_{first_user}.json."""
+    import json, shutil
+    if not kite_users:
+        return
+    first_uid = kite_users[0]["id"]
+    dest = os.path.join(DATA_STORE_PATH, f"live_positions_{first_uid}.json")
+    if os.path.exists(LIVE_POSITIONS_FILE) and not os.path.exists(dest):
+        shutil.copy2(LIVE_POSITIONS_FILE, dest)
+
+_migrate_legacy_data()
+
+
+def _find_position_owner(position_id):
+    """Search all user_engines for a position. Returns (user_id, position) or (None, None)."""
+    for uid, engine in user_engines.items():
+        for p in engine.get_positions():
+            if p["id"] == position_id:
+                return uid, p
+    return None, None
 
 # Background refresh state
 refresh_lock = threading.Lock()
@@ -178,8 +216,8 @@ def get_progress():
 def get_live_signals_data():
     """Get cached J+K scan results."""
     try:
-        data = live_signals_engine.scan_entry_signals(force_refresh=False)
-        cache_age = live_signals_engine.get_cache_age_minutes()
+        data = live_signals_scanner.scan_entry_signals(force_refresh=False)
+        cache_age = live_signals_scanner.get_cache_age_minutes()
 
         return jsonify({
             "success": True,
@@ -209,7 +247,7 @@ def refresh_live_signals():
         live_signals_refresh_in_progress = True
 
     try:
-        data = live_signals_engine.scan_entry_signals(
+        data = live_signals_scanner.scan_entry_signals(
             force_refresh=True,
             progress_callback=update_live_signals_progress
         )
@@ -240,10 +278,15 @@ def get_live_signals_progress():
 
 @app.route("/api/live-signals/positions", methods=["GET"])
 def get_live_positions():
-    """Get active positions."""
+    """Get active positions merged across all users."""
     try:
-        positions = live_signals_engine.get_positions()
-        return jsonify({"success": True, "positions": positions})
+        all_positions = []
+        for uid, engine in user_engines.items():
+            for p in engine.get_positions():
+                if "user_id" not in p:
+                    p["user_id"] = uid
+                all_positions.append(p)
+        return jsonify({"success": True, "positions": all_positions})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -256,15 +299,17 @@ def force_exit_position():
     if not position_id:
         return jsonify({"success": False, "error": "position_id required"}), 400
 
-    # Look up position
-    positions = live_signals_engine.get_positions()
-    pos = next((p for p in positions if p["id"] == position_id), None)
+    # Auto-detect owner
+    owner_uid, pos = _find_position_owner(position_id)
     if pos is None:
         return jsonify({"success": False, "error": "Position not found"}), 400
 
+    broker = brokers.get(owner_uid)
+    engine = user_engines.get(owner_uid)
+
     # Sell on Zerodha
     try:
-        order_result = kite_broker.place_sell_order(
+        order_result = broker.place_sell_order(
             pos["ticker"], pos["remaining_shares"])
     except RuntimeError as e:
         return jsonify({"success": False, "error": str(e)}), 400
@@ -272,7 +317,7 @@ def force_exit_position():
         return jsonify({"success": False, "error": f"Sell order failed: {e}"}), 500
 
     # Order placed — record as closed with reason MANUAL_FORCE_EXIT
-    result = live_signals_engine.close_position(
+    result = engine.close_position(
         position_id, pos["entry_price"], "MANUAL_FORCE_EXIT",
         pos["remaining_shares"])
     if "error" in result:
@@ -297,12 +342,16 @@ def buy_live_signal():
     support = data.get("support", 0)
     ibs = data.get("ibs", 0)
     metadata = data.get("metadata", {})
+    user_id = data.get("user_id")
 
     if not ticker or not strategy or not price:
         return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
 
-    if strategy not in ("J", "K", "N"):
-        return jsonify({"success": False, "error": "strategy must be J, K, or N"}), 400
+    if strategy not in ("J", "K", "N", "T", "U", "V"):
+        return jsonify({"success": False, "error": "strategy must be J, K, N, T, U, or V"}), 400
+
+    if not user_id or user_id not in brokers:
+        return jsonify({"success": False, "error": "Valid user_id required"}), 400
 
     try:
         amount = float(amount)
@@ -314,9 +363,12 @@ def buy_live_signal():
     if shares <= 0:
         return jsonify({"success": False, "error": "Amount too small for even 1 share"}), 400
 
+    broker = brokers[user_id]
+    engine = user_engines[user_id]
+
     # Place real order on Zerodha
     try:
-        order_result = kite_broker.place_buy_order(ticker, shares)
+        order_result = broker.place_buy_order(ticker, shares)
     except RuntimeError as e:
         return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
@@ -332,7 +384,7 @@ def buy_live_signal():
             metadata["nifty_at_entry"] = float(nifty["Close"].iloc[-1])
     except Exception:
         pass
-    result = live_signals_engine.add_position(
+    result = engine.add_position(
         ticker, strategy, price, amount, support, ibs, metadata)
 
     if "error" in result:
@@ -344,10 +396,15 @@ def buy_live_signal():
 
 @app.route("/api/live-signals/exits", methods=["GET"])
 def get_live_exit_signals():
-    """Check exit conditions for all active positions."""
+    """Check exit conditions for all active positions (merged across users)."""
     try:
-        exits = live_signals_engine.check_exit_signals()
-        return jsonify({"success": True, "exits": exits})
+        all_exits = []
+        for uid, engine in user_engines.items():
+            exits = engine.check_exit_signals()
+            for e in exits:
+                e["user_id"] = uid
+            all_exits.extend(exits)
+        return jsonify({"success": True, "exits": all_exits})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -366,15 +423,17 @@ def execute_live_exit():
 
     shares = int(shares)
 
-    # Look up ticker from position
-    positions = live_signals_engine.get_positions()
-    pos = next((p for p in positions if p["id"] == position_id), None)
+    # Auto-detect owner
+    owner_uid, pos = _find_position_owner(position_id)
     if pos is None:
         return jsonify({"success": False, "error": "Position not found"}), 400
 
+    broker = brokers.get(owner_uid)
+    engine = user_engines.get(owner_uid)
+
     # Place real sell order on Zerodha
     try:
-        order_result = kite_broker.place_sell_order(pos["ticker"], shares)
+        order_result = broker.place_sell_order(pos["ticker"], shares)
     except RuntimeError as e:
         return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
@@ -382,7 +441,7 @@ def execute_live_exit():
 
     # Order placed — now record locally
     try:
-        result = live_signals_engine.close_position(
+        result = engine.close_position(
             position_id, float(exit_price), reason, shares)
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]}), 400
@@ -489,11 +548,11 @@ def run_momentum_backtest():
     if not symbol:
         return jsonify({"success": False, "error": "Symbol required"}), 400
 
-    if strategy not in ("D", "E", "G", "I", "J", "K", "L", "M", "N", "P", "Q"):
-        strategy = "D"
+    if strategy not in ("J", "K", "N", "O", "R", "S", "T", "U", "V"):
+        strategy = "J"
 
     # exit_ema can be "5","8","10","20" (EMA) or "pct5" (% target)
-    valid_targets = ("5", "8", "10", "20", "pct5", "5pct10pct", "gtt", "close", "2wlow")
+    valid_targets = ("5", "8", "10", "20", "pct5", "5pct10pct")
     if exit_ema is not None:
         exit_ema = str(exit_ema) if str(exit_ema) in valid_targets else None
 
@@ -593,7 +652,7 @@ def run_portfolio_backtest():
     if per_stock not in (50000, 100000, 200000, 500000):
         per_stock = 50000
     strategies = data.get("strategies", ["J", "K"])
-    valid_strats = {"J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U"}
+    valid_strats = {"J", "K", "N", "O", "R", "S", "T", "U", "V"}
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
         strategies = ["J", "K"]
@@ -634,16 +693,39 @@ def get_portfolio_backtest_progress():
 
 # ============ Zerodha Login Routes ============
 
+@app.route("/api/users", methods=["GET"])
+def get_users():
+    """Return all configured users with connection status."""
+    result = []
+    for uid, broker in brokers.items():
+        status = broker.get_connection_status()
+        result.append(status)
+    return jsonify({"success": True, "users": result})
+
+
 @app.route("/api/login/url", methods=["GET"])
 def get_login_url():
-    """Get Zerodha login URL."""
-    url = kite_broker.get_login_url()
+    """Get Zerodha login URL for a specific user."""
+    global _pending_login_user_id
+    user_id = request.args.get("user_id")
+    broker = brokers.get(user_id) if user_id else None
+
+    if not broker:
+        # Fallback to first broker
+        if brokers:
+            user_id = list(brokers.keys())[0]
+            broker = brokers[user_id]
+        else:
+            return jsonify({"success": False, "error": "No users configured"})
+
+    url = broker.get_login_url()
     if url:
+        _pending_login_user_id = user_id
         return jsonify({"success": True, "url": url})
     else:
         return jsonify({
             "success": False,
-            "error": "API key not configured. Set KITE_API_KEY environment variable."
+            "error": f"API key not configured for {broker.config_name}."
         })
 
 
@@ -652,6 +734,7 @@ def exchange_token():
     """Exchange request token for access token."""
     data = request.get_json()
     request_token = data.get("request_token")
+    user_id = data.get("user_id")
 
     if not request_token:
         return jsonify({
@@ -659,11 +742,15 @@ def exchange_token():
             "error": "Request token required"
         }), 400
 
-    success = kite_broker.exchange_token(request_token)
+    broker = brokers.get(user_id) if user_id else None
+    if not broker:
+        return jsonify({"success": False, "error": "Valid user_id required"}), 400
+
+    success = broker.exchange_token(request_token)
     if success:
         return jsonify({
             "success": True,
-            "message": "Connected to Zerodha"
+            "message": f"Connected {broker.config_name} to Zerodha"
         })
     else:
         return jsonify({
@@ -675,9 +762,13 @@ def exchange_token():
 @app.route("/api/login/callback")
 def login_callback():
     """Handle Zerodha OAuth callback."""
+    global _pending_login_user_id
     request_token = request.args.get("request_token")
-    if request_token:
-        success = kite_broker.exchange_token(request_token)
+    user_id = _pending_login_user_id
+    broker = brokers.get(user_id) if user_id else None
+
+    if request_token and broker:
+        success = broker.exchange_token(request_token)
         if success:
             return """
             <html>
@@ -705,16 +796,23 @@ def login_callback():
 
 @app.route("/api/connection/status", methods=["GET"])
 def connection_status():
-    """Get current connection status."""
-    status = kite_broker.get_connection_status()
-    return jsonify({"success": True, "status": status})
+    """Get all users' connection statuses."""
+    statuses = []
+    for uid, broker in brokers.items():
+        statuses.append(broker.get_connection_status())
+    return jsonify({"success": True, "users": statuses})
 
 
 @app.route("/api/connection/disconnect", methods=["POST"])
 def disconnect():
-    """Disconnect from Zerodha."""
-    kite_broker.disconnect()
-    return jsonify({"success": True, "message": "Disconnected"})
+    """Disconnect a specific user from Zerodha."""
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    broker = brokers.get(user_id) if user_id else None
+    if not broker:
+        return jsonify({"success": False, "error": "Valid user_id required"}), 400
+    broker.disconnect()
+    return jsonify({"success": True, "message": f"Disconnected {broker.config_name}"})
 
 
 # ============ Settings Routes ============
@@ -726,7 +824,6 @@ def get_settings():
     return jsonify({
         "success": True,
         "settings": {
-            "stock_universe": config.get("stock_universe", 250),
             "rs_period": config.get("rs_period", 63),
             "ema_period": config.get("ema_period", 63),
             "cache_ttl_minutes": config.get("cache_ttl_minutes", 15),
@@ -748,12 +845,6 @@ def update_settings():
     settings_changed = False
 
     # Update allowed settings
-    if "stock_universe" in data:
-        val = int(data["stock_universe"])
-        if val in [50, 100, 250, 500] and val != config.get("stock_universe"):
-            config["stock_universe"] = val
-            settings_changed = True
-
     if "rs_period" in data:
         val = int(data["rs_period"])
         if val in [21, 63, 126, 252] and val != config.get("rs_period"):
@@ -776,7 +867,7 @@ def update_settings():
 
     if "live_signals_universe" in data:
         val = int(data["live_signals_universe"])
-        if val in [50, 100] and val != config.get("live_signals_universe"):
+        if val in [50, 100, 150] and val != config.get("live_signals_universe"):
             config["live_signals_universe"] = val
             live_signals_changed = True
 
@@ -830,7 +921,10 @@ def execute_paper_trade():
         }), 400
 
     try:
-        trade = kite_broker.execute_paper_trade(ticker, action, price, quantity)
+        _first_broker = next(iter(brokers.values())) if brokers else None
+        if not _first_broker:
+            return jsonify({"success": False, "error": "No brokers configured"}), 400
+        trade = _first_broker.execute_paper_trade(ticker, action, price, quantity)
         return jsonify({
             "success": True,
             "trade": trade
@@ -846,7 +940,8 @@ def execute_paper_trade():
 def get_paper_trades():
     """Get paper trade history."""
     limit = request.args.get("limit", 50, type=int)
-    trades = kite_broker.get_paper_trades(limit)
+    _first_broker = next(iter(brokers.values())) if brokers else None
+    trades = _first_broker.get_paper_trades(limit) if _first_broker else []
     return jsonify({
         "success": True,
         "trades": trades
@@ -856,7 +951,8 @@ def get_paper_trades():
 @app.route("/api/trade/paper/portfolio", methods=["GET"])
 def get_paper_portfolio():
     """Get paper portfolio."""
-    portfolio = kite_broker.get_paper_portfolio()
+    _first_broker = next(iter(brokers.values())) if brokers else None
+    portfolio = _first_broker.get_paper_portfolio() if _first_broker else {"positions": [], "total_trades": 0}
     return jsonify({
         "success": True,
         "portfolio": portfolio
@@ -866,7 +962,9 @@ def get_paper_portfolio():
 @app.route("/api/trade/paper/clear", methods=["POST"])
 def clear_paper_trades():
     """Clear paper trades."""
-    kite_broker.clear_paper_trades()
+    _first_broker = next(iter(brokers.values())) if brokers else None
+    if _first_broker:
+        _first_broker.clear_paper_trades()
     return jsonify({
         "success": True,
         "message": "Paper trades cleared"
