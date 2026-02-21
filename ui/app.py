@@ -347,8 +347,8 @@ def buy_live_signal():
     if not ticker or not strategy or not price:
         return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
 
-    if strategy not in ("J", "K", "N", "T", "U", "V"):
-        return jsonify({"success": False, "error": "strategy must be J, K, N, T, U, or V"}), 400
+    if strategy not in ("J", "T"):
+        return jsonify({"success": False, "error": "strategy must be J or T"}), 400
 
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Valid user_id required"}), 400
@@ -451,6 +451,22 @@ def execute_live_exit():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route("/api/live-signals/closed", methods=["GET"])
+def get_closed_trades():
+    """Get closed positions (trade history) from all user engines."""
+    try:
+        all_closed = []
+        for uid, engine in user_engines.items():
+            data = engine._load_positions_data()
+            for c in data.get("closed", []):
+                c["user_id"] = uid
+                all_closed.append(c)
+        all_closed.sort(key=lambda x: x.get("exit_date", ""), reverse=True)
+        return jsonify({"success": True, "closed": all_closed})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 # ============ Momentum API Routes ============
 
 @app.route("/api/momentum/data", methods=["GET"])
@@ -548,7 +564,7 @@ def run_momentum_backtest():
     if not symbol:
         return jsonify({"success": False, "error": "Symbol required"}), 400
 
-    if strategy not in ("J", "K", "N", "O", "R", "S", "T", "U", "V"):
+    if strategy not in ("J", "T"):
         strategy = "J"
 
     # exit_ema can be "5","8","10","20" (EMA) or "pct5" (% target)
@@ -651,14 +667,15 @@ def run_portfolio_backtest():
     per_stock = int(data.get("per_stock", 50000))
     if per_stock not in (50000, 100000, 200000, 500000):
         per_stock = 50000
-    strategies = data.get("strategies", ["J", "K"])
-    valid_strats = {"J", "K", "N", "O", "R", "S", "T", "U", "V"}
+    strategies = data.get("strategies", ["J", "T"])
+    valid_strats = {"J", "T"}
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
-        strategies = ["J", "K"]
+        strategies = ["J", "T"]
     entries_per_day = int(data.get("entries_per_day", 1))
     if entries_per_day not in (1, 2):
         entries_per_day = 1
+    three_stage_exit = bool(data.get("three_stage_exit", True))
 
     try:
         backtester = MomentumBacktester()
@@ -670,7 +687,8 @@ def run_portfolio_backtest():
             strategies=strategies,
             entries_per_day=entries_per_day,
             progress_callback=update_portfolio_backtest_progress,
-            end_date=end_date
+            end_date=end_date,
+            three_stage_exit=three_stage_exit
         )
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]})

@@ -695,23 +695,20 @@
         /* Live Signals panel colors */
         .panel.ls-j-signals .panel-title { color: var(--green); }
         .panel.ls-t-signals .panel-title { color: var(--blue); }
-        .panel.ls-u-signals .panel-title { color: var(--orange); }
-        .panel.ls-v-signals .panel-title { color: #8e44ad; }
         .panel.ls-positions .panel-title { color: var(--green); }
         .panel.ls-exits .panel-title { color: var(--red); }
 
         .ls-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
             gap: 10px;
             min-width: 700px;
-            height: calc(100vh - 60px);
         }
         .ls-bottom-row {
             grid-column: 1 / -1;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 10px;
         }
 
@@ -1040,35 +1037,48 @@
                     <div class="section-title">Backtest</div>
                     <select class="backtest-select" id="backtest-strategy">
                         <option value="J">Strategy J — weekly support</option>
-                        <option value="K">Strategy K — RS trending</option>
-                        <option value="N">Strategy N — CCI momentum</option>
-                        <option value="O">Strategy O — Connors RSI(2)</option>
-                        <option value="R">Strategy R — RSI momentum</option>
-                        <option value="S">Strategy S — MACD + RSI</option>
                         <option value="T">Strategy T — Keltner pullback</option>
-                        <option value="U">Strategy U — Stochastic RSI</option>
-                        <option value="V">Strategy V — Donchian Breakout</option>
                     </select>
                     <select class="backtest-select" id="backtest-symbol">
                         <option value="">-- Select Symbol --</option>
+                        <option value="ABB">ABB</option>
                         <option value="ADANIENT">ADANIENT</option>
+                        <option value="ADANIENSOL">ADANIENSOL</option>
+                        <option value="ADANIGREEN">ADANIGREEN</option>
                         <option value="ADANIPORTS">ADANIPORTS</option>
+                        <option value="ADANIPOWER">ADANIPOWER</option>
+                        <option value="AMBUJACEM">AMBUJACEM</option>
                         <option value="APOLLOHOSP">APOLLOHOSP</option>
                         <option value="ASIANPAINT">ASIANPAINT</option>
+                        <option value="ATGL">ATGL</option>
+                        <option value="AUROPHARMA">AUROPHARMA</option>
                         <option value="AXISBANK">AXISBANK</option>
                         <option value="BAJAJ-AUTO">BAJAJ-AUTO</option>
-                        <option value="BAJFINANCE">BAJFINANCE</option>
                         <option value="BAJAJFINSV">BAJAJFINSV</option>
+                        <option value="BAJAJHLDNG">BAJAJHLDNG</option>
+                        <option value="BAJFINANCE">BAJFINANCE</option>
+                        <option value="BANKBARODA">BANKBARODA</option>
                         <option value="BEL">BEL</option>
-                        <option value="BPCL">BPCL</option>
                         <option value="BHARTIARTL">BHARTIARTL</option>
+                        <option value="BHEL">BHEL</option>
+                        <option value="BOSCHLTD">BOSCHLTD</option>
+                        <option value="BPCL">BPCL</option>
                         <option value="BRITANNIA">BRITANNIA</option>
+                        <option value="CANBK">CANBK</option>
+                        <option value="CHOLAFIN">CHOLAFIN</option>
                         <option value="CIPLA">CIPLA</option>
                         <option value="COALINDIA">COALINDIA</option>
+                        <option value="COLPAL">COLPAL</option>
+                        <option value="DABUR">DABUR</option>
+                        <option value="DLF">DLF</option>
                         <option value="DRREDDY">DRREDDY</option>
                         <option value="EICHERMOT">EICHERMOT</option>
                         <option value="ETERNAL">ETERNAL</option>
+                        <option value="GAIL">GAIL</option>
+                        <option value="GODREJCP">GODREJCP</option>
                         <option value="GRASIM">GRASIM</option>
+                        <option value="HAL">HAL</option>
+                        <option value="HAVELLS">HAVELLS</option>
                         <option value="HCLTECH">HCLTECH</option>
                         <option value="HDFCBANK">HDFCBANK</option>
                         <option value="HDFCLIFE">HDFCLIFE</option>
@@ -1076,31 +1086,60 @@
                         <option value="HINDALCO">HINDALCO</option>
                         <option value="HINDUNILVR">HINDUNILVR</option>
                         <option value="ICICIBANK">ICICIBANK</option>
-                        <option value="ITC">ITC</option>
+                        <option value="ICICIGI">ICICIGI</option>
+                        <option value="ICICIPRULI">ICICIPRULI</option>
+                        <option value="INDIGO">INDIGO</option>
                         <option value="INDUSINDBK">INDUSINDBK</option>
+                        <option value="INDUSTOWER">INDUSTOWER</option>
                         <option value="INFY">INFY</option>
+                        <option value="IOC">IOC</option>
+                        <option value="IRFC">IRFC</option>
+                        <option value="ITC">ITC</option>
+                        <option value="JIOFIN">JIOFIN</option>
+                        <option value="JSWENERGY">JSWENERGY</option>
                         <option value="JSWSTEEL">JSWSTEEL</option>
                         <option value="KOTAKBANK">KOTAKBANK</option>
+                        <option value="LICI">LICI</option>
+                        <option value="LODHA">LODHA</option>
                         <option value="LT">LT</option>
-                        <option value="M&M">M&M</option>
+                        <option value="LUPIN">LUPIN</option>
+                        <option value="M&M">M&amp;M</option>
+                        <option value="MANKIND">MANKIND</option>
+                        <option value="MARICO">MARICO</option>
                         <option value="MARUTI">MARUTI</option>
-                        <option value="NTPC">NTPC</option>
+                        <option value="MOTHERSON">MOTHERSON</option>
+                        <option value="NAUKRI">NAUKRI</option>
                         <option value="NESTLEIND">NESTLEIND</option>
+                        <option value="NHPC">NHPC</option>
+                        <option value="NTPC">NTPC</option>
                         <option value="ONGC">ONGC</option>
+                        <option value="PFC">PFC</option>
                         <option value="PIDILITIND">PIDILITIND</option>
+                        <option value="PNB">PNB</option>
+                        <option value="POLYCAB">POLYCAB</option>
                         <option value="POWERGRID">POWERGRID</option>
+                        <option value="RECLTD">RECLTD</option>
                         <option value="RELIANCE">RELIANCE</option>
-                        <option value="SBILIFE">SBILIFE</option>
                         <option value="SBIN">SBIN</option>
+                        <option value="SBILIFE">SBILIFE</option>
+                        <option value="SHREECEM">SHREECEM</option>
+                        <option value="SIEMENS">SIEMENS</option>
+                        <option value="SRF">SRF</option>
                         <option value="SUNPHARMA">SUNPHARMA</option>
-                        <option value="TCS">TCS</option>
                         <option value="TATACONSUM">TATACONSUM</option>
-                        <option value="TATAMOTORS">TATAMOTORS</option>
+                        <option value="TATAPOWER">TATAPOWER</option>
                         <option value="TATASTEEL">TATASTEEL</option>
+                        <option value="TCS">TCS</option>
                         <option value="TECHM">TECHM</option>
                         <option value="TITAN">TITAN</option>
+                        <option value="TORNTPHARM">TORNTPHARM</option>
+                        <option value="TRENT">TRENT</option>
+                        <option value="TVSMOTOR">TVSMOTOR</option>
                         <option value="ULTRACEMCO">ULTRACEMCO</option>
+                        <option value="UNITDSPR">UNITDSPR</option>
+                        <option value="VEDL">VEDL</option>
                         <option value="WIPRO">WIPRO</option>
+                        <option value="ZOMATO">ZOMATO</option>
                     </select>
                     <div style="display:flex; gap:4px; align-items:center; margin:4px 0;">
                         <label style="font-size:11px; color:var(--text-secondary); width:32px;">From</label>
@@ -1131,21 +1170,12 @@
                         <option value="500000">5L / trade</option>
                     </select>
                     <select class="backtest-select" id="portfolio-strategy">
-                        <option value="JTUOV">J + T + U + O + V</option>
-                        <option value="JTUO">J + T + U + O</option>
-                        <option value="JTU">J + T + U</option>
-                        <option value="JT">J + T</option>
-                        <option value="JK">J + K</option>
-                        <option value="JKN">J + K + N</option>
-                        <option value="J">J: Weekly Support</option>
-                        <option value="K">K: RS Trending Dip</option>
-                        <option value="N">N: CCI Momentum</option>
-                        <option value="O">O: Connors RSI(2)</option>
-                        <option value="R">R: RSI Momentum</option>
-                        <option value="S">S: MACD + RSI</option>
-                        <option value="T">T: Keltner Pullback</option>
-                        <option value="U">U: Stochastic RSI</option>
-                        <option value="V">V: Donchian Breakout</option>
+                        <option value="JT3">J + T (3-Stage)</option>
+                        <option value="JT">J + T (Original)</option>
+                        <option value="J3">J (3-Stage)</option>
+                        <option value="J">J: Weekly Support (Original)</option>
+                        <option value="T3">T (3-Stage)</option>
+                        <option value="T">T: Keltner Pullback (Original)</option>
                     </select>
                     <select class="backtest-select" id="portfolio-entries-per-day">
                         <option value="1">1 trade / day</option>
@@ -1254,26 +1284,6 @@
                     </div>
                 </div>
 
-                <div class="panel ls-u-signals">
-                    <div class="panel-header">
-                        <span class="panel-title">U — Stochastic RSI</span>
-                        <span class="panel-count" id="ls-u-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-u-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
-
-                <div class="panel ls-v-signals">
-                    <div class="panel-header">
-                        <span class="panel-title">V — Donchian Breakout</span>
-                        <span class="panel-count" id="ls-v-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-v-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
-
                 <div class="ls-bottom-row">
                     <div class="panel ls-positions">
                         <div class="panel-header">
@@ -1292,6 +1302,16 @@
                         </div>
                         <div class="panel-body" id="ls-exits-panel">
                             <div class="empty-state">No exit signals</div>
+                        </div>
+                    </div>
+
+                    <div class="panel ls-closed-trades">
+                        <div class="panel-header">
+                            <span class="panel-title">Closed Trades</span>
+                            <span class="panel-count" id="ls-closed-count">0</span>
+                        </div>
+                        <div class="panel-body" id="ls-closed-panel">
+                            <div class="empty-state">No closed trades</div>
                         </div>
                     </div>
                 </div>
@@ -1423,6 +1443,7 @@
             if (strategy === 'live_signals' && !liveSignalsDataLoaded) {
                 loadLiveSignalsData();
                 loadLivePositions();
+                loadClosedTrades();
             }
         }
 
@@ -1861,7 +1882,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-u-panel', 'ls-v-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="loading-container">
                         <div class="loader"></div>
@@ -1969,61 +1990,6 @@
                 `;
             }
 
-            // U signals
-            const uPanel = document.getElementById('ls-u-panel');
-            const uSignals = data.u_signals || [];
-            document.getElementById('ls-u-count').textContent = uSignals.length;
-
-            if (uSignals.length === 0) {
-                uPanel.innerHTML = '<div class="empty-state">No U signals</div>';
-            } else {
-                const rows = uSignals.map(s => `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td>${s.stoch_k.toFixed(1)}</td>
-                        <td>${s.stoch_d.toFixed(1)}</td>
-                        <td style="white-space:nowrap;">
-                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-u-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
-                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'U', ${s.price}, 0, 0, this)">Buy</button>
-                        </td>
-                    </tr>
-                `).join('');
-                uPanel.innerHTML = `
-                    <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>%K</th><th>%D</th><th></th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
-            }
-
-            // V signals
-            const vPanel = document.getElementById('ls-v-panel');
-            const vSignals = data.v_signals || [];
-            document.getElementById('ls-v-count').textContent = vSignals.length;
-
-            if (vSignals.length === 0) {
-                vPanel.innerHTML = '<div class="empty-state">No V signals</div>';
-            } else {
-                const rows = vSignals.map(s => `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td class="price">${s.high_20d.toLocaleString()}</td>
-                        <td>${s.vol_ratio}x</td>
-                        <td style="white-space:nowrap;">
-                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-v-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
-                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'V', ${s.price}, 0, 0, this)">Buy</button>
-                        </td>
-                    </tr>
-                `).join('');
-                vPanel.innerHTML = `
-                    <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>20D Hi</th><th>Vol</th><th></th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
-            }
         }
 
         async function buyLiveSignal(ticker, strategy, price, support, ibs, btn) {
@@ -2061,6 +2027,40 @@
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Buy';
+            }
+        }
+
+        async function loadClosedTrades() {
+            try {
+                const res = await fetch('/api/live-signals/closed');
+                const data = await res.json();
+                const panel = document.getElementById('ls-closed-panel');
+                const closed = data.closed || [];
+                document.getElementById('ls-closed-count').textContent = closed.length;
+                if (closed.length === 0) {
+                    panel.innerHTML = '<div class="empty-state">No closed trades</div>';
+                } else {
+                    const rows = closed.map(c => {
+                        const pnlClass = c.pnl_pct >= 0 ? 'positive' : 'negative';
+                        return `<tr>
+                            <td class="ticker">${c.ticker}</td>
+                            <td>${c.strategy}</td>
+                            <td class="price">${c.entry_price}</td>
+                            <td class="price">${c.exit_price}</td>
+                            <td class="rs-value ${pnlClass}">${c.pnl_pct >= 0 ? '+' : ''}${c.pnl_pct}%</td>
+                            <td>${c.reason}</td>
+                            <td>${c.exit_date}</td>
+                        </tr>`;
+                    }).join('');
+                    panel.innerHTML = `
+                        <table class="stock-table">
+                            <thead><tr><th>Stock</th><th>Strat</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Reason</th><th>Date</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    `;
+                }
+            } catch (e) {
+                console.error('Load closed trades error:', e);
             }
         }
 
@@ -2229,7 +2229,7 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel', 'ls-u-panel', 'ls-v-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="empty-state" style="color: var(--text-muted);">${message}</div>
                 `;
@@ -2311,7 +2311,7 @@
             const s = data.summary;
             const periodLabel = document.getElementById('backtest-from').value + ' to ' + document.getElementById('backtest-to').value;
             let stratLabel;
-            const stratLabels = {'J': 'Strategy J (weekly support)', 'K': 'Strategy K (RS trending)', 'N': 'Strategy N (CCI)', 'O': 'Strategy O (Connors RSI2)', 'R': 'Strategy R (RSI momentum)', 'S': 'Strategy S (MACD+RSI)', 'T': 'Strategy T (Keltner)', 'U': 'Strategy U (StochRSI)'};
+            const stratLabels = {'J': 'Strategy J (weekly support)', 'T': 'Strategy T (Keltner)'};
             stratLabel = stratLabels[data.strategy] || data.strategy;
 
             // Title
@@ -2568,8 +2568,9 @@
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'JTUOV': ['J','T','U','O','V'], 'JTUO': ['J','T','U','O'], 'JTU': ['J','T','U'], 'JT': ['J','T'], 'JK': ['J','K'], 'JKN': ['J','K','N']};
+            const stratMap = {'JT3': ['J','T'], 'JT': ['J','T'], 'J3': ['J'], 'J': ['J'], 'T3': ['T'], 'T': ['T']};
             const strategies = stratMap[stratVal] || [stratVal];
+            const threeStageExit = !['JT','J','T'].includes(stratVal);
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
 
             const btnId = universe === 100 ? 'run-portfolio100-btn' : 'run-portfolio50-btn';
@@ -2614,7 +2615,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ from_date: fromDate, to_date: toDate, universe: universe,
                         capital_lakhs: capitalLakhs, per_stock: perStock, strategies: strategies,
-                        entries_per_day: entriesPerDay })
+                        entries_per_day: entriesPerDay, three_stage_exit: threeStageExit })
                 });
                 const data = await res.json();
                 clearInterval(progressInterval);

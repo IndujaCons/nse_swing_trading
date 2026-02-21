@@ -1,6 +1,6 @@
 """
-Live Signals Engine — scans for Strategy J and K entry signals in real-time,
-manages positions, and checks exit conditions.
+Live Signals Engine — scans for Strategy J and T entry signals in real-time,
+manages positions (with 3-stage exits for T), and checks exit conditions.
 """
 
 import csv
@@ -61,7 +61,7 @@ def _calculate_rsi_series(closes: pd.Series, period: int) -> pd.Series:
 
 
 class LiveSignalsEngine:
-    """Scans J/K/N/O/R/S/T/U/V entry signals, manages positions, checks exit conditions."""
+    """Scans J/T entry signals, manages positions with 3-stage exits, checks exit conditions."""
 
     def __init__(self, user_id=None):
         self.user_id = user_id
@@ -80,7 +80,7 @@ class LiveSignalsEngine:
     # ==================== Entry Signal Scanning ====================
 
     def scan_entry_signals(self, force_refresh=False, progress_callback=None):
-        """Scan for J, K, N, O, R, S, T, U entry signals across Nifty 50/100."""
+        """Scan for J and T entry signals across Nifty 50/100."""
         if not force_refresh:
             cached = self._load_cache()
             if cached is not None:
@@ -109,25 +109,8 @@ class LiveSignalsEngine:
         except Exception:
             nifty_raw = pd.DataFrame()
 
-        # Nifty CCI(20) for Strategy N regime filter
-        nifty_cci_val = 0.0
-        if not nifty_raw.empty:
-            n_tp = (nifty_raw["High"] + nifty_raw["Low"] + nifty_raw["Close"]) / 3
-            n_sma = n_tp.rolling(window=20, min_periods=20).mean()
-            n_md = n_tp.rolling(window=20, min_periods=20).apply(
-                lambda x: np.mean(np.abs(x - x.mean())), raw=True)
-            n_cci = (n_tp - n_sma) / (0.015 * n_md)
-            nifty_cci_val = float(n_cci.iloc[-1]) if not pd.isna(n_cci.iloc[-1]) else 0.0
-
         j_signals = []
-        k_signals = []
-        n_signals = []
-        o_signals = []
-        r_signals = []
-        s_signals = []
         t_signals = []
-        u_signals = []
-        v_signals = []
 
         for idx, ticker in enumerate(tickers):
             if progress_callback:
@@ -204,130 +187,6 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
-            # Strategy K: RS Trending Dip
-            try:
-                rsi2_series = _calculate_rsi_series(closes, 2)
-                rsi2 = float(rsi2_series.iloc[i])
-                rsi2_prev = float(rsi2_series.iloc[i - 1]) if i > 0 else 50.0
-                ema50 = float(closes.ewm(span=50, adjust=False).mean().iloc[i])
-                vol_today = float(volumes.iloc[i])
-                vol_avg20 = float(volumes.rolling(
-                    window=20, min_periods=20).mean().iloc[i]) if len(volumes) >= 20 else 0.0
-
-                rs_spread = 0.0
-                if not nifty_raw.empty:
-                    nifty_close = nifty_raw["Close"].reindex(
-                        daily.index, method="ffill")
-                    stock_3m = closes.pct_change(periods=63)
-                    nifty_3m = nifty_close.pct_change(periods=63)
-                    rs_spread_series = stock_3m - nifty_3m
-                    if not pd.isna(rs_spread_series.iloc[i]):
-                        rs_spread = float(rs_spread_series.iloc[i])
-
-                vol_ratio = round(vol_today / vol_avg20, 2) if vol_avg20 > 0 else 0.0
-
-                if (rs_spread > 0 and rsi2 >= 20
-                        and not np.isnan(rsi2_prev) and rsi2_prev < 20
-                        and price > ema50
-                        and ibs > 0.5
-                        and vol_today > vol_avg20):
-                    # Don't duplicate if already a J signal
-                    already_j = any(s["ticker"] == ticker for s in j_signals)
-                    if not already_j:
-                        k_signals.append({
-                            "ticker": ticker,
-                            "price": round(price, 2),
-                            "rs_pct": round(rs_spread * 100, 1),
-                            "rsi2": round(rsi2, 1),
-                            "vol_ratio": vol_ratio,
-                            "ema50": round(ema50, 2),
-                            "ibs": round(ibs, 2),
-                        })
-            except Exception:
-                pass
-
-            # Strategy N: CCI Momentum (crossover)
-            try:
-                tp = (highs + lows + closes) / 3
-                sma_tp = tp.rolling(window=20, min_periods=20).mean()
-                mean_dev = tp.rolling(window=20, min_periods=20).apply(
-                    lambda x: np.mean(np.abs(x - x.mean())), raw=True)
-                cci_series = (tp - sma_tp) / (0.015 * mean_dev)
-                cci_val = float(cci_series.iloc[i]) if not pd.isna(cci_series.iloc[i]) else 0.0
-                cci_prev = float(cci_series.iloc[i-1]) if i > 0 and not pd.isna(cci_series.iloc[i-1]) else 0.0
-
-                if cci_val > 100 and cci_prev <= 100 and is_green:
-                    # RS spread (3M) for ranking
-                    rs_spread = 0.0
-                    if not nifty_raw.empty:
-                        nifty_close = nifty_raw["Close"].reindex(daily.index, method="ffill")
-                        stock_3m = closes.pct_change(periods=63)
-                        nifty_3m = nifty_close.pct_change(periods=63)
-                        rs_s = stock_3m - nifty_3m
-                        if not pd.isna(rs_s.iloc[i]):
-                            rs_spread = float(rs_s.iloc[i])
-                    n_signals.append({
-                        "ticker": ticker,
-                        "price": round(price, 2),
-                        "cci": round(cci_val, 1),
-                        "rs_pct": round(rs_spread * 100, 1),
-                    })
-            except Exception:
-                pass
-
-            # Strategy O: Connors RSI(2) Mean Reversion
-            try:
-                rsi2_series_o = _calculate_rsi_series(closes, 2)
-                rsi2_val = float(rsi2_series_o.iloc[i])
-                sma200 = float(closes.rolling(window=200, min_periods=200).mean().iloc[i])
-                if not np.isnan(sma200) and rsi2_val < 5 and price > sma200:
-                    o_signals.append({
-                        "ticker": ticker,
-                        "price": round(price, 2),
-                        "rsi2": round(rsi2_val, 1),
-                        "sma200": round(sma200, 2),
-                    })
-            except Exception:
-                pass
-
-            # Strategy R: RSI Momentum
-            try:
-                rsi14_series_r = _calculate_rsi_series(closes, 14)
-                rsi14_val = float(rsi14_series_r.iloc[i])
-                rsi14_prev = float(rsi14_series_r.iloc[i - 1]) if i > 0 else 50.0
-                ema200_val = float(closes.ewm(span=200, adjust=False).mean().iloc[i])
-                if rsi14_prev <= 60 and rsi14_val > 60 and price > ema200_val and is_green:
-                    r_signals.append({
-                        "ticker": ticker,
-                        "price": round(price, 2),
-                        "rsi14": round(rsi14_val, 1),
-                    })
-            except Exception:
-                pass
-
-            # Strategy S: MACD + RSI Combo
-            try:
-                rsi14_series_s = _calculate_rsi_series(closes, 14)
-                rsi14_val = float(rsi14_series_s.iloc[i])
-                ema12 = closes.ewm(span=12, adjust=False).mean()
-                ema26 = closes.ewm(span=26, adjust=False).mean()
-                macd_line = ema12 - ema26
-                macd_signal = macd_line.ewm(span=9, adjust=False).mean()
-                macd_val = float(macd_line.iloc[i])
-                macd_sig = float(macd_signal.iloc[i])
-                macd_prev = float(macd_line.iloc[i - 1]) if i > 0 else 0.0
-                macd_sig_prev = float(macd_signal.iloc[i - 1]) if i > 0 else 0.0
-                macd_cross_up = (macd_prev <= macd_sig_prev and macd_val > macd_sig)
-                if macd_cross_up and macd_val > 0 and rsi14_val > 50 and is_green:
-                    s_signals.append({
-                        "ticker": ticker,
-                        "price": round(price, 2),
-                        "macd": round(macd_val, 2),
-                        "rsi14": round(rsi14_val, 1),
-                    })
-            except Exception:
-                pass
-
             # Strategy T: Keltner Channel Pullback
             try:
                 ema20_val = float(closes.ewm(span=20, adjust=False).mean().iloc[i])
@@ -360,72 +219,15 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
-            # Strategy U: Stochastic RSI
-            try:
-                rsi14_series_u = _calculate_rsi_series(closes, 14)
-                rsi14_min = rsi14_series_u.rolling(window=14, min_periods=14).min()
-                rsi14_max = rsi14_series_u.rolling(window=14, min_periods=14).max()
-                stoch_raw = (rsi14_series_u - rsi14_min) / (rsi14_max - rsi14_min)
-                stoch_raw = stoch_raw.fillna(0.5)
-                stoch_k = stoch_raw.rolling(window=3, min_periods=3).mean() * 100
-                stoch_d = stoch_k.rolling(window=3, min_periods=3).mean()
-                stk = float(stoch_k.iloc[i]) if not pd.isna(stoch_k.iloc[i]) else 50.0
-                std = float(stoch_d.iloc[i]) if not pd.isna(stoch_d.iloc[i]) else 50.0
-                stk_prev = float(stoch_k.iloc[i - 1]) if i > 0 and not pd.isna(stoch_k.iloc[i - 1]) else 50.0
-                std_prev = float(stoch_d.iloc[i - 1]) if i > 0 and not pd.isna(stoch_d.iloc[i - 1]) else 50.0
-                ema200_val = float(closes.ewm(span=200, adjust=False).mean().iloc[i])
-                k_cross_up = (stk_prev <= std_prev and stk > std)
-                if k_cross_up and stk < 30 and std < 30 and price > ema200_val:
-                    u_signals.append({
-                        "ticker": ticker,
-                        "price": round(price, 2),
-                        "stoch_k": round(stk, 1),
-                        "stoch_d": round(std, 1),
-                    })
-            except Exception:
-                pass
-
-            # Strategy V: Donchian Breakout with Volume
-            try:
-                high_20d = float(highs.rolling(window=20, min_periods=20).max().shift(1).iloc[i])
-                ema200_val = float(closes.ewm(span=200, adjust=False).mean().iloc[i])
-                vol_today = float(volumes.iloc[i])
-                vol_avg20 = float(volumes.rolling(
-                    window=20, min_periods=20).mean().iloc[i]) if len(volumes) >= 20 else 0.0
-                vol_ratio = round(vol_today / vol_avg20, 2) if vol_avg20 > 0 else 0.0
-                if (not np.isnan(high_20d) and price > high_20d
-                        and vol_avg20 > 0 and vol_today > 1.5 * vol_avg20
-                        and price > ema200_val and is_green):
-                    v_signals.append({
-                        "ticker": ticker,
-                        "price": round(price, 2),
-                        "high_20d": round(high_20d, 2),
-                        "vol_ratio": vol_ratio,
-                    })
-            except Exception:
-                pass
-
-        # Sort N signals by RS spread (strongest outperformer first)
-        n_signals.sort(key=lambda s: s.get("rs_pct", 0), reverse=True)
-
         result = {
             "j_signals": j_signals,
-            "k_signals": k_signals,
-            "n_signals": n_signals,
-            "o_signals": o_signals,
-            "r_signals": r_signals,
-            "s_signals": s_signals,
             "t_signals": t_signals,
-            "u_signals": u_signals,
-            "v_signals": v_signals,
             "last_updated": datetime.now().isoformat(),
             "universe": universe,
         }
 
         self._save_cache(result)
-        self._append_signals_history(j_signals, k_signals, n_signals,
-                                     o_signals, r_signals, s_signals,
-                                     t_signals, u_signals, v_signals)
+        self._append_signals_history(j_signals, t_signals)
         return result
 
     def get_cache_age_minutes(self):
@@ -453,9 +255,7 @@ class LiveSignalsEngine:
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)
 
-    def _append_signals_history(self, j_signals, k_signals, n_signals=None,
-                               o_signals=None, r_signals=None, s_signals=None,
-                               t_signals=None, u_signals=None, v_signals=None):
+    def _append_signals_history(self, j_signals, t_signals=None):
         """Append today's scan results to the history CSV."""
         history_file = LIVE_SIGNALS_HISTORY_FILE
         scan_date = datetime.now().strftime("%Y-%m-%d")
@@ -469,70 +269,18 @@ class LiveSignalsEngine:
                 writer.writerow([
                     "date", "time", "strategy", "ticker", "price",
                     "support", "close_near_pct", "ibs",
-                    "rs_pct", "rsi2", "vol_ratio",
                 ])
 
             for s in j_signals:
                 writer.writerow([
                     scan_date, scan_time, "J", s["ticker"], s["price"],
                     s["support"], s["close_near_pct"], s["ibs"],
-                    "", "", "",
-                ])
-
-            for s in k_signals:
-                writer.writerow([
-                    scan_date, scan_time, "K", s["ticker"], s["price"],
-                    "", "", s["ibs"],
-                    s["rs_pct"], s["rsi2"], s["vol_ratio"],
-                ])
-
-            for s in (n_signals or []):
-                writer.writerow([
-                    scan_date, scan_time, "N", s["ticker"], s["price"],
-                    "", "", "",
-                    s.get("rs_pct", ""), "", s.get("vol_ratio", ""),
-                ])
-
-            for s in (o_signals or []):
-                writer.writerow([
-                    scan_date, scan_time, "O", s["ticker"], s["price"],
-                    "", "", "",
-                    "", s.get("rsi2", ""), "",
-                ])
-
-            for s in (r_signals or []):
-                writer.writerow([
-                    scan_date, scan_time, "R", s["ticker"], s["price"],
-                    "", "", "",
-                    "", "", "",
-                ])
-
-            for s in (s_signals or []):
-                writer.writerow([
-                    scan_date, scan_time, "S", s["ticker"], s["price"],
-                    "", "", "",
-                    "", "", "",
                 ])
 
             for s in (t_signals or []):
                 writer.writerow([
                     scan_date, scan_time, "T", s["ticker"], s["price"],
                     "", "", "",
-                    "", "", "",
-                ])
-
-            for s in (u_signals or []):
-                writer.writerow([
-                    scan_date, scan_time, "U", s["ticker"], s["price"],
-                    "", "", "",
-                    "", "", "",
-                ])
-
-            for s in (v_signals or []):
-                writer.writerow([
-                    scan_date, scan_time, "V", s["ticker"], s["price"],
-                    "", "", "",
-                    "", "", s.get("vol_ratio", ""),
                 ])
 
     # ==================== Position Management ====================
@@ -568,6 +316,7 @@ class LiveSignalsEngine:
             "amount_invested": round(shares * entry_price, 2),
             "support_level": round(support_level, 2),
             "partial_exit_done": False,
+            "partial_stage": 0,
             "remaining_shares": shares,
             "metadata": metadata or {},
         }
@@ -646,7 +395,7 @@ class LiveSignalsEngine:
         if not positions:
             return []
 
-        # Fetch Nifty data for 3-day low check
+        # Fetch Nifty data for Nifty shield
         end_date = datetime.now()
         try:
             nifty_data = yf.Ticker("^NSEI").history(
@@ -654,12 +403,6 @@ class LiveSignalsEngine:
             nifty_closes = nifty_data["Close"]
         except Exception:
             nifty_closes = pd.Series(dtype=float)
-
-        nifty_weak = False
-        if len(nifty_closes) >= 4:
-            nifty_today = float(nifty_closes.iloc[-1])
-            nifty_3day_low = float(nifty_closes.iloc[-4:-1].min())
-            nifty_weak = nifty_today < nifty_3day_low
 
         nifty_close_today = float(nifty_closes.iloc[-1]) if len(nifty_closes) > 0 else 0.0
 
@@ -677,8 +420,7 @@ class LiveSignalsEngine:
                 continue
 
             current_price = float(daily["Close"].iloc[-1])
-            current_low = float(daily["Low"].iloc[-1])
-            lows = daily["Low"]
+            highs = daily["High"]
 
             entry_price = pos["entry_price"]
             pnl_pct = round(((current_price - entry_price) / entry_price) * 100, 2)
@@ -718,145 +460,40 @@ class LiveSignalsEngine:
                         exit_signals.append(self._make_exit_signal(
                             pos, current_price, pnl_pct, "10PCT_TARGET",
                             pos["remaining_shares"]))
-                    elif not nifty_weak and len(lows) >= 4:
-                        three_day_low = float(lows.iloc[-4:-1].min())
-                        if current_price < three_day_low:
-                            exit_signals.append(self._make_exit_signal(
-                                pos, current_price, pnl_pct, "BELOW_3DAY_LOW",
-                                pos["remaining_shares"]))
-
-            elif pos["strategy"] == "K":
-                stop_3pct = entry_price * 0.97
-                t1_price = entry_price * 1.05
-
-                # Check Nifty drop shield
-                nifty_at_entry = pos.get("metadata", {}).get("nifty_at_entry", 0)
-                nifty_shields = False
-                if nifty_at_entry > 0 and nifty_close_today > 0:
-                    nifty_pct = (nifty_close_today - nifty_at_entry) / nifty_at_entry
-                    stock_pct = (current_price - entry_price) / entry_price
-                    if nifty_pct <= stock_pct and nifty_pct < 0:
-                        nifty_shields = True
-
-                if not pos["partial_exit_done"]:
-                    # 3% stop (unless Nifty shields)
-                    if not nifty_shields and current_price < stop_3pct:
-                        exit_signals.append(self._make_exit_signal(
-                            pos, current_price, pnl_pct, "STOP_3PCT",
-                            pos["remaining_shares"]))
-                    # +5% partial
-                    elif current_price >= t1_price:
-                        half = pos["shares"] // 2
-                        exit_signals.append(self._make_exit_signal(
-                            pos, current_price, pnl_pct, "5PCT_PARTIAL", half))
-                else:
-                    # 3% stop on remaining
-                    if not nifty_shields and current_price < stop_3pct:
-                        exit_signals.append(self._make_exit_signal(
-                            pos, current_price, pnl_pct, "STOP_3PCT",
-                            pos["remaining_shares"]))
-                    # 3-day low exit (skip if Nifty weak)
-                    elif not nifty_weak and len(lows) >= 4:
-                        three_day_low = float(lows.iloc[-4:-1].min())
-                        if current_price < three_day_low:
-                            exit_signals.append(self._make_exit_signal(
-                                pos, current_price, pnl_pct, "BELOW_3DAY_LOW",
-                                pos["remaining_shares"]))
-
-            elif pos["strategy"] == "N":
-                # Hard stop-loss: 3%
-                if current_price <= entry_price * 0.97:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "HARD_SL_3PCT", sz))
-                    continue
-                closes_s = daily["Close"]
-                highs_s = daily["High"]
-                lows_s = daily["Low"]
-                tp = (highs_s + lows_s + closes_s) / 3
-                sma_tp = tp.rolling(window=20, min_periods=20).mean()
-                mean_dev = tp.rolling(window=20, min_periods=20).apply(
-                    lambda x: np.mean(np.abs(x - x.mean())), raw=True)
-                cci_series = (tp - sma_tp) / (0.015 * mean_dev)
-                cci_now = float(cci_series.iloc[-1]) if not pd.isna(cci_series.iloc[-1]) else 0.0
-                # Partial: +5% → sell 50%
-                if not pos["partial_exit_done"] and current_price >= entry_price * 1.05:
-                    half = pos["shares"] // 2
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "5PCT_PARTIAL", half))
-                # CCI exit: CCI < -100 AND red candle
-                is_red = current_price < float(daily["Open"].iloc[-1])
-                if cci_now < -100 and is_red:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "CCI_RED_EXIT", sz))
-
-            elif pos["strategy"] == "O":
-                # O: 3% hard SL, Close > EMA(5) exit
-                if current_price <= entry_price * 0.97:
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "HARD_SL_3PCT", pos["shares"]))
-                    continue
-                closes_o = daily["Close"]
-                ema5_o = float(closes_o.ewm(span=5, adjust=False).mean().iloc[-1])
-                if not np.isnan(ema5_o) and current_price > ema5_o:
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "EMA5_EXIT", pos["shares"]))
-
-            elif pos["strategy"] == "R":
-                # R: 5% hard SL, +5% partial, RSI(14) < 50 exit
-                if current_price <= entry_price * 0.95:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "HARD_SL_3PCT", sz))
-                    continue
-                rsi14_s = _calculate_rsi_series(daily["Close"], 14)
-                rsi14_now = float(rsi14_s.iloc[-1]) if not pd.isna(rsi14_s.iloc[-1]) else 50.0
-                if not pos["partial_exit_done"] and current_price >= entry_price * 1.05:
-                    half = pos["shares"] // 2
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "5PCT_PARTIAL", half))
-                elif rsi14_now < 50:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "RSI14_EXIT", sz))
-
-            elif pos["strategy"] == "S":
-                # S: 5% hard SL, +5% partial, MACD cross down OR RSI(14) < 40
-                if current_price <= entry_price * 0.95:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "HARD_SL_3PCT", sz))
-                    continue
-                closes_s = daily["Close"]
-                rsi14_s = _calculate_rsi_series(closes_s, 14)
-                rsi14_now = float(rsi14_s.iloc[-1]) if not pd.isna(rsi14_s.iloc[-1]) else 50.0
-                ema12 = closes_s.ewm(span=12, adjust=False).mean()
-                ema26 = closes_s.ewm(span=26, adjust=False).mean()
-                macd_line = ema12 - ema26
-                macd_signal = macd_line.ewm(span=9, adjust=False).mean()
-                macd_now = float(macd_line.iloc[-1])
-                macd_sig_now = float(macd_signal.iloc[-1])
-                macd_prev = float(macd_line.iloc[-2]) if len(macd_line) >= 2 else 0.0
-                macd_sig_prev = float(macd_signal.iloc[-2]) if len(macd_signal) >= 2 else 0.0
-                macd_cross_dn = (macd_prev >= macd_sig_prev and macd_now < macd_sig_now)
-                if not pos["partial_exit_done"] and current_price >= entry_price * 1.05:
-                    half = pos["shares"] // 2
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "5PCT_PARTIAL", half))
-                elif macd_cross_dn or rsi14_now < 40:
-                    reason = "MACD_CROSS_DOWN" if macd_cross_dn else "RSI14_EXIT"
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, reason, sz))
+                    else:
+                        # Chandelier exit: highest high since entry - 3x ATR(14)
+                        entry_date_str = pos.get("entry_date", "")
+                        entry_dt = pd.Timestamp(entry_date_str) if entry_date_str else daily.index[0]
+                        since_entry = daily[daily.index >= entry_dt]
+                        if len(since_entry) >= 2:
+                            highest_high = float(since_entry["High"].max())
+                            # ATR(14) from daily data
+                            tr = pd.concat([
+                                daily["High"] - daily["Low"],
+                                (daily["High"] - daily["Close"].shift()).abs(),
+                                (daily["Low"] - daily["Close"].shift()).abs()
+                            ], axis=1).max(axis=1)
+                            atr14 = float(tr.rolling(14).mean().iloc[-1]) if len(tr) >= 14 else 0.0
+                            chandelier_stop = highest_high - 3.0 * atr14
+                            if atr14 > 0 and current_price < chandelier_stop:
+                                exit_signals.append(self._make_exit_signal(
+                                    pos, current_price, pnl_pct, "CHANDELIER_EXIT",
+                                    pos["remaining_shares"]))
 
             elif pos["strategy"] == "T":
-                # T: 5% hard SL, +5% partial, price >= upper Keltner exit
+                # T: 3-stage exit logic
+                # Stage 0: 5% SL → exit all. +5% → sell 1/3, set stage=1.
+                # Stage 1: 5% SL → exit remaining. +8% → sell 1/3, set stage=2 (partial_exit_done=True).
+                # Stage 2: 5% SL → exit remaining. Upper Keltner → exit remaining.
+                stage = pos.get("partial_stage", 0)
+                third = pos["shares"] // 3
+
                 if current_price <= entry_price * 0.95:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                    sz = pos["remaining_shares"]
                     exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "HARD_SL_3PCT", sz))
+                        pos, current_price, pnl_pct, "HARD_SL_5PCT", sz))
                     continue
+
                 closes_t = daily["Close"]
                 highs_t = daily["High"]
                 lows_t = daily["Low"]
@@ -868,60 +505,17 @@ class LiveSignalsEngine:
                 true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
                 atr14_t = float(true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[-1])
                 upper_keltner = ema20_t + 2 * atr14_t
-                if not pos["partial_exit_done"] and current_price >= entry_price * 1.05:
-                    half = pos["shares"] // 2
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "5PCT_PARTIAL", half))
-                elif current_price >= upper_keltner:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "KELTNER_UPPER_EXIT", sz))
 
-            elif pos["strategy"] == "U":
-                # U: 5% hard SL, +5% partial, StochRSI %K crosses below %D both > 70
-                if current_price <= entry_price * 0.95:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                if stage == 0 and current_price >= entry_price * 1.05 and third > 0:
                     exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "HARD_SL_3PCT", sz))
-                    continue
-                closes_u = daily["Close"]
-                rsi14_u = _calculate_rsi_series(closes_u, 14)
-                rsi14_min = rsi14_u.rolling(window=14, min_periods=14).min()
-                rsi14_max = rsi14_u.rolling(window=14, min_periods=14).max()
-                stoch_raw = (rsi14_u - rsi14_min) / (rsi14_max - rsi14_min)
-                stoch_raw = stoch_raw.fillna(0.5)
-                stoch_k = stoch_raw.rolling(window=3, min_periods=3).mean() * 100
-                stoch_d = stoch_k.rolling(window=3, min_periods=3).mean()
-                stk = float(stoch_k.iloc[-1]) if not pd.isna(stoch_k.iloc[-1]) else 50.0
-                std_val = float(stoch_d.iloc[-1]) if not pd.isna(stoch_d.iloc[-1]) else 50.0
-                stk_prev = float(stoch_k.iloc[-2]) if len(stoch_k) >= 2 and not pd.isna(stoch_k.iloc[-2]) else 50.0
-                std_prev = float(stoch_d.iloc[-2]) if len(stoch_d) >= 2 and not pd.isna(stoch_d.iloc[-2]) else 50.0
-                k_cross_dn = (stk_prev >= std_prev and stk < std_val)
-                if not pos["partial_exit_done"] and current_price >= entry_price * 1.05:
-                    half = pos["shares"] // 2
+                        pos, current_price, pnl_pct, "PARTIAL_5PCT_1of3", third))
+                elif stage == 1 and current_price >= entry_price * 1.08 and third > 0:
                     exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "5PCT_PARTIAL", half))
-                elif k_cross_dn and stk > 70 and std_val > 70:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        pos, current_price, pnl_pct, "PARTIAL_8PCT_2of3", third))
+                elif (stage == 2 or pos["partial_exit_done"]) and current_price >= upper_keltner:
                     exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "STOCHRSI_EXIT", sz))
-
-            elif pos["strategy"] == "V":
-                # V: 5% hard SL, +5% partial, Close < 10-day low trailing exit
-                if current_price <= entry_price * 0.95:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "HARD_SL_5PCT", sz))
-                    continue
-                low_10d = float(lows.rolling(window=10, min_periods=10).min().shift(1).iloc[-1])
-                if not pos["partial_exit_done"] and current_price >= entry_price * 1.05:
-                    half = pos["shares"] // 2
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "5PCT_PARTIAL", half))
-                elif not np.isnan(low_10d) and low_10d > 0 and current_price < low_10d:
-                    sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                    exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "DONCHIAN_LOW_EXIT", sz))
+                        pos, current_price, pnl_pct, "KELTNER_UPPER_EXIT",
+                        pos["remaining_shares"]))
 
         return exit_signals
 
