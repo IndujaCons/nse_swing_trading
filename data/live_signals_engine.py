@@ -215,11 +215,8 @@ class LiveSignalsEngine:
                 if atr14 > 0:
                     upper_keltner = ema20_val + 2 * atr14
                     near_ema20 = abs(price - ema20_val) / ema20_val <= 0.01
-                    # Uptrend filter: EMA20 must be rising (vs 10 bars ago)
-                    ema20_s = closes.ewm(span=20, adjust=False).mean()
-                    ema20_prev = float(ema20_s.iloc[i - 10]) if i >= 10 else 0.0
-                    ema20_rising = ema20_val > ema20_prev
                     was_at_upper = False
+                    ema20_s = closes.ewm(span=20, adjust=False).mean()
                     atr14_s = true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
                     for lb_j in range(max(0, i - 10), i):
                         past_high = float(highs.iloc[lb_j])
@@ -228,7 +225,7 @@ class LiveSignalsEngine:
                         if past_high >= past_ema20 + 2 * past_atr14:
                             was_at_upper = True
                             break
-                    if near_ema20 and was_at_upper and is_green and ema20_rising:
+                    if near_ema20 and was_at_upper and is_green:
                         t_signals.append({
                             "ticker": ticker,
                             "price": round(price, 2),
