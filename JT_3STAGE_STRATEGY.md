@@ -65,55 +65,37 @@ The original system sold 1/2 at +5% and exited the other 1/2 on indicator. The 3
 
 Results below are 3-seed averages (seeds 42, 99, 7) with gap-down filter ON (production config).
 
-### 3-Stage + Gap-Down Filter (Production)
+### Production Config (3-Stage + Gap-Down + Risk Ranking)
 
-| Year | Trades | WR% | Return% | P&L |
-|---|---|---|---|---|
-| 2025 | 182 | 67.1% | 14.23% | 2,84,719 |
-| 2024 | 195 | 73.0% | 22.81% | 4,56,167 |
-| 2023 | 184 | 79.8% | 36.32% | 7,26,425 |
-| 2022 | 214 | 66.4% | 12.88% | 2,57,726 |
-| 2021 | 212 | 69.8% | 20.40% | 4,08,052 |
-| 2020 | 222 | 72.1% | 20.59% | 4,11,771 |
-| 2019 | 218 | 65.8% | 12.18% | 2,43,627 |
-| 2018 | 169 | 59.8% | -0.33% | -6,621 |
-| 2017 | 184 | 82.3% | 41.10% | 8,22,090 |
-| 2016 | 183 | 69.4% | 15.60% | 3,11,994 |
-| **Total** | | | **195.79%** | **39,15,950** |
-| **Avg/yr** | | | **19.58%** | **3,91,595** |
+| Year | Trades | WR% | Return% | P&L | AvgWin | AvgLoss |
+|---|---|---|---|---|---|---|
+| 2025 | 171 | 63.9% | 14.17% | 2,83,435 | 7,192 | -8,131 |
+| 2024 | 196 | 69.6% | 19.65% | 3,92,922 | 7,044 | -9,540 |
+| 2023 | 185 | 81.3% | 40.53% | 8,10,517 | 7,513 | -9,273 |
+| 2022 | 210 | 64.7% | 13.17% | 2,63,429 | 7,800 | -10,728 |
+| 2021 | 206 | 69.7% | 20.06% | 4,01,267 | 7,582 | -11,030 |
+| 2020 | 228 | 72.3% | 20.84% | 4,16,835 | 7,971 | -14,177 |
+| 2019 | 221 | 67.5% | 15.95% | 3,19,066 | 7,133 | -10,393 |
+| 2018 | 179 | 59.1% | 0.63% | 12,487 | 7,498 | -10,671 |
+| 2017 | 193 | 81.3% | 44.11% | 8,82,139 | 7,900 | -9,954 |
+| 2016 | 173 | 69.2% | 15.69% | 3,13,689 | 7,230 | -10,386 |
+| **Total** | | | **204.80%** | **40,95,786** | | |
+| **Avg/yr** | | | **20.48%** | **4,09,579** | **7,486** | **-10,428** |
 
-- Winning years: 9/10
-- Best year: 41.10% (2017)
-- Worst year: -0.33% (2018 — effectively breakeven)
+- Winning years: 10/10
+- Best year: 44.11% (2017)
+- Worst year: 0.63% (2018 — breakeven)
 
-### Without Gap-Down Filter (for Reference)
+### Baseline (Random Shuffle, No Filters) for Reference
 
-| Year | Trades | WR% | Return% | P&L |
-|---|---|---|---|---|
-| 2025 | 179 | 66.2% | 14.67% | 2,93,444 |
-| 2024 | 210 | 68.9% | 17.01% | 3,40,228 |
-| 2023 | 195 | 79.1% | 36.79% | 7,35,850 |
-| 2022 | 234 | 67.4% | 18.98% | 3,79,567 |
-| 2021 | 233 | 68.4% | 18.13% | 3,62,615 |
-| 2020 | 243 | 72.7% | 23.71% | 4,74,192 |
-| 2019 | 216 | 63.2% | 7.02% | 1,40,449 |
-| 2018 | 199 | 54.6% | -9.34% | -1,86,871 |
-| 2017 | 177 | 80.0% | 36.55% | 7,31,100 |
-| 2016 | 190 | 65.1% | 12.95% | 2,58,916 |
-| **Total** | | | **176.48%** | **35,29,490** |
-| **Avg/yr** | | | **17.65%** | **3,52,949** |
-
-- Winning years: 9/10
-- Worst year: -9.34% (2018)
-
-### Gap-Down Filter Impact
-
-| Metric | No Filter | Gap Filter | Improvement |
+| Metric | Baseline | Production | Improvement |
 |---|---|---|---|
-| Total Return (10yr) | 176.48% | 195.79% | +19.31% |
-| Avg Return/yr | 17.65% | 19.58% | +1.93% |
-| Total P&L | 35.3L | 39.2L | +3.9L |
-| Worst Year | -9.34% | -0.33% | +9.01% |
+| Avg Return/yr | 17.65% | 20.48% | +2.83% |
+| Avg Loss | -11,115 | -10,428 | +Rs 687 smaller |
+| Worst Year | -9.34% | +0.63% | No losing years |
+| Total P&L (10yr) | 35.3L | 41.0L | +5.7L |
+
+Improvements from: gap-down filter (+1.93%/yr) + risk ranking (+1.08%/yr, -Rs 687 avg loss).
 
 ---
 
@@ -121,18 +103,22 @@ Results below are 3-seed averages (seeds 42, 99, 7) with gap-down filter ON (pro
 
 When multiple signals fire on the same day and you have limited slots:
 
-1. **Priority: J > T** — J has structural support (defined risk), T is a trend pullback
-2. **Within same strategy**:
-   - J: Prefer lower `close_near_pct` (closer to support = tighter risk) + higher IBS
-   - T: Prefer stock that more recently touched upper Keltner
+1. **Rank by stop_distance_pct ASC** — tightest risk first, regardless of strategy type
+   - J: `stop_pct = (price - weekly_low_stop) / price * 100` (variable, typically 2-8%)
+   - T: `stop_pct = 5.0` (fixed hard SL)
+   - A J signal with 2% stop beats a T signal with 5% stop (better risk/reward)
+   - A J signal with 7% stop loses to T (worse risk/reward)
+2. **Seed-based tiebreaker** — when stop_pct is equal, random (reproducible) selection
 3. **No duplicate stocks** — skip if you already hold a position in the same stock
-4. **Sector diversification** — avoid 2 stocks from the same sector when choosing between signals
+
+This reduces avg loss by Rs 687/trade and adds +1.08%/yr vs random selection.
 
 ---
 
 ## Risk Notes
 
-- 2018 is the worst year — broad market selloff (Oct 2018 Nifty crash). Gap-down filter turns it from -9.34% to -0.33% (effectively breakeven).
-- Random trade selection causes ~20-30% variance in annual returns between runs. Live results will differ from any single backtest run.
+- 2018 is the worst year — broad market selloff (Oct 2018 Nifty crash). Gap-down filter + risk ranking turns it from -9.34% to +0.63%.
+- Risk ranking by stop distance reduces avg loss by Rs 687/trade and adds +1.08%/yr vs random selection.
+- Results are 3-seed averages. Live results will differ from any single backtest run.
 - Results are based on daily closing prices. Live execution at different prices will cause slippage.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).

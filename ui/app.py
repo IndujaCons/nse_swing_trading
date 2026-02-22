@@ -689,7 +689,8 @@ def run_portfolio_backtest():
             progress_callback=update_portfolio_backtest_progress,
             end_date=end_date,
             three_stage_exit=three_stage_exit,
-            no_gap_down=True
+            no_gap_down=True,
+            rank_by_risk=True
         )
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]})

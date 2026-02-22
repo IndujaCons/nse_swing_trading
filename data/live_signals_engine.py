@@ -181,11 +181,13 @@ class LiveSignalsEngine:
                                 and ibs > 0.5 and is_green
                                 and cci_val > -100):
                             raw_stop = wls if wls else ws
+                            j_stop_pct = round((price - raw_stop) / price * 100, 2) if price > 0 else 99.0
                             j_signals.append({
                                 "ticker": ticker,
                                 "price": round(price, 2),
                                 "support": round(ws, 2),
                                 "stop": round(raw_stop, 2),
+                                "stop_pct": j_stop_pct,
                                 "close_near_pct": round(close_near_pct, 2),
                                 "ibs": round(ibs, 2),
                                 "low": round(low, 2),
@@ -221,9 +223,14 @@ class LiveSignalsEngine:
                             "price": round(price, 2),
                             "ema20": round(ema20_val, 2),
                             "upper_keltner": round(upper_keltner, 2),
+                            "stop_pct": 5.0,
                         })
             except Exception:
                 pass
+
+        # Sort by stop distance (tightest risk first)
+        j_signals.sort(key=lambda s: s.get("stop_pct", 99.0))
+        t_signals.sort(key=lambda s: s.get("stop_pct", 99.0))
 
         result = {
             "j_signals": j_signals,

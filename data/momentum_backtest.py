@@ -525,7 +525,7 @@ class MomentumBacktester:
                               strategies=None, entries_per_day=1,
                               progress_callback=None, end_date=None,
                               three_stage_exit=True, seed=42,
-                              no_gap_down=True):
+                              no_gap_down=True, rank_by_risk=True):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -868,6 +868,7 @@ class MomentumBacktester:
                             if (close_near >= 0 and close_near <= 3.0
                                     and ibs > 0.5 and is_green
                                     and cci_val > -100):
+                                j_stop_pct = (price - wls) / price * 100 if price > 0 else 99.0
                                 signals.append({
                                     "symbol": ticker,
                                     "strategy": "J",
@@ -876,6 +877,7 @@ class MomentumBacktester:
                                     "entry_support_j": ws,
                                     "entry_stop_j": wls,
                                     "atr14": sig_atr14,
+                                    "stop_pct": j_stop_pct,
                                 })
 
                 # Strategy T entry: Price near EMA(20) (within 1%) AND was at upper Keltner in last 10 bars AND green
@@ -900,6 +902,7 @@ class MomentumBacktester:
                                     "strategy": "T",
                                     "price": price,
                                     "atr14": sig_atr14,
+                                    "stop_pct": 5.0,
                                 })
 
             total_signals += len(signals)
@@ -908,7 +911,12 @@ class MomentumBacktester:
             available_slots = MAX_POSITIONS - len(positions)
             max_today = min(entries_per_day, available_slots)
             if signals and max_today > 0:
-                random.Random(seed).shuffle(signals)
+                if rank_by_risk:
+                    # Tightest stop first; seed-based jitter for tiebreaker
+                    rng = random.Random(seed)
+                    signals.sort(key=lambda s: (s.get("stop_pct", 99.0), rng.random()))
+                else:
+                    random.Random(seed).shuffle(signals)
                 taken = min(len(signals), max_today)
                 missed_signals += len(signals) - taken
                 signals = signals[:taken]
