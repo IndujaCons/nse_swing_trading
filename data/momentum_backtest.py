@@ -827,6 +827,7 @@ class MomentumBacktester:
                     still_open.append(pos)
 
             positions = still_open
+            running_pnl = sum(t["pnl"] for t in trades)
 
             # === 2. Collect all entry signals ===
             signals = []
@@ -929,6 +930,8 @@ class MomentumBacktester:
                 for sig in signals:
                     shares = int(PER_STOCK // sig["price"])
                     if shares > 0:
+                        capital_used = round(sig["price"] * shares, 2)
+                        deployed = sum(p["entry_price"] * p["shares"] for p in positions) + capital_used
                         pos = {
                             "symbol": sig["symbol"],
                             "strategy": sig["strategy"],
@@ -937,6 +940,9 @@ class MomentumBacktester:
                             "shares": shares,
                             "remaining_shares": shares,
                             "partial_exit_done": False,
+                            "capital_used": capital_used,
+                            "capital_deployed": round(deployed, 0),
+                            "capital_available": round(TOTAL_CAPITAL + running_pnl - deployed, 0),
                         }
                         if sig["strategy"] == "J":
                             pos["entry_support_j"] = sig["entry_support_j"]
@@ -973,13 +979,8 @@ class MomentumBacktester:
             trades.append(self._make_portfolio_trade(
                 pos, sz, last_day, price, "BACKTEST_END"))
 
-        # --- Compute capital balance per trade ---
         # Sort trades by exit_date (chronological order of realization)
         trades.sort(key=lambda t: (t["exit_date"], t["entry_date"]))
-        balance = float(TOTAL_CAPITAL)
-        for t in trades:
-            balance += t["pnl"]
-            t["capital_balance"] = round(balance, 0)
 
         # --- Build summary ---
         # Prorate return based on max capital actually deployed
@@ -1016,6 +1017,9 @@ class MomentumBacktester:
             exit_date, exit_price, reason)
         trade["symbol"] = pos["symbol"]
         trade["strategy"] = pos["strategy"]
+        trade["capital_used"] = pos.get("capital_used", 0)
+        trade["capital_deployed"] = pos.get("capital_deployed", 0)
+        trade["capital_available"] = pos.get("capital_available", 0)
         return trade
 
     def run_all_stocks(self, period_days, capital=100000, progress_callback=None, universe=50, end_date=None):
