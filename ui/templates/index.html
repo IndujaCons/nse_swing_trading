@@ -2909,6 +2909,7 @@
                         <td class="${pnlCls}">${pnlSign}${t.pnl_pct}%</td>
                         <td>${t.holding_days}d</td>
                         <td>${t.exit_reason}</td>
+                        <td class="price">${(t.capital_balance || 0).toLocaleString()}</td>
                     </tr>
                 `;
             }).join('');
@@ -2929,6 +2930,7 @@
                             <th>P&L %</th>
                             <th>Hold</th>
                             <th>Reason</th>
+                            <th>Balance</th>
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>
@@ -2942,7 +2944,7 @@
             const s = data.summary;
             const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
 
-            const header = ['#','Symbol','Strategy','Entry Date','Entry Price','Shares','Exit Date','Exit Price','P&L','P&L %','Hold Days','Reason'].map(q);
+            const header = ['#','Symbol','Strategy','Entry Date','Entry Price','Shares','Exit Date','Exit Price','P&L','P&L %','Hold Days','Reason','Balance'].map(q);
             const csvRows = [header.join(',')];
 
             data.trades.forEach((t, i) => {
@@ -2950,7 +2952,7 @@
                 csvRows.push([
                     i + 1, q(t.symbol), q(t.strategy), q(t.entry_date),
                     t.entry_price, t.shares, q(t.exit_date), t.exit_price,
-                    `${sign}${t.pnl}`, `${sign}${t.pnl_pct}%`, t.holding_days, q(t.exit_reason)
+                    `${sign}${t.pnl}`, `${sign}${t.pnl_pct}%`, t.holding_days, q(t.exit_reason), t.capital_balance || 0
                 ].join(','));
             });
 
