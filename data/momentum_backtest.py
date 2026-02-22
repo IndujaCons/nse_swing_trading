@@ -15,7 +15,7 @@ Strategy J — Weekly Close Support Bounce:
 Strategy T — Keltner Channel Pullback:
   Entry: Price pulls back to EMA(20) midline (was at upper Keltner in last 10 days)
          AND green candle AND no gap-down (open >= prev close)
-  Exit 1 (3-stage): +5% sell 1/3, +8% sell 1/3, upper Keltner sell remaining 1/3
+  Exit 1 (3-stage): +6% sell 1/3, +10% sell 1/3, upper Keltner sell remaining 1/3
   Stop: 5% hard SL
 """
 
@@ -525,7 +525,8 @@ class MomentumBacktester:
                               strategies=None, entries_per_day=1,
                               progress_callback=None, end_date=None,
                               three_stage_exit=True, seed=42,
-                              no_gap_down=True, rank_by_risk=True):
+                              no_gap_down=True, rank_by_risk=True,
+                              t_target1=0.06, t_target2=0.10):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -797,14 +798,14 @@ class MomentumBacktester:
                         if three_stage_exit:
                             stage = pos.get("partial_stage", 0)
                             third = pos["shares"] // 3
-                            if stage == 0 and price >= pos["entry_price"] * 1.05 and third > 0:
+                            if stage == 0 and price >= pos["entry_price"] * (1 + t_target1) and third > 0:
                                 trades.append(self._make_portfolio_trade(
-                                    pos, third, day, price, "PARTIAL_5PCT_1of3"))
+                                    pos, third, day, price, f"PARTIAL_{int(t_target1*100)}PCT_1of3"))
                                 pos["remaining_shares"] = pos["shares"] - third
                                 pos["partial_stage"] = 1
-                            elif stage == 1 and price >= pos["entry_price"] * 1.08 and third > 0:
+                            elif stage == 1 and price >= pos["entry_price"] * (1 + t_target2) and third > 0:
                                 trades.append(self._make_portfolio_trade(
-                                    pos, third, day, price, "PARTIAL_8PCT_2of3"))
+                                    pos, third, day, price, f"PARTIAL_{int(t_target2*100)}PCT_2of3"))
                                 pos["remaining_shares"] = pos["shares"] - 2 * third
                                 pos["partial_exit_done"] = True
                         elif price >= pos["entry_price"] * 1.05:

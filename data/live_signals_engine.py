@@ -495,8 +495,8 @@ class LiveSignalsEngine:
 
             elif pos["strategy"] == "T":
                 # T: 3-stage exit logic
-                # Stage 0: 5% SL → exit all. +5% → sell 1/3, set stage=1.
-                # Stage 1: 5% SL → exit remaining. +8% → sell 1/3, set stage=2 (partial_exit_done=True).
+                # Stage 0: 5% SL → exit all. +6% → sell 1/3, set stage=1.
+                # Stage 1: 5% SL → exit remaining. +10% → sell 1/3, set stage=2 (partial_exit_done=True).
                 # Stage 2: 5% SL → exit remaining. Upper Keltner → exit remaining.
                 stage = pos.get("partial_stage", 0)
                 third = pos["shares"] // 3
@@ -519,12 +519,12 @@ class LiveSignalsEngine:
                 atr14_t = float(true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[-1])
                 upper_keltner = ema20_t + 2 * atr14_t
 
-                if stage == 0 and current_price >= entry_price * 1.05 and third > 0:
+                if stage == 0 and current_price >= entry_price * 1.06 and third > 0:
                     exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "PARTIAL_5PCT_1of3", third))
-                elif stage == 1 and current_price >= entry_price * 1.08 and third > 0:
+                        pos, current_price, pnl_pct, "PARTIAL_6PCT_1of3", third))
+                elif stage == 1 and current_price >= entry_price * 1.10 and third > 0:
                     exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "PARTIAL_8PCT_2of3", third))
+                        pos, current_price, pnl_pct, "PARTIAL_10PCT_2of3", third))
                 elif (stage == 2 or pos["partial_exit_done"]) and current_price >= upper_keltner:
                     exit_signals.append(self._make_exit_signal(
                         pos, current_price, pnl_pct, "KELTNER_UPPER_EXIT",
