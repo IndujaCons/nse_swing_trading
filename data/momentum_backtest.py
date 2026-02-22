@@ -696,6 +696,7 @@ class MomentumBacktester:
         missed_signals = 0
         max_positions_used = 0
         positions_over_time = []
+        running_pnl = 0  # cumulative realized PnL
 
         for day_idx, day in enumerate(all_dates):
             if progress_callback and day_idx % 20 == 0:
@@ -971,6 +972,14 @@ class MomentumBacktester:
             sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
             trades.append(self._make_portfolio_trade(
                 pos, sz, last_day, price, "BACKTEST_END"))
+
+        # --- Compute capital balance per trade ---
+        # Sort trades by exit_date (chronological order of realization)
+        trades.sort(key=lambda t: (t["exit_date"], t["entry_date"]))
+        balance = float(TOTAL_CAPITAL)
+        for t in trades:
+            balance += t["pnl"]
+            t["capital_balance"] = round(balance, 0)
 
         # --- Build summary ---
         # Prorate return based on max capital actually deployed
