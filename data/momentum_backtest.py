@@ -166,11 +166,11 @@ class MomentumBacktester:
                 "Open": "first", "High": "max", "Low": "min",
                 "Close": "last", "Volume": "sum"
             }).dropna()
-            # 26-week rolling min of weekly CLOSE (W-FRI: ffill naturally excludes current incomplete week)
-            w_support = weekly["Close"].rolling(window=26, min_periods=26).min()
+            # 26-week rolling min of weekly CLOSE, skip last 2 weeks (use proven support, not recent noise)
+            w_support = weekly["Close"].rolling(window=26, min_periods=26).min().shift(2)
             weekly_support_series = w_support.reindex(daily.index, method="ffill")
-            # 26-week rolling min of weekly LOW (for stop-loss)
-            w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min()
+            # 26-week rolling min of weekly LOW (for stop-loss), also skip last 2 weeks
+            w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min().shift(2)
             weekly_low_stop_series = w_low_stop.reindex(daily.index, method="ffill")
 
 
@@ -600,9 +600,10 @@ class MomentumBacktester:
                 "Open": "first", "High": "max", "Low": "min",
                 "Close": "last", "Volume": "sum"
             }).dropna()
-            w_support = weekly["Close"].rolling(window=26, min_periods=26).min()
+            # Skip last 2 weeks of support (use proven support, not recent noise)
+            w_support = weekly["Close"].rolling(window=26, min_periods=26).min().shift(2)
+            w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min().shift(2)
             weekly_support_series = w_support.reindex(daily.index, method="ffill")
-            w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min()
             weekly_low_stop_series = w_low_stop.reindex(daily.index, method="ffill")
 
             # Volume

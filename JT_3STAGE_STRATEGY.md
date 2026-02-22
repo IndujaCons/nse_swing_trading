@@ -10,7 +10,8 @@ Momentum dip-buying strategy on Nifty 100 stocks combining two signal types (J, 
 
 ### Strategy J — Weekly Support Bounce
 - **Condition**: Close within 0-3% above weekly support level, IBS > 0.5, green candle, CCI(20) > -100, **no gap-down** (open >= prev close)
-- **Stop**: Below weekly low (support break)
+- **Support calculation**: 26-week rolling min of weekly close, **skipping the last 2 weeks** (current + previous). Uses proven support levels, not recent noise.
+- **Stop**: Below weekly low (support break), also skipping last 2 weeks
 - **Edge**: Defined structural support gives tight risk
 
 ### Strategy T — Keltner Channel Pullback

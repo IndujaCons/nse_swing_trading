@@ -161,16 +161,17 @@ class LiveSignalsEngine:
                     "Close": "last", "Volume": "sum"
                 }).dropna()
                 if len(weekly) >= 27:
+                    # Skip last 2 weeks (use proven support, not recent noise)
                     w_support_series = weekly["Close"].rolling(
-                        window=26, min_periods=26).min()
+                        window=26, min_periods=26).min().shift(2)
                     w_support_daily = w_support_series.reindex(
                         daily.index, method="ffill")
                     ws = float(w_support_daily.iloc[i]) if not pd.isna(
                         w_support_daily.iloc[i]) else None
 
-                    # 26-week weekly low for stop-loss
+                    # 26-week weekly low for stop-loss, also skip last 2 weeks
                     w_low_stop_series = weekly["Low"].rolling(
-                        window=26, min_periods=26).min()
+                        window=26, min_periods=26).min().shift(2)
                     w_low_stop_daily = w_low_stop_series.reindex(
                         daily.index, method="ffill")
                     wls = float(w_low_stop_daily.iloc[i]) if not pd.isna(
