@@ -61,65 +61,138 @@ The original system sold 1/2 at +5% and exited the other 1/2 on indicator. The 3
 
 ---
 
-## Backtest Results — 10 Years (2016-2025), Nifty 100, 3-Seed Average
+## Signal Ranking — ATR% (Lowest Volatility First)
 
-Results below are 3-seed averages (seeds 42, 99, 7) with gap-down filter ON (production config).
+When multiple signals fire on the same day and you have limited slots (2/day):
 
-### Production Config (3-Stage 6/10 + Gap-Down + Risk Ranking)
+### Current Method: Rank by ATR% (ATR14 / Price)
+- **Sort**: Lowest `atr_norm` first — prefer calmer, less volatile stocks
+- **Logic**: Lower volatility stocks are less likely to gap through stops and more likely to have orderly pullbacks that recover to targets
+- **Tiebreaker**: Seed-based random jitter for reproducibility
 
-| Year | Trades | WR% | Return% | P&L | AvgWin | AvgLoss |
-|---|---|---|---|---|---|---|
-| 2025 | 167 | 61.3% | 13.34% | 2,66,785 | 7,778 | -8,176 |
-| 2024 | 189 | 69.7% | 23.54% | 4,70,866 | 7,892 | -9,992 |
-| 2023 | 173 | 79.0% | 37.78% | 7,55,691 | 8,193 | -10,013 |
-| 2022 | 206 | 63.8% | 16.54% | 3,30,866 | 8,545 | -10,635 |
-| 2021 | 194 | 67.8% | 23.68% | 4,73,693 | 8,905 | -11,204 |
-| 2020 | 216 | 70.3% | 22.35% | 4,47,001 | 8,914 | -14,157 |
-| 2019 | 210 | 65.1% | 16.24% | 3,24,805 | 8,124 | -10,757 |
-| 2018 | 175 | 57.5% | 0.55% | 10,974 | 7,988 | -10,675 |
-| 2017 | 172 | 79.1% | 45.01% | 9,00,131 | 9,291 | -10,202 |
-| 2016 | 158 | 66.3% | 14.88% | 2,97,472 | 8,108 | -10,396 |
-| **Total** | | | **213.91%** | **42,78,284** | | |
-| **Avg/yr** | | | **21.39%** | **4,27,828** | **8,374** | **-10,621** |
+### Why ATR% over Stop%
+Four ranking strategies were tested across 11 years (2015-2025):
 
-- Winning years: 10/10
-- Best year: 45.01% (2017)
-- Worst year: 0.55% (2018 — breakeven)
+| Rank Method | Total PnL | Avg Ret/yr | Positive Yrs | Avg WR | Avg PF |
+|---|---|---|---|---|---|
+| **B: ATR% (current)** | **+43.88L** | **+19.95%** | **11/11** | **67.1%** | **1.79** |
+| A: Stop% (old) | +40.40L | +18.36% | 9/11 | 66.6% | 1.79 |
+| C: Trend/Risk | +42.42L | +19.28% | 10/11 | 68.5% | 1.75 |
+| D: Composite | +42.48L | +19.31% | 11/11 | 67.8% | 1.82 |
 
-### Baseline (Random Shuffle, No Filters) for Reference
+ATR% ranking:
+- **+3.48L more** than old Stop% ranking over 11 years
+- **Eliminates both losing years** (2015: -2.0% -> +0.6%, 2018: -2.6% -> +5.0%)
+- Entry conditions already filter for trend quality, so ranking by volatility avoids double-counting
+- Slight weakness in very strong trending markets (2019, 2023) where volatile runners get skipped
 
-| Metric | Baseline | Production | Improvement |
-|---|---|---|---|
-| Avg Return/yr | 17.65% | 21.39% | +3.74% |
-| Avg Win | 7,486 | 8,374 | +Rs 888 per trade |
-| Avg Loss | -11,115 | -10,621 | +Rs 494 smaller |
-| Worst Year | -9.34% | +0.55% | No losing years |
-| Total P&L (10yr) | 35.3L | 42.8L | +7.5L |
-
-Improvements from: gap-down filter (+1.93%/yr) + risk ranking (+1.08%/yr) + wider T targets 6/10 (+1.99%/yr, +Rs 888 avg win).
+### Stop% is still displayed
+The UI shows both ATR% (ranking column) and Stop% (SL distance) in the Top Picks panel so you can see the risk profile of each signal.
 
 ---
 
-## Live Trade Selection Rules
+## Backtest Results — 11 Years (2015-2025), Nifty 100
 
-When multiple signals fire on the same day and you have limited slots:
+### Production Config (3-Stage 6/10 + Gap-Down + ATR% Ranking)
 
-1. **Rank by stop_distance_pct ASC** — tightest risk first, regardless of strategy type
-   - J: `stop_pct = (price - weekly_low_stop) / price * 100` (variable, typically 2-8%)
-   - T: `stop_pct = 5.0` (fixed hard SL)
-   - A J signal with 2% stop beats a T signal with 5% stop (better risk/reward)
-   - A J signal with 7% stop loses to T (worse risk/reward)
-2. **Seed-based tiebreaker** — when stop_pct is equal, random (reproducible) selection
-3. **No duplicate stocks** — skip if you already hold a position in the same stock
+| Year | Trades | J | T | Win | Loss | WR% | P&L | Return% | AvgWin | AvgLoss | PF |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2025 | 164 | 97 | 67 | 110 | 54 | 67.1% | +4,64,706 | +23.24% | 8,262 | -8,225 | 2.05 |
+| 2024 | 187 | 74 | 113 | 129 | 58 | 69.0% | +5,48,242 | +27.41% | 8,299 | -9,006 | 2.05 |
+| 2023 | 159 | 68 | 91 | 125 | 34 | 78.6% | +6,72,189 | +33.61% | 8,017 | -9,703 | 3.04 |
+| 2022 | 195 | 103 | 92 | 125 | 70 | 64.1% | +2,49,805 | +12.49% | 8,310 | -11,271 | 1.32 |
+| 2021 | 185 | 37 | 148 | 125 | 60 | 67.6% | +5,09,796 | +25.49% | 9,380 | -11,045 | 1.77 |
+| 2020 | 206 | 66 | 140 | 143 | 63 | 69.4% | +3,63,722 | +18.19% | 8,547 | -13,626 | 1.42 |
+| 2019 | 185 | 99 | 86 | 111 | 74 | 60.0% | +87,619 | +4.38% | 7,795 | -10,508 | 1.11 |
+| 2018 | 157 | 95 | 62 | 98 | 59 | 62.4% | +1,01,641 | +5.08% | 7,721 | -11,102 | 1.16 |
+| 2017 | 164 | 69 | 95 | 134 | 30 | 81.7% | +9,97,931 | +49.90% | 9,856 | -10,761 | 4.09 |
+| 2016 | 167 | 77 | 90 | 114 | 53 | 68.3% | +3,81,051 | +19.05% | 8,208 | -10,465 | 1.69 |
+| 2015 | 180 | 106 | 74 | 103 | 77 | 57.2% | +11,496 | +0.57% | 7,923 | -10,450 | 1.01 |
+| **Total** | **1,949** | **891** | **1,058** | **1,317** | **632** | | **+43,88,199** | | | | |
+| **Avg/yr** | **177** | | | | | **67.8%** | **+3,98,927** | **+19.95%** | **8,393** | **-10,560** | **1.97** |
 
-This reduces avg loss by Rs 687/trade and adds +1.08%/yr vs random selection.
+- **Positive years: 11/11**
+- **Best year: +49.90% (2017)**
+- **Worst year: +0.57% (2015)**
+- **Total P&L: Rs 43.88 Lakhs on 20L capital over 11 years**
+
+### Comparison: Old Stop% Ranking (for reference)
+
+| Year | Old (Stop%) | New (ATR%) | Difference |
+|---|---|---|---|
+| 2025 | +15.03% | +23.24% | +8.21% |
+| 2024 | +17.03% | +27.41% | +10.38% |
+| 2023 | +38.51% | +33.61% | -4.90% |
+| 2022 | +16.07% | +12.49% | -3.58% |
+| 2021 | +20.88% | +25.49% | +4.61% |
+| 2020 | +23.46% | +18.19% | -5.27% |
+| 2019 | +19.36% | +4.38% | -14.98% |
+| 2018 | **-2.68%** | **+5.08%** | +7.76% |
+| 2017 | +44.80% | +49.90% | +5.10% |
+| 2016 | +13.95% | +19.05% | +5.10% |
+| 2015 | **-1.99%** | **+0.57%** | +2.56% |
+| **Avg/yr** | **+18.58%** | **+19.95%** | **+1.37%** |
+
+ATR% wins 7/11 years. Where it loses (2019, 2023, 2020), it was underweight on volatile runners in trending markets. But it eliminates both losing years, giving a smoother equity curve.
+
+---
+
+## Filters Tested and Rejected
+
+### EMA20 Rising Filter (for T signals)
+- **Idea**: Only take T entries when EMA20 is rising over last N bars (uptrend confirmation)
+- **Tested**: 20-bar and 10-bar lookback across 10 years
+- **Result**: 10-bar showed +37K on aggregate but **0/10 years positive** on per-year testing, -3.45L total
+- **Verdict**: Rejected. T entry conditions already require "was at upper Keltner" which implies uptrend. Adding EMA slope is double-filtering and hurts more than helps.
+
+### Momentum Smoothness Filter (for T signals)
+- **Idea**: Only take T entries when `20d_return / 20d_stdev > threshold` (mini Sharpe ratio — prefer smooth momentum)
+- **Tested**: Thresholds 0.0, 0.3, 0.5 across 10 years
+- **Result**: Only threshold 0.0 showed marginal aggregate improvement (+42K), but per-year: 4/10 wins, -1.03L total
+- **Verdict**: Rejected. The signal is not strong enough on per-year validation.
+
+---
+
+## 2015 Loss Analysis (Worst Year)
+
+2015 was the worst year (+0.57% with ATR% ranking, -1.99% with old Stop% ranking). Key findings:
+
+- **August 2015 crash** (Chinese stock market panic): 6 trades exited on Aug 24 alone, losing Rs -1.29L. This single day accounts for most of the year's drag.
+- **T SL slippage**: 27 T trades exited beyond -5% hard SL (backtest checks on daily close, not intraday). Extra loss beyond perfect 5% SL: Rs -1.23L. In live trading with real SL orders, this would be tighter.
+- **J wide support**: 4 J trades lost >8% due to support being far from entry. ATR% ranking naturally avoids these (volatile stocks rank lower).
+- **Re-entries after loss**: Only 5 instances, net Rs -826 — not a material issue.
+- **Repeat losers**: TATASTEEL (3 J losses in Jan-Mar), LT (4 losses Jul-Dec), JSWSTEEL (4 losses Jan-Mar) — all declining stocks that kept triggering signals.
+
+---
+
+## Live Signals UI
+
+### Top Picks Panel
+- Combined J+T signals ranked by ATR% (lowest volatility first)
+- Top 2 signals highlighted with star and green background
+- Columns: Rank, Strategy (J/T), Stock, Close, **ATR%** (ranking), **Stop%** (SL distance), Stop Price, Detail, Buy button
+- ATR% color: green (<2%), gray (2-3.5%), red (>3.5%)
+- Stop% color: green (<5%), gray (=5%), red (>5%)
+
+### Entered Signals (Positions) Panel
+- Shows active positions with: Strategy badge (J green / T blue), User, Entry Date, Entry Price
+- SL price with percentage (J: support level, T: entry * 0.95)
+- T1 target (J: +5%, T: +6%), T2 target (J: +10%, T: +10%)
+- Stage label (J: Full pos / Half out; T: Stage 0 / Stage 1 (1/3 out) / Stage 2 (2/3 out))
+- Shares: remaining/total
+
+### Historical Date Picker
+- Date picker in sidebar to scan signals for any past date (2015 onwards)
+- Historical scans hide Buy buttons (view-only)
+- "Today" button resets to live cached data
 
 ---
 
 ## Risk Notes
 
-- 2018 is the worst year — broad market selloff (Oct 2018 Nifty crash). Gap-down filter + risk ranking turns it from -9.34% to +0.55%.
-- Risk ranking by stop distance reduces avg loss by Rs 687/trade and adds +1.08%/yr vs random selection.
-- Results are 3-seed averages. Live results will differ from any single backtest run.
+- 2015 and 2018 are the weakest years. ATR% ranking turns both from negative to positive (2015: +0.57%, 2018: +5.08%).
+- ATR% ranking can underperform in strong trending markets where volatile stocks are the big runners (e.g., 2019: +4.38% vs +19.36% with Stop% ranking).
 - Results are based on daily closing prices. Live execution at different prices will cause slippage.
+- T strategy SL slippage in backtest is an artifact of daily-bar checking. Live trading with actual SL orders will have tighter stops.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).
+- ~170-200 trades per year (avg 177), roughly evenly split between J and T.
