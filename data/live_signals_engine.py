@@ -241,7 +241,9 @@ class LiveSignalsEngine:
                         if past_high >= past_ema20 + 2 * past_atr14:
                             was_at_upper = True
                             break
-                    if near_ema20 and was_at_upper and is_green:
+                    # Skip T if stock already has a J signal (match backtest dedup)
+                    already_j = any(s["ticker"] == ticker for s in j_signals)
+                    if near_ema20 and was_at_upper and is_green and not already_j:
                         atr_norm_t = round(atr14 / price * 100, 2) if price > 0 else 99.0
                         t_signals.append({
                             "ticker": ticker,
