@@ -2022,8 +2022,10 @@
 
                 if (data.success) {
                     renderEntrySignals(data.data, true);
-                    document.getElementById('last-updated').textContent = `Signals for: ${dateStr}`;
-                    showToast(`Signals loaded for ${dateStr}`, 'success');
+                    const actualDate = data.data.actual_date || dateStr;
+                    const displayDate = actualDate !== dateStr ? `${actualDate} (trading day for ${dateStr})` : dateStr;
+                    document.getElementById('last-updated').textContent = `Signals for: ${displayDate}`;
+                    showToast(`Signals loaded for ${actualDate}`, 'success');
                 } else {
                     showToast(data.error || 'Scan failed', 'error');
                 }

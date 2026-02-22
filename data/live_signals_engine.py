@@ -119,6 +119,7 @@ class LiveSignalsEngine:
 
         j_signals = []
         t_signals = []
+        actual_date = None  # Track actual last trading date from data
 
         for idx, ticker in enumerate(tickers):
             if progress_callback:
@@ -140,6 +141,11 @@ class LiveSignalsEngine:
             volumes = daily["Volume"].astype(float)
 
             i = len(daily) - 1  # Latest bar
+            bar_date = daily.index[i]
+            if hasattr(bar_date, 'tz') and bar_date.tz is not None:
+                bar_date = bar_date.tz_localize(None)
+            if actual_date is None or bar_date > actual_date:
+                actual_date = bar_date
             price = float(closes.iloc[i])
             open_price = float(opens.iloc[i])
             low = float(lows.iloc[i])
@@ -259,6 +265,8 @@ class LiveSignalsEngine:
             "universe": universe,
         }
 
+        if actual_date is not None:
+            result["actual_date"] = actual_date.strftime("%Y-%m-%d")
         if is_historical:
             result["scan_date"] = scan_date
         else:
