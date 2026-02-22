@@ -214,7 +214,7 @@ def get_progress():
 
 @app.route("/api/live-signals/data", methods=["GET"])
 def get_live_signals_data():
-    """Get cached J+K scan results."""
+    """Get cached J+T scan results."""
     try:
         data = live_signals_scanner.scan_entry_signals(force_refresh=False)
         cache_age = live_signals_scanner.get_cache_age_minutes()
@@ -234,7 +234,7 @@ def get_live_signals_data():
 
 @app.route("/api/live-signals/refresh", methods=["POST"])
 def refresh_live_signals():
-    """Force re-scan J+K entry signals."""
+    """Force re-scan J+T entry signals."""
     global live_signals_refresh_in_progress
 
     with live_signals_refresh_lock:
@@ -376,7 +376,7 @@ def buy_live_signal():
 
     # Order placed — now record locally
     metadata["order_id"] = order_result.get("order_id")
-    # Store Nifty close at entry for drop shield (J and K)
+    # Store Nifty close at entry for drop shield (J)
     try:
         import yfinance as yf
         nifty = yf.Ticker("^NSEI").history(period="5d")
@@ -645,7 +645,7 @@ def update_portfolio_backtest_progress(current, total, ticker):
 
 @app.route("/api/momentum/backtest-portfolio", methods=["POST"])
 def run_portfolio_backtest():
-    """Run portfolio-level backtest (10L capital, J+K strategies)."""
+    """Run portfolio-level backtest (10L capital, J+T strategies)."""
     global portfolio_backtest_in_progress
 
     with portfolio_backtest_lock:
