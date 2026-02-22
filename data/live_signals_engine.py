@@ -190,8 +190,6 @@ class LiveSignalsEngine:
                                 and cci_val > -100):
                             raw_stop = wls if wls else ws
                             j_stop_pct = round((price - raw_stop) / price * 100, 2) if price > 0 else 99.0
-                            if j_stop_pct > 5.0:
-                                continue
                             # ATR14 for volatility ranking
                             prev_close_j = closes.shift(1)
                             tr1_j = highs - lows
