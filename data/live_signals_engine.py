@@ -79,9 +79,14 @@ class LiveSignalsEngine:
 
     # ==================== Entry Signal Scanning ====================
 
-    def scan_entry_signals(self, force_refresh=False, progress_callback=None):
-        """Scan for J and T entry signals across Nifty 50/100."""
-        if not force_refresh:
+    def scan_entry_signals(self, force_refresh=False, progress_callback=None, scan_date=None):
+        """Scan for J and T entry signals across Nifty 50/100.
+
+        scan_date: optional "YYYY-MM-DD" string to scan a historical date.
+        """
+        is_historical = scan_date is not None
+
+        if not force_refresh and not is_historical:
             cached = self._load_cache()
             if cached is not None:
                 return cached
@@ -100,7 +105,10 @@ class LiveSignalsEngine:
             tickers = midcap
 
         total = len(tickers)
-        end_date = datetime.now()
+        if is_historical:
+            end_date = datetime.strptime(scan_date, "%Y-%m-%d") + timedelta(days=1)
+        else:
+            end_date = datetime.now()
         daily_start = end_date - timedelta(days=500)
 
         # Fetch Nifty index data once
@@ -207,8 +215,11 @@ class LiveSignalsEngine:
                 if atr14 > 0:
                     upper_keltner = ema20_val + 2 * atr14
                     near_ema20 = abs(price - ema20_val) / ema20_val <= 0.01
-                    was_at_upper = False
+                    # Uptrend filter: EMA20 must be rising (vs 10 bars ago)
                     ema20_s = closes.ewm(span=20, adjust=False).mean()
+                    ema20_prev = float(ema20_s.iloc[i - 10]) if i >= 10 else 0.0
+                    ema20_rising = ema20_val > ema20_prev
+                    was_at_upper = False
                     atr14_s = true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
                     for lb_j in range(max(0, i - 10), i):
                         past_high = float(highs.iloc[lb_j])
@@ -217,7 +228,7 @@ class LiveSignalsEngine:
                         if past_high >= past_ema20 + 2 * past_atr14:
                             was_at_upper = True
                             break
-                    if near_ema20 and was_at_upper and is_green:
+                    if near_ema20 and was_at_upper and is_green and ema20_rising:
                         t_signals.append({
                             "ticker": ticker,
                             "price": round(price, 2),
@@ -239,8 +250,12 @@ class LiveSignalsEngine:
             "universe": universe,
         }
 
-        self._save_cache(result)
-        self._append_signals_history(j_signals, t_signals)
+        if is_historical:
+            result["scan_date"] = scan_date
+        else:
+            self._save_cache(result)
+            self._append_signals_history(j_signals, t_signals)
+
         return result
 
     def get_cache_age_minutes(self):

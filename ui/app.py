@@ -267,6 +267,52 @@ def refresh_live_signals():
             live_signals_refresh_in_progress = False
 
 
+@app.route("/api/live-signals/scan-date", methods=["POST"])
+def scan_live_signals_date():
+    """Scan J+T entry signals for a specific historical date."""
+    global live_signals_refresh_in_progress
+
+    data = request.get_json() or {}
+    scan_date = data.get("scan_date")
+
+    if not scan_date:
+        return jsonify({"success": False, "error": "scan_date required"}), 400
+
+    # Validate format
+    try:
+        dt = datetime.strptime(scan_date, "%Y-%m-%d")
+    except ValueError:
+        return jsonify({"success": False, "error": "Invalid date format (YYYY-MM-DD)"}), 400
+
+    # Validate range
+    if dt.date() > datetime.now().date():
+        return jsonify({"success": False, "error": "Cannot scan future dates"}), 400
+    if dt.year < 2015:
+        return jsonify({"success": False, "error": "Date must be 2015 or later"}), 400
+
+    with live_signals_refresh_lock:
+        if live_signals_refresh_in_progress:
+            return jsonify({"success": False, "error": "Scan already in progress"}), 409
+        live_signals_refresh_in_progress = True
+
+    try:
+        result = live_signals_scanner.scan_entry_signals(
+            force_refresh=True,
+            progress_callback=update_live_signals_progress,
+            scan_date=scan_date,
+        )
+        return jsonify({
+            "success": True,
+            "data": result,
+            "message": f"Signals scanned for {scan_date}",
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        with live_signals_refresh_lock:
+            live_signals_refresh_in_progress = False
+
+
 @app.route("/api/live-signals/progress", methods=["GET"])
 def get_live_signals_progress():
     """Poll scan progress."""

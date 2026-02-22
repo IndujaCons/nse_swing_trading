@@ -1029,6 +1029,15 @@
                         <option value="150">Midcap 150</option>
                     </select>
                 </div>
+                <div class="section-title" style="margin-top: 12px;">Scan Date</div>
+                <div class="setting-row">
+                    <span class="setting-label">Date</span>
+                    <input type="date" id="ls-scan-date" class="setting-select" style="width:130px;">
+                </div>
+                <div class="setting-row hidden" id="ls-historical-info" style="font-size:11px;color:var(--yellow,#f0c040);align-items:center;">
+                    <span>Viewing historical signals</span>
+                    <button class="btn" onclick="clearScanDate()" style="padding:2px 8px;font-size:11px;margin-left:6px;">Today</button>
+                </div>
                 <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save</button>
             </div>
 
@@ -1370,6 +1379,7 @@
         let autoRefreshInterval = null;
         let activeStrategy = 'rs';
         let liveSignalsDataLoaded = false;
+        let lsScanDate = null;  // tracks selected historical date
         let batchResultData = null;
         let portfolioResultData = null;
         const AUTO_REFRESH_MS = 15 * 60 * 1000;
@@ -1409,6 +1419,11 @@
             oneYearAgo.setFullYear(today.getFullYear() - 1);
             document.getElementById('backtest-to').value = today.toISOString().split('T')[0];
             document.getElementById('backtest-from').value = oneYearAgo.toISOString().split('T')[0];
+
+            // Init live signals date picker
+            const lsDateInput = document.getElementById('ls-scan-date');
+            lsDateInput.max = today.toISOString().split('T')[0];
+            lsDateInput.addEventListener('change', onScanDateChange);
 
             loadSettings();
             checkConnection();
@@ -1888,6 +1903,10 @@
         }
 
         async function refreshLiveSignalsData() {
+            if (isHistoricalScan()) {
+                return scanForDate(lsScanDate);
+            }
+
             const btn = document.getElementById('refresh-btn');
             btn.classList.add('loading');
             btn.disabled = true;
@@ -1942,7 +1961,83 @@
             }
         }
 
-        function renderEntrySignals(data) {
+        function isHistoricalScan() { return lsScanDate !== null; }
+
+        function onScanDateChange() {
+            const val = document.getElementById('ls-scan-date').value;
+            if (val) {
+                lsScanDate = val;
+                document.getElementById('ls-historical-info').classList.remove('hidden');
+                scanForDate(val);
+            } else {
+                clearScanDate();
+            }
+        }
+
+        function clearScanDate() {
+            lsScanDate = null;
+            document.getElementById('ls-scan-date').value = '';
+            document.getElementById('ls-historical-info').classList.add('hidden');
+            // Reload today's cached data
+            loadLiveSignalsData();
+        }
+
+        async function scanForDate(dateStr) {
+            const btn = document.getElementById('refresh-btn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            ['ls-j-panel', 'ls-t-panel', 'ls-picks-panel'].forEach(id => {
+                document.getElementById(id).innerHTML = `
+                    <div class="loading-container">
+                        <div class="loader"></div>
+                        <span>Scanning ${dateStr}...</span>
+                        <span class="progress-text"></span>
+                    </div>
+                `;
+            });
+
+            const progressInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/live-signals/progress');
+                    const progress = await res.json();
+                    if (progress.in_progress && progress.total > 0) {
+                        const pct = Math.round((progress.current / progress.total) * 100);
+                        const text = `${progress.current}/${progress.total} (${pct}%)`;
+                        document.querySelectorAll('#live-signals-panels .progress-text').forEach(el => {
+                            el.textContent = text;
+                        });
+                    }
+                } catch (e) {}
+            }, 500);
+
+            try {
+                const res = await fetch('/api/live-signals/scan-date', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({scan_date: dateStr}),
+                });
+                const data = await res.json();
+                clearInterval(progressInterval);
+
+                if (data.success) {
+                    renderEntrySignals(data.data, true);
+                    document.getElementById('last-updated').textContent = `Signals for: ${dateStr}`;
+                    showToast(`Signals loaded for ${dateStr}`, 'success');
+                } else {
+                    showToast(data.error || 'Scan failed', 'error');
+                }
+            } catch (e) {
+                clearInterval(progressInterval);
+                showToast('Historical scan failed', 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        function renderEntrySignals(data, isHistorical) {
+            isHistorical = isHistorical || false;
             // J signals
             const jPanel = document.getElementById('ls-j-panel');
             const jSignals = data.j_signals || [];
@@ -1959,15 +2054,15 @@
                         <td>${s.close_near_pct.toFixed(1)}%</td>
                         <td class="rs-value positive">${s.ibs.toFixed(2)}</td>
                         <td style="color:${(s.stop_pct||0)<5?'var(--green)':'var(--red)'}">${(s.stop_pct||0).toFixed(1)}%</td>
-                        <td style="white-space:nowrap;">
+                        ${isHistorical ? '' : `<td style="white-space:nowrap;">
                             <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-j-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
                             <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'J', ${s.price}, ${s.stop}, ${s.ibs}, this)">Buy</button>
-                        </td>
+                        </td>`}
                     </tr>
                 `).join('');
                 jPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>Supp</th><th>Dist%</th><th>IBS</th><th>Stop%</th><th></th></tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>Supp</th><th>Dist%</th><th>IBS</th><th>Stop%</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -1988,15 +2083,15 @@
                         <td class="price">${s.ema20.toLocaleString()}</td>
                         <td class="price">${s.upper_keltner.toLocaleString()}</td>
                         <td style="color:var(--text-muted)">${(s.stop_pct||5).toFixed(1)}%</td>
-                        <td style="white-space:nowrap;">
+                        ${isHistorical ? '' : `<td style="white-space:nowrap;">
                             <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-t-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
                             <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'T', ${s.price}, 0, 0, this)">Buy</button>
-                        </td>
+                        </td>`}
                     </tr>
                 `).join('');
                 tPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>EMA20</th><th>UpKelt</th><th>Stop%</th><th></th></tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>EMA20</th><th>UpKelt</th><th>Stop%</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -2033,16 +2128,17 @@
                             <td class="ticker">${s.ticker}</td>
                             <td class="price">${s.price.toLocaleString()}</td>
                             <td style="color:${stopColor};font-weight:600;">${s.stop_pct.toFixed(1)}%</td>
+                            <td class="price">${stopVal.toLocaleString()}</td>
                             <td style="font-size:11px;color:var(--text-muted);">${detail}</td>
-                            <td style="white-space:nowrap;">
+                            ${isHistorical ? '' : `<td style="white-space:nowrap;">
                                 <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-pick-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
                                 <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', '${s.strategy}', ${s.price}, ${stopVal}, ${ibsVal}, this)">Buy</button>
-                            </td>
+                            </td>`}
                         </tr>`;
                 }).join('');
                 picksPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>#</th><th>Str</th><th>Stock</th><th>Close</th><th>Stop%</th><th>Detail</th><th></th></tr></thead>
+                        <thead><tr><th>#</th><th>Str</th><th>Stock</th><th>Close</th><th>Stop%</th><th>Stop</th><th>Detail</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;

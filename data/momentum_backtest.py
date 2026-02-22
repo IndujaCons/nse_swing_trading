@@ -415,6 +415,9 @@ class MomentumBacktester:
 
                 if not in_position and atr14 > 0:
                     near_ema20 = abs(price - ema20) / ema20 <= 0.01
+                    # Uptrend filter: EMA20 must be rising (vs 10 bars ago)
+                    ema20_prev = float(ema20_series.iloc[i - 10]) if i >= 10 else 0.0
+                    ema20_rising = ema20 > ema20_prev
                     was_at_upper = False
                     for lookback_j in range(max(0, i - 10), i):
                         past_high = float(highs.iloc[lookback_j])
@@ -424,7 +427,7 @@ class MomentumBacktester:
                         if past_high >= past_upper:
                             was_at_upper = True
                             break
-                    if near_ema20 and was_at_upper and price > open_price:
+                    if near_ema20 and was_at_upper and price > open_price and ema20_rising:
                         shares = int(capital // price)
                         if shares > 0:
                             entry_price = price
@@ -887,6 +890,9 @@ class MomentumBacktester:
                     atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
                     if atr14_val > 0:
                         near_ema20 = abs(price - ema20_val) / ema20_val <= 0.01
+                        # Uptrend filter: EMA20 must be rising (vs 10 bars ago)
+                        ema20_prev = float(ind["ema20"].iloc[i - 10]) if i >= 10 else 0.0
+                        ema20_rising = ema20_val > ema20_prev
                         was_at_upper = False
                         for lb_j in range(max(0, i - 10), i):
                             past_high = float(ind["highs"].iloc[lb_j])
@@ -895,7 +901,7 @@ class MomentumBacktester:
                             if past_high >= past_ema20 + 2 * past_atr14:
                                 was_at_upper = True
                                 break
-                        if near_ema20 and was_at_upper and is_green:
+                        if near_ema20 and was_at_upper and is_green and ema20_rising:
                             already = any(s["symbol"] == ticker for s in signals)
                             if not already:
                                 signals.append({
