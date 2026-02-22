@@ -1021,8 +1021,7 @@ class MomentumBacktester:
             exit_date, exit_price, reason)
         trade["symbol"] = pos["symbol"]
         trade["strategy"] = pos["strategy"]
-        trade["capital_used"] = pos.get("capital_used", 0)
-        trade["capital_deployed"] = pos.get("capital_deployed", 0)
+        trade["capital_used"] = round(shares * pos["entry_price"], 2)
         trade["capital_available"] = pos.get("capital_available", 0)
         return trade
 
