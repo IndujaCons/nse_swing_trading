@@ -1284,6 +1284,16 @@
                     </div>
                 </div>
 
+                <div class="panel ls-top-picks" style="grid-column: 1 / -1;">
+                    <div class="panel-header">
+                        <span class="panel-title" style="color: var(--yellow, #f0c040);">Top Picks — Ranked by Stop%</span>
+                        <span class="panel-count" id="ls-picks-count">0</span>
+                    </div>
+                    <div class="panel-body" id="ls-picks-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
                 <div class="ls-bottom-row">
                     <div class="panel ls-positions">
                         <div class="panel-header">
@@ -1882,7 +1892,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-picks-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="loading-container">
                         <div class="loader"></div>
@@ -1948,6 +1958,7 @@
                         <td class="price">${s.support.toLocaleString()}</td>
                         <td>${s.close_near_pct.toFixed(1)}%</td>
                         <td class="rs-value positive">${s.ibs.toFixed(2)}</td>
+                        <td style="color:${(s.stop_pct||0)<5?'var(--green)':'var(--red)'}">${(s.stop_pct||0).toFixed(1)}%</td>
                         <td style="white-space:nowrap;">
                             <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-j-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
                             <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'J', ${s.price}, ${s.stop}, ${s.ibs}, this)">Buy</button>
@@ -1956,7 +1967,7 @@
                 `).join('');
                 jPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>Supp</th><th>Dist%</th><th>IBS</th><th></th></tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>Supp</th><th>Dist%</th><th>IBS</th><th>Stop%</th><th></th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -1976,6 +1987,7 @@
                         <td class="price">${s.price.toLocaleString()}</td>
                         <td class="price">${s.ema20.toLocaleString()}</td>
                         <td class="price">${s.upper_keltner.toLocaleString()}</td>
+                        <td style="color:var(--text-muted)">${(s.stop_pct||5).toFixed(1)}%</td>
                         <td style="white-space:nowrap;">
                             <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-t-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
                             <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'T', ${s.price}, 0, 0, this)">Buy</button>
@@ -1984,7 +1996,53 @@
                 `).join('');
                 tPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>EMA20</th><th>UpKelt</th><th></th></tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>EMA20</th><th>UpKelt</th><th>Stop%</th><th></th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+
+            // Top Picks — combine J+T, rank by stop_pct
+            const picksPanel = document.getElementById('ls-picks-panel');
+            const allSignals = [
+                ...jSignals.map(s => ({...s, strategy: 'J', stop_pct: s.stop_pct || 99})),
+                ...tSignals.map(s => ({...s, strategy: 'T', stop_pct: s.stop_pct || 5.0})),
+            ].sort((a, b) => a.stop_pct - b.stop_pct);
+            document.getElementById('ls-picks-count').textContent = allSignals.length;
+
+            if (allSignals.length === 0) {
+                picksPanel.innerHTML = '<div class="empty-state">No signals</div>';
+            } else {
+                const rows = allSignals.map((s, idx) => {
+                    const isTop2 = idx < 2;
+                    const rowStyle = isTop2 ? 'background:rgba(76,175,80,0.12);font-weight:600;' : '';
+                    const rank = idx + 1;
+                    const badge = s.strategy === 'J'
+                        ? '<span style="color:var(--green);font-weight:700;">J</span>'
+                        : '<span style="color:var(--blue);font-weight:700;">T</span>';
+                    const stopColor = s.stop_pct < 5 ? 'var(--green)' : s.stop_pct === 5 ? 'var(--text-muted)' : 'var(--red)';
+                    const detail = s.strategy === 'J'
+                        ? `Supp ${s.support.toLocaleString()} | IBS ${s.ibs.toFixed(2)}`
+                        : `EMA20 ${s.ema20.toLocaleString()}`;
+                    const stopVal = s.strategy === 'J' ? s.stop : Math.round(s.price * 0.95);
+                    const ibsVal = s.strategy === 'J' ? s.ibs : 0;
+                    return `
+                        <tr style="${rowStyle}">
+                            <td>${isTop2 ? '&#9733;' : rank}</td>
+                            <td>${badge}</td>
+                            <td class="ticker">${s.ticker}</td>
+                            <td class="price">${s.price.toLocaleString()}</td>
+                            <td style="color:${stopColor};font-weight:600;">${s.stop_pct.toFixed(1)}%</td>
+                            <td style="font-size:11px;color:var(--text-muted);">${detail}</td>
+                            <td style="white-space:nowrap;">
+                                <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-pick-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
+                                <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', '${s.strategy}', ${s.price}, ${stopVal}, ${ibsVal}, this)">Buy</button>
+                            </td>
+                        </tr>`;
+                }).join('');
+                picksPanel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr><th>#</th><th>Str</th><th>Stock</th><th>Close</th><th>Stop%</th><th>Detail</th><th></th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -2229,7 +2287,7 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-picks-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="empty-state" style="color: var(--text-muted);">${message}</div>
                 `;
