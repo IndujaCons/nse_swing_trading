@@ -140,6 +140,12 @@ class LiveSignalsEngine:
             ibs = (price - low) / hl_range if hl_range > 0 else 0.5
             is_green = price > open_price
 
+            # Gap-down filter: skip if today's open < yesterday's close
+            if i > 0:
+                prev_close = float(closes.iloc[i - 1])
+                if open_price < prev_close:
+                    continue
+
             # Strategy J: Weekly Close Support Bounce
             try:
                 weekly = daily.resample("W-FRI").agg({

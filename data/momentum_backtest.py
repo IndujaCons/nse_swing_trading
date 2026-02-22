@@ -6,15 +6,16 @@ Strategy J — Weekly Close Support Bounce:
   Entry support: Lowest weekly CLOSE of last 26 weeks (~6 months)
   Stop support: Lowest daily LOW of 120 days
   Entry: Daily low within 1% of weekly close support AND close > support AND IBS > 0.5
-         AND green candle AND CCI(20) > -100
+         AND green candle AND CCI(20) > -100 AND no gap-down (open >= prev close)
   Exit 1: Close >= Entry+5% → sell 50%
   Exit 2: Close >= Entry+10% → sell remaining
   Stop: Close < daily low support (6-month low)
+  Trailing: Chandelier exit — Highest High (since entry) - 3x ATR(14)
 
 Strategy T — Keltner Channel Pullback:
-  Entry: Price pulls back to EMA(20) midline (was at upper Keltner in last 10 days) AND green candle
-  Exit 1: Close >= Entry+5% → sell 50%
-  Exit 2: Price >= upper Keltner (EMA20 + 2*ATR14) → sell remaining
+  Entry: Price pulls back to EMA(20) midline (was at upper Keltner in last 10 days)
+         AND green candle AND no gap-down (open >= prev close)
+  Exit 1 (3-stage): +5% sell 1/3, +8% sell 1/3, upper Keltner sell remaining 1/3
   Stop: 5% hard SL
 """
 
@@ -523,7 +524,8 @@ class MomentumBacktester:
                               capital_lakhs=10, per_stock=50000,
                               strategies=None, entries_per_day=1,
                               progress_callback=None, end_date=None,
-                              three_stage_exit=True, seed=42):
+                              three_stage_exit=True, seed=42,
+                              no_gap_down=True):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -847,6 +849,11 @@ class MomentumBacktester:
                 if pd.isna(rsi2):
                     continue
 
+                # Gap-down filter: skip if today's open < yesterday's close
+                if no_gap_down and i > 0:
+                    prev_close = float(ind["closes"].iloc[i - 1])
+                    if open_price < prev_close:
+                        continue
 
                 # Strategy J entry: close within 0-3% above weekly support, IBS > 0.5, green
                 if "J" in strategies:
