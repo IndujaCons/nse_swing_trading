@@ -190,6 +190,14 @@ class LiveSignalsEngine:
                                 and cci_val > -100):
                             raw_stop = wls if wls else ws
                             j_stop_pct = round((price - raw_stop) / price * 100, 2) if price > 0 else 99.0
+                            # ATR14 for volatility ranking
+                            prev_close_j = closes.shift(1)
+                            tr1_j = highs - lows
+                            tr2_j = (highs - prev_close_j).abs()
+                            tr3_j = (lows - prev_close_j).abs()
+                            tr_j = pd.concat([tr1_j, tr2_j, tr3_j], axis=1).max(axis=1)
+                            atr14_j = float(tr_j.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
+                            atr_norm_j = round(atr14_j / price * 100, 2) if price > 0 else 99.0
                             j_signals.append({
                                 "ticker": ticker,
                                 "price": round(price, 2),
@@ -199,6 +207,7 @@ class LiveSignalsEngine:
                                 "close_near_pct": round(close_near_pct, 2),
                                 "ibs": round(ibs, 2),
                                 "low": round(low, 2),
+                                "atr_pct": atr_norm_j,
                             })
             except Exception:
                 pass
@@ -226,19 +235,21 @@ class LiveSignalsEngine:
                             was_at_upper = True
                             break
                     if near_ema20 and was_at_upper and is_green:
+                        atr_norm_t = round(atr14 / price * 100, 2) if price > 0 else 99.0
                         t_signals.append({
                             "ticker": ticker,
                             "price": round(price, 2),
                             "ema20": round(ema20_val, 2),
                             "upper_keltner": round(upper_keltner, 2),
                             "stop_pct": 5.0,
+                            "atr_pct": atr_norm_t,
                         })
             except Exception:
                 pass
 
-        # Sort by stop distance (tightest risk first)
-        j_signals.sort(key=lambda s: s.get("stop_pct", 99.0))
-        t_signals.sort(key=lambda s: s.get("stop_pct", 99.0))
+        # Sort by volatility (lowest ATR% first = calmest stocks)
+        j_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
+        t_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
 
         result = {
             "j_signals": j_signals,

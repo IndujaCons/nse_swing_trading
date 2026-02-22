@@ -1295,7 +1295,7 @@
 
                 <div class="panel ls-top-picks" style="grid-column: 1 / -1;">
                     <div class="panel-header">
-                        <span class="panel-title" style="color: var(--yellow, #f0c040);">Top Picks — Ranked by Stop%</span>
+                        <span class="panel-title" style="color: var(--yellow, #f0c040);">Top Picks — Ranked by ATR%</span>
                         <span class="panel-count" id="ls-picks-count">0</span>
                     </div>
                     <div class="panel-body" id="ls-picks-panel">
@@ -2097,12 +2097,12 @@
                 `;
             }
 
-            // Top Picks — combine J+T, rank by stop_pct
+            // Top Picks — combine J+T, rank by ATR% (lowest volatility first)
             const picksPanel = document.getElementById('ls-picks-panel');
             const allSignals = [
-                ...jSignals.map(s => ({...s, strategy: 'J', stop_pct: s.stop_pct || 99})),
-                ...tSignals.map(s => ({...s, strategy: 'T', stop_pct: s.stop_pct || 5.0})),
-            ].sort((a, b) => a.stop_pct - b.stop_pct);
+                ...jSignals.map(s => ({...s, strategy: 'J', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
+                ...tSignals.map(s => ({...s, strategy: 'T', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
+            ].sort((a, b) => a.atr_pct - b.atr_pct);
             document.getElementById('ls-picks-count').textContent = allSignals.length;
 
             if (allSignals.length === 0) {
@@ -2121,13 +2121,15 @@
                         : `EMA20 ${s.ema20.toLocaleString()}`;
                     const stopVal = s.strategy === 'J' ? s.stop : Math.round(s.price * 0.95);
                     const ibsVal = s.strategy === 'J' ? s.ibs : 0;
+                    const atrColor = s.atr_pct < 2 ? 'var(--green)' : s.atr_pct < 3.5 ? 'var(--text-muted)' : 'var(--red)';
                     return `
                         <tr style="${rowStyle}">
                             <td>${isTop2 ? '&#9733;' : rank}</td>
                             <td>${badge}</td>
                             <td class="ticker">${s.ticker}</td>
                             <td class="price">${s.price.toLocaleString()}</td>
-                            <td style="color:${stopColor};font-weight:600;">${s.stop_pct.toFixed(1)}%</td>
+                            <td style="color:${atrColor};font-weight:600;">${s.atr_pct.toFixed(1)}%</td>
+                            <td style="color:${stopColor};">${s.stop_pct.toFixed(1)}%</td>
                             <td class="price">${stopVal.toLocaleString()}</td>
                             <td style="font-size:11px;color:var(--text-muted);">${detail}</td>
                             ${isHistorical ? '' : `<td style="white-space:nowrap;">
@@ -2138,7 +2140,7 @@
                 }).join('');
                 picksPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>#</th><th>Str</th><th>Stock</th><th>Close</th><th>Stop%</th><th>Stop</th><th>Detail</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
+                        <thead><tr><th>#</th><th>Str</th><th>Stock</th><th>Close</th><th>ATR%</th><th>Stop%</th><th>Stop</th><th>Detail</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
