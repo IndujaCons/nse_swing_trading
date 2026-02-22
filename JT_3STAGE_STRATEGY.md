@@ -9,8 +9,9 @@ Momentum dip-buying strategy on Nifty 100 stocks combining two signal types (J, 
 ## Entry Signals
 
 ### Strategy J — Weekly Support Bounce
-- **Condition**: Close within 0-3% above weekly support level, IBS > 0.5, green candle, CCI(20) > -100, **no gap-down** (open >= prev close)
+- **Condition**: Close within 0-3% above weekly support level, IBS > 0.5, green candle, CCI(20) > -100, **no gap-down** (open >= prev close), **SL <= 5%** from entry
 - **Stop**: Below weekly low (support break)
+- **SL cap rule**: Skip J signals where weekly low is >5% below entry price. Wide stops mean support is too far — these trades behave like T trades without an uptrend filter.
 - **Edge**: Defined structural support gives tight risk
 
 ### Strategy T — Keltner Channel Pullback
@@ -93,47 +94,42 @@ The UI shows both ATR% (ranking column) and Stop% (SL distance) in the Top Picks
 
 ## Backtest Results — 11 Years (2015-2025), Nifty 100
 
-### Production Config (3-Stage 6/10 + Gap-Down + ATR% Ranking)
+### Production Config (3-Stage 6/10 + Gap-Down + ATR% Ranking + J SL<=5%)
 
 | Year | Trades | J | T | Win | Loss | WR% | P&L | Return% | AvgWin | AvgLoss | PF |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 2025 | 164 | 97 | 67 | 110 | 54 | 67.1% | +4,64,706 | +23.24% | 8,262 | -8,225 | 2.05 |
-| 2024 | 187 | 74 | 113 | 129 | 58 | 69.0% | +5,48,242 | +27.41% | 8,299 | -9,006 | 2.05 |
-| 2023 | 159 | 68 | 91 | 125 | 34 | 78.6% | +6,72,189 | +33.61% | 8,017 | -9,703 | 3.04 |
-| 2022 | 195 | 103 | 92 | 125 | 70 | 64.1% | +2,49,805 | +12.49% | 8,310 | -11,271 | 1.32 |
-| 2021 | 185 | 37 | 148 | 125 | 60 | 67.6% | +5,09,796 | +25.49% | 9,380 | -11,045 | 1.77 |
-| 2020 | 206 | 66 | 140 | 143 | 63 | 69.4% | +3,63,722 | +18.19% | 8,547 | -13,626 | 1.42 |
-| 2019 | 185 | 99 | 86 | 111 | 74 | 60.0% | +87,619 | +4.38% | 7,795 | -10,508 | 1.11 |
-| 2018 | 157 | 95 | 62 | 98 | 59 | 62.4% | +1,01,641 | +5.08% | 7,721 | -11,102 | 1.16 |
-| 2017 | 164 | 69 | 95 | 134 | 30 | 81.7% | +9,97,931 | +49.90% | 9,856 | -10,761 | 4.09 |
-| 2016 | 167 | 77 | 90 | 114 | 53 | 68.3% | +3,81,051 | +19.05% | 8,208 | -10,465 | 1.69 |
-| 2015 | 180 | 106 | 74 | 103 | 77 | 57.2% | +11,496 | +0.57% | 7,923 | -10,450 | 1.01 |
-| **Total** | **1,949** | **891** | **1,058** | **1,317** | **632** | | **+43,88,199** | | | | |
-| **Avg/yr** | **177** | | | | | **67.8%** | **+3,98,927** | **+19.95%** | **8,393** | **-10,560** | **1.97** |
+| 2025 | 167 | 81 | 86 | 103 | 64 | 61.7% | +3,08,959 | +15.45% | 8,016 | -8,073 | 1.60 |
+| 2024 | 180 | 53 | 127 | 127 | 53 | 70.6% | +5,36,398 | +26.82% | 8,067 | -9,209 | 2.10 |
+| 2023 | 156 | 63 | 93 | 119 | 37 | 76.3% | +5,96,433 | +29.82% | 8,235 | -10,364 | 2.56 |
+| 2022 | 188 | 74 | 114 | 117 | 71 | 62.2% | +2,06,850 | +10.34% | 8,317 | -10,792 | 1.27 |
+| 2021 | 178 | 29 | 149 | 121 | 57 | 68.0% | +4,41,354 | +22.07% | 8,765 | -10,864 | 1.71 |
+| 2020 | 173 | 14 | 159 | 114 | 59 | 65.9% | +2,39,748 | +11.99% | 8,527 | -12,412 | 1.33 |
+| 2019 | 194 | 86 | 108 | 115 | 79 | 59.3% | +1,50,795 | +7.54% | 8,227 | -10,068 | 1.19 |
+| 2018 | 147 | 83 | 64 | 91 | 56 | 61.9% | +1,27,387 | +6.37% | 7,611 | -10,092 | 1.23 |
+| 2017 | 158 | 58 | 100 | 120 | 38 | 75.9% | +7,92,183 | +39.61% | 9,894 | -10,398 | 3.00 |
+| 2016 | 165 | 63 | 102 | 110 | 55 | 66.7% | +3,51,302 | +17.57% | 8,171 | -9,956 | 1.64 |
+| 2015 | 168 | 78 | 90 | 96 | 72 | 57.1% | +47,350 | +2.37% | 8,084 | -10,120 | 1.06 |
+| **Total** | **1,874** | **682** | **1,192** | **1,233** | **641** | | **+37,98,760** | | | | |
+| **Avg/yr** | **170** | | | | | **65.9%** | **+3,45,342** | **+17.27%** | **8,265** | **-10,215** | **1.79** |
 
 - **Positive years: 11/11**
-- **Best year: +49.90% (2017)**
-- **Worst year: +0.57% (2015)**
-- **Total P&L: Rs 43.88 Lakhs on 20L capital over 11 years**
+- **Best year: +39.61% (2017)**
+- **Worst year: +2.37% (2015)**
+- **Total P&L: Rs 37.99 Lakhs on 20L capital over 11 years**
 
-### Comparison: Old Stop% Ranking (for reference)
+### Impact of J SL<=5% Filter
 
-| Year | Old (Stop%) | New (ATR%) | Difference |
+The J SL<=5% filter skips J signals where weekly support is more than 5% below entry. This matches manual trading behavior (you wouldn't take a "support bounce" trade with a wide stop).
+
+| Metric | Without J SL filter | With J SL<=5% | Impact |
 |---|---|---|---|
-| 2025 | +15.03% | +23.24% | +8.21% |
-| 2024 | +17.03% | +27.41% | +10.38% |
-| 2023 | +38.51% | +33.61% | -4.90% |
-| 2022 | +16.07% | +12.49% | -3.58% |
-| 2021 | +20.88% | +25.49% | +4.61% |
-| 2020 | +23.46% | +18.19% | -5.27% |
-| 2019 | +19.36% | +4.38% | -14.98% |
-| 2018 | **-2.68%** | **+5.08%** | +7.76% |
-| 2017 | +44.80% | +49.90% | +5.10% |
-| 2016 | +13.95% | +19.05% | +5.10% |
-| 2015 | **-1.99%** | **+0.57%** | +2.56% |
-| **Avg/yr** | **+18.58%** | **+19.95%** | **+1.37%** |
+| Total PnL | +43.88L | +37.99L | -5.89L |
+| Avg return/yr | +19.95% | +17.27% | -2.68% |
+| J trades | 891 | 682 | -209 skipped |
+| Positive years | 11/11 | 11/11 | Same |
+| Worst year | +0.57% | +2.37% | Better |
 
-ATR% wins 7/11 years. Where it loses (2019, 2023, 2020), it was underweight on volatile runners in trending markets. But it eliminates both losing years, giving a smoother equity curve.
+The filter costs ~6L over 11 years but improves the worst year and matches how you'd actually trade (skipping wide-stop J entries).
 
 ---
 
@@ -190,9 +186,10 @@ ATR% wins 7/11 years. Where it loses (2019, 2023, 2020), it was underweight on v
 
 ## Risk Notes
 
-- 2015 and 2018 are the weakest years. ATR% ranking turns both from negative to positive (2015: +0.57%, 2018: +5.08%).
-- ATR% ranking can underperform in strong trending markets where volatile stocks are the big runners (e.g., 2019: +4.38% vs +19.36% with Stop% ranking).
+- 2015 and 2018 are the weakest years. ATR% ranking + J SL filter keeps both positive (2015: +2.37%, 2018: +6.37%).
+- ATR% ranking can underperform in strong trending markets where volatile stocks are the big runners (e.g., 2019: +7.54% vs higher with Stop% ranking).
+- J SL<=5% filter removes ~209 J trades over 11 years (891 -> 682). These wide-stop trades have poor risk/reward.
 - Results are based on daily closing prices. Live execution at different prices will cause slippage.
 - T strategy SL slippage in backtest is an artifact of daily-bar checking. Live trading with actual SL orders will have tighter stops.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).
-- ~170-200 trades per year (avg 177), roughly evenly split between J and T.
+- ~150-195 trades per year (avg 170), T trades outnumber J due to the SL filter.

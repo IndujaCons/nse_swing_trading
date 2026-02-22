@@ -870,17 +870,18 @@ class MomentumBacktester:
                                     and ibs > 0.5 and is_green
                                     and cci_val > -100):
                                 j_stop_pct = (price - wls) / price * 100 if price > 0 else 99.0
-                                signals.append({
-                                    "symbol": ticker,
-                                    "strategy": "J",
-                                    "price": price,
-                                    "ibs": ibs,
-                                    "entry_support_j": ws,
-                                    "entry_stop_j": wls,
-                                    "atr14": sig_atr14,
-                                    "stop_pct": j_stop_pct,
-                                    "atr_norm": sig_atr14 / price if price > 0 else 99.0,
-                                })
+                                if j_stop_pct <= 5.0:
+                                    signals.append({
+                                        "symbol": ticker,
+                                        "strategy": "J",
+                                        "price": price,
+                                        "ibs": ibs,
+                                        "entry_support_j": ws,
+                                        "entry_stop_j": wls,
+                                        "atr14": sig_atr14,
+                                        "stop_pct": j_stop_pct,
+                                        "atr_norm": sig_atr14 / price if price > 0 else 99.0,
+                                    })
 
                 # Strategy T entry: Price near EMA(20) (within 1%) AND was at upper Keltner in last 10 bars AND green
                 if "T" in strategies:
