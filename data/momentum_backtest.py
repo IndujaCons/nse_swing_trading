@@ -932,6 +932,10 @@ class MomentumBacktester:
                     if shares > 0:
                         capital_used = round(sig["price"] * shares, 2)
                         deployed = sum(p["entry_price"] * p["shares"] for p in positions) + capital_used
+                        free_capital = TOTAL_CAPITAL + running_pnl - deployed
+                        if free_capital < 0:
+                            missed_signals += 1
+                            continue  # Not enough capital
                         pos = {
                             "symbol": sig["symbol"],
                             "strategy": sig["strategy"],
