@@ -108,7 +108,7 @@ class LiveSignalsEngine:
         if is_historical:
             end_date = datetime.strptime(scan_date, "%Y-%m-%d") + timedelta(days=1)
         else:
-            end_date = datetime.now()
+            end_date = datetime.now() + timedelta(days=1)
         daily_start = end_date - timedelta(days=500)
 
         # Fetch Nifty index data once
