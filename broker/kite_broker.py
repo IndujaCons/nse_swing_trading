@@ -55,11 +55,50 @@ class KiteBroker:
         self._kite = None
         suffix = f"_{user_id}" if user_id != "default" else ""
         self._paper_trades_file = os.path.join(DATA_STORE_PATH, f"paper_trades{suffix}.json")
+        self._session_file = os.path.join(DATA_STORE_PATH, f"kite_session{suffix}.json")
         self._ensure_data_dir()
+        self._restore_session()
 
     def _ensure_data_dir(self):
         """Ensure data directory exists."""
         os.makedirs(DATA_STORE_PATH, exist_ok=True)
+
+    def _save_session(self):
+        """Persist access token to disk so it survives server restarts."""
+        data = {
+            "access_token": self.access_token,
+            "user_id": self.user_id,
+            "user_name": self.user_name,
+            "saved_at": datetime.now().isoformat(),
+        }
+        try:
+            with open(self._session_file, 'w') as f:
+                json.dump(data, f)
+        except IOError:
+            pass
+
+    def _restore_session(self):
+        """Load saved access token from disk (if any)."""
+        if not os.path.exists(self._session_file):
+            return
+        try:
+            with open(self._session_file, 'r') as f:
+                data = json.load(f)
+            token = data.get("access_token")
+            if token:
+                self.set_access_token(token)
+                self.user_id = data.get("user_id")
+                self.user_name = data.get("user_name")
+        except (json.JSONDecodeError, IOError):
+            pass
+
+    def _clear_session(self):
+        """Remove saved session file."""
+        try:
+            if os.path.exists(self._session_file):
+                os.remove(self._session_file)
+        except IOError:
+            pass
 
     def get_login_url(self) -> str:
         """Get Zerodha login URL for OAuth flow."""
@@ -90,6 +129,7 @@ class KiteBroker:
             self.user_name = data.get("user_name")
             self._kite = kite
             self._kite.set_access_token(self.access_token)
+            self._save_session()
             return True
         except ImportError:
             # kiteconnect not installed - paper trading only
@@ -131,6 +171,7 @@ class KiteBroker:
         self.user_id = None
         self.user_name = None
         self._kite = None
+        self._clear_session()
 
     # Paper Trading Functions
 

@@ -2158,7 +2158,7 @@
                 return;
             }
 
-            const amtInput = document.getElementById(`amt-${strategy.toLowerCase()}-${ticker}`);
+            const amtInput = btn.parentElement.querySelector('.buy-input');
             const amount = amtInput ? parseIndian(amtInput.value) : 100000;
 
             btn.disabled = true;
