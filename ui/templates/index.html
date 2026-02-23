@@ -1382,6 +1382,8 @@
         let lsScanDate = null;  // tracks selected historical date
         let batchResultData = null;
         let portfolioResultData = null;
+        let portfolioSortCol = 'exit';  // default sort by exit date
+        let portfolioSortDir = 'asc';
         const AUTO_REFRESH_MS = 15 * 60 * 1000;
 
         // Indian number formatting helpers
@@ -2892,28 +2894,56 @@
                 return;
             }
 
-            const rows = data.trades.map((t, i) => {
-                const pnlCls = t.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-                const pnlSign = t.pnl >= 0 ? '+' : '';
-                return `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td><strong>${t.symbol}</strong></td>
-                        <td>${t.strategy}</td>
-                        <td>${t.entry_date}</td>
-                        <td class="price">${t.entry_price.toLocaleString()}</td>
-                        <td>${t.shares}</td>
-                        <td>${t.exit_date}</td>
-                        <td class="price">${t.exit_price.toLocaleString()}</td>
-                        <td class="${pnlCls}">${pnlSign}${t.pnl.toLocaleString()}</td>
-                        <td class="${pnlCls}">${pnlSign}${t.pnl_pct}%</td>
-                        <td>${t.holding_days}d</td>
-                        <td>${t.exit_reason}</td>
-                        <td class="price">${(t.capital_used || 0).toLocaleString()}</td>
-                        <td class="price ${(t.capital_available || 0) < 0 ? 'pnl-negative' : ''}">${(t.capital_available || 0).toLocaleString()}</td>
-                    </tr>
-                `;
-            }).join('');
+            let sortedTrades = [...data.trades];
+            const sortArrow = (col, dir) => portfolioSortCol === col ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+
+            function renderPortfolioRows(trades) {
+                return trades.map((t, i) => {
+                    const pnlCls = t.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                    const pnlSign = t.pnl >= 0 ? '+' : '';
+                    return `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td><strong>${t.symbol}</strong></td>
+                            <td>${t.strategy}</td>
+                            <td>${t.entry_date}</td>
+                            <td class="price">${t.entry_price.toLocaleString()}</td>
+                            <td>${t.shares}</td>
+                            <td>${t.exit_date}</td>
+                            <td class="price">${t.exit_price.toLocaleString()}</td>
+                            <td class="${pnlCls}">${pnlSign}${t.pnl.toLocaleString()}</td>
+                            <td class="${pnlCls}">${pnlSign}${t.pnl_pct}%</td>
+                            <td>${t.holding_days}d</td>
+                            <td>${t.exit_reason}</td>
+                            <td class="price">${(t.capital_used || 0).toLocaleString()}</td>
+                            <td class="price ${(t.capital_available || 0) < 0 ? 'pnl-negative' : ''}">${(t.capital_available || 0).toLocaleString()}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function sortPortfolioBy(col) {
+                if (portfolioSortCol === col) {
+                    portfolioSortDir = portfolioSortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    portfolioSortCol = col;
+                    portfolioSortDir = 'asc';
+                }
+                const key = col === 'entry' ? 'entry_date' : 'exit_date';
+                sortedTrades.sort((a, b) => {
+                    const cmp = a[key].localeCompare(b[key]);
+                    return portfolioSortDir === 'asc' ? cmp : -cmp;
+                });
+                const tbody = document.querySelector('#backtest-trades-body table tbody');
+                if (tbody) tbody.innerHTML = renderPortfolioRows(sortedTrades);
+                // Update header arrows
+                document.querySelectorAll('#backtest-trades-body th[data-sort]').forEach(th => {
+                    const c = th.dataset.sort;
+                    const base = c === 'entry' ? 'Entry Date' : 'Exit Date';
+                    th.textContent = base + (portfolioSortCol === c ? (portfolioSortDir === 'asc' ? ' ▲' : ' ▼') : '');
+                });
+            }
+            window._sortPortfolioBy = sortPortfolioBy;
 
             document.getElementById('backtest-trades-body').innerHTML = `
                 <table class="stock-table">
@@ -2922,10 +2952,10 @@
                             <th>#</th>
                             <th>Symbol</th>
                             <th>Strategy</th>
-                            <th>Entry Date</th>
+                            <th data-sort="entry" onclick="window._sortPortfolioBy('entry')" style="cursor:pointer">Entry Date${sortArrow('entry', portfolioSortDir)}</th>
                             <th>Entry Price</th>
                             <th>Shares</th>
-                            <th>Exit Date</th>
+                            <th data-sort="exit" onclick="window._sortPortfolioBy('exit')" style="cursor:pointer">Exit Date${sortArrow('exit', portfolioSortDir)}</th>
                             <th>Exit Price</th>
                             <th>P&L</th>
                             <th>P&L %</th>
@@ -2935,7 +2965,7 @@
                             <th>Free Capital</th>
                         </tr>
                     </thead>
-                    <tbody>${rows}</tbody>
+                    <tbody>${renderPortfolioRows(sortedTrades)}</tbody>
                 </table>
             `;
         }
