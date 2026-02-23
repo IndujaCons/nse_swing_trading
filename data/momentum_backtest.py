@@ -194,8 +194,8 @@ class MomentumBacktester:
         true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         atr14_series = true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
 
-        # Tracking variables for Strategy T
-        t_partial_done = False
+        # Tracking variables for Strategy T (3-stage)
+        t_partial_stage = 0  # 0=none, 1=sold 1/3 at +6%, 2=sold 2/3 at +10%
         t_remaining = 0
 
         # Determine backtest start index (need 200+ bars warmup)
@@ -219,6 +219,7 @@ class MomentumBacktester:
         entry_stop_j = 0.0       # For Strategy J: weekly open support (stop level)
         entry_bar = 0            # For Strategy J: bar index at entry
         nifty_at_entry = 0.0     # For Strategy J: Nifty close at entry (for SL filter)
+        j_highest_high = 0.0     # For Strategy J: highest high since entry (for chandelier)
 
         for i in bt_indices:
             price = float(closes.iloc[i])
@@ -267,11 +268,13 @@ class MomentumBacktester:
                 if w_support is not None and not in_position:
                     close_near = ((price - w_support) / w_support) * 100 if w_support > 0 else 999
                     cci_val = float(cci20_series.iloc[i]) if not pd.isna(cci20_series.iloc[i]) else 0.0
+                    no_gap_down_j = (prev_close is None or open_price >= prev_close)
                     entry_signal = (close_near >= 0        # close above support
                                     and close_near <= 3.0  # close within +3% of support
                                     and ibs > 0.5          # bounce
                                     and price > open_price # green candle
-                                    and cci_val > -100)    # CCI(20) not deeply oversold
+                                    and cci_val > -100     # CCI(20) not deeply oversold
+                                    and no_gap_down_j)     # no gap-down
 
                 # Exits (scale-out: 50% at +5%, remaining at +8%)
                 t1_price = entry_price * 1.05 if in_position else 0
@@ -307,6 +310,10 @@ class MomentumBacktester:
                         return True
                     return False
 
+                # Track highest high for chandelier exit
+                if in_position:
+                    j_highest_high = max(j_highest_high, high)
+
                 if in_position and not partial_exit_done:
                     if _j_stop(shares):
                         in_position = False
@@ -328,24 +335,27 @@ class MomentumBacktester:
                         in_position = False
                         partial_exit_done = False
                         continue
-                    # Exit remaining: Close < 3-day low (skip if Nifty weak)
-                    if i >= 3:
-                        three_day_low = float(lows.iloc[max(0, i-3):i].min())
-                        nifty_weak = False
-                        if nifty_close is not None:
-                            nifty_today = float(nifty_close.iloc[i])
-                            nifty_3day_low_close = float(nifty_close.iloc[max(0, i-3):i].min())
-                            nifty_weak = nifty_today < nifty_3day_low_close
-                        if not nifty_weak and price < three_day_low:
-                            _j_trade(entry_price, remaining_shares, day, price, "BELOW_3DAY_LOW")
-                            in_position = False
-                            partial_exit_done = False
-                            continue
+                    # Chandelier exit: highest high since entry - 3x ATR(14)
+                    atr14_val = float(atr14_series.iloc[i]) if not pd.isna(atr14_series.iloc[i]) else 0.0
+                    chandelier_stop = j_highest_high - 3.0 * atr14_val
+                    if atr14_val > 0 and price < chandelier_stop:
+                        _j_trade(entry_price, remaining_shares, day, price, "CHANDELIER_EXIT")
+                        in_position = False
+                        partial_exit_done = False
+                        continue
                     if price >= t2_price:
                         _j_trade(entry_price, remaining_shares, day, price, "10PCT")
                         in_position = False
                         partial_exit_done = False
                         continue
+
+                # Underwater exit: 10 trading days below entry
+                if in_position and (i - entry_bar) >= 10 and price < entry_price:
+                    sz = remaining_shares if partial_exit_done else shares
+                    _j_trade(entry_price, sz, day, price, "UNDERWATER_EXIT")
+                    in_position = False
+                    partial_exit_done = False
+                    continue
 
                 # Entry (only when fully out)
                 if entry_signal and not in_position:
@@ -357,63 +367,71 @@ class MomentumBacktester:
                         entry_support_j = w_support  # Weekly close support (for display)
                         entry_stop_j = w_low_stop if w_low_stop is not None else w_support
                         nifty_at_entry = float(nifty_close.iloc[i]) if nifty_close is not None else 0.0
+                        j_highest_high = high
                         in_position = True
                         partial_exit_done = False
                 continue
 
             elif strategy == "T":
-                # Strategy T: Keltner Channel Pullback
-                # Entry: Price near EMA(20) (within 1%) AND was above upper Keltner in last 10 bars AND green candle
-                # Partial: +5% → sell 50%
-                # Exit: Price >= upper Keltner → sell remaining
-                # Stop: 5% hard SL
+                # Strategy T: Keltner Channel Pullback (3-stage exit)
+                # Entry: Price near EMA(20) (within 1%) AND was at upper Keltner in last 10 bars
+                #        AND green candle AND no gap-down
+                # Stage 0: 5% SL. +6% → sell 1/3, stage=1.
+                # Stage 1: 3% SL. +10% → sell 1/3, stage=2.
+                # Stage 2: 3% SL. Upper Keltner → sell remaining.
+                # Underwater: 10 trading days below entry → exit all remaining.
                 atr14 = float(atr14_series.iloc[i]) if not pd.isna(atr14_series.iloc[i]) else 0.0
                 upper_keltner = ema20 + 2 * atr14
-                t_entry_upper_keltner = 0.0  # will be set at entry
 
-                if in_position and not t_partial_done:
-                    current_upper = ema20 + 2 * atr14
-                    if price <= entry_price * 0.95:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day,
-                            price, "HARD_SL_5PCT"))
-                        in_position = False
-                        t_partial_done = False
-                        continue
-                    if price >= entry_price * 1.05:
-                        half = shares // 2
-                        if half > 0:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, half, day,
-                                price, "PARTIAL_5PCT"))
-                            t_remaining = shares - half
-                            t_partial_done = True
-                    elif price >= current_upper:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, shares, day,
-                            price, "KELTNER_UPPER_EXIT"))
-                        in_position = False
-                        t_partial_done = False
-                        continue
+                if in_position:
+                    third = shares // 3
+                    t_sl_pct = 0.03 if t_partial_stage >= 1 else 0.05
+                    exited = False
 
-                if in_position and t_partial_done:
-                    current_upper = ema20 + 2 * atr14
-                    if price <= entry_price * 0.95:
+                    # Hard SL (tightens to 3% after first partial)
+                    if price <= entry_price * (1 - t_sl_pct):
+                        sl_label = f"HARD_SL_{int(t_sl_pct*100)}PCT"
                         trades.append(self._make_trade(
                             entry_date, entry_price, t_remaining, day,
-                            price, "HARD_SL_5PCT"))
-                        in_position = False
-                        t_partial_done = False
-                        continue
-                    if price >= current_upper:
+                            price, sl_label))
+                        exited = True
+
+                    # 3-stage partial exits
+                    if not exited and t_partial_stage == 0 and price >= entry_price * 1.06 and third > 0:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, third, day,
+                            price, "PARTIAL_6PCT_1of3"))
+                        t_remaining = shares - third
+                        t_partial_stage = 1
+                    elif not exited and t_partial_stage == 1 and price >= entry_price * 1.10 and third > 0:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, third, day,
+                            price, "PARTIAL_10PCT_2of3"))
+                        t_remaining = shares - 2 * third
+                        t_partial_stage = 2
+
+                    # Upper Keltner exit on remaining
+                    if not exited and price >= upper_keltner:
                         trades.append(self._make_trade(
                             entry_date, entry_price, t_remaining, day,
                             price, "KELTNER_UPPER_EXIT"))
-                        in_position = False
-                        t_partial_done = False
-                        continue
+                        exited = True
 
-                if not in_position and atr14 > 0:
+                    # Underwater exit: 10 trading days below entry
+                    if not exited and (i - entry_bar) >= 10 and price < entry_price:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, t_remaining, day,
+                            price, "UNDERWATER_EXIT"))
+                        exited = True
+
+                    if exited:
+                        in_position = False
+                        t_partial_stage = 0
+                        t_remaining = 0
+                    continue
+
+                # Entry check (not in position)
+                if atr14 > 0:
                     near_ema20 = abs(price - ema20) / ema20 <= 0.01
                     was_at_upper = False
                     for lookback_j in range(max(0, i - 10), i):
@@ -424,13 +442,15 @@ class MomentumBacktester:
                         if past_high >= past_upper:
                             was_at_upper = True
                             break
-                    if near_ema20 and was_at_upper and price > open_price:
+                    no_gap_down_t = (prev_close is None or open_price >= prev_close)
+                    if near_ema20 and was_at_upper and price > open_price and no_gap_down_t:
                         shares = int(capital // price)
                         if shares > 0:
                             entry_price = price
                             entry_date = day
+                            entry_bar = i
                             in_position = True
-                            t_partial_done = False
+                            t_partial_stage = 0
                             t_remaining = shares
                 continue
 
@@ -438,7 +458,11 @@ class MomentumBacktester:
         if in_position:
             last_day = daily.index[bt_indices[-1]].date()
             last_price = float(closes.iloc[bt_indices[-1]])
-            if partial_exit_done:
+            if strategy == "T":
+                trades.append(self._make_trade(
+                    entry_date, entry_price, t_remaining, last_day,
+                    last_price, "BACKTEST_END"))
+            elif partial_exit_done:
                 trades.append(self._make_trade(
                     entry_date, entry_price, remaining_shares, last_day,
                     last_price, "BACKTEST_END"))
