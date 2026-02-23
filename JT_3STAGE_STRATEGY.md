@@ -99,23 +99,23 @@ The UI shows both ATR% (ranking column) and Stop% (SL distance) in the Top Picks
 | Year | Trades | J | T | Win | Loss | WR% | P&L | Return% | AvgWin | AvgLoss | PF |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | 2025 | 153 | 78 | 75 | 111 | 42 | 72.5% | +5,28,787 | +26.44% | 8,313 | -9,379 | 2.34 |
-| 2024 | 176 | 57 | 119 | 121 | 55 | 68.8% | +4,05,592 | +20.28% | 7,837 | -9,866 | 1.75 |
-| 2023 | 166 | 59 | 107 | 132 | 34 | 79.5% | +7,45,736 | +37.29% | 8,568 | -11,332 | 2.94 |
-| 2022 | 191 | 88 | 103 | 123 | 68 | 64.4% | +3,26,684 | +16.33% | 8,652 | -10,847 | 1.44 |
-| 2021 | 187 | 44 | 143 | 128 | 59 | 68.4% | +4,84,299 | +24.21% | 9,205 | -11,761 | 1.70 |
-| 2020 | 219 | 74 | 145 | 158 | 61 | 72.1% | +5,66,020 | +28.30% | 8,649 | -13,123 | 1.71 |
-| 2019 | 200 | 84 | 116 | 131 | 69 | 65.5% | +3,71,395 | +18.57% | 8,044 | -9,890 | 1.54 |
-| 2018 | 151 | 85 | 66 | 88 | 63 | 58.3% | +37,650 | +1.88% | 7,753 | -10,232 | 1.06 |
-| 2017 | 170 | 61 | 109 | 134 | 36 | 78.8% | +9,59,818 | +47.99% | 9,849 | -9,999 | 3.67 |
-| 2016 | 160 | 66 | 94 | 112 | 48 | 70.0% | +3,54,762 | +17.74% | 7,896 | -11,033 | 1.67 |
-| 2015 | 144 | 69 | 75 | 81 | 63 | 56.2% | -40,064 | -2.00% | 7,790 | -10,652 | 0.94 |
-| **Total** | **1,917** | **765** | **1,152** | **1,319** | **598** | | **+47,40,677** | | | | |
-| **Avg/yr** | **174** | | | | | **68.8%** | **+4,30,971** | **+21.55%** | **8,519** | **-10,865** | **1.76** |
+| 2024 | 177 | 60 | 117 | 122 | 55 | 68.9% | +4,03,236 | +20.16% | 7,805 | -9,982 | 1.73 |
+| 2023 | 162 | 61 | 101 | 126 | 36 | 77.8% | +7,08,960 | +35.45% | 8,633 | -10,521 | 2.87 |
+| 2022 | 188 | 89 | 99 | 119 | 69 | 63.3% | +2,98,775 | +14.94% | 8,883 | -10,990 | 1.39 |
+| 2021 | 183 | 40 | 143 | 129 | 54 | 70.5% | +5,60,201 | +28.01% | 9,170 | -11,531 | 1.90 |
+| 2020 | 224 | 74 | 150 | 161 | 63 | 71.9% | +5,79,226 | +28.96% | 8,668 | -12,957 | 1.71 |
+| 2019 | 183 | 77 | 106 | 113 | 70 | 61.7% | +1,73,010 | +8.65% | 7,958 | -10,375 | 1.24 |
+| 2018 | 157 | 93 | 64 | 97 | 60 | 61.8% | +2,03,759 | +10.19% | 8,031 | -9,587 | 1.35 |
+| 2017 | 166 | 63 | 103 | 134 | 32 | 80.7% | +9,39,744 | +46.99% | 9,529 | -10,536 | 3.79 |
+| 2016 | 161 | 68 | 93 | 113 | 48 | 70.2% | +3,98,957 | +19.95% | 8,217 | -11,033 | 1.75 |
+| 2015 | 143 | 70 | 73 | 78 | 65 | 54.5% | -73,513 | -3.68% | 7,986 | -10,715 | 0.89 |
+| **Total** | **1,897** | **773** | **1,124** | **1,303** | **594** | | **+47,21,142** | | | | |
+| **Avg/yr** | **172** | | | | | **68.7%** | **+4,29,195** | **+21.46%** | **8,522** | **-10,747** | **1.74** |
 
-- **Positive years: 10/11** (2015: -2.00%)
-- **Best year: +47.99% (2017)**
-- **Worst year: -2.00% (2015)**
-- **Total P&L: Rs 47.41 Lakhs on 20L capital over 11 years**
+- **Positive years: 10/11** (2015: -3.68%)
+- **Best year: +46.99% (2017)**
+- **Worst year: -3.68% (2015)**
+- **Total P&L: Rs 47.21 Lakhs on 20L capital over 11 years**
 
 ### Why Skip 2 Weeks of Support
 J support uses the 26-week rolling min of weekly closes. Including the last 2 weeks (current + previous) means support can be set by very recent price action that hasn't been tested. Shifting by 2 weeks uses only proven support levels — prices the market has bounced from and held for at least 2 weeks.
@@ -124,9 +124,9 @@ J support uses the 26-week rolling min of weekly closes. Including the last 2 we
 
 | Metric | Without skip | With skip 2wk | Diff |
 |---|---|---|---|
-| Avg return/yr | +19.95% | +21.55% | +1.60% |
-| Total PnL | +43.88L | +47.41L | +3.53L |
-| Worst year | +0.57% | -2.00% | — |
+| Avg return/yr | +19.95% | +21.46% | +1.51% |
+| Total PnL | +43.88L | +47.21L | +3.33L |
+| Worst year | +0.57% | -3.68% | — |
 | Positive years | 11/11 | 10/11 | — |
 
 Wins 8/11 years. The 3 underperformance years (2024, 2021, 2017) are due to butterfly effects on T slot allocation, not structural J issues.
@@ -186,11 +186,11 @@ Wins 8/11 years. The 3 underperformance years (2024, 2021, 2017) are due to butt
 
 ## Risk Notes
 
-- 2015 is the only losing year (-2.00%). Capital check prevents entries when losses have exhausted available capital.
-- 2018 is the weakest positive year (+1.88%).
+- 2015 is the only losing year (-3.68%). Capital check prevents entries when losses have exhausted available capital.
+- 2018 and 2019 are the weakest positive years (+10.19% and +8.65%).
 - ATR% ranking can underperform in strong trending markets where volatile stocks are the big runners (e.g., 2019: +18.57% vs higher with Stop% ranking).
 - Results are based on daily closing prices. Live execution at different prices will cause slippage.
 - T strategy SL slippage in backtest is an artifact of daily-bar checking. Live trading with actual SL orders will have tighter stops.
 - Capital check: entries are skipped if trade cost would exceed available capital (20L + running PnL - deployed). Prevents over-leveraging after losses.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).
-- ~144-219 trades per year (avg 174), T trades slightly outnumber J.
+- ~143-224 trades per year (avg 172), T trades slightly outnumber J.
