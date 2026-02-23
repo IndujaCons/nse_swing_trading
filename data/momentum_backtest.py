@@ -526,7 +526,9 @@ class MomentumBacktester:
                               progress_callback=None, end_date=None,
                               three_stage_exit=True, seed=42,
                               no_gap_down=True, rank_by_risk=True,
-                              t_target1=0.06, t_target2=0.10):
+                              t_target1=0.06, t_target2=0.10,
+                              underwater_exit_days=None,
+                              earnings_blackout=False):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -823,6 +825,15 @@ class MomentumBacktester:
                             pos, sz, day, price, "KELTNER_UPPER_EXIT"))
                         exited = True
 
+                # Underwater exit — if held >= N trading days and still underwater, cut it
+                if not exited and underwater_exit_days:
+                    trading_days_held = day_idx - pos.get("entry_day_idx", day_idx)
+                    if trading_days_held >= underwater_exit_days and price < pos["entry_price"]:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "UNDERWATER_EXIT"))
+                        exited = True
+
                 if not exited:
                     still_open.append(pos)
 
@@ -857,6 +868,17 @@ class MomentumBacktester:
                 if no_gap_down and i > 0:
                     prev_close = float(ind["closes"].iloc[i - 1])
                     if open_price < prev_close:
+                        continue
+
+                # Earnings blackout: skip entries during peak results season
+                # Q3: Jan 10–Feb 10, Q4: Apr 10–May 10, Q1: Jul 10–Aug 10, Q2: Oct 10–Nov 10
+                if earnings_blackout:
+                    m, d = day.month, day.day
+                    in_blackout = ((m == 1 and d >= 10) or (m == 2 and d <= 10)
+                                   or (m == 4 and d >= 10) or (m == 5 and d <= 10)
+                                   or (m == 7 and d >= 10) or (m == 8 and d <= 10)
+                                   or (m == 10 and d >= 10) or (m == 11 and d <= 10))
+                    if in_blackout:
                         continue
 
                 # Strategy J entry: close within 0-3% above weekly support, IBS > 0.5, green
@@ -940,6 +962,7 @@ class MomentumBacktester:
                             "symbol": sig["symbol"],
                             "strategy": sig["strategy"],
                             "entry_date": day,
+                            "entry_day_idx": day_idx,
                             "entry_price": sig["price"],
                             "shares": shares,
                             "remaining_shares": shares,
@@ -948,10 +971,10 @@ class MomentumBacktester:
                             "capital_deployed": round(deployed, 0),
                             "capital_available": round(TOTAL_CAPITAL + running_pnl - deployed, 0),
                         }
+                        pos["nifty_at_entry"] = nifty_close_by_date.get(day, 0.0)
                         if sig["strategy"] == "J":
                             pos["entry_support_j"] = sig["entry_support_j"]
                             pos["entry_stop_j"] = sig["entry_stop_j"]
-                            pos["nifty_at_entry"] = nifty_close_by_date.get(day, 0.0)
                         positions.append(pos)
             elif signals and available_slots <= 0:
                 missed_signals += len(signals)
