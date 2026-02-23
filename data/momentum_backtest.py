@@ -528,7 +528,7 @@ class MomentumBacktester:
                               no_gap_down=True, rank_by_risk=True,
                               t_target1=0.06, t_target2=0.10,
                               underwater_exit_days=None,
-                              earnings_blackout=False):
+                              t_tight_sl=None):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -793,10 +793,13 @@ class MomentumBacktester:
                     ema20_val = float(ind["ema20"].iloc[i])
                     atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
                     upper_keltner = ema20_val + 2 * atr14_val
-                    if price <= pos["entry_price"] * 0.95:
+                    # Tighten SL after first partial exit (stage >= 1)
+                    t_sl_pct = t_tight_sl if (t_tight_sl and pos.get("partial_stage", 0) >= 1) else 0.05
+                    if price <= pos["entry_price"] * (1 - t_sl_pct):
                         sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        sl_label = f"HARD_SL_{int(t_sl_pct*100)}PCT" if t_sl_pct != 0.05 else "HARD_SL_5PCT"
                         trades.append(self._make_portfolio_trade(
-                            pos, sz, day, price, "HARD_SL_5PCT"))
+                            pos, sz, day, price, sl_label))
                         exited = True
                     if not exited and not pos["partial_exit_done"]:
                         if three_stage_exit:
@@ -824,7 +827,6 @@ class MomentumBacktester:
                         trades.append(self._make_portfolio_trade(
                             pos, sz, day, price, "KELTNER_UPPER_EXIT"))
                         exited = True
-
                 # Underwater exit — if held >= N trading days and still underwater, cut it
                 if not exited and underwater_exit_days:
                     trading_days_held = day_idx - pos.get("entry_day_idx", day_idx)
@@ -868,17 +870,6 @@ class MomentumBacktester:
                 if no_gap_down and i > 0:
                     prev_close = float(ind["closes"].iloc[i - 1])
                     if open_price < prev_close:
-                        continue
-
-                # Earnings blackout: skip entries during peak results season
-                # Q3: Jan 10–Feb 10, Q4: Apr 10–May 10, Q1: Jul 10–Aug 10, Q2: Oct 10–Nov 10
-                if earnings_blackout:
-                    m, d = day.month, day.day
-                    in_blackout = ((m == 1 and d >= 10) or (m == 2 and d <= 10)
-                                   or (m == 4 and d >= 10) or (m == 5 and d <= 10)
-                                   or (m == 7 and d >= 10) or (m == 8 and d <= 10)
-                                   or (m == 10 and d >= 10) or (m == 11 and d <= 10))
-                    if in_blackout:
                         continue
 
                 # Strategy J entry: close within 0-3% above weekly support, IBS > 0.5, green

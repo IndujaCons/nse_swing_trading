@@ -1,6 +1,6 @@
 """
-Baseline vs Underwater Exit (10 trading days) — 11 Year Comparison.
-20L capital, 2L per trade, 2 entries/day, Nifty 100, 2015-2025.
+Baseline (UW 10d) vs Option 1 (Tighten SL to 4% after first +6% exit)
+11-year comparison: 2015-2025, 20L capital, 2L/trade, 2 entries/day, Nifty 100.
 Usage: python3 backtest_options_compare.py [seed]
 """
 import os, sys
@@ -22,6 +22,7 @@ def run_year(bt, year, seed=42, **kwargs):
         end_date=end,
         three_stage_exit=True,
         seed=seed,
+        underwater_exit_days=10,
         **kwargs,
     )
     if "error" in result:
@@ -36,7 +37,6 @@ def run_year(bt, year, seed=42, **kwargs):
         "avg_win": s["avg_win"],
         "avg_loss": s["avg_loss"],
         "profit_factor": s["profit_factor"],
-        "largest_loss": s["largest_loss"],
     }
 
 
@@ -48,8 +48,8 @@ def main():
     years = list(range(2025, 2014, -1))
 
     configs = [
-        ("Baseline", {}),
-        ("UW Exit 10d", {"underwater_exit_days": 10}),
+        ("Baseline (UW 10d)", {}),
+        ("+ T SL 4% after 1st", {"t_tight_sl": 0.04}),
     ]
 
     all_results = {name: {} for name, _ in configs}
@@ -69,7 +69,7 @@ def main():
     col_w = 48
     total_w = 8 + (col_w + 3) * 2 + 14
     print(f"\n{'=' * total_w}")
-    print(f"  Baseline vs Underwater Exit (10 trading days)")
+    print(f"  Baseline (UW 10d) vs + Tighten T SL to 4% after first +6% exit")
     print(f"  Nifty 100, 11 Years, 20L capital, 2L/trade, 2/day, seed={seed}")
     print(f"{'=' * total_w}")
 
@@ -101,8 +101,8 @@ def main():
                 line += f" | {r['trades']:>4} {r['win_rate']:>5.1f}% {r['return_pct']:>6.2f}% {r['total_pnl']:>12,.0f} {r['avg_loss']:>9,.0f} {r['profit_factor']:>5.2f}"
             else:
                 line += f" | {'FAILED':^{col_w}}"
-        b = all_results["Baseline"].get(year)
-        u = all_results["UW Exit 10d"].get(year)
+        b = all_results[configs[0][0]].get(year)
+        u = all_results[configs[1][0]].get(year)
         if b and u:
             d = u["total_pnl"] - b["total_pnl"]
             line += f" | {d:>+12,.0f}"
@@ -116,7 +116,7 @@ def main():
         wr = (a["wins"] / a["tr"] * 100) if a["tr"] else 0
         ret = a["pnl"] / 2000000 * 100
         line += f" | {a['tr']:>4} {wr:>5.1f}% {ret:>6.2f}% {a['pnl']:>12,.0f} {'':>9} {'':>5}"
-    dpnl = acc["UW Exit 10d"]["pnl"] - acc["Baseline"]["pnl"]
+    dpnl = acc[configs[1][0]]["pnl"] - acc[configs[0][0]]["pnl"]
     line += f" | {dpnl:>+12,.0f}"
     print(line)
 

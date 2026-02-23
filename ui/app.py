@@ -736,7 +736,9 @@ def run_portfolio_backtest():
             end_date=end_date,
             three_stage_exit=three_stage_exit,
             no_gap_down=True,
-            rank_by_risk=True
+            rank_by_risk=True,
+            underwater_exit_days=10,
+            t_tight_sl=0.03
         )
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]})

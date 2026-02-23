@@ -530,15 +530,18 @@ class LiveSignalsEngine:
             elif pos["strategy"] == "T":
                 # T: 3-stage exit logic
                 # Stage 0: 5% SL → exit all. +6% → sell 1/3, set stage=1.
-                # Stage 1: 5% SL → exit remaining. +10% → sell 1/3, set stage=2 (partial_exit_done=True).
-                # Stage 2: 5% SL → exit remaining. Upper Keltner → exit remaining.
+                # Stage 1: 3% SL → exit remaining. +10% → sell 1/3, set stage=2 (partial_exit_done=True).
+                # Stage 2: 3% SL → exit remaining. Upper Keltner → exit remaining.
                 stage = pos.get("partial_stage", 0)
                 third = pos["shares"] // 3
 
-                if current_price <= entry_price * 0.95:
+                # Tighter SL after first partial exit
+                sl_pct = 0.03 if stage >= 1 else 0.05
+                if current_price <= entry_price * (1 - sl_pct):
                     sz = pos["remaining_shares"]
+                    sl_label = f"HARD_SL_{int(sl_pct*100)}PCT"
                     exit_signals.append(self._make_exit_signal(
-                        pos, current_price, pnl_pct, "HARD_SL_5PCT", sz))
+                        pos, current_price, pnl_pct, sl_label, sz))
                     continue
 
                 closes_t = daily["Close"]
@@ -563,6 +566,40 @@ class LiveSignalsEngine:
                     exit_signals.append(self._make_exit_signal(
                         pos, current_price, pnl_pct, "KELTNER_UPPER_EXIT",
                         pos["remaining_shares"]))
+
+        # Underwater exit: if held >= 10 trading days and still below entry, cut it
+        for pos in positions:
+            # Skip if already flagged for exit above
+            already_flagged = any(e["position_id"] == pos["id"] for e in exit_signals)
+            if already_flagged:
+                continue
+
+            entry_date_str = pos.get("entry_date", "")
+            if not entry_date_str:
+                continue
+
+            try:
+                daily = yf.Ticker(f"{pos['ticker']}.NS").history(
+                    start=end_date - timedelta(days=30), end=end_date)
+            except Exception:
+                continue
+
+            if daily.empty or len(daily) < 2:
+                continue
+
+            current_price = float(daily["Close"].iloc[-1])
+            entry_price = pos["entry_price"]
+
+            if current_price >= entry_price:
+                continue  # Not underwater
+
+            entry_dt = pd.Timestamp(entry_date_str)
+            trading_days_held = len(daily[daily.index >= entry_dt])
+            if trading_days_held >= 10:
+                pnl_pct = round(((current_price - entry_price) / entry_price) * 100, 2)
+                sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                exit_signals.append(self._make_exit_signal(
+                    pos, current_price, pnl_pct, "UNDERWATER_EXIT", sz))
 
         return exit_signals
 
