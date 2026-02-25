@@ -433,8 +433,8 @@ def buy_live_signal():
     if not ticker or not strategy or not price:
         return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
 
-    if strategy not in ("J", "T"):
-        return jsonify({"success": False, "error": "strategy must be J or T"}), 400
+    if strategy not in ("J", "T", "R"):
+        return jsonify({"success": False, "error": "strategy must be J, T, or R"}), 400
 
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Valid user_id required"}), 400
@@ -470,6 +470,9 @@ def buy_live_signal():
             metadata["nifty_at_entry"] = float(nifty["Close"].iloc[-1])
     except Exception:
         pass
+    # Store structural SL for R (support param doubles as swing_low_stop)
+    if strategy == "R" and support > 0:
+        metadata["r_swing_low_stop"] = support
     result = engine.add_position(
         ticker, strategy, price, amount, support, ibs, metadata)
 
@@ -650,7 +653,7 @@ def run_momentum_backtest():
     if not symbol:
         return jsonify({"success": False, "error": "Symbol required"}), 400
 
-    if strategy not in ("J", "T"):
+    if strategy not in ("J", "T", "R"):
         strategy = "J"
 
     # exit_ema can be "5","8","10","20" (EMA) or "pct5" (% target)
@@ -754,7 +757,7 @@ def run_portfolio_backtest():
     if per_stock not in (50000, 100000, 200000, 500000):
         per_stock = 50000
     strategies = data.get("strategies", ["J", "T"])
-    valid_strats = {"J", "T"}
+    valid_strats = {"J", "T", "R"}
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
         strategies = ["J", "T"]

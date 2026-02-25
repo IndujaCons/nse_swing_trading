@@ -17,6 +17,12 @@ Strategy T — Keltner Channel Pullback:
          AND green candle AND no gap-down (open >= prev close)
   Exit 1 (3-stage): +6% sell 1/3, +10% sell 1/3, upper Keltner sell remaining 1/3
   Stop: 5% hard SL
+
+Strategy R — Bullish RSI Divergence:
+  Entry: Price makes lower low but RSI(14) makes higher low (bullish divergence)
+         AND RSI(14) < 40 AND green candle AND no gap-down
+  Exit (3-stage like T): structural SL (1% below swing low), +6% sell 1/3,
+         tight 3% SL after first exit, +10% sell 1/3, upper Keltner sell remaining
 """
 
 import os
@@ -50,11 +56,12 @@ NIFTY_NEXT50_TICKERS = [
 BATCH_VARIANTS = [
     ("J", None, "J: Weekly Support"),
     ("T", None, "T: Keltner Pullback"),
+    ("R", None, "R: RSI Divergence"),
 ]
 
 
 class MomentumBacktester:
-    """Single-stock daily backtest for swing trading strategies (J, T)."""
+    """Single-stock daily backtest for swing trading strategies (J, T, R)."""
 
     def _calculate_rsi_series(self, closes: pd.Series, period: int) -> pd.Series:
         """Calculate full RSI series using Wilder's smoothing."""
@@ -66,6 +73,64 @@ class MomentumBacktester:
         rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))
         return rsi
+
+    @staticmethod
+    def _find_swing_lows(lows: pd.Series, left: int = 5, right: int = 3) -> list:
+        """Find swing low positions: low[i] is min of surrounding window.
+
+        Returns list of (iloc_pos, low_value) tuples, confirmed `right` bars
+        after the actual low.
+        """
+        result = []
+        vals = lows.values
+        n = len(vals)
+        for i in range(left, n - right):
+            window = vals[i - left: i + right + 1]
+            if vals[i] == np.min(window):
+                result.append((i, float(vals[i])))
+        return result
+
+    @staticmethod
+    def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
+                                   max_lookback=50, min_sep=5,
+                                   rsi_threshold=35, min_rsi_divergence=5,
+                                   min_price_drop=0.0):
+        """Check for bullish RSI divergence at bar i.
+
+        Looks for two swing lows in the last max_lookback bars where:
+        - Price: current swing low < previous * (1 - min_price_drop) (meaningful lower low)
+        - RSI(14): current > previous + min_rsi_divergence (meaningful higher low)
+        - RSI(14) < rsi_threshold at the current swing low (oversold zone)
+
+        Returns (True, swing_low_price) or (False, None).
+        """
+        # Gather recent swing lows confirmed by bar i (confirmed = idx + right <= i)
+        recent = [(idx, val) for idx, val in swing_lows
+                  if idx <= i and i - idx <= max_lookback]
+        if len(recent) < 2:
+            return False, None
+
+        # Check pairs: most recent first
+        for k in range(len(recent) - 1, 0, -1):
+            curr_idx, curr_low = recent[k]
+            prev_idx, prev_low = recent[k - 1]
+            if curr_idx - prev_idx < min_sep:
+                continue
+            # Meaningful lower low in price (>= min_price_drop)
+            if curr_low >= prev_low * (1 - min_price_drop):
+                continue
+            # Meaningful higher low in RSI(14) (>= min_rsi_divergence points)
+            curr_rsi = rsi14_vals[curr_idx]
+            prev_rsi = rsi14_vals[prev_idx]
+            if np.isnan(curr_rsi) or np.isnan(prev_rsi):
+                continue
+            if curr_rsi - prev_rsi < min_rsi_divergence:
+                continue
+            # RSI below threshold at current swing low (oversold zone)
+            if curr_rsi >= rsi_threshold:
+                continue
+            return True, curr_low
+        return False, None
 
     @staticmethod
     def _calculate_cci_series(highs: pd.Series, lows: pd.Series, closes: pd.Series, period: int = 20) -> pd.Series:
@@ -86,7 +151,7 @@ class MomentumBacktester:
         Args:
             symbol: NSE ticker (e.g. "ICICIBANK")
             period_days: backtest lookback in calendar days (30, 90, 180, 365)
-            strategy: "J" or "T"
+            strategy: "J", "T", or "R"
             capital: starting capital in INR
             exit_target: profit target for Strategy J variants
 
@@ -177,6 +242,7 @@ class MomentumBacktester:
         # Pre-compute indicator series over entire dataset
         rsi2_series = self._calculate_rsi_series(closes, 2)
         rsi3_series = self._calculate_rsi_series(closes, 3)
+        rsi14_series = self._calculate_rsi_series(closes, 14)
         ema5_series = closes.ewm(span=5, adjust=False).mean()
         ema8_series = closes.ewm(span=8, adjust=False).mean()
         ema10_series = closes.ewm(span=10, adjust=False).mean()
@@ -197,6 +263,16 @@ class MomentumBacktester:
         # Tracking variables for Strategy T (3-stage)
         t_partial_stage = 0  # 0=none, 1=sold 1/3 at +6%, 2=sold 2/3 at +10%
         t_remaining = 0
+
+        # Tracking variables for Strategy R (RSI divergence, 3-stage like T)
+        r_partial_stage = 0
+        r_remaining = 0
+        r_swing_low_stop = 0.0  # structural SL: 1% below divergence swing low
+
+        # Pre-compute swing lows for Strategy R
+        swing_lows = []
+        if strategy == "R":
+            swing_lows = self._find_swing_lows(lows)
 
         # Determine backtest start index (need 200+ bars warmup)
         bt_start_date = (end_date - timedelta(days=period_days)).date()
@@ -454,6 +530,85 @@ class MomentumBacktester:
                             t_remaining = shares
                 continue
 
+            elif strategy == "R":
+                # Strategy R: Bullish RSI Divergence (3-stage exit like T)
+                atr14 = float(atr14_series.iloc[i]) if not pd.isna(atr14_series.iloc[i]) else 0.0
+                upper_keltner = ema20 + 2 * atr14
+
+                if in_position:
+                    third = shares // 3
+                    r_sl_pct = 0.03 if r_partial_stage >= 1 else 0.01
+                    structural_stop = r_swing_low_stop
+                    exited = False
+
+                    # Structural SL (1% below divergence swing low)
+                    if price <= structural_stop:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, r_remaining, day,
+                            price, "STRUCTURAL_SL"))
+                        exited = True
+
+                    # 3-stage partial exits
+                    if not exited and r_partial_stage == 0 and price >= entry_price * 1.06 and third > 0:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, third, day,
+                            price, "PARTIAL_6PCT_1of3"))
+                        r_remaining = shares - third
+                        r_partial_stage = 1
+                    elif not exited and r_partial_stage == 1 and price >= entry_price * 1.10 and third > 0:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, third, day,
+                            price, "PARTIAL_10PCT_2of3"))
+                        r_remaining = shares - 2 * third
+                        r_partial_stage = 2
+
+                    # Tight SL after first partial (3%)
+                    if not exited and r_partial_stage >= 1 and price <= entry_price * (1 - 0.03):
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, r_remaining, day,
+                            price, "HARD_SL_3PCT"))
+                        exited = True
+
+                    # Upper Keltner exit on remaining
+                    if not exited and price >= upper_keltner:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, r_remaining, day,
+                            price, "KELTNER_UPPER_EXIT"))
+                        exited = True
+
+                    # Underwater exit: 10 trading days below entry
+                    if not exited and (i - entry_bar) >= 10 and price < entry_price:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, r_remaining, day,
+                            price, "UNDERWATER_EXIT"))
+                        exited = True
+
+                    if exited:
+                        in_position = False
+                        r_partial_stage = 0
+                        r_remaining = 0
+                    continue
+
+                # Entry check (not in position)
+                no_gap_down_r = (prev_close is None or open_price >= prev_close)
+                is_green_r = price > open_price
+                if is_green_r and no_gap_down_r:
+                    rsi14_vals = rsi14_series.values
+                    lows_vals = lows.values
+                    divergence, swing_low_val = self._detect_bullish_divergence(
+                        lows_vals, rsi14_vals, i, swing_lows)
+                    if divergence and swing_low_val is not None:
+                        shares = int(capital // price)
+                        if shares > 0:
+                            entry_price = price
+                            entry_date = day
+                            entry_bar = i
+                            in_position = True
+                            r_partial_stage = 0
+                            r_remaining = shares
+                            r_swing_low_stop = swing_low_val * 0.99  # 1% below swing low
+                continue
+
         # Close open position at end of backtest
         if in_position:
             last_day = daily.index[bt_indices[-1]].date()
@@ -461,6 +616,10 @@ class MomentumBacktester:
             if strategy == "T":
                 trades.append(self._make_trade(
                     entry_date, entry_price, t_remaining, last_day,
+                    last_price, "BACKTEST_END"))
+            elif strategy == "R":
+                trades.append(self._make_trade(
+                    entry_date, entry_price, r_remaining, last_day,
                     last_price, "BACKTEST_END"))
             elif partial_exit_done:
                 trades.append(self._make_trade(
@@ -644,9 +803,13 @@ class MomentumBacktester:
             ema50_series = closes.ewm(span=50, adjust=False).mean()
             ema200_series = closes.ewm(span=200, adjust=False).mean()
 
-            # RSI(2) and RSI(3)
+            # RSI(2), RSI(3), RSI(14)
             rsi2_series = self._calculate_rsi_series(closes, 2)
             rsi3_series = self._calculate_rsi_series(closes, 3)
+            rsi14_series = self._calculate_rsi_series(closes, 14)
+
+            # Swing lows for Strategy R
+            swing_lows = self._find_swing_lows(lows)
 
             # CCI(20) for Strategy J entry confirmation
             cci20_series = self._calculate_cci_series(highs, lows, closes, 20)
@@ -676,6 +839,8 @@ class MomentumBacktester:
                 "weekly_low_stop": weekly_low_stop_series,
                 "rsi2": rsi2_series,
                 "rsi3": rsi3_series,
+                "rsi14": rsi14_series,
+                "swing_lows": swing_lows,
                 "cci20": cci20_series,
                 "volume": vol_series,
                 "vol_avg20": vol_avg20,
@@ -851,6 +1016,49 @@ class MomentumBacktester:
                         trades.append(self._make_portfolio_trade(
                             pos, sz, day, price, "KELTNER_UPPER_EXIT"))
                         exited = True
+
+                elif pos["strategy"] == "R":
+                    # R exits: structural SL → 3-stage partials → tight SL → Keltner upper
+                    ema20_val = float(ind["ema20"].iloc[i])
+                    atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
+                    upper_keltner = ema20_val + 2 * atr14_val
+                    structural_stop = pos.get("r_swing_low_stop", 0)
+                    stage = pos.get("partial_stage", 0)
+
+                    # Structural SL: 1% below divergence swing low — exit all
+                    if structural_stop > 0 and price <= structural_stop:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "STRUCTURAL_SL"))
+                        exited = True
+
+                    # Tight SL after first partial (3%)
+                    if not exited and stage >= 1 and price <= pos["entry_price"] * 0.97:
+                        trades.append(self._make_portfolio_trade(
+                            pos, pos["remaining_shares"], day, price, "HARD_SL_3PCT"))
+                        exited = True
+
+                    # 3-stage partial exits
+                    if not exited:
+                        third = pos["shares"] // 3
+                        if stage == 0 and price >= pos["entry_price"] * 1.06 and third > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, third, day, price, "PARTIAL_6PCT_1of3"))
+                            pos["remaining_shares"] = pos["shares"] - third
+                            pos["partial_stage"] = 1
+                        elif stage == 1 and price >= pos["entry_price"] * 1.10 and third > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, third, day, price, "PARTIAL_10PCT_2of3"))
+                            pos["remaining_shares"] = pos["shares"] - 2 * third
+                            pos["partial_exit_done"] = True
+
+                    # Upper Keltner exit on remaining
+                    if not exited and price >= upper_keltner:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "KELTNER_UPPER_EXIT"))
+                        exited = True
+
                 # Underwater exit — if held >= N trading days and still underwater, cut it
                 if not exited and underwater_exit_days:
                     trading_days_held = day_idx - pos.get("entry_day_idx", day_idx)
@@ -948,6 +1156,27 @@ class MomentumBacktester:
                                     "atr_norm": sig_atr14 / price if price > 0 else 99.0,
                                 })
 
+                # Strategy R entry: Bullish RSI divergence + green + no gap-down
+                if "R" in strategies:
+                    already_jt = any(s["symbol"] == ticker for s in signals)
+                    if not already_jt and is_green:
+                        rsi14_vals = ind["rsi14"].values
+                        lows_vals = ind["lows"].values
+                        divergence, swing_low_val = self._detect_bullish_divergence(
+                            lows_vals, rsi14_vals, i, ind["swing_lows"])
+                        if divergence and swing_low_val is not None:
+                            r_struct_stop = swing_low_val * 0.99
+                            r_stop_pct = (price - r_struct_stop) / price * 100 if price > 0 else 99.0
+                            signals.append({
+                                "symbol": ticker,
+                                "strategy": "R",
+                                "price": price,
+                                "atr14": sig_atr14,
+                                "stop_pct": r_stop_pct,
+                                "atr_norm": sig_atr14 / price if price > 0 else 99.0,
+                                "r_swing_low_stop": r_struct_stop,
+                            })
+
             total_signals += len(signals)
 
             # === 3. Allocate capital (max entries_per_day) ===
@@ -990,6 +1219,8 @@ class MomentumBacktester:
                         if sig["strategy"] == "J":
                             pos["entry_support_j"] = sig["entry_support_j"]
                             pos["entry_stop_j"] = sig["entry_stop_j"]
+                        elif sig["strategy"] == "R":
+                            pos["r_swing_low_stop"] = sig["r_swing_low_stop"]
                         positions.append(pos)
             elif signals and available_slots <= 0:
                 missed_signals += len(signals)
@@ -1029,7 +1260,7 @@ class MomentumBacktester:
         effective_capital = max_positions_used * PER_STOCK if max_positions_used > 0 else TOTAL_CAPITAL
         summary = self._calculate_summary(trades, effective_capital)
 
-        strat_labels = {"J": "J(Weekly Support)", "T": "T(Keltner)"}
+        strat_labels = {"J": "J(Weekly Support)", "T": "T(Keltner)", "R": "R(RSI Divergence)"}
         strat_label = " + ".join(strat_labels.get(s, s) for s in strategies)
 
         return {

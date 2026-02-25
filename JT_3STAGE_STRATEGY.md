@@ -1,8 +1,8 @@
-# JT 3-Stage Scale-Out Strategy
+# JTR 3-Stage Scale-Out Strategy
 
 ## Overview
 
-Momentum dip-buying strategy on Nifty 100 stocks combining two signal types (J, T) with a 3-stage partial exit system. Capital: 20L, 2L per trade, 3 entries/day.
+Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J, T, R) with a 3-stage partial exit system. Capital: 20L, 2L per trade, 3 entries/day.
 
 ---
 
@@ -19,7 +19,15 @@ Momentum dip-buying strategy on Nifty 100 stocks combining two signal types (J, 
 - **Stop**: 5% hard SL (tightens to 3% after first +6% partial exit — see Exit Rules)
 - **Edge**: Buying a pullback in a confirmed uptrend (was recently at upper band = strong momentum)
 
-### Gap-Down Filter (applies to both J and T)
+### Strategy R — Bullish RSI Divergence
+- **Condition**: Price makes a lower low but RSI(14) makes a higher low (bullish divergence), **RSI(14) < 35** at the divergence point, **min 5-point RSI divergence** between the two swing lows, green candle, **no gap-down** (open >= prev close)
+- **Swing Low Detection**: Low[i] is minimum of surrounding window (5 bars left, 3 bars right). Signal confirmed 3 bars after actual low. Min 5 bars separation between the two swing lows.
+- **Divergence Window**: Looks back up to 50 bars for two qualifying swing lows
+- **Stop**: Structural SL — 1% below the divergence swing low (natural invalidation level)
+- **Dedup**: Skip if J or T already fired for the same stock on the same day
+- **Edge**: RSI divergence signals momentum improving despite price weakness — early reversal signal
+
+### Gap-Down Filter (applies to J, T, and R)
 - **Rule**: Skip entry if today's Open < yesterday's Close (stock gapped down)
 - **Why**: Analysis of top 10 losses in 2018 showed 9/10 had gap-down entries on low volume — classic "dead cat bounce" pattern. Filtering these improves avg return by +2.6%/yr and eliminates losing years.
 
@@ -41,7 +49,14 @@ J uses its own exit logic (not the 3-stage system):
 4. **+10%**: Sell 1/3 of shares (lock in second profit)
 5. **Indicator exit on remaining 1/3**: Price reaches upper Keltner band (EMA20 + 2x ATR14)
 
-### Underwater Exit (applies to both J and T)
+### Strategy R Exits (3-Stage, mirrors T)
+1. **Structural SL**: 1% below the divergence swing low — exit all remaining shares (natural invalidation)
+2. **+6%**: Sell 1/3 of shares (lock in first profit)
+3. **Tight SL kicks in**: After first +6% exit, SL tightens to **3%** on remaining shares
+4. **+10%**: Sell 1/3 of shares (lock in second profit)
+5. **Indicator exit on remaining 1/3**: Price reaches upper Keltner band (EMA20 + 2x ATR14)
+
+### Underwater Exit (applies to J, T, and R)
 - **Rule**: If a trade is held for **10+ trading days** and price is still **below entry price**, exit at close
 - **Why**: Analysis of 2024-2025 biggest losses showed a common "falling knife" pattern — stocks entering near support but drifting lower for weeks. Cutting these losers after 10 days frees capital for better opportunities.
 - **Impact**: +4.52L improvement over 11 years, turned 2015 from a losing year into a winning year (11/11 positive years)
@@ -78,7 +93,7 @@ The original system sold 1/2 at +5% and exited the other 1/2 on indicator. The 3
 | Per trade | 2 Lakhs |
 | Max positions | 10 (20L / 2L) |
 | Entries per day | 3 |
-| Strategies | J + T |
+| Strategies | J + T + R |
 | Underwater exit | 10 trading days |
 | T tight SL | 3% after first +6% exit |
 
@@ -116,28 +131,48 @@ The UI shows both ATR% (ranking column) and Stop% (SL distance) in the Top Picks
 
 ## Backtest Results — 11 Years (2015-2025), Nifty 100
 
-### Current Baseline (3-Stage 6/10 + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T Tight SL 3% + 3 entries/day)
+### Current Baseline — JTR (3-Stage 6/10 + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T Tight SL 3% + R filters: RSI<35, divergence>=5pt + 3 entries/day)
 
 | Year | Trades | WR% | Return% | P&L | AvgWin | AvgLoss | PF |
 |---|---|---|---|---|---|---|---|
-| 2025 | 218 | 48.2% | 21.6% | +4,32,206 | 8,486 | -4,061 | 1.94 |
-| 2024 | 233 | 60.9% | 30.3% | +6,05,348 | 8,369 | -6,407 | 2.04 |
-| 2023 | 218 | 54.6% | 28.2% | +5,63,882 | 8,523 | -4,549 | 2.25 |
-| 2022 | 247 | 57.9% | 25.2% | +5,04,705 | 8,388 | -6,681 | 1.73 |
-| 2021 | 251 | 54.6% | 31.7% | +6,33,955 | 9,574 | -5,945 | 1.94 |
-| 2020 | 258 | 61.2% | 31.4% | +6,28,601 | 8,789 | -7,601 | 1.83 |
-| 2019 | 241 | 48.1% | 8.4% | +1,68,949 | 8,260 | -6,314 | 1.21 |
-| 2018 | 214 | 48.1% | 8.2% | +1,63,070 | 8,204 | -6,143 | 1.24 |
-| 2017 | 217 | 60.4% | 46.7% | +9,34,746 | 9,880 | -4,180 | 3.60 |
-| 2016 | 235 | 48.5% | 16.9% | +3,38,185 | 8,414 | -5,132 | 1.54 |
-| 2015 | 186 | 51.1% | 6.9% | +1,38,036 | 8,014 | -6,850 | 1.22 |
-| **Avg/yr** | **229** | **54.0%** | **~23%** | **+4,64,698** | **8,627** | **-5,806** | **1.78** |
+| 2025 | 247 | 47.4% | 18.6% | +3,71,528 | 7,590 | -3,973 | 1.72 |
+| 2024 | 246 | 60.2% | 30.7% | +6,14,614 | 8,194 | -6,103 | 2.03 |
+| 2023 | 228 | 59.2% | 30.4% | +6,08,574 | 8,116 | -5,238 | 2.25 |
+| 2022 | 273 | 60.1% | 30.6% | +6,13,034 | 7,832 | -6,159 | 1.91 |
+| 2021 | 243 | 53.9% | 28.7% | +5,74,867 | 9,169 | -5,592 | 1.92 |
+| 2020 | 303 | 60.4% | 34.3% | +6,85,586 | 9,266 | -8,417 | 1.68 |
+| 2019 | 300 | 57.0% | 29.4% | +5,87,225 | 8,140 | -6,238 | 1.73 |
+| 2018 | 234 | 48.7% | 9.1% | +1,82,546 | 7,711 | -5,804 | 1.26 |
+| 2017 | 231 | 59.7% | 44.0% | +8,80,749 | 9,462 | -4,570 | 3.07 |
+| 2016 | 235 | 51.1% | 19.0% | +3,79,176 | 8,054 | -5,107 | 1.65 |
+| 2015 | 241 | 50.2% | 12.2% | +2,43,747 | 8,210 | -6,248 | 1.33 |
+| **Avg/yr** | **253** | **55.3%** | **~26%** | **+5,21,968** | **8,340** | **-5,768** | **1.82** |
 
 - **Positive years: 11/11**
-- **Best year: +46.7% (2017)**
-- **Worst year: +6.9% (2015)**
-- **Total P&L: Rs ~51.1 Lakhs on 20L capital over 11 years**
-- **Avg Win/Loss ratio: 1.5x** (make Rs 8,627 on winners, lose Rs 5,806 on losers)
+- **Best year: +44.0% (2017)**
+- **Worst year: +9.1% (2018)**
+- **Total P&L: Rs ~57.4 Lakhs on 20L capital over 11 years**
+- **Avg Win/Loss ratio: 1.4x** (make Rs 8,340 on winners, lose Rs 5,768 on losers)
+- **R adds +8.6L over JT-only baseline** (+21 R trades/yr avg), value in 8/11 years
+
+### Previous JT-only Baseline (before Strategy R)
+
+| Year | Trades | WR% | Return% | P&L | AvgWin | AvgLoss | PF |
+|---|---|---|---|---|---|---|---|
+| 2025 | 236 | 48.7% | 19.4% | +3,87,352 | 8,118 | -4,514 | 1.71 |
+| 2024 | 231 | 61.5% | 30.9% | +6,18,676 | 8,319 | -6,321 | 2.10 |
+| 2023 | 220 | 59.5% | 33.2% | +6,63,231 | 8,313 | -4,784 | 2.56 |
+| 2022 | 248 | 58.5% | 22.9% | +4,58,722 | 8,163 | -7,039 | 1.63 |
+| 2021 | 239 | 54.0% | 26.9% | +5,37,875 | 9,118 | -5,804 | 1.84 |
+| 2020 | 249 | 60.2% | 28.4% | +5,68,858 | 8,790 | -7,573 | 1.76 |
+| 2019 | 242 | 50.8% | 13.0% | +2,59,948 | 8,151 | -6,240 | 1.35 |
+| 2018 | 213 | 47.9% | 5.3% | +1,05,872 | 7,782 | -6,197 | 1.15 |
+| 2017 | 211 | 58.8% | 41.8% | +8,36,657 | 9,496 | -3,917 | 3.45 |
+| 2016 | 234 | 50.4% | 18.4% | +3,68,231 | 8,233 | -5,200 | 1.61 |
+| 2015 | 222 | 48.6% | 3.9% | +77,925 | 7,744 | -6,653 | 1.10 |
+| **Avg/yr** | **231** | **54.4%** | **~22%** | **+4,43,941** | **8,384** | **-5,840** | **1.82** |
+
+- **Total P&L: Rs ~48.8 Lakhs** (JTR adds +8.6L = **+17.6% improvement**)
 
 ### Why Skip 2 Weeks of Support
 J support uses the 26-week rolling min of weekly closes. Including the last 2 weeks (current + previous) means support can be set by very recent price action that hasn't been tested. Shifting by 2 weeks uses only proven support levels — prices the market has bounced from and held for at least 2 weeks.
@@ -194,23 +229,27 @@ The strategy runs in three places. All three use identical entry/exit logic:
 | J Nifty shield | SL skip if Nifty fell more | SL skip if Nifty fell more | — |
 | J Chandelier | HH - 3x ATR14 after partial | HH - 3x ATR14 after partial | — |
 | T 3-stage | 6% / 10% / Keltner | 6% / 10% / Keltner | `three_stage_exit=True` |
+| R structural SL | 1% below swing low | 1% below swing low | metadata.r_swing_low_stop |
+| R 3-stage | 6% / 10% / Keltner | 6% / 10% / Keltner | `three_stage_exit=True` |
+| R dedup | Skip if J/T fired | Skip if J/T fired | — |
 
 ---
 
 ## Live Signals UI
 
 ### Top Picks Panel
-- Combined J+T signals ranked by ATR% (lowest volatility first)
+- Combined J+T+R signals ranked by ATR% (lowest volatility first)
 - Top 2 signals highlighted with star and green background
-- Columns: Rank, Strategy (J/T), Stock, Close, **ATR%** (ranking), **Stop%** (SL distance), Stop Price, Detail, Buy button
+- Columns: Rank, Strategy (J/T/R), Stock, Close, **ATR%** (ranking), **Stop%** (SL distance), Stop Price, Detail, Buy button
 - ATR% color: green (<2%), gray (2-3.5%), red (>3.5%)
 - Stop% color: green (<5%), gray (=5%), red (>5%)
+- R badge: purple (#ab47bc)
 
 ### Entered Signals (Positions) Panel
-- Shows active positions with: Strategy badge (J green / T blue), User, Entry Date, Entry Price
-- SL price with percentage (J: support level, T: entry * 0.95 → tightens to 0.97 after first exit)
-- T1 target (J: +5%, T: +6%), T2 target (J: +10%, T: +10%)
-- Stage label (J: Full pos / Half out; T: Stage 0 / Stage 1 (1/3 out) / Stage 2 (2/3 out))
+- Shows active positions with: Strategy badge (J green / T blue / R purple), User, Entry Date, Entry Price
+- SL price with percentage (J: support level, T: entry * 0.95 → tightens to 0.97 after first exit, R: structural SL 1% below swing low → tightens to 3% after first exit)
+- T1 target (J: +5%, T/R: +6%), T2 target (J/T/R: +10%)
+- Stage label (J: Full pos / Half out; T/R: Stage 0 / Stage 1 (1/3 out) / Stage 2 (2/3 out))
 - Shares: remaining/total
 - Exit signals: UNDERWATER_EXIT after 10 trading days below entry
 
@@ -223,12 +262,12 @@ The strategy runs in three places. All three use identical entry/exit logic:
 
 ## Risk Notes
 
-- 2015 and 2019 are the weakest years (+5.68% and +8.29%). Both are choppy sideways markets.
-- 2018 is weak (+11.77%) due to broad market correction.
+- 2018 is the weakest year (+9.1%) due to broad market correction.
+- 2015 was weakest under JT-only (+3.9%), but R improved it to +12.2%.
 - ATR% ranking can underperform in strong trending markets where volatile stocks are the big runners.
 - Results are based on daily closing prices. Live execution at different prices will cause slippage.
 - T strategy SL slippage in backtest is an artifact of daily-bar checking. Live trading with actual SL orders will have tighter stops.
 - Capital check: entries are skipped if trade cost would exceed available capital (20L + running PnL - deployed). Prevents over-leveraging after losses.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).
-- ~186-258 trades per year (avg 229), mix of J and T.
+- ~228-303 trades per year (avg 253), mix of J, T, and R (~21 R trades/yr).
 - yfinance data variability: backtest numbers can shift ~0.5-1% between runs due to Yahoo Finance adjusting historical prices for splits/dividends.

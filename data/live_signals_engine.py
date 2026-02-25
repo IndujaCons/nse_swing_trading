@@ -1,6 +1,6 @@
 """
-Live Signals Engine — scans for Strategy J and T entry signals in real-time,
-manages positions (with 3-stage exits for T), and checks exit conditions.
+Live Signals Engine — scans for Strategy J, T, and R entry signals in real-time,
+manages positions (with 3-stage exits for T and R), and checks exit conditions.
 """
 
 import csv
@@ -60,8 +60,51 @@ def _calculate_rsi_series(closes: pd.Series, period: int) -> pd.Series:
     return 100 - (100 / (1 + rs))
 
 
+def _find_swing_lows(lows: pd.Series, left: int = 5, right: int = 3) -> list:
+    """Find swing low positions: low[i] is min of surrounding window."""
+    result = []
+    vals = lows.values
+    n = len(vals)
+    for i in range(left, n - right):
+        window = vals[i - left: i + right + 1]
+        if vals[i] == np.min(window):
+            result.append((i, float(vals[i])))
+    return result
+
+
+def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
+                               max_lookback=50, min_sep=5,
+                               rsi_threshold=35, min_rsi_divergence=5,
+                               min_price_drop=0.0):
+    """Check for bullish RSI divergence at bar i."""
+    recent = [(idx, val) for idx, val in swing_lows
+              if idx <= i and i - idx <= max_lookback]
+    if len(recent) < 2:
+        return False, None
+    for k in range(len(recent) - 1, 0, -1):
+        curr_idx, curr_low = recent[k]
+        prev_idx, prev_low = recent[k - 1]
+        if curr_idx - prev_idx < min_sep:
+            continue
+        # Meaningful lower low in price (>= min_price_drop)
+        if curr_low >= prev_low * (1 - min_price_drop):
+            continue
+        # Meaningful higher low in RSI(14) (>= min_rsi_divergence points)
+        curr_rsi = rsi14_vals[curr_idx]
+        prev_rsi = rsi14_vals[prev_idx]
+        if np.isnan(curr_rsi) or np.isnan(prev_rsi):
+            continue
+        if curr_rsi - prev_rsi < min_rsi_divergence:
+            continue
+        # RSI below threshold at current swing low (oversold zone)
+        if curr_rsi >= rsi_threshold:
+            continue
+        return True, curr_low
+    return False, None
+
+
 class LiveSignalsEngine:
-    """Scans J/T entry signals, manages positions with 3-stage exits, checks exit conditions."""
+    """Scans J/T/R entry signals, manages positions with 3-stage exits, checks exit conditions."""
 
     def __init__(self, user_id=None):
         self.user_id = user_id
@@ -80,7 +123,7 @@ class LiveSignalsEngine:
     # ==================== Entry Signal Scanning ====================
 
     def scan_entry_signals(self, force_refresh=False, progress_callback=None, scan_date=None):
-        """Scan for J and T entry signals across Nifty 50/100.
+        """Scan for J, T, and R entry signals across Nifty 50/100.
 
         scan_date: optional "YYYY-MM-DD" string to scan a historical date.
         """
@@ -119,6 +162,7 @@ class LiveSignalsEngine:
 
         j_signals = []
         t_signals = []
+        r_signals = []
         actual_date = None  # Track actual last trading date from data
 
         for idx, ticker in enumerate(tickers):
@@ -256,13 +300,50 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
+            # Strategy R: Bullish RSI Divergence
+            try:
+                # Skip R if stock already has J or T signal (dedup)
+                already_jt = any(s["ticker"] == ticker for s in j_signals + t_signals)
+                if is_green and not already_jt:
+                    rsi14_series = _calculate_rsi_series(closes, 14)
+                    swing_lows = _find_swing_lows(lows)
+                    rsi14_vals = rsi14_series.values
+                    lows_vals = lows.values
+                    divergence, swing_low_val = _detect_bullish_divergence(
+                        lows_vals, rsi14_vals, i, swing_lows)
+                    if divergence and swing_low_val is not None:
+                        rsi14_at_bar = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 0.0
+                        r_struct_stop = round(swing_low_val * 0.99, 2)
+                        r_stop_pct = round((price - r_struct_stop) / price * 100, 2) if price > 0 else 99.0
+                        # ATR14 for volatility ranking
+                        prev_close_r = closes.shift(1)
+                        tr1_r = highs - lows
+                        tr2_r = (highs - prev_close_r).abs()
+                        tr3_r = (lows - prev_close_r).abs()
+                        tr_r = pd.concat([tr1_r, tr2_r, tr3_r], axis=1).max(axis=1)
+                        atr14_r = float(tr_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
+                        atr_norm_r = round(atr14_r / price * 100, 2) if price > 0 else 99.0
+                        r_signals.append({
+                            "ticker": ticker,
+                            "price": round(price, 2),
+                            "rsi14": round(rsi14_at_bar, 1),
+                            "swing_low": round(swing_low_val, 2),
+                            "stop": r_struct_stop,
+                            "stop_pct": r_stop_pct,
+                            "atr_pct": atr_norm_r,
+                        })
+            except Exception:
+                pass
+
         # Sort by volatility (lowest ATR% first = calmest stocks)
         j_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         t_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
+        r_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
 
         result = {
             "j_signals": j_signals,
             "t_signals": t_signals,
+            "r_signals": r_signals,
             "last_updated": datetime.now().isoformat(),
             "universe": universe,
         }
@@ -273,7 +354,7 @@ class LiveSignalsEngine:
             result["scan_date"] = scan_date
         else:
             self._save_cache(result)
-            self._append_signals_history(j_signals, t_signals)
+            self._append_signals_history(j_signals, t_signals, r_signals)
 
         return result
 
@@ -302,7 +383,7 @@ class LiveSignalsEngine:
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)
 
-    def _append_signals_history(self, j_signals, t_signals=None):
+    def _append_signals_history(self, j_signals, t_signals=None, r_signals=None):
         """Append today's scan results to the history CSV."""
         history_file = LIVE_SIGNALS_HISTORY_FILE
         scan_date = datetime.now().strftime("%Y-%m-%d")
@@ -328,6 +409,12 @@ class LiveSignalsEngine:
                 writer.writerow([
                     scan_date, scan_time, "T", s["ticker"], s["price"],
                     "", "", "",
+                ])
+
+            for s in (r_signals or []):
+                writer.writerow([
+                    scan_date, scan_time, "R", s["ticker"], s["price"],
+                    s.get("swing_low", ""), "", "",
                 ])
 
     # ==================== Position Management ====================
@@ -555,6 +642,50 @@ class LiveSignalsEngine:
                 true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
                 atr14_t = float(true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[-1])
                 upper_keltner = ema20_t + 2 * atr14_t
+
+                if stage == 0 and current_price >= entry_price * 1.06 and third > 0:
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "PARTIAL_6PCT_1of3", third))
+                elif stage == 1 and current_price >= entry_price * 1.10 and third > 0:
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "PARTIAL_10PCT_2of3", third))
+                elif (stage == 2 or pos["partial_exit_done"]) and current_price >= upper_keltner:
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "KELTNER_UPPER_EXIT",
+                        pos["remaining_shares"]))
+
+            elif pos["strategy"] == "R":
+                # R: 3-stage exit logic (mirrors T with structural SL)
+                stage = pos.get("partial_stage", 0)
+                third = pos["shares"] // 3
+                structural_stop = pos.get("metadata", {}).get("r_swing_low_stop", 0)
+
+                # Structural SL: 1% below divergence swing low — exit all
+                if structural_stop > 0 and current_price <= structural_stop:
+                    sz = pos["remaining_shares"]
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "STRUCTURAL_SL", sz))
+                    continue
+
+                # Tight SL after first partial (3%)
+                if stage >= 1 and current_price <= entry_price * 0.97:
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "HARD_SL_3PCT",
+                        pos["remaining_shares"]))
+                    continue
+
+                # Compute upper Keltner for final exit
+                closes_r = daily["Close"]
+                highs_r = daily["High"]
+                lows_r = daily["Low"]
+                ema20_r = float(closes_r.ewm(span=20, adjust=False).mean().iloc[-1])
+                prev_close_r = closes_r.shift(1)
+                tr1 = highs_r - lows_r
+                tr2 = (highs_r - prev_close_r).abs()
+                tr3 = (lows_r - prev_close_r).abs()
+                true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+                atr14_r = float(true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[-1])
+                upper_keltner = ema20_r + 2 * atr14_r
 
                 if stage == 0 and current_price >= entry_price * 1.06 and third > 0:
                     exit_signals.append(self._make_exit_signal(
