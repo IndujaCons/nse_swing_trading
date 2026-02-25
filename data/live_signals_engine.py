@@ -99,8 +99,8 @@ def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
         # RSI below threshold at current swing low (oversold zone)
         if curr_rsi >= rsi_threshold:
             continue
-        return True, curr_low
-    return False, None
+        return True, curr_low, curr_rsi
+    return False, None, None
 
 
 class LiveSignalsEngine:
@@ -309,7 +309,7 @@ class LiveSignalsEngine:
                     swing_lows = _find_swing_lows(lows)
                     rsi14_vals = rsi14_series.values
                     lows_vals = lows.values
-                    divergence, swing_low_val = _detect_bullish_divergence(
+                    divergence, swing_low_val, rsi_at_low = _detect_bullish_divergence(
                         lows_vals, rsi14_vals, i, swing_lows)
                     if divergence and swing_low_val is not None:
                         rsi14_at_bar = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 0.0
@@ -328,6 +328,7 @@ class LiveSignalsEngine:
                                 "ticker": ticker,
                                 "price": round(price, 2),
                                 "rsi14": round(rsi14_at_bar, 1),
+                                "rsi_at_low": round(float(rsi_at_low), 1),
                                 "swing_low": round(swing_low_val, 2),
                                 "stop": r_struct_stop,
                                 "stop_pct": r_stop_pct,

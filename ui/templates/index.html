@@ -1984,7 +1984,8 @@
                     updateLastUpdated(data.data.last_updated, 0);
                     liveSignalsDataLoaded = true;
                     showToast('Live signals refreshed!', 'success');
-                    // Also check exits after refresh
+                    // Also refresh positions (LTP/P&L) and exits
+                    loadLivePositions();
                     loadExitSignals();
                 } else {
                     showToast(data.error || 'Refresh failed', 'error');
@@ -2150,7 +2151,7 @@
                     <tr>
                         <td class="ticker">${s.ticker}</td>
                         <td class="price">${s.price.toLocaleString()}</td>
-                        <td>${(s.rsi14||0).toFixed(1)}</td>
+                        <td>${(s.rsi14||0).toFixed(1)} <span style="color:var(--green);font-size:11px;">(${(s.rsi_at_low||0).toFixed(1)})</span></td>
                         <td class="price">${(s.swing_low||0).toLocaleString()}</td>
                         <td class="price">${(s.stop||0).toLocaleString()}</td>
                         <td style="color:${(s.stop_pct||0)<5?'var(--green)':'var(--red)'}">${(s.stop_pct||0).toFixed(1)}%</td>
@@ -2162,7 +2163,7 @@
                 `).join('');
                 rPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>RSI14</th><th>SwLow</th><th>Stop</th><th>Stop%</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>RSI14 (Low)</th><th>SwLow</th><th>Stop</th><th>Stop%</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -2194,7 +2195,7 @@
                     const detail = s.strategy === 'J'
                         ? `Supp ${s.support.toLocaleString()} | IBS ${s.ibs.toFixed(2)}`
                         : s.strategy === 'R'
-                        ? `RSI14 ${(s.rsi14||0).toFixed(1)} | SwLow ${(s.swing_low||0).toLocaleString()}`
+                        ? `RSI14 ${(s.rsi14||0).toFixed(1)} (${(s.rsi_at_low||0).toFixed(1)}) | SwLow ${(s.swing_low||0).toLocaleString()}`
                         : `EMA20 ${s.ema20.toLocaleString()}`;
                     const stopVal = s.strategy === 'J' ? s.stop : s.strategy === 'R' ? s.stop : Math.round(s.price * 0.95);
                     const ibsVal = s.strategy === 'J' ? s.ibs : 0;
