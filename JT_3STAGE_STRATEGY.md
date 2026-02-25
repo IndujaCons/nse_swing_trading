@@ -20,10 +20,10 @@ Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J
 - **Edge**: Buying a pullback in a confirmed uptrend (was recently at upper band = strong momentum)
 
 ### Strategy R — Bullish RSI Divergence
-- **Condition**: Price makes a lower low but RSI(14) makes a higher low (bullish divergence), **RSI(14) < 35** at the divergence point, **min 5-point RSI divergence** between the two swing lows, green candle, **no gap-down** (open >= prev close)
+- **Condition**: Price makes a lower low but RSI(14) makes a higher low (bullish divergence), **RSI(14) < 40** at the divergence point, **min 3-point RSI divergence** between the two swing lows, green candle, **no gap-down** (open >= prev close)
 - **Swing Low Detection**: Low[i] is minimum of surrounding window (5 bars left, 3 bars right). Signal confirmed 3 bars after actual low. Min 5 bars separation between the two swing lows.
 - **Divergence Window**: Looks back up to 50 bars for two qualifying swing lows
-- **Stop**: Structural SL — 1% below the divergence swing low (natural invalidation level)
+- **Stop**: Structural SL — 1% below the divergence swing low (natural invalidation level). **Max stop distance: 5%** — skip signal if structural stop is >5% away (stale divergence).
 - **Dedup**: Skip if J or T already fired for the same stock on the same day
 - **Edge**: RSI divergence signals momentum improving despite price weakness — early reversal signal
 
@@ -131,29 +131,29 @@ The UI shows both ATR% (ranking column) and Stop% (SL distance) in the Top Picks
 
 ## Backtest Results — 11 Years (2015-2025), Nifty 100
 
-### Current Baseline — JTR (3-Stage 6/10 + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T Tight SL 3% + R filters: RSI<35, divergence>=5pt + 3 entries/day)
+### Current Baseline — JTR (3-Stage 6/10 + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T Tight SL 3% + R filters: RSI<40, divergence>=3pt, stop cap 5% + 3 entries/day)
 
 | Year | Trades | WR% | Return% | P&L | AvgWin | AvgLoss | PF |
 |---|---|---|---|---|---|---|---|
-| 2025 | 247 | 47.4% | 18.6% | +3,71,528 | 7,590 | -3,973 | 1.72 |
-| 2024 | 246 | 60.2% | 30.7% | +6,14,614 | 8,194 | -6,103 | 2.03 |
-| 2023 | 228 | 59.2% | 30.4% | +6,08,574 | 8,116 | -5,238 | 2.25 |
-| 2022 | 273 | 60.1% | 30.6% | +6,13,034 | 7,832 | -6,159 | 1.91 |
-| 2021 | 243 | 53.9% | 28.7% | +5,74,867 | 9,169 | -5,592 | 1.92 |
-| 2020 | 303 | 60.4% | 34.3% | +6,85,586 | 9,266 | -8,417 | 1.68 |
-| 2019 | 300 | 57.0% | 29.4% | +5,87,225 | 8,140 | -6,238 | 1.73 |
-| 2018 | 234 | 48.7% | 9.1% | +1,82,546 | 7,711 | -5,804 | 1.26 |
-| 2017 | 231 | 59.7% | 44.0% | +8,80,749 | 9,462 | -4,570 | 3.07 |
-| 2016 | 235 | 51.1% | 19.0% | +3,79,176 | 8,054 | -5,107 | 1.65 |
-| 2015 | 241 | 50.2% | 12.2% | +2,43,747 | 8,210 | -6,248 | 1.33 |
-| **Avg/yr** | **253** | **55.3%** | **~26%** | **+5,21,968** | **8,340** | **-5,768** | **1.82** |
+| 2025 | 257 | 47.9% | +21.0% | +4,19,157 | 7,477 | -3,735 | 1.84 |
+| 2024 | 244 | 57.8% | +29.2% | +5,83,114 | 7,958 | -5,232 | 2.08 |
+| 2023 | 217 | 56.2% | +28.1% | +5,62,018 | 7,982 | -4,334 | 2.36 |
+| 2022 | 269 | 59.1% | +26.1% | +5,21,611 | 7,579 | -6,213 | 1.76 |
+| 2021 | 250 | 56.4% | +33.0% | +6,59,408 | 8,894 | -5,456 | 2.11 |
+| 2020 | 303 | 58.7% | +27.0% | +5,39,255 | 8,384 | -7,625 | 1.57 |
+| 2019 | 333 | 58.6% | +37.9% | +7,57,259 | 8,129 | -5,999 | 1.91 |
+| 2018 | 248 | 53.2% | +17.0% | +3,39,740 | 7,597 | -5,716 | 1.51 |
+| 2017 | 254 | 59.1% | +49.3% | +9,86,825 | 9,534 | -4,262 | 3.23 |
+| 2016 | 255 | 51.0% | +20.1% | +4,02,324 | 7,592 | -4,677 | 1.69 |
+| 2015 | 234 | 45.7% | +2.9% | +57,063 | 7,740 | -6,072 | 1.07 |
+| **Avg/yr** | **260** | **55.1%** | **+26.5%** | **+5,29,798** | **8,079** | **-5,393** | **1.92** |
 
 - **Positive years: 11/11**
-- **Best year: +44.0% (2017)**
-- **Worst year: +9.1% (2018)**
-- **Total P&L: Rs ~57.4 Lakhs on 20L capital over 11 years**
-- **Avg Win/Loss ratio: 1.4x** (make Rs 8,340 on winners, lose Rs 5,768 on losers)
-- **R adds +8.6L over JT-only baseline** (+21 R trades/yr avg), value in 8/11 years
+- **Best year: +49.3% (2017)**
+- **Worst year: +2.9% (2015)**
+- **Total P&L: Rs ~58.3 Lakhs on 20L capital over 11 years (291% cumulative)**
+- **Avg Win/Loss ratio: 1.5x** (make Rs 8,079 on winners, lose Rs 5,393 on losers)
+- **R adds +9.5L over JT-only baseline**, value across most years
 
 ### Previous JT-only Baseline (before Strategy R)
 
@@ -262,12 +262,12 @@ The strategy runs in three places. All three use identical entry/exit logic:
 
 ## Risk Notes
 
-- 2018 is the weakest year (+9.1%) due to broad market correction.
-- 2015 was weakest under JT-only (+3.9%), but R improved it to +12.2%.
+- 2015 is the weakest year (+2.9%) — still positive.
+- 2018 is second weakest (+17.0%) due to broad market correction.
 - ATR% ranking can underperform in strong trending markets where volatile stocks are the big runners.
 - Results are based on daily closing prices. Live execution at different prices will cause slippage.
 - T strategy SL slippage in backtest is an artifact of daily-bar checking. Live trading with actual SL orders will have tighter stops.
 - Capital check: entries are skipped if trade cost would exceed available capital (20L + running PnL - deployed). Prevents over-leveraging after losses.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).
-- ~228-303 trades per year (avg 253), mix of J, T, and R (~21 R trades/yr).
+- ~217-333 trades per year (avg 260), mix of J, T, and R.
 - yfinance data variability: backtest numbers can shift ~0.5-1% between runs due to Yahoo Finance adjusting historical prices for splits/dividends.

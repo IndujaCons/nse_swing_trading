@@ -74,7 +74,7 @@ def _find_swing_lows(lows: pd.Series, left: int = 5, right: int = 3) -> list:
 
 def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
                                max_lookback=50, min_sep=5,
-                               rsi_threshold=35, min_rsi_divergence=5,
+                               rsi_threshold=40, min_rsi_divergence=3,
                                min_price_drop=0.0):
     """Check for bullish RSI divergence at bar i."""
     recent = [(idx, val) for idx, val in swing_lows
