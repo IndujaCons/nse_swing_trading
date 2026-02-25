@@ -1189,6 +1189,7 @@
                     <select class="backtest-select" id="portfolio-entries-per-day">
                         <option value="1">1 trade / day</option>
                         <option value="2">2 trades / day</option>
+                        <option value="3" selected>3 trades / day</option>
                     </select>
                     <button class="btn btn-backtest" id="run-portfolio50-btn" onclick="runPortfolioBacktest(50)">Backtest (Nifty 50)</button>
                     <button class="btn btn-backtest" id="run-portfolio100-btn" onclick="runPortfolioBacktest(100)">Backtest (Nifty 100)</button>
@@ -1539,9 +1540,30 @@
                 if (data.success) {
                     kiteUsers = data.users;
                     updateConnectionUI();
+                    loadUserMargins();
                 }
             } catch (e) {
                 console.error('Connection check failed:', e);
+            }
+        }
+
+        async function loadUserMargins() {
+            try {
+                const res = await fetch('/api/live-signals/margins');
+                const data = await res.json();
+                if (data.success) {
+                    if (data.margins) {
+                        for (const [uid, m] of Object.entries(data.margins)) {
+                            const el = document.getElementById(`margin-${uid}`);
+                            if (el && m.available_cash > 0) {
+                                const cashL = (m.available_cash / 100000).toFixed(1);
+                                el.textContent = `Funds: ₹${m.available_cash.toLocaleString('en-IN')} (${cashL}L)`;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Margins load error:', e);
             }
         }
 
@@ -1583,6 +1605,10 @@
                         </div>`;
                 }
 
+                const marginLine = u.connected
+                    ? `<div id="margin-${u.config_user_id}" style="font-size:11px;color:var(--green);margin-top:2px;"></div>`
+                    : '';
+
                 return `
                     <div class="${connClass}">
                         <div class="user-card-header">
@@ -1590,6 +1616,7 @@
                             <span class="user-card-name">${u.config_name}</span>
                         </div>
                         <div class="user-card-status">${statusText}</div>
+                        ${marginLine}
                         <div class="user-card-actions">${actions}</div>
                     </div>`;
             }).join('');
@@ -2150,6 +2177,7 @@
                 `;
             }
 
+
         }
 
         async function buyLiveSignal(ticker, strategy, price, support, ibs, btn) {
@@ -2229,16 +2257,17 @@
                 const res = await fetch('/api/live-signals/positions');
                 const data = await res.json();
                 if (data.success) {
-                    renderPositions(data.positions);
+                    renderPositions(data.positions, data.ltps || {});
                 }
             } catch (e) {
                 console.error('Positions load error:', e);
             }
         }
 
-        function renderPositions(positions) {
+        function renderPositions(positions, ltps) {
             const panel = document.getElementById('ls-positions-panel');
             document.getElementById('ls-positions-count').textContent = positions.length;
+            ltps = ltps || {};
 
             if (!positions || positions.length === 0) {
                 panel.innerHTML = '<div class="empty-state">No active positions</div>';
@@ -2277,6 +2306,20 @@
                 }
                 const slPct = ((ep - sl) / ep * 100).toFixed(1);
 
+                // LTP & P&L
+                const ltp = ltps[p.ticker];
+                let ltpCell, pnlCell;
+                if (ltp) {
+                    const pnlPct = ((ltp - ep) / ep * 100).toFixed(1);
+                    const pnlColor = pnlPct >= 0 ? 'var(--green)' : 'var(--red)';
+                    const pnlSign = pnlPct >= 0 ? '+' : '';
+                    ltpCell = `<td class="price" style="font-weight:600;">${ltp.toLocaleString()}</td>`;
+                    pnlCell = `<td style="color:${pnlColor};font-weight:600;">${pnlSign}${pnlPct}%</td>`;
+                } else {
+                    ltpCell = '<td style="color:var(--text-muted);">--</td>';
+                    pnlCell = '<td>--</td>';
+                }
+
                 return `
                 <tr>
                     <td class="ticker">${p.ticker}</td>
@@ -2286,6 +2329,8 @@
                     <td style="font-size:10px;color:var(--text-muted);">${userName}</td>
                     <td>${p.entry_date}</td>
                     <td class="price">${ep.toLocaleString()}</td>
+                    ${ltpCell}
+                    ${pnlCell}
                     <td style="color:var(--red);">${sl.toLocaleString()} <span style="font-size:10px;">(${slPct}%)</span></td>
                     <td class="price">${t1.toLocaleString()}</td>
                     <td class="price">${t2.toLocaleString()}</td>
@@ -2297,7 +2342,7 @@
 
             panel.innerHTML = `
                 <table class="stock-table">
-                    <thead><tr><th>Stock</th><th>Str</th><th>User</th><th>Entry</th><th>Price</th><th>SL</th><th>T1</th><th>T2</th><th>Stage</th><th>Shares</th><th></th></tr></thead>
+                    <thead><tr><th>Stock</th><th>Str</th><th>User</th><th>Entry</th><th>Price</th><th>LTP</th><th>P&L</th><th>SL</th><th>T1</th><th>T2</th><th>Stage</th><th>Shares</th><th></th></tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
             `;

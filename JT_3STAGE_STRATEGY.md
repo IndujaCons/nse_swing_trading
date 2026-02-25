@@ -2,7 +2,7 @@
 
 ## Overview
 
-Momentum dip-buying strategy on Nifty 100 stocks combining two signal types (J, T) with a 3-stage partial exit system. Capital: 20L, 2L per trade, 2 entries/day.
+Momentum dip-buying strategy on Nifty 100 stocks combining two signal types (J, T) with a 3-stage partial exit system. Capital: 20L, 2L per trade, 3 entries/day.
 
 ---
 
@@ -77,7 +77,7 @@ The original system sold 1/2 at +5% and exited the other 1/2 on indicator. The 3
 | Capital | 20 Lakhs |
 | Per trade | 2 Lakhs |
 | Max positions | 10 (20L / 2L) |
-| Entries per day | 2 |
+| Entries per day | 3 |
 | Strategies | J + T |
 | Underwater exit | 10 trading days |
 | T tight SL | 3% after first +6% exit |
@@ -116,28 +116,28 @@ The UI shows both ATR% (ranking column) and Stop% (SL distance) in the Top Picks
 
 ## Backtest Results — 11 Years (2015-2025), Nifty 100
 
-### Current Baseline (3-Stage 6/10 + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T Tight SL 3%)
+### Current Baseline (3-Stage 6/10 + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T Tight SL 3% + 3 entries/day)
 
 | Year | Trades | WR% | Return% | P&L | AvgWin | AvgLoss | PF |
 |---|---|---|---|---|---|---|---|
-| 2025 | 219 | 48.4% | 18.60% | +3,72,077 | 7,998 | -4,209 | 1.78 |
-| 2024 | 222 | 60.8% | 26.32% | +5,26,364 | 8,092 | -6,505 | 1.93 |
-| 2023 | 215 | 60.9% | 32.56% | +6,51,226 | 8,363 | -5,290 | 2.47 |
-| 2022 | 230 | 55.7% | 17.25% | +3,44,978 | 8,277 | -7,004 | 1.48 |
-| 2021 | 228 | 52.6% | 25.31% | +5,06,140 | 9,232 | -5,570 | 1.84 |
-| 2020 | 239 | 61.1% | 28.01% | +5,60,268 | 8,597 | -7,472 | 1.81 |
-| 2019 | 233 | 48.9% | 9.05% | +1,81,070 | 8,065 | -6,206 | 1.24 |
-| 2018 | 207 | 50.2% | 10.20% | +2,04,067 | 7,670 | -5,764 | 1.34 |
-| 2017 | 219 | 59.8% | 41.49% | +8,29,706 | 9,272 | -4,374 | 3.16 |
-| 2016 | 215 | 48.8% | 18.12% | +3,62,322 | 8,175 | -4,509 | 1.73 |
-| 2015 | 209 | 47.8% | 5.73% | +1,14,528 | 8,020 | -6,306 | 1.17 |
-| **Avg/yr** | **222** | **54.1%** | **~22%** | **+4,32,068** | **8,342** | **-5,746** | **1.72** |
+| 2025 | 218 | 48.2% | 21.6% | +4,32,206 | 8,486 | -4,061 | 1.94 |
+| 2024 | 233 | 60.9% | 30.3% | +6,05,348 | 8,369 | -6,407 | 2.04 |
+| 2023 | 218 | 54.6% | 28.2% | +5,63,882 | 8,523 | -4,549 | 2.25 |
+| 2022 | 247 | 57.9% | 25.2% | +5,04,705 | 8,388 | -6,681 | 1.73 |
+| 2021 | 251 | 54.6% | 31.7% | +6,33,955 | 9,574 | -5,945 | 1.94 |
+| 2020 | 258 | 61.2% | 31.4% | +6,28,601 | 8,789 | -7,601 | 1.83 |
+| 2019 | 241 | 48.1% | 8.4% | +1,68,949 | 8,260 | -6,314 | 1.21 |
+| 2018 | 214 | 48.1% | 8.2% | +1,63,070 | 8,204 | -6,143 | 1.24 |
+| 2017 | 217 | 60.4% | 46.7% | +9,34,746 | 9,880 | -4,180 | 3.60 |
+| 2016 | 235 | 48.5% | 16.9% | +3,38,185 | 8,414 | -5,132 | 1.54 |
+| 2015 | 186 | 51.1% | 6.9% | +1,38,036 | 8,014 | -6,850 | 1.22 |
+| **Avg/yr** | **229** | **54.0%** | **~23%** | **+4,64,698** | **8,627** | **-5,806** | **1.78** |
 
 - **Positive years: 11/11**
-- **Best year: +41.49% (2017)**
-- **Worst year: +5.73% (2015)**
-- **Total P&L: Rs ~47.5 Lakhs on 20L capital over 11 years**
-- **Avg Win/Loss ratio: 1.5x** (make Rs 8,342 on winners, lose Rs 5,746 on losers)
+- **Best year: +46.7% (2017)**
+- **Worst year: +6.9% (2015)**
+- **Total P&L: Rs ~51.1 Lakhs on 20L capital over 11 years**
+- **Avg Win/Loss ratio: 1.5x** (make Rs 8,627 on winners, lose Rs 5,806 on losers)
 
 ### Why Skip 2 Weeks of Support
 J support uses the 26-week rolling min of weekly closes. Including the last 2 weeks (current + previous) means support can be set by very recent price action that hasn't been tested. Shifting by 2 weeks uses only proven support levels — prices the market has bounced from and held for at least 2 weeks.
@@ -230,5 +230,5 @@ The strategy runs in three places. All three use identical entry/exit logic:
 - T strategy SL slippage in backtest is an artifact of daily-bar checking. Live trading with actual SL orders will have tighter stops.
 - Capital check: entries are skipped if trade cost would exceed available capital (20L + running PnL - deployed). Prevents over-leveraging after losses.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).
-- ~204-241 trades per year (avg 224), mix of J and T.
+- ~186-258 trades per year (avg 229), mix of J and T.
 - yfinance data variability: backtest numbers can shift ~0.5-1% between runs due to Yahoo Finance adjusting historical prices for splits/dividends.

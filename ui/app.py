@@ -322,9 +322,22 @@ def get_live_signals_progress():
     return jsonify(progress)
 
 
+@app.route("/api/live-signals/margins", methods=["GET"])
+def get_live_margins():
+    """Get available margin/funds from connected Zerodha accounts."""
+    try:
+        result = {}
+        for uid, broker in brokers.items():
+            if broker.is_connected():
+                result[uid] = broker.get_margins()
+        return jsonify({"success": True, "margins": result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.route("/api/live-signals/positions", methods=["GET"])
 def get_live_positions():
-    """Get active positions merged across all users."""
+    """Get active positions merged across all users, with LTPs from Zerodha."""
     try:
         all_positions = []
         for uid, engine in user_engines.items():
@@ -332,7 +345,34 @@ def get_live_positions():
                 if "user_id" not in p:
                     p["user_id"] = uid
                 all_positions.append(p)
-        return jsonify({"success": True, "positions": all_positions})
+
+        # Fetch LTPs for position tickers via first connected broker
+        ltps = {}
+        if all_positions:
+            tickers = list(set(p["ticker"] for p in all_positions))
+            for broker in brokers.values():
+                if broker.is_connected():
+                    instruments = [f"NSE:{t}" for t in tickers]
+                    ltp_data = broker.get_ltp(instruments)
+                    for t in tickers:
+                        key = f"NSE:{t}"
+                        if key in ltp_data:
+                            ltps[t] = ltp_data[key].get("last_price")
+                    break
+
+            # Fallback: use yfinance close for any tickers missing LTP
+            missing = [t for t in tickers if t not in ltps]
+            if missing:
+                import yfinance as yf
+                for t in missing:
+                    try:
+                        hist = yf.Ticker(f"{t}.NS").history(period="5d")
+                        if not hist.empty:
+                            ltps[t] = round(float(hist["Close"].iloc[-1]), 2)
+                    except Exception:
+                        pass
+
+        return jsonify({"success": True, "positions": all_positions, "ltps": ltps})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -718,9 +758,9 @@ def run_portfolio_backtest():
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
         strategies = ["J", "T"]
-    entries_per_day = int(data.get("entries_per_day", 1))
-    if entries_per_day not in (1, 2):
-        entries_per_day = 1
+    entries_per_day = int(data.get("entries_per_day", 3))
+    if entries_per_day not in (1, 2, 3):
+        entries_per_day = 3
     three_stage_exit = bool(data.get("three_stage_exit", True))
 
     try:

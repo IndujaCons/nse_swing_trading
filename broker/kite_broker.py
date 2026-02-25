@@ -165,6 +165,31 @@ class KiteBroker:
             "paper_mode": PAPER_TRADING_ONLY
         }
 
+    def get_margins(self) -> Dict:
+        """Get available margin/funds from Zerodha."""
+        if not self._kite:
+            return {"available_cash": 0, "error": "Not connected"}
+        try:
+            margins = self._kite.margins(segment="equity")
+            available = margins.get("available", {})
+            cash = available.get("live_balance", 0) + available.get("collateral", 0)
+            return {
+                "available_cash": round(cash, 2),
+                "opening_balance": available.get("opening_balance", 0),
+                "net": margins.get("net", 0),
+            }
+        except Exception as e:
+            return {"available_cash": 0, "error": str(e)}
+
+    def get_ltp(self, instruments: list) -> Dict:
+        """Get last traded price for instruments (e.g. ['NSE:NIFTY 50'])."""
+        if not self._kite:
+            return {}
+        try:
+            return self._kite.ltp(instruments)
+        except Exception:
+            return {}
+
     def disconnect(self):
         """Disconnect from Zerodha."""
         self.access_token = None
