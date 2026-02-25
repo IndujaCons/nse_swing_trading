@@ -1047,6 +1047,7 @@
                     <select class="backtest-select" id="backtest-strategy">
                         <option value="J">Strategy J — weekly support</option>
                         <option value="T">Strategy T — Keltner pullback</option>
+                        <option value="R">Strategy R — RSI divergence</option>
                     </select>
                     <select class="backtest-select" id="backtest-symbol">
                         <option value="">-- Select Symbol --</option>
@@ -1181,13 +1182,9 @@
                     <select class="backtest-select" id="portfolio-strategy">
                         <option value="JTR3">J + T + R (3-Stage)</option>
                         <option value="JT3">J + T (3-Stage)</option>
-                        <option value="JT">J + T (Original)</option>
-                        <option value="J3">J (3-Stage)</option>
-                        <option value="J">J: Weekly Support (Original)</option>
-                        <option value="T3">T (3-Stage)</option>
-                        <option value="T">T: Keltner Pullback (Original)</option>
-                        <option value="R3">R (3-Stage)</option>
-                        <option value="R">R: RSI Divergence (Original)</option>
+                        <option value="J3">J Only (3-Stage)</option>
+                        <option value="T3">T Only (3-Stage)</option>
+                        <option value="R3">R Only (3-Stage)</option>
                     </select>
                     <select class="backtest-select" id="portfolio-entries-per-day">
                         <option value="1">1 trade / day</option>
@@ -2868,9 +2865,9 @@
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'JTR3': ['J','T','R'], 'JT3': ['J','T'], 'JT': ['J','T'], 'J3': ['J'], 'J': ['J'], 'T3': ['T'], 'T': ['T'], 'R3': ['R'], 'R': ['R']};
+            const stratMap = {'JTR3': ['J','T','R'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R']};
             const strategies = stratMap[stratVal] || [stratVal];
-            const threeStageExit = !['JT','J','T','R'].includes(stratVal);
+            const threeStageExit = true;
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
 
             const btnId = universe === 100 ? 'run-portfolio100-btn' : 'run-portfolio50-btn';

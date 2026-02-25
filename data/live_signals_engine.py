@@ -315,23 +315,24 @@ class LiveSignalsEngine:
                         rsi14_at_bar = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 0.0
                         r_struct_stop = round(swing_low_val * 0.99, 2)
                         r_stop_pct = round((price - r_struct_stop) / price * 100, 2) if price > 0 else 99.0
-                        # ATR14 for volatility ranking
-                        prev_close_r = closes.shift(1)
-                        tr1_r = highs - lows
-                        tr2_r = (highs - prev_close_r).abs()
-                        tr3_r = (lows - prev_close_r).abs()
-                        tr_r = pd.concat([tr1_r, tr2_r, tr3_r], axis=1).max(axis=1)
-                        atr14_r = float(tr_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
-                        atr_norm_r = round(atr14_r / price * 100, 2) if price > 0 else 99.0
-                        r_signals.append({
-                            "ticker": ticker,
-                            "price": round(price, 2),
-                            "rsi14": round(rsi14_at_bar, 1),
-                            "swing_low": round(swing_low_val, 2),
-                            "stop": r_struct_stop,
-                            "stop_pct": r_stop_pct,
-                            "atr_pct": atr_norm_r,
-                        })
+                        if r_stop_pct <= 5.0:  # Skip if structural stop too far (stale divergence)
+                            # ATR14 for volatility ranking
+                            prev_close_r = closes.shift(1)
+                            tr1_r = highs - lows
+                            tr2_r = (highs - prev_close_r).abs()
+                            tr3_r = (lows - prev_close_r).abs()
+                            tr_r = pd.concat([tr1_r, tr2_r, tr3_r], axis=1).max(axis=1)
+                            atr14_r = float(tr_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
+                            atr_norm_r = round(atr14_r / price * 100, 2) if price > 0 else 99.0
+                            r_signals.append({
+                                "ticker": ticker,
+                                "price": round(price, 2),
+                                "rsi14": round(rsi14_at_bar, 1),
+                                "swing_low": round(swing_low_val, 2),
+                                "stop": r_struct_stop,
+                                "stop_pct": r_stop_pct,
+                                "atr_pct": atr_norm_r,
+                            })
             except Exception:
                 pass
 

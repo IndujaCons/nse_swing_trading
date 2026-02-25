@@ -598,15 +598,18 @@ class MomentumBacktester:
                     divergence, swing_low_val = self._detect_bullish_divergence(
                         lows_vals, rsi14_vals, i, swing_lows)
                     if divergence and swing_low_val is not None:
-                        shares = int(capital // price)
-                        if shares > 0:
-                            entry_price = price
-                            entry_date = day
-                            entry_bar = i
-                            in_position = True
-                            r_partial_stage = 0
-                            r_remaining = shares
-                            r_swing_low_stop = swing_low_val * 0.99  # 1% below swing low
+                        r_swing_low_stop_cand = swing_low_val * 0.99
+                        r_stop_pct_cand = (price - r_swing_low_stop_cand) / price * 100 if price > 0 else 99.0
+                        if r_stop_pct_cand <= 5.0:  # Skip if structural stop too far
+                            shares = int(capital // price)
+                            if shares > 0:
+                                entry_price = price
+                                entry_date = day
+                                entry_bar = i
+                                in_position = True
+                                r_partial_stage = 0
+                                r_remaining = shares
+                                r_swing_low_stop = r_swing_low_stop_cand
                 continue
 
         # Close open position at end of backtest
@@ -1167,15 +1170,16 @@ class MomentumBacktester:
                         if divergence and swing_low_val is not None:
                             r_struct_stop = swing_low_val * 0.99
                             r_stop_pct = (price - r_struct_stop) / price * 100 if price > 0 else 99.0
-                            signals.append({
-                                "symbol": ticker,
-                                "strategy": "R",
-                                "price": price,
-                                "atr14": sig_atr14,
-                                "stop_pct": r_stop_pct,
-                                "atr_norm": sig_atr14 / price if price > 0 else 99.0,
-                                "r_swing_low_stop": r_struct_stop,
-                            })
+                            if r_stop_pct <= 5.0:  # Skip if structural stop too far (stale divergence)
+                                signals.append({
+                                    "symbol": ticker,
+                                    "strategy": "R",
+                                    "price": price,
+                                    "atr14": sig_atr14,
+                                    "stop_pct": r_stop_pct,
+                                    "atr_norm": sig_atr14 / price if price > 0 else 99.0,
+                                    "r_swing_low_stop": r_struct_stop,
+                                })
 
             total_signals += len(signals)
 
