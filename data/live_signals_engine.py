@@ -496,18 +496,26 @@ class LiveSignalsEngine:
         pnl_pct = round(((exit_price - pos["entry_price"]) / pos["entry_price"]) * 100, 2)
         pnl_amount = round((exit_price - pos["entry_price"]) * shares_to_exit, 2)
 
+        exit_date_str = datetime.now().strftime("%Y-%m-%d")
+        try:
+            holding_days = (datetime.strptime(exit_date_str, "%Y-%m-%d")
+                            - datetime.strptime(pos["entry_date"], "%Y-%m-%d")).days
+        except Exception:
+            holding_days = 0
+
         closed_record = {
             "id": pos["id"],
             "ticker": pos["ticker"],
             "strategy": pos["strategy"],
             "entry_date": pos["entry_date"],
             "entry_price": pos["entry_price"],
-            "exit_date": datetime.now().strftime("%Y-%m-%d"),
+            "exit_date": exit_date_str,
             "exit_price": round(exit_price, 2),
             "shares_exited": shares_to_exit,
             "reason": reason,
             "pnl_pct": pnl_pct,
             "pnl_amount": pnl_amount,
+            "holding_days": holding_days,
         }
 
         remaining = current_shares - shares_to_exit

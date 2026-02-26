@@ -2511,6 +2511,7 @@
                             <td class="${amtClass}" style="text-align:right">${amtSign}${fmt(c.pnl_amount || 0)}</td>
                             <td>${c.reason}</td>
                             <td>${c.exit_date}</td>
+                            <td style="text-align:right">${c.holding_days != null ? c.holding_days + 'd' : ''}</td>
                         </tr>`;
                     }).join('');
                     panel.innerHTML = `
@@ -2521,7 +2522,7 @@
                             <span style="color:var(--text-muted);">WR: ${closed.length > 0 ? Math.round(wins / closed.length * 100) : 0}%</span>
                         </div>
                         <table class="stock-table">
-                            <thead><tr><th>Stock</th><th>Strat</th><th>Entry</th><th>Exit</th><th>Shares</th><th>P&L%</th><th>P&L &#8377;</th><th>Reason</th><th>Date</th></tr></thead>
+                            <thead><tr><th>Stock</th><th>Strat</th><th>Entry</th><th>Exit</th><th>Shares</th><th>P&L%</th><th>P&L &#8377;</th><th>Reason</th><th>Date</th><th>Hold</th></tr></thead>
                             <tbody>${rows}</tbody>
                         </table>
                     `;
