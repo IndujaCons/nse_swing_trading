@@ -441,7 +441,7 @@ In a trending market, T generates the most signals. In a rangebound market, J sh
 
 ### Capital Allocation
 
-The system allocates a fixed amount per trade (e.g., Rs 2,00,000) regardless of which strategy generated the signal. On any given day, up to 3 new positions can be opened. Signals are ranked by risk (lowest volatility first) so the system prefers calmer stocks over volatile ones.
+The system allocates a fixed amount per trade (e.g., Rs 2,00,000) regardless of which strategy generated the signal. A maximum of **3 new trades per day** is enforced — even if 10 signals fire on the same day, only the best 3 are taken. Signals are ranked by risk (lowest volatility first) so the system prefers calmer stocks over volatile ones.
 
 ### Risk Management
 
