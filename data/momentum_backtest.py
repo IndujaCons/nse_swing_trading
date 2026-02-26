@@ -133,6 +133,44 @@ class MomentumBacktester:
         return False, None
 
     @staticmethod
+    def _explain_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
+                                     max_lookback=50, min_sep=5,
+                                     rsi_threshold=40, min_rsi_divergence=3,
+                                     min_price_drop=0.0):
+        """Like _detect_bullish_divergence but returns full detail for explanation.
+
+        Returns (True, detail_dict) or (False, None).
+        detail_dict has: prev_idx, prev_low, prev_rsi, curr_idx, curr_low, curr_rsi
+        """
+        recent = [(idx, val) for idx, val in swing_lows
+                  if idx <= i and i - idx <= max_lookback]
+        if len(recent) < 2:
+            return False, None
+
+        for k in range(len(recent) - 1, 0, -1):
+            curr_idx, curr_low = recent[k]
+            prev_idx, prev_low = recent[k - 1]
+            if curr_idx - prev_idx < min_sep:
+                continue
+            if curr_low >= prev_low * (1 - min_price_drop):
+                continue
+            curr_rsi = rsi14_vals[curr_idx]
+            prev_rsi = rsi14_vals[prev_idx]
+            if np.isnan(curr_rsi) or np.isnan(prev_rsi):
+                continue
+            if curr_rsi - prev_rsi < min_rsi_divergence:
+                continue
+            if curr_rsi >= rsi_threshold:
+                continue
+            return True, {
+                "prev_idx": prev_idx, "prev_low": float(prev_low),
+                "prev_rsi": float(prev_rsi),
+                "curr_idx": curr_idx, "curr_low": float(curr_low),
+                "curr_rsi": float(curr_rsi),
+            }
+        return False, None
+
+    @staticmethod
     def _calculate_cci_series(highs: pd.Series, lows: pd.Series, closes: pd.Series, period: int = 20) -> pd.Series:
         """Calculate Commodity Channel Index (CCI) series."""
         tp = (highs + lows + closes) / 3
@@ -704,6 +742,267 @@ class MomentumBacktester:
             "profit_factor": round(min(profit_factor, 999.99), 2),
             "avg_holding_days": round(
                 sum(t["holding_days"] for t in trades) / len(trades), 1),
+        }
+
+    REASON_LABELS = {
+        "5PCT_PARTIAL": "Hit +5% target, sold 50%",
+        "10PCT": "Hit +10% target, sold remaining",
+        "SUPPORT_BREAK": "Close broke below weekly support stop",
+        "CHANDELIER_EXIT": "Chandelier trailing stop triggered",
+        "UNDERWATER_EXIT": "Held 10+ days underwater, cut loss",
+        "BACKTEST_END": "Position still open at backtest end",
+        "PARTIAL_6PCT_1of3": "Hit +6% target, sold 1/3",
+        "PARTIAL_10PCT_2of3": "Hit +10% target, sold 1/3",
+        "KELTNER_UPPER_EXIT": "Upper Keltner band reached, sold remaining",
+        "HARD_SL_5PCT": "Hard 5% stop-loss triggered",
+        "HARD_SL_3PCT": "Tight 3% stop-loss triggered (post partial)",
+        "STRUCTURAL_SL": "Structural stop (1% below swing low) hit",
+        "PARTIAL_5PCT": "Hit +5% target, sold partial",
+    }
+
+    def explain_trade(self, symbol, strategy, entry_date_str):
+        """Explain a single trade: setup indicators, entry, exit progression, P&L.
+
+        Args:
+            symbol: NSE ticker
+            strategy: "J", "T", or "R"
+            entry_date_str: "YYYY-MM-DD"
+
+        Returns dict with {symbol, strategy, setup, entry, exits, result} or {error}.
+        """
+        from datetime import datetime as dt
+
+        target_date = dt.strptime(entry_date_str, "%Y-%m-%d").date()
+
+        # Run backtest with a 120-day window around target date
+        window_start = target_date - timedelta(days=60)
+        window_end = target_date + timedelta(days=120)
+        if window_end.date() if hasattr(window_end, 'date') else window_end > datetime.now().date():
+            window_end = datetime.now()
+        else:
+            window_end = datetime.combine(window_end, datetime.min.time())
+
+        period_days = (window_end.date() - window_start).days if hasattr(window_end, 'date') else (window_end - window_start).days
+        result = self.run(symbol, period_days, strategy=strategy, end_date=window_end)
+
+        if "error" in result:
+            return {"error": result["error"]}
+
+        trades = result.get("trades", [])
+        if not trades:
+            return {"error": f"No {strategy} trades found for {symbol} in the window around {entry_date_str}"}
+
+        # Find trades matching entry_date (±3 day tolerance)
+        matched = []
+        for t in trades:
+            t_entry = dt.strptime(t["entry_date"], "%Y-%m-%d").date()
+            if abs((t_entry - target_date).days) <= 3:
+                matched.append(t)
+
+        if not matched:
+            # List available entry dates for debugging
+            available = sorted(set(t["entry_date"] for t in trades))
+            return {"error": f"No trade on {entry_date_str} (±3d). Available entry dates: {', '.join(available[:10])}"}
+
+        entry_date_actual = dt.strptime(matched[0]["entry_date"], "%Y-%m-%d").date()
+        entry_price = matched[0]["entry_price"]
+        shares_total = sum(t["shares"] for t in matched)
+
+        # Fetch raw OHLCV for indicator snapshots
+        nse_symbol = f"{symbol}.NS"
+        fetch_start = entry_date_actual - timedelta(days=300)
+        try:
+            raw = yf.Ticker(nse_symbol).history(start=fetch_start, end=window_end)
+        except Exception:
+            raw = pd.DataFrame()
+
+        if raw.empty or len(raw) < 50:
+            return {"error": f"Could not fetch price data for {symbol}"}
+
+        # Find entry bar index
+        entry_i = None
+        for idx_i, ts in enumerate(raw.index):
+            if ts.date() == entry_date_actual:
+                entry_i = idx_i
+                break
+
+        if entry_i is None:
+            return {"error": f"Entry date {entry_date_actual} not found in price data"}
+
+        closes = raw["Close"]
+        opens = raw["Open"]
+        highs = raw["High"]
+        lows = raw["Low"]
+
+        # Build setup explanation
+        setup = {"strategy": strategy}
+
+        if strategy == "J":
+            # Weekly support, IBS, CCI, distance
+            weekly = raw.resample("W-FRI").agg({
+                "Open": "first", "High": "max", "Low": "min",
+                "Close": "last", "Volume": "sum"
+            }).dropna()
+            w_support = weekly["Close"].rolling(window=26, min_periods=26).min().shift(2)
+            w_support_daily = w_support.reindex(raw.index, method="ffill")
+            w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min().shift(2)
+            w_low_stop_daily = w_low_stop.reindex(raw.index, method="ffill")
+
+            ws = float(w_support_daily.iloc[entry_i]) if not pd.isna(w_support_daily.iloc[entry_i]) else 0
+            wls = float(w_low_stop_daily.iloc[entry_i]) if not pd.isna(w_low_stop_daily.iloc[entry_i]) else 0
+
+            hl_range = highs.iloc[entry_i] - lows.iloc[entry_i]
+            ibs_val = float((closes.iloc[entry_i] - lows.iloc[entry_i]) / hl_range) if hl_range > 0 else 0.5
+            cci_series = self._calculate_cci_series(highs, lows, closes, 20)
+            cci_val = float(cci_series.iloc[entry_i]) if not pd.isna(cci_series.iloc[entry_i]) else 0
+
+            dist_pct = round(((entry_price - ws) / ws) * 100, 2) if ws > 0 else 0
+            stop_dist = round(((entry_price - wls) / entry_price) * 100, 2) if wls > 0 else 0
+
+            setup["description"] = f"{symbol} was trading near its 26-week support level (weekly close support at {ws:,.2f})"
+            setup["weekly_support"] = round(ws, 2)
+            setup["weekly_low_stop"] = round(wls, 2)
+            setup["ibs"] = round(ibs_val, 2)
+            setup["cci20"] = round(cci_val, 1)
+            setup["distance_from_support"] = f"{dist_pct}%"
+            setup["stop_distance"] = f"{stop_dist}%"
+
+        elif strategy == "T":
+            # EMA20, upper Keltner, last touch, pullback depth, ATR14
+            ema20_series = closes.ewm(span=20, adjust=False).mean()
+            prev_close_s = closes.shift(1)
+            tr1 = highs - lows
+            tr2 = (highs - prev_close_s).abs()
+            tr3 = (lows - prev_close_s).abs()
+            true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+            atr14_series = true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+
+            ema20_val = float(ema20_series.iloc[entry_i])
+            atr14_val = float(atr14_series.iloc[entry_i]) if not pd.isna(atr14_series.iloc[entry_i]) else 0
+            upper_k = ema20_val + 2 * atr14_val
+
+            # Find last touch of upper Keltner
+            last_touch_date = None
+            pullback_high = 0
+            for lb in range(entry_i - 1, max(entry_i - 11, -1), -1):
+                past_h = float(highs.iloc[lb])
+                past_ema20 = float(ema20_series.iloc[lb])
+                past_atr14 = float(atr14_series.iloc[lb]) if not pd.isna(atr14_series.iloc[lb]) else 0
+                past_upper = past_ema20 + 2 * past_atr14
+                if past_h >= past_upper:
+                    last_touch_date = raw.index[lb].strftime("%b %d")
+                    pullback_high = past_h
+                    break
+
+            pullback_pct = round(((pullback_high - entry_price) / pullback_high) * 100, 2) if pullback_high > 0 else 0
+
+            setup["description"] = f"{symbol} pulled back to EMA(20) after touching upper Keltner band"
+            setup["ema20"] = round(ema20_val, 2)
+            setup["upper_keltner"] = round(upper_k, 2)
+            setup["atr14"] = round(atr14_val, 2)
+            setup["last_keltner_touch"] = last_touch_date or "N/A"
+            setup["pullback_depth"] = f"{pullback_pct}%"
+            setup["stop"] = f"{round(entry_price * 0.95, 2)} (5% hard SL)"
+
+        elif strategy == "R":
+            # Swing lows, RSI values, divergence detail
+            rsi14_series = self._calculate_rsi_series(closes, 14)
+            swing_lows = self._find_swing_lows(lows)
+            rsi14_vals = rsi14_series.values
+            lows_vals = lows.values
+
+            found, detail = self._explain_bullish_divergence(
+                lows_vals, rsi14_vals, entry_i, swing_lows)
+
+            if found and detail:
+                prev_date = raw.index[detail["prev_idx"]].strftime("%b %d")
+                curr_date = raw.index[detail["curr_idx"]].strftime("%b %d")
+                rsi_div = round(detail["curr_rsi"] - detail["prev_rsi"], 1)
+                price_drop = round(((detail["curr_low"] - detail["prev_low"]) / detail["prev_low"]) * 100, 1)
+                struct_stop = round(detail["curr_low"] * 0.99, 2)
+                stop_pct = round(((entry_price - struct_stop) / entry_price) * 100, 1)
+
+                setup["description"] = f"{symbol} showed bullish RSI divergence — price made lower low but RSI made higher low"
+                setup["swing_low_1"] = {
+                    "date": prev_date,
+                    "price": round(detail["prev_low"], 2),
+                    "rsi": round(detail["prev_rsi"], 1),
+                }
+                setup["swing_low_2"] = {
+                    "date": curr_date,
+                    "price": round(detail["curr_low"], 2),
+                    "rsi": round(detail["curr_rsi"], 1),
+                }
+                setup["rsi_divergence"] = f"+{rsi_div} points"
+                setup["price_drop"] = f"{price_drop}%"
+                setup["structural_stop"] = struct_stop
+                setup["stop_distance"] = f"{stop_pct}%"
+            else:
+                setup["description"] = f"{symbol} had bullish RSI divergence signal (detail unavailable for exact entry bar)"
+
+        # Entry details
+        o = round(float(opens.iloc[entry_i]), 2)
+        h = round(float(highs.iloc[entry_i]), 2)
+        l = round(float(lows.iloc[entry_i]), 2)
+        c = round(float(closes.iloc[entry_i]), 2)
+
+        entry_info = {
+            "date": entry_date_actual.strftime("%b %d, %Y"),
+            "price": entry_price,
+            "open": o, "high": h, "low": l, "close": c,
+            "shares": shares_total,
+            "capital": round(entry_price * shares_total, 2),
+        }
+        if strategy == "J" and "weekly_low_stop" in setup:
+            entry_info["stop"] = setup["weekly_low_stop"]
+            entry_info["stop_type"] = "Weekly Low Support"
+            entry_info["stop_pct"] = setup.get("stop_distance", "")
+        elif strategy == "T":
+            entry_info["stop"] = round(entry_price * 0.95, 2)
+            entry_info["stop_type"] = "Hard 5% SL"
+            entry_info["stop_pct"] = "5.0%"
+        elif strategy == "R" and "structural_stop" in setup:
+            entry_info["stop"] = setup["structural_stop"]
+            entry_info["stop_type"] = "Structural (1% below swing low)"
+            entry_info["stop_pct"] = setup.get("stop_distance", "")
+
+        # Exit progression
+        exits = []
+        for idx, t in enumerate(matched):
+            pnl_pct = t["pnl_pct"]
+            label = self.REASON_LABELS.get(t["exit_reason"], t["exit_reason"])
+            exits.append({
+                "stage": idx + 1,
+                "date": dt.strptime(t["exit_date"], "%Y-%m-%d").date().strftime("%b %d"),
+                "price": t["exit_price"],
+                "shares": t["shares"],
+                "pnl_pct": f"{'+' if pnl_pct >= 0 else ''}{pnl_pct}%",
+                "pnl": t["pnl"],
+                "reason": label,
+                "reason_code": t["exit_reason"],
+            })
+
+        # Result summary
+        total_pnl = round(sum(t["pnl"] for t in matched), 2)
+        total_capital = round(entry_price * shares_total, 2)
+        total_pnl_pct = round((total_pnl / total_capital) * 100, 1) if total_capital > 0 else 0
+        last_exit = dt.strptime(matched[-1]["exit_date"], "%Y-%m-%d").date()
+        holding_days = (last_exit - entry_date_actual).days
+
+        result_info = {
+            "winner": total_pnl > 0,
+            "total_pnl": total_pnl,
+            "total_pnl_pct": total_pnl_pct,
+            "holding_days": holding_days,
+        }
+
+        return {
+            "symbol": symbol,
+            "strategy": strategy,
+            "setup": setup,
+            "entry": entry_info,
+            "exits": exits,
+            "result": result_info,
         }
 
     def run_portfolio_backtest(self, period_days, universe=50,

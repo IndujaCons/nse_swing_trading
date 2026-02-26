@@ -674,6 +674,30 @@ def run_momentum_backtest():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route("/api/momentum/explain-trade", methods=["POST"])
+def explain_trade():
+    """Explain a single trade: setup, entry, exit progression, P&L."""
+    data = request.get_json()
+    symbol = data.get("symbol")
+    strategy = data.get("strategy")
+    entry_date = data.get("entry_date")
+
+    if not symbol or not strategy or not entry_date:
+        return jsonify({"success": False, "error": "symbol, strategy, entry_date required"}), 400
+
+    if strategy not in ("J", "T", "R"):
+        return jsonify({"success": False, "error": "strategy must be J, T, or R"}), 400
+
+    try:
+        backtester = MomentumBacktester()
+        result = backtester.explain_trade(symbol, strategy, entry_date)
+        if "error" in result:
+            return jsonify({"success": False, "error": result["error"]})
+        return jsonify({"success": True, "data": result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 def update_batch_progress(current, total, ticker):
     """Update progress callback for batch backtest."""
     global batch_backtest_progress

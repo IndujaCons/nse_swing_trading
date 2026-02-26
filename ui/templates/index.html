@@ -866,6 +866,97 @@
         .pnl-positive { color: var(--green); font-weight: 500; }
         .pnl-negative { color: var(--red); font-weight: 500; }
 
+        /* Trade Explain styles */
+        .trade-explain {
+            height: calc(100vh - 60px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+        .explain-banner {
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .explain-banner.winner {
+            background: var(--green-light);
+            color: #1a7a3a;
+            border: 1px solid #a3dfbb;
+        }
+        .explain-banner.loser {
+            background: var(--red-light);
+            color: #b03a2e;
+            border: 1px solid #f1948a;
+        }
+        .explain-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 14px 16px;
+        }
+        .explain-card-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+        .explain-card p {
+            margin: 4px 0;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .explain-card .detail-label {
+            color: var(--text-muted);
+            display: inline-block;
+            min-width: 140px;
+        }
+        .explain-card .detail-value {
+            font-weight: 500;
+        }
+        .explain-desc {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 8px !important;
+        }
+        .exit-stage {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .exit-stage:last-child { border-bottom: none; }
+        .exit-stage-num {
+            background: var(--bg-card);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .exit-stage-detail { flex: 1; }
+        .exit-stage-detail .exit-line {
+            font-size: 12px;
+            margin: 1px 0;
+        }
+        .exit-stage-detail .exit-reason {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
         /* Batch backtest matrix styles */
         .batch-results {
             height: calc(100vh - 60px);
@@ -963,6 +1054,7 @@
                 <button class="strategy-tab active" onclick="switchStrategy('rs')">Watchlist</button>
                 <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
                 <button class="strategy-tab" onclick="switchStrategy('momentum')">Backtest</button>
+                <button class="strategy-tab" onclick="switchStrategy('trade_explain')">Trade Explain</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -1213,6 +1305,120 @@
                     <span class="setting-value" id="paper-trades-count">0</span>
                 </div>
             </div>
+
+            <div class="section hidden" id="trade-explain-settings">
+                <div class="section-title">Trade Explain</div>
+                <select class="backtest-select" id="explain-strategy">
+                    <option value="J">Strategy J — weekly support</option>
+                    <option value="T">Strategy T — Keltner pullback</option>
+                    <option value="R">Strategy R — RSI divergence</option>
+                </select>
+                <select class="backtest-select" id="explain-symbol">
+                    <option value="">-- Select Symbol --</option>
+                    <option value="ABB">ABB</option>
+                    <option value="ADANIENT">ADANIENT</option>
+                    <option value="ADANIENSOL">ADANIENSOL</option>
+                    <option value="ADANIGREEN">ADANIGREEN</option>
+                    <option value="ADANIPORTS">ADANIPORTS</option>
+                    <option value="ADANIPOWER">ADANIPOWER</option>
+                    <option value="AMBUJACEM">AMBUJACEM</option>
+                    <option value="APOLLOHOSP">APOLLOHOSP</option>
+                    <option value="ASIANPAINT">ASIANPAINT</option>
+                    <option value="ATGL">ATGL</option>
+                    <option value="AUROPHARMA">AUROPHARMA</option>
+                    <option value="AXISBANK">AXISBANK</option>
+                    <option value="BAJAJ-AUTO">BAJAJ-AUTO</option>
+                    <option value="BAJAJFINSV">BAJAJFINSV</option>
+                    <option value="BAJAJHLDNG">BAJAJHLDNG</option>
+                    <option value="BANKBARODA">BANKBARODA</option>
+                    <option value="BEL">BEL</option>
+                    <option value="BHARTIARTL">BHARTIARTL</option>
+                    <option value="BHEL">BHEL</option>
+                    <option value="BPCL">BPCL</option>
+                    <option value="BOSCHLTD">BOSCHLTD</option>
+                    <option value="BRITANNIA">BRITANNIA</option>
+                    <option value="CANBK">CANBK</option>
+                    <option value="CHOLAFIN">CHOLAFIN</option>
+                    <option value="CIPLA">CIPLA</option>
+                    <option value="COALINDIA">COALINDIA</option>
+                    <option value="COLPAL">COLPAL</option>
+                    <option value="DABUR">DABUR</option>
+                    <option value="DLF">DLF</option>
+                    <option value="DRREDDY">DRREDDY</option>
+                    <option value="EICHERMOT">EICHERMOT</option>
+                    <option value="GAIL">GAIL</option>
+                    <option value="GODREJCP">GODREJCP</option>
+                    <option value="GRASIM">GRASIM</option>
+                    <option value="HAL">HAL</option>
+                    <option value="HAVELLS">HAVELLS</option>
+                    <option value="HCLTECH">HCLTECH</option>
+                    <option value="HDFCBANK">HDFCBANK</option>
+                    <option value="HDFCLIFE">HDFCLIFE</option>
+                    <option value="HEROMOTOCO">HEROMOTOCO</option>
+                    <option value="HINDALCO">HINDALCO</option>
+                    <option value="HINDUNILVR">HINDUNILVR</option>
+                    <option value="ICICIBANK">ICICIBANK</option>
+                    <option value="ICICIGI">ICICIGI</option>
+                    <option value="ICICIPRULI">ICICIPRULI</option>
+                    <option value="INDIGO">INDIGO</option>
+                    <option value="INDUSINDBK">INDUSINDBK</option>
+                    <option value="INDUSTOWER">INDUSTOWER</option>
+                    <option value="INFY">INFY</option>
+                    <option value="IOC">IOC</option>
+                    <option value="IRFC">IRFC</option>
+                    <option value="ITC">ITC</option>
+                    <option value="JIOFIN">JIOFIN</option>
+                    <option value="JSWENERGY">JSWENERGY</option>
+                    <option value="JSWSTEEL">JSWSTEEL</option>
+                    <option value="KOTAKBANK">KOTAKBANK</option>
+                    <option value="LICI">LICI</option>
+                    <option value="LODHA">LODHA</option>
+                    <option value="LT">LT</option>
+                    <option value="LUPIN">LUPIN</option>
+                    <option value="M&M">M&amp;M</option>
+                    <option value="MANKIND">MANKIND</option>
+                    <option value="MARICO">MARICO</option>
+                    <option value="MARUTI">MARUTI</option>
+                    <option value="MOTHERSON">MOTHERSON</option>
+                    <option value="NAUKRI">NAUKRI</option>
+                    <option value="NESTLEIND">NESTLEIND</option>
+                    <option value="NHPC">NHPC</option>
+                    <option value="NTPC">NTPC</option>
+                    <option value="ONGC">ONGC</option>
+                    <option value="PFC">PFC</option>
+                    <option value="PIDILITIND">PIDILITIND</option>
+                    <option value="PNB">PNB</option>
+                    <option value="POLYCAB">POLYCAB</option>
+                    <option value="POWERGRID">POWERGRID</option>
+                    <option value="RECLTD">RECLTD</option>
+                    <option value="RELIANCE">RELIANCE</option>
+                    <option value="SBIN">SBIN</option>
+                    <option value="SBILIFE">SBILIFE</option>
+                    <option value="SHREECEM">SHREECEM</option>
+                    <option value="SIEMENS">SIEMENS</option>
+                    <option value="SRF">SRF</option>
+                    <option value="SUNPHARMA">SUNPHARMA</option>
+                    <option value="TATACONSUM">TATACONSUM</option>
+                    <option value="TATAPOWER">TATAPOWER</option>
+                    <option value="TATASTEEL">TATASTEEL</option>
+                    <option value="TCS">TCS</option>
+                    <option value="TECHM">TECHM</option>
+                    <option value="TITAN">TITAN</option>
+                    <option value="TORNTPHARM">TORNTPHARM</option>
+                    <option value="TRENT">TRENT</option>
+                    <option value="TVSMOTOR">TVSMOTOR</option>
+                    <option value="ULTRACEMCO">ULTRACEMCO</option>
+                    <option value="UNITDSPR">UNITDSPR</option>
+                    <option value="VEDL">VEDL</option>
+                    <option value="WIPRO">WIPRO</option>
+                    <option value="ZOMATO">ZOMATO</option>
+                </select>
+                <div style="display:flex; gap:4px; align-items:center; margin:4px 0;">
+                    <label style="font-size:11px; color:var(--text-secondary); width:52px;">Entry</label>
+                    <input type="date" class="backtest-select" id="explain-date" style="flex:1;">
+                </div>
+                <button class="btn btn-backtest" id="run-explain-btn" onclick="explainTrade()">Explain Trade</button>
+            </div>
         </aside>
 
         <!-- Main Content -->
@@ -1377,6 +1583,17 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Trade Explain Results -->
+            <div class="trade-explain hidden" id="trade-explain-results">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button class="btn btn-back" style="margin-bottom:0;" onclick="closeTradeExplain()">&larr; Back</button>
+                    <div style="flex:1;"></div>
+                </div>
+                <div id="trade-explain-content">
+                    <div class="empty-state">Select a stock, strategy, and entry date to explain a trade</div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -1465,17 +1682,20 @@
             if (strategy === 'rs') tabs[0].classList.add('active');
             else if (strategy === 'live_signals') tabs[1].classList.add('active');
             else if (strategy === 'momentum') tabs[2].classList.add('active');
+            else if (strategy === 'trade_explain') tabs[3].classList.add('active');
 
             // Toggle panels
             document.getElementById('rs-panels').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-panels').classList.toggle('hidden', strategy !== 'live_signals');
             document.getElementById('backtest-results').classList.add('hidden');
             document.getElementById('batch-results').classList.add('hidden');
+            document.getElementById('trade-explain-results').classList.toggle('hidden', strategy !== 'trade_explain');
 
             // Toggle sidebar settings
             document.getElementById('rs-settings').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-settings').classList.toggle('hidden', strategy !== 'live_signals');
             document.getElementById('momentum-settings').classList.toggle('hidden', strategy !== 'momentum');
+            document.getElementById('trade-explain-settings').classList.toggle('hidden', strategy !== 'trade_explain');
 
             // Lazy-load data on first switch
             if (strategy === 'live_signals' && !liveSignalsDataLoaded) {
@@ -2096,15 +2316,11 @@
                         <td>${s.close_near_pct.toFixed(1)}%</td>
                         <td class="rs-value positive">${s.ibs.toFixed(2)}</td>
                         <td style="color:${(s.stop_pct||0)<5?'var(--green)':'var(--red)'}">${(s.stop_pct||0).toFixed(1)}%</td>
-                        ${isHistorical ? '' : `<td style="white-space:nowrap;">
-                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-j-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
-                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'J', ${s.price}, ${s.stop}, ${s.ibs}, this)">Buy</button>
-                        </td>`}
                     </tr>
                 `).join('');
                 jPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>Supp</th><th>Dist%</th><th>IBS</th><th>Stop%</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>Supp</th><th>Dist%</th><th>IBS</th><th>Stop%</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -2125,15 +2341,11 @@
                         <td class="price">${s.ema20.toLocaleString()}</td>
                         <td class="price">${s.upper_keltner.toLocaleString()}</td>
                         <td style="color:var(--text-muted)">${(s.stop_pct||5).toFixed(1)}%</td>
-                        ${isHistorical ? '' : `<td style="white-space:nowrap;">
-                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-t-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
-                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'T', ${s.price}, 0, 0, this)">Buy</button>
-                        </td>`}
                     </tr>
                 `).join('');
                 tPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>EMA20</th><th>UpKelt</th><th>Stop%</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>EMA20</th><th>UpKelt</th><th>Stop%</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -2155,15 +2367,11 @@
                         <td class="price">${(s.swing_low||0).toLocaleString()}</td>
                         <td class="price">${(s.stop||0).toLocaleString()}</td>
                         <td style="color:${(s.stop_pct||0)<5?'var(--green)':'var(--red)'}">${(s.stop_pct||0).toFixed(1)}%</td>
-                        ${isHistorical ? '' : `<td style="white-space:nowrap;">
-                            <span style="font-size:11px;">&#8377;</span><input type="text" class="buy-input" id="amt-r-${s.ticker}" value="1,00,000" oninput="formatIndian(this)" onfocus="this.select()">
-                            <button class="trade-btn" onclick="buyLiveSignal('${s.ticker}', 'R', ${s.price}, ${s.stop}, 0, this)">Buy</button>
-                        </td>`}
                     </tr>
                 `).join('');
                 rPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>RSI14 (Low)</th><th>SwLow</th><th>Stop</th><th>Stop%</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>RSI14 (Low)</th><th>SwLow</th><th>Stop</th><th>Stop%</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -2275,21 +2483,45 @@
                 if (closed.length === 0) {
                     panel.innerHTML = '<div class="empty-state">No closed trades</div>';
                 } else {
+                    const fmt = (n) => Number(n).toLocaleString('en-IN', {maximumFractionDigits: 0});
+                    // Summary
+                    let totalPnl = 0;
+                    let wins = 0;
+                    let losses = 0;
+                    closed.forEach(c => {
+                        const amt = c.pnl_amount || 0;
+                        totalPnl += amt;
+                        if (amt >= 0) wins++; else losses++;
+                    });
+                    const totalClass = totalPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                    const totalSign = totalPnl >= 0 ? '+' : '';
+
                     const rows = closed.map(c => {
                         const pnlClass = c.pnl_pct >= 0 ? 'positive' : 'negative';
+                        const amtClass = (c.pnl_amount || 0) >= 0 ? 'pnl-positive' : 'pnl-negative';
+                        const amtSign = (c.pnl_amount || 0) >= 0 ? '+' : '';
+                        const shares = c.shares_exited || '';
                         return `<tr>
                             <td class="ticker">${c.ticker}</td>
                             <td>${c.strategy}</td>
                             <td class="price">${c.entry_price}</td>
                             <td class="price">${c.exit_price}</td>
+                            <td style="text-align:right">${shares}</td>
                             <td class="rs-value ${pnlClass}">${c.pnl_pct >= 0 ? '+' : ''}${c.pnl_pct}%</td>
+                            <td class="${amtClass}" style="text-align:right">${amtSign}${fmt(c.pnl_amount || 0)}</td>
                             <td>${c.reason}</td>
                             <td>${c.exit_date}</td>
                         </tr>`;
                     }).join('');
                     panel.innerHTML = `
+                        <div style="display:flex;gap:12px;padding:6px 10px;font-size:11px;border-bottom:1px solid var(--border-color);align-items:center;">
+                            <span style="color:var(--text-muted);">Total P&L:</span>
+                            <span class="${totalClass}" style="font-weight:600;font-size:13px;">${totalSign}&#8377;${fmt(Math.abs(totalPnl))}</span>
+                            <span style="color:var(--text-muted);margin-left:8px;">W: ${wins} / L: ${losses}</span>
+                            <span style="color:var(--text-muted);">WR: ${closed.length > 0 ? Math.round(wins / closed.length * 100) : 0}%</span>
+                        </div>
                         <table class="stock-table">
-                            <thead><tr><th>Stock</th><th>Strat</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Reason</th><th>Date</th></tr></thead>
+                            <thead><tr><th>Stock</th><th>Strat</th><th>Entry</th><th>Exit</th><th>Shares</th><th>P&L%</th><th>P&L &#8377;</th><th>Reason</th><th>Date</th></tr></thead>
                             <tbody>${rows}</tbody>
                         </table>
                     `;
@@ -2421,6 +2653,8 @@
                     if (data.success) {
                         showToast(data.message, 'success');
                         loadLivePositions();
+                        loadExitSignals();
+                        loadClosedTrades();
                     } else {
                         showToast(data.error || 'Exit failed', 'error');
                         btn.disabled = false;
@@ -2515,6 +2749,7 @@
                     showToast(`Exited ${data.closed.ticker}: ${pnl}`, data.closed.pnl_pct >= 0 ? 'success' : 'error');
                     loadLivePositions();
                     loadExitSignals();
+                    loadClosedTrades();
                 } else {
                     showToast(data.error || 'Exit failed', 'error');
                 }
@@ -2714,6 +2949,128 @@
 
         function closeBacktest() {
             document.getElementById('backtest-results').classList.add('hidden');
+        }
+
+        // ============ Trade Explain ============
+
+        async function explainTrade() {
+            const symbol = document.getElementById('explain-symbol').value;
+            const strategy = document.getElementById('explain-strategy').value;
+            const entryDate = document.getElementById('explain-date').value;
+
+            if (!symbol) { showToast('Select a symbol', 'error'); return; }
+            if (!entryDate) { showToast('Select an entry date', 'error'); return; }
+
+            const btn = document.getElementById('run-explain-btn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            const container = document.getElementById('trade-explain-content');
+            container.innerHTML = `<div class="loading-container"><div class="loader"></div><span>Fetching trade data for ${symbol}...</span></div>`;
+            document.getElementById('trade-explain-results').classList.remove('hidden');
+
+            try {
+                const res = await fetch('/api/momentum/explain-trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol, strategy, entry_date: entryDate })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    renderTradeExplanation(data.data);
+                    showToast(`Trade explained: ${symbol} ${strategy}`, 'success');
+                } else {
+                    container.innerHTML = `<div class="empty-state" style="color:var(--red);">${data.error || 'Failed to explain trade'}</div>`;
+                    showToast(data.error || 'Failed', 'error');
+                }
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state" style="color:var(--red);">Request failed</div>`;
+                showToast('Request failed', 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                btn.textContent = 'Explain Trade';
+            }
+        }
+
+        function renderTradeExplanation(d) {
+            const r = d.result;
+            const fmt = (n) => Number(n).toLocaleString('en-IN', {maximumFractionDigits: 2});
+            const bannerCls = r.winner ? 'winner' : 'loser';
+            const sign = r.total_pnl >= 0 ? '+' : '';
+
+            let html = '';
+
+            // Result banner
+            html += `<div class="explain-banner ${bannerCls}">
+                ${r.winner ? 'Winner' : 'Loser'} &nbsp; ${sign}&#8377;${fmt(r.total_pnl)} &nbsp; (${sign}${r.total_pnl_pct}%) &nbsp; ${r.holding_days}d hold
+            </div>`;
+
+            // Setup card
+            const s = d.setup;
+            html += `<div class="explain-card">
+                <div class="explain-card-title">Setup &mdash; Why This Trade Was Taken</div>`;
+            if (s.description) {
+                html += `<p class="explain-desc">"${s.description}"</p>`;
+            }
+            if (s.strategy === 'J') {
+                html += `<p><span class="detail-label">Weekly Support:</span> <span class="detail-value">&#8377;${fmt(s.weekly_support)}</span></p>`;
+                html += `<p><span class="detail-label">Weekly Low Stop:</span> <span class="detail-value">&#8377;${fmt(s.weekly_low_stop)}</span></p>`;
+                html += `<p><span class="detail-label">IBS:</span> <span class="detail-value">${s.ibs}</span></p>`;
+                html += `<p><span class="detail-label">CCI(20):</span> <span class="detail-value">${s.cci20}</span></p>`;
+                html += `<p><span class="detail-label">Distance from Support:</span> <span class="detail-value">${s.distance_from_support}</span></p>`;
+            } else if (s.strategy === 'T') {
+                html += `<p><span class="detail-label">EMA(20):</span> <span class="detail-value">&#8377;${fmt(s.ema20)}</span></p>`;
+                html += `<p><span class="detail-label">Upper Keltner:</span> <span class="detail-value">&#8377;${fmt(s.upper_keltner)}</span></p>`;
+                html += `<p><span class="detail-label">ATR(14):</span> <span class="detail-value">&#8377;${fmt(s.atr14)}</span></p>`;
+                html += `<p><span class="detail-label">Last Keltner Touch:</span> <span class="detail-value">${s.last_keltner_touch}</span></p>`;
+                html += `<p><span class="detail-label">Pullback Depth:</span> <span class="detail-value">${s.pullback_depth}</span></p>`;
+            } else if (s.strategy === 'R') {
+                if (s.swing_low_1) {
+                    html += `<p><span class="detail-label">Swing Low 1:</span> <span class="detail-value">&#8377;${fmt(s.swing_low_1.price)} on ${s.swing_low_1.date} (RSI ${s.swing_low_1.rsi})</span></p>`;
+                    html += `<p><span class="detail-label">Swing Low 2:</span> <span class="detail-value">&#8377;${fmt(s.swing_low_2.price)} on ${s.swing_low_2.date} (RSI ${s.swing_low_2.rsi})</span></p>`;
+                    html += `<p><span class="detail-label">RSI Divergence:</span> <span class="detail-value">${s.rsi_divergence}</span></p>`;
+                    html += `<p><span class="detail-label">Price Drop:</span> <span class="detail-value">${s.price_drop}</span></p>`;
+                    html += `<p><span class="detail-label">Structural Stop:</span> <span class="detail-value">&#8377;${fmt(s.structural_stop)} (${s.stop_distance} away)</span></p>`;
+                }
+            }
+            html += `</div>`;
+
+            // Entry card
+            const e = d.entry;
+            html += `<div class="explain-card">
+                <div class="explain-card-title">Entry</div>
+                <p><span class="detail-label">Date:</span> <span class="detail-value">${e.date}</span></p>
+                <p><span class="detail-label">Price:</span> <span class="detail-value">&#8377;${fmt(e.price)}</span></p>
+                <p><span class="detail-label">Candle:</span> <span class="detail-value">O:${fmt(e.open)} H:${fmt(e.high)} L:${fmt(e.low)} C:${fmt(e.close)}</span></p>
+                <p><span class="detail-label">Stop:</span> <span class="detail-value">&#8377;${fmt(e.stop)} (${e.stop_type}, ${e.stop_pct} away)</span></p>
+                <p><span class="detail-label">Shares:</span> <span class="detail-value">${e.shares}</span></p>
+                <p><span class="detail-label">Capital:</span> <span class="detail-value">&#8377;${fmt(e.capital)}</span></p>
+            </div>`;
+
+            // Exit progression
+            html += `<div class="explain-card">
+                <div class="explain-card-title">Exit Progression</div>`;
+            d.exits.forEach(ex => {
+                const pnlCls = ex.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                const pnlSign = ex.pnl >= 0 ? '+' : '';
+                html += `<div class="exit-stage">
+                    <div class="exit-stage-num">#${ex.stage}</div>
+                    <div class="exit-stage-detail">
+                        <div class="exit-line"><strong>${ex.date}</strong> &nbsp; &#8377;${fmt(ex.price)} &nbsp; ${ex.shares}sh &nbsp; <span class="${pnlCls}">${ex.pnl_pct}</span> &nbsp; <span class="${pnlCls}">${pnlSign}&#8377;${fmt(ex.pnl)}</span></div>
+                        <div class="exit-reason">${ex.reason}</div>
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+
+            document.getElementById('trade-explain-content').innerHTML = html;
+        }
+
+        function closeTradeExplain() {
+            document.getElementById('trade-explain-results').classList.add('hidden');
         }
 
         // ============ Batch Backtest ============
