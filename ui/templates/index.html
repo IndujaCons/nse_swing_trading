@@ -130,6 +130,7 @@
             padding: 12px;
             flex-shrink: 0;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .section {
@@ -296,6 +297,7 @@
 
         .user-card .user-card-actions {
             display: flex;
+            flex-wrap: wrap;
             gap: 4px;
             margin-top: 4px;
         }
@@ -313,6 +315,7 @@
 
         .user-card .token-row input {
             flex: 1;
+            min-width: 0;
             font-size: 10px;
             padding: 3px 6px;
             border: 1px solid var(--border-color);
