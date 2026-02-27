@@ -369,7 +369,7 @@
             flex: 1;
             padding: 10px;
             overflow-x: auto;
-            overflow-y: hidden;
+            overflow-y: auto;
         }
 
         .panels {
@@ -707,8 +707,8 @@
         }
         .ls-bottom-row {
             grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
         }
 
