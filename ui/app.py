@@ -100,6 +100,7 @@ portfolio_backtest_in_progress = False
 portfolio_backtest_progress = {"current": 0, "total": 0, "ticker": ""}
 
 
+
 def get_refresh_progress():
     """Get current refresh progress."""
     global refresh_progress

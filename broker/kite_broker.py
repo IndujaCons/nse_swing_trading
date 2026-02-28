@@ -289,6 +289,31 @@ class KiteBroker:
         """Clear all paper trades."""
         self._save_paper_trades([])
 
+    # Kite Data API Wrappers
+
+    def get_instruments(self, exchange="NSE"):
+        """Fetch instrument list from Kite for a given exchange."""
+        if not self._kite:
+            raise RuntimeError("Not connected to Zerodha.")
+        return self._kite.instruments(exchange)
+
+    def get_historical_data(self, instrument_token, from_date, to_date, interval="30minute"):
+        """Fetch historical candle data from Kite.
+
+        Args:
+            instrument_token: Kite instrument token (int)
+            from_date: datetime or date object
+            to_date: datetime or date object
+            interval: candle interval (e.g. '30minute', 'day')
+
+        Returns:
+            List of candle dicts with date, open, high, low, close, volume
+        """
+        if not self._kite:
+            raise RuntimeError("Not connected to Zerodha.")
+        return self._kite.historical_data(
+            instrument_token, from_date, to_date, interval)
+
     # Live Order Placement
 
     def place_buy_order(self, ticker: str, quantity: int, price: float = None) -> Dict:
