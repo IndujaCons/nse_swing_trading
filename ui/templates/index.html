@@ -2382,13 +2382,14 @@
                 `;
             }
 
-            // Top Picks — combine J+T+R, rank by ATR% (lowest volatility first)
+            // Top Picks — combine J+T+R, rank by R priority then ATR% (lowest volatility first)
             const picksPanel = document.getElementById('ls-picks-panel');
+            const stratPriority = {'R': 0, 'J': 1, 'T': 2};
             const allSignals = [
                 ...jSignals.map(s => ({...s, strategy: 'J', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
                 ...tSignals.map(s => ({...s, strategy: 'T', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
                 ...rSignals.map(s => ({...s, strategy: 'R', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
-            ].sort((a, b) => a.atr_pct - b.atr_pct);
+            ].sort((a, b) => (stratPriority[a.strategy] ?? 9) - (stratPriority[b.strategy] ?? 9) || a.atr_pct - b.atr_pct);
             document.getElementById('ls-picks-count').textContent = allSignals.length;
 
             if (allSignals.length === 0) {

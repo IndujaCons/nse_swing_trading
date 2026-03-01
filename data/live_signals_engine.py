@@ -338,6 +338,7 @@ class LiveSignalsEngine:
                 pass
 
         # Sort by volatility (lowest ATR% first = calmest stocks)
+        # R gets priority in combined ranking (best WR + P&L historically)
         j_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         t_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         r_signals.sort(key=lambda s: s.get("atr_pct", 99.0))

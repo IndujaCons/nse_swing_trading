@@ -1487,9 +1487,10 @@ class MomentumBacktester:
             max_today = min(entries_per_day, available_slots)
             if signals and max_today > 0:
                 if rank_by_risk:
-                    # Lowest volatility first (ATR/price); seed-based jitter for tiebreaker
+                    # Priority strategy first (R), then lowest ATR
                     rng = random.Random(seed)
-                    signals.sort(key=lambda s: (s.get("atr_norm", 99.0), rng.random()))
+                    strat_priority = {"R": 0, "J": 1, "T": 2}
+                    signals.sort(key=lambda s: (strat_priority.get(s.get("strategy"), 9), s.get("atr_norm", 99.0), rng.random()))
                 else:
                     random.Random(seed).shuffle(signals)
                 taken = min(len(signals), max_today)
