@@ -638,7 +638,7 @@ class MomentumBacktester:
                     if divergence and swing_low_val is not None:
                         r_swing_low_stop_cand = swing_low_val * 0.99
                         r_stop_pct_cand = (price - r_swing_low_stop_cand) / price * 100 if price > 0 else 99.0
-                        if r_stop_pct_cand <= 5.0:  # Skip if structural stop too far
+                        if 0 < r_stop_pct_cand <= 5.0:  # Skip if stop above entry or too far
                             shares = int(capital // price)
                             if shares > 0:
                                 entry_price = price
@@ -1469,7 +1469,7 @@ class MomentumBacktester:
                         if divergence and swing_low_val is not None:
                             r_struct_stop = swing_low_val * 0.99
                             r_stop_pct = (price - r_struct_stop) / price * 100 if price > 0 else 99.0
-                            if r_stop_pct <= 5.0:  # Skip if structural stop too far (stale divergence)
+                            if 0 < r_stop_pct <= 5.0:  # Skip if stop above entry or too far
                                 signals.append({
                                     "symbol": ticker,
                                     "strategy": "R",

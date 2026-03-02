@@ -315,7 +315,7 @@ class LiveSignalsEngine:
                         rsi14_at_bar = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 0.0
                         r_struct_stop = round(swing_low_val * 0.99, 2)
                         r_stop_pct = round((price - r_struct_stop) / price * 100, 2) if price > 0 else 99.0
-                        if r_stop_pct <= 5.0:  # Skip if structural stop too far (stale divergence)
+                        if 0 < r_stop_pct <= 5.0:  # Skip if stop above entry or too far
                             # ATR14 for volatility ranking
                             prev_close_r = closes.shift(1)
                             tr1_r = highs - lows
