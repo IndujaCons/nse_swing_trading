@@ -1611,6 +1611,7 @@
         let selectedTradeUser = null;
         let autoRefreshInterval = null;
         let activeStrategy = 'rs';
+        let _lastMomentumPanel = null;  // 'backtest' or 'batch' — tracks which was visible
         let liveSignalsDataLoaded = false;
         let lsScanDate = null;  // tracks selected historical date
         let batchResultData = null;
@@ -1692,8 +1693,18 @@
             // Toggle panels
             document.getElementById('rs-panels').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-panels').classList.toggle('hidden', strategy !== 'live_signals');
-            document.getElementById('backtest-results').classList.add('hidden');
-            document.getElementById('batch-results').classList.add('hidden');
+            // Preserve backtest/batch results visibility when switching tabs
+            if (strategy !== 'momentum') {
+                document.getElementById('backtest-results').classList.add('hidden');
+                document.getElementById('batch-results').classList.add('hidden');
+            } else {
+                // Restore whichever was visible before
+                if (_lastMomentumPanel === 'backtest') {
+                    document.getElementById('backtest-results').classList.remove('hidden');
+                } else if (_lastMomentumPanel === 'batch') {
+                    document.getElementById('batch-results').classList.remove('hidden');
+                }
+            }
             document.getElementById('trade-explain-results').classList.toggle('hidden', strategy !== 'trade_explain');
 
             // Toggle sidebar settings
@@ -2806,6 +2817,7 @@
 
             // Show backtest results area with loading state
                         document.getElementById('backtest-results').classList.remove('hidden');
+            _lastMomentumPanel = 'backtest';
             document.getElementById('backtest-summary').innerHTML = '';
             const loadingMsg = `Running Strategy ${strategy} backtest for ${symbol}...`;
             document.getElementById('backtest-trades-body').innerHTML = `
@@ -2956,6 +2968,7 @@
 
         function closeBacktest() {
             document.getElementById('backtest-results').classList.add('hidden');
+            _lastMomentumPanel = null;
         }
 
         // ============ Trade Explain ============
@@ -3102,6 +3115,7 @@
             // Show batch results area with loading
                         document.getElementById('backtest-results').classList.add('hidden');
             document.getElementById('batch-results').classList.remove('hidden');
+            _lastMomentumPanel = 'batch';
             document.getElementById('batch-title').textContent = `Batch Backtest — All Strategies × ${universeLabel} — ${periodLabel}`;
             document.getElementById('batch-table-container').innerHTML = `
                 <div class="loading-container">
@@ -3218,6 +3232,7 @@
 
         function closeBatchBacktest() {
             document.getElementById('batch-results').classList.add('hidden');
+            _lastMomentumPanel = null;
         }
 
         // ============ Portfolio Backtest (10L) ============
@@ -3249,6 +3264,7 @@
             // Show backtest results area with loading
                         document.getElementById('batch-results').classList.add('hidden');
             document.getElementById('backtest-results').classList.remove('hidden');
+            _lastMomentumPanel = 'backtest';
             document.getElementById('backtest-summary').innerHTML = '';
             document.getElementById('backtest-trades-body').innerHTML = `
                 <div class="loading-container">
