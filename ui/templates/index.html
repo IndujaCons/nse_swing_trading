@@ -2407,8 +2407,8 @@
                 picksPanel.innerHTML = '<div class="empty-state">No signals</div>';
             } else {
                 const rows = allSignals.map((s, idx) => {
-                    const isTop2 = idx < 2;
-                    const rowStyle = isTop2 ? 'background:rgba(76,175,80,0.12);font-weight:600;' : '';
+                    const isTop = idx < 3;
+                    const rowStyle = isTop ? 'background:rgba(76,175,80,0.12);font-weight:600;' : '';
                     const rank = idx + 1;
                     const badgeMap = {
                         'J': '<span style="color:var(--green);font-weight:700;">J</span>',
@@ -2427,7 +2427,7 @@
                     const atrColor = s.atr_pct < 2 ? 'var(--green)' : s.atr_pct < 3.5 ? 'var(--text-muted)' : 'var(--red)';
                     return `
                         <tr style="${rowStyle}">
-                            <td>${isTop2 ? '&#9733;' : rank}</td>
+                            <td>${isTop ? '&#9733;' : rank}</td>
                             <td>${badge}</td>
                             <td class="ticker">${s.ticker}</td>
                             <td class="price">${s.price.toLocaleString()}</td>
