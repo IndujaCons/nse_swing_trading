@@ -792,17 +792,24 @@ class MomentumBacktester:
         if not trades:
             return {"error": f"No {strategy} trades found for {symbol} in the window around {entry_date_str}"}
 
-        # Find trades matching entry_date (±3 day tolerance)
+        # Find trades matching entry_date — exact match first, then ±1 day fallback
         matched = []
         for t in trades:
             t_entry = dt.strptime(t["entry_date"], "%Y-%m-%d").date()
-            if abs((t_entry - target_date).days) <= 3:
+            if t_entry == target_date:
                 matched.append(t)
+
+        if not matched:
+            # ±1 day fallback (weekends / holidays)
+            for t in trades:
+                t_entry = dt.strptime(t["entry_date"], "%Y-%m-%d").date()
+                if abs((t_entry - target_date).days) <= 1:
+                    matched.append(t)
 
         if not matched:
             # List available entry dates for debugging
             available = sorted(set(t["entry_date"] for t in trades))
-            return {"error": f"No trade on {entry_date_str} (±3d). Available entry dates: {', '.join(available[:10])}"}
+            return {"error": f"No trade on {entry_date_str}. Nearby entry dates: {', '.join(available[:10])}"}
 
         entry_date_actual = dt.strptime(matched[0]["entry_date"], "%Y-%m-%d").date()
         entry_price = matched[0]["entry_price"]

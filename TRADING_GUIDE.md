@@ -456,33 +456,61 @@ With Rs 2,00,000 per trade and a 5% max stop, the worst-case loss per trade is R
 
 ## Part 8: Backtest Results
 
-The JTR system has been backtested over 11 years (2015-2025) on Nifty 100 stocks with Rs 20 lakh capital and Rs 2 lakh per trade:
+The JTR system has been backtested over 21 years (2005-2025) on Nifty 100 stocks with Rs 20 lakh capital and Rs 2 lakh per trade:
 
 ```
-  Year    Tr   Win  Loss    WR%   AvgWin  AvgLoss     PF    Ret%     P&L
-  2015   229   104   125  45.4%    7,698   -6,472   0.99   -0.4%  -0.08L
-  2016   250   125   125  50.0%    7,773   -4,588   1.69  +19.9%   3.98L
-  2017   253   149   104  58.9%    9,557   -4,565   3.00  +47.5%   9.49L
-  2018   271   149   122  55.0%    7,733   -5,294   1.78  +25.3%   5.06L
-  2019   336   195   141  58.0%    8,136   -5,856   1.92  +38.0%   7.61L
-  2020   303   180   123  59.4%    8,353   -7,710   1.59  +27.8%   5.55L
-  2021   256   145   111  56.6%    8,999   -5,634   2.09  +34.0%   6.79L
-  2022   269   158   111  58.7%    7,669   -6,258   1.74  +25.9%   5.17L
-  2023   216   123    93  56.9%    8,039   -4,245   2.50  +29.7%   5.94L
-  2024   247   146   101  59.1%    7,944   -5,490   2.09  +30.3%   6.05L
-  2025   258   125   133  48.4%    7,699   -3,685   1.96  +23.6%   4.72L
+JTR Portfolio — R Priority + ATR Rank (Nifty 100, 20L, 2L/trade, 3/day)
 
-  Avg    263   145   117  55.1%    8,145   -5,436   1.94  +27.4%   5.48L
-  Total P&L: Rs 60.3 Lakhs on 20L capital (11 years)
-  Winning years: 10/11
+  Year     Tr    Win   Loss     WR%    AvgWin   AvgLoss     PF     Ret%        P&L   Hold
+-----------------------------------------------------------------------------------------------
+  2005    270    205     65   75.9%    12,111    -6,119   6.24  +104.3%  +  20.85L    31d
+  2006    153    106     47   69.3%     9,318    -7,962   2.64  + 30.7%  +   6.14L    14d
+  2007    236    136    100   57.6%    12,871    -6,203   2.82  + 56.5%  +  11.30L    14d
+  2008    341    235    106   68.9%    12,655   -12,333   2.27  + 83.3%  +  16.67L    24d
+  2009    194    144     50   74.2%     8,551    -8,627   2.85  + 40.0%  +   8.00L    15d
+  2010    218    134     84   61.5%     8,285    -6,253   2.11  + 29.2%  +   5.85L    21d
+  2011    273    157    116   57.5%     7,593    -5,838   1.76  + 25.7%  +   5.15L    24d
+  2012    222    148     74   66.7%     8,602    -5,130   3.35  + 44.7%  +   8.93L    22d
+  2013    262    138    124   52.7%     8,035    -7,168   1.25  + 11.0%  +   2.20L    16d
+  2014    237    158     79   66.7%     8,480    -6,411   2.65  + 41.7%  +   8.33L    17d
+  2015    222    100    122   45.0%     7,603    -6,328   0.98   -0.6%    -  0.12L    18d
+  2016    281    161    120   57.3%     8,733    -4,757   2.46  + 41.8%  +   8.35L    24d
+  2017    234    135     99   57.7%     9,315    -4,247   2.99  + 41.8%  +   8.37L    18d
+  2018    257    132    125   51.4%     8,000    -5,347   1.58  + 19.4%  +   3.88L    17d
+  2019    394    271    123   68.8%     9,046    -5,804   3.43  + 86.9%  +  17.38L    27d
+  2020    313    205    108   65.5%     9,873    -8,267   2.27  + 56.6%  +  11.31L    13d
+  2021    255    147    108   57.6%     8,997    -5,563   2.20  + 36.1%  +   7.22L    16d
+  2022    244    144    100   59.0%     7,946    -6,700   1.71  + 23.7%  +   4.74L    19d
+  2023    230    135     95   58.7%     8,294    -4,296   2.74  + 35.6%  +   7.12L    24d
+  2024    241    141    100   58.5%     7,986    -5,971   1.89  + 26.4%  +   5.29L    20d
+  2025    261    139    122   53.3%     9,203    -3,966   2.64  + 39.8%  +   7.95L    20d
+-----------------------------------------------------------------------------------------------
+   Avg    254    156     98   61.3%     9,119    -6,347   2.52  + 41.6%  +   8.33L    20d
+ Total   5338   3271   2067                                     +874.5%  + 174.91L
+
+Summary:
+  - Winning years: 20/21 (only 2015 red at -0.12L)
+  - Best year: +104.3% (2005)
+  - Worst year: -0.6% (2015)
+  - Total P&L: Rs 174.91 Lakhs on 20L capital
+  - CAGR: 11.5%
+  - Avg Win/Loss: 1.4x
+  - Avg PF: 2.52
+  - Trades/yr: 254
+
+By strategy:
+  - R: 1,622 trades, 71.9% WR, +90.4L (52% of total P&L)
+  - J: 1,460 trades, 55.9% WR, +27.7L (16% of total P&L)
+  - T: 2,256 trades, 57.1% WR, +56.8L (32% of total P&L)
 ```
 
 Key takeaways:
-- **10 out of 11 years profitable** (2015 was essentially flat at -0.4%)
-- **Average return: +27.4% per year** on effective capital deployed
-- **Win rate: 55.1%** — you're wrong 45% of the time, but winners are 1.5x larger than losers
-- **Average Profit Factor: 1.94** — for every Rs 1 lost, you make Rs 1.94
-- **~263 trades per year** — roughly 1 trade per trading day, very manageable
+- **20 out of 21 years profitable** (2015 was essentially flat at -0.12L)
+- **Average return: +41.6% per year** on effective capital deployed
+- **Win rate: 61.3%** — winners are 1.4x larger than losers
+- **Average Profit Factor: 2.52** — for every Rs 1 lost, you make Rs 2.52
+- **~254 trades per year** — roughly 1 trade per trading day, very manageable
+- **Strategy R is the star** — 52% of total P&L with 71.9% win rate
 
 ---
 
