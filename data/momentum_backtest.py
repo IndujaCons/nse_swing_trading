@@ -811,13 +811,19 @@ class MomentumBacktester:
             available = sorted(set(t["entry_date"] for t in trades))
             return {"error": f"No trade on {entry_date_str}. Nearby entry dates: {', '.join(available[:10])}"}
 
-        entry_date_actual = dt.strptime(matched[0]["entry_date"], "%Y-%m-%d").date()
+        entry_date_bt = dt.strptime(matched[0]["entry_date"], "%Y-%m-%d").date()
         entry_price = matched[0]["entry_price"]
         shares_total = sum(t["shares"] for t in matched)
 
+        # Display date: use user's requested date (real entry day) when
+        # backtest trade was matched via ±1 fallback.  The backtest fires
+        # signals at the signal-bar close (e.g. Feb 25) but the actual
+        # trade entry happens the next trading day (Feb 26).
+        entry_date_display = target_date
+
         # Fetch raw OHLCV for indicator snapshots
         nse_symbol = f"{symbol}.NS"
-        fetch_start = entry_date_actual - timedelta(days=300)
+        fetch_start = entry_date_bt - timedelta(days=300)
         try:
             raw = yf.Ticker(nse_symbol).history(start=fetch_start, end=window_end)
         except Exception:
@@ -826,15 +832,20 @@ class MomentumBacktester:
         if raw.empty or len(raw) < 50:
             return {"error": f"Could not fetch price data for {symbol}"}
 
-        # Find entry bar index
+        # Find entry bar index — prefer user's requested date, fall back to backtest date
         entry_i = None
         for idx_i, ts in enumerate(raw.index):
-            if ts.date() == entry_date_actual:
+            if ts.date() == target_date:
                 entry_i = idx_i
                 break
+        if entry_i is None:
+            for idx_i, ts in enumerate(raw.index):
+                if ts.date() == entry_date_bt:
+                    entry_i = idx_i
+                    break
 
         if entry_i is None:
-            return {"error": f"Entry date {entry_date_actual} not found in price data"}
+            return {"error": f"Entry date {target_date} not found in price data"}
 
         closes = raw["Close"]
         opens = raw["Open"]
@@ -954,7 +965,7 @@ class MomentumBacktester:
         c = round(float(closes.iloc[entry_i]), 2)
 
         entry_info = {
-            "date": entry_date_actual.strftime("%b %d, %Y"),
+            "date": entry_date_display.strftime("%b %d, %Y"),
             "price": entry_price,
             "open": o, "high": h, "low": l, "close": c,
             "shares": shares_total,
@@ -994,7 +1005,7 @@ class MomentumBacktester:
         total_capital = round(entry_price * shares_total, 2)
         total_pnl_pct = round((total_pnl / total_capital) * 100, 1) if total_capital > 0 else 0
         last_exit = dt.strptime(matched[-1]["exit_date"], "%Y-%m-%d").date()
-        holding_days = (last_exit - entry_date_actual).days
+        holding_days = (last_exit - entry_date_display).days
 
         result_info = {
             "winner": total_pnl > 0,
