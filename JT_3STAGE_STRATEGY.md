@@ -19,13 +19,16 @@ Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J
 - **Stop**: 5% hard SL (shifts up to 3% below entry after first +6% partial exit — see Exit Rules)
 - **Edge**: Buying a pullback in a confirmed uptrend (was recently at upper band = strong momentum)
 
-### Strategy R — Bullish RSI Divergence
-- **Condition**: Price makes a lower low but RSI(14) makes a higher low (bullish divergence), **RSI(14) < 40** at the divergence point, **min 3-point RSI divergence** between the two swing lows, green candle, **no gap-down** (open >= prev close)
+### Strategy R — Bullish RSI Divergence (Regular + Hidden)
+- **Regular Divergence** (reversal): Price makes a lower low but RSI(14) makes a higher low, **RSI(14) < 40** at the divergence point, **min 3-point RSI divergence**
+- **Hidden Divergence** (continuation): Price makes a higher low but RSI(14) makes a lower low, **RSI(14) < 60** (relaxed), **min 5-point RSI divergence**, **close > EMA(50)** (uptrend filter)
+- **Common Filters**: Green candle, **no gap-down** (open >= prev close), **min stop distance: 2%**
 - **Swing Low Detection**: Low[i] is minimum of surrounding window (5 bars left, 3 bars right). Signal confirmed 3 bars after actual low. Min 5 bars separation between the two swing lows.
 - **Divergence Window**: Looks back up to 50 bars for two qualifying swing lows
-- **Stop**: Structural SL — 1% below the divergence swing low (natural invalidation level). **Max stop distance: 5%** — skip signal if structural stop is >5% away (stale divergence).
+- **Stop**: Structural SL — 1% below the divergence swing low (natural invalidation level). **Stop distance: 2–5%** — skip signal if structural stop is <2% (too tight) or >5% away (stale divergence).
+- **Priority**: Regular divergence checked first; hidden only if regular not found
 - **Dedup**: Skip if J or T already fired for the same stock on the same day
-- **Edge**: RSI divergence signals momentum improving despite price weakness — early reversal signal
+- **Edge**: Regular divergence = momentum improving despite price weakness (reversal). Hidden divergence = uptrend continuation despite temporary RSI dip.
 
 ### Gap-Down Filter (applies to J, T, and R)
 - **Rule**: Skip entry if today's Open < yesterday's Close (stock gapped down)

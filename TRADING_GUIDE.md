@@ -371,26 +371,38 @@ Green candle ✓, No gap-down ✓
 
 ---
 
-### Strategy R — Bullish RSI Divergence
+### Strategy R — Bullish RSI Divergence (Regular + Hidden)
 
-**What it does:** Buys stocks showing bullish RSI divergence — where price is making new lows but momentum (RSI) is actually improving. This catches reversals at the bottom.
+**What it does:** Buys stocks showing bullish RSI divergence. Strategy R detects two types:
 
-**The Logic:** When a stock's price makes a lower low but RSI makes a higher low, it means the selling pressure is exhausting itself. The stock is bottoming out and likely to reverse upward. This is one of the most reliable reversal signals in technical analysis.
+1. **Regular divergence** (reversal): Price makes a lower low but RSI makes a higher low — selling pressure is exhausting, stock is bottoming out.
+2. **Hidden divergence** (continuation): Price makes a higher low but RSI makes a lower low — uptrend is intact despite a temporary RSI dip. Requires price > EMA(50) to confirm the uptrend.
 
-**Entry Conditions (ALL must be true):**
+**Entry Conditions — Regular Divergence (ALL must be true):**
 | Condition | Why |
 |-----------|-----|
 | Two swing lows where price: lower low, RSI(14): higher low | Bullish divergence confirmed |
 | RSI divergence >= 3 points | Meaningful divergence, not noise |
 | RSI(14) < 40 at current swing low | Stock is in oversold zone |
-| Structural stop <= 5% from entry | Risk is manageable |
+| Structural stop 2–5% from entry | Risk is manageable (min 2% to avoid too-tight stops) |
 | Green candle (close > open) | Reversal candle |
 | No gap-down | No continued panic |
 
+**Entry Conditions — Hidden Divergence (ALL must be true):**
+| Condition | Why |
+|-----------|-----|
+| Two swing lows where price: higher low, RSI(14): lower low | Hidden bullish divergence |
+| RSI divergence >= 5 points | Stronger threshold for continuation signals |
+| RSI(14) < 60 at current swing low | Relaxed threshold (stock is in uptrend) |
+| Close > EMA(50) | Confirms stock is in an uptrend |
+| Structural stop 2–5% from entry | Risk is manageable |
+| Green candle (close > open) | Continuation candle |
+| No gap-down | No sudden weakness |
+
 **Stop-Loss:**
-- **Structural stop**: 1% below the most recent swing low (this is the "structure" that must hold for the reversal to be valid)
+- **Structural stop**: 1% below the most recent swing low (this is the "structure" that must hold for the divergence to be valid)
 - After Stage 1 (+6%), SL shifts up to 3% below entry price
-- Maximum 5% stop distance (if swing low is too far away, the trade is skipped)
+- Stop distance must be 2–5% (minimum 2% to avoid tight stops, maximum 5% to skip stale divergence)
 
 **Exit (2-stage scale-out, same as T):**
 | Stage | Trigger | Action |
@@ -399,7 +411,7 @@ Green candle ✓, No gap-down ✓
 | 2 | Price reaches upper Keltner band | Sell remaining 2/3 |
 | Safety | 10 trading days underwater | Exit all remaining |
 
-**Example:**
+**Example — Regular Divergence:**
 ```
 TATAPOWER — Two swing lows:
   Swing Low 1: Rs 376 on Aug 08, RSI = 30.7
@@ -415,8 +427,26 @@ Structural stop = 368 × 0.99 = Rs 364.32
 → BUY at Rs 374.15
 → Stop at Rs 364.32 (structural, 2.6% away)
 → Target 1: Rs 396.60 (+6%) → sell 1/3
-→ Target 2: Rs 411.57 (+10%) → sell 1/3
-→ Target 3: Upper Keltner → sell remaining 1/3
+→ Target 2: Upper Keltner → sell remaining 2/3
+```
+
+**Example — Hidden Divergence:**
+```
+HAVELLS — Two swing lows (uptrend):
+  Swing Low 1: Rs 1420 on Sep 10, RSI = 45.2
+  Swing Low 2: Rs 1455 on Oct 01, RSI = 38.8
+
+  Price: 1420 → 1455 (higher low ✓)
+  RSI:  45.2 → 38.8 (lower low ✓, divergence = -6.4 pts)
+  RSI < 60 ✓, Close > EMA(50) ✓
+
+Oct 01 candle is green, no gap-down
+Structural stop = 1455 × 0.99 = Rs 1440.45
+
+→ BUY at Rs 1478 (continuation in uptrend)
+→ Stop at Rs 1440.45 (structural, 2.5% away)
+→ Target 1: Rs 1566.68 (+6%) → sell 1/3
+→ Target 2: Upper Keltner → sell remaining 2/3
 ```
 
 ---

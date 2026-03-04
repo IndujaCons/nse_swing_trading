@@ -2375,16 +2375,20 @@
             if (rSignals.length === 0) {
                 rPanel.innerHTML = '<div class="empty-state">No R signals</div>';
             } else {
-                const rows = rSignals.map(s => `
+                const rows = rSignals.map(s => {
+                    const divBadge = s.div_type === 'hidden'
+                        ? '<span style="color:#9c27b0;font-weight:700;font-size:10px;margin-left:4px;" title="Hidden Bullish Divergence">H</span>'
+                        : '<span style="color:#ab47bc;font-weight:700;font-size:10px;margin-left:4px;" title="Regular Bullish Divergence">R</span>';
+                    return `
                     <tr>
-                        <td class="ticker">${s.ticker}</td>
+                        <td class="ticker">${s.ticker}${divBadge}</td>
                         <td class="price">${s.price.toLocaleString()}</td>
                         <td>${(s.rsi14||0).toFixed(1)} <span style="color:var(--green);font-size:11px;">(${(s.rsi_at_low||0).toFixed(1)})</span></td>
                         <td class="price">${(s.swing_low||0).toLocaleString()}</td>
                         <td class="price">${(s.stop||0).toLocaleString()}</td>
                         <td style="color:${(s.stop_pct||0)<5?'var(--green)':'var(--red)'}">${(s.stop_pct||0).toFixed(1)}%</td>
                     </tr>
-                `).join('');
+                `}).join('');
                 rPanel.innerHTML = `
                     <table class="stock-table">
                         <thead><tr><th>Stock</th><th>Close</th><th>RSI14 (Low)</th><th>SwLow</th><th>Stop</th><th>Stop%</th></tr></thead>
@@ -2417,10 +2421,11 @@
                     };
                     const badge = badgeMap[s.strategy] || s.strategy;
                     const stopColor = s.stop_pct < 5 ? 'var(--green)' : s.stop_pct === 5 ? 'var(--text-muted)' : 'var(--red)';
+                    const rDivLabel = s.div_type === 'hidden' ? ' (Hidden)' : s.div_type === 'regular' ? ' (Regular)' : '';
                     const detail = s.strategy === 'J'
                         ? `Supp ${s.support.toLocaleString()} | IBS ${s.ibs.toFixed(2)}`
                         : s.strategy === 'R'
-                        ? `RSI14 ${(s.rsi14||0).toFixed(1)} (${(s.rsi_at_low||0).toFixed(1)}) | SwLow ${(s.swing_low||0).toLocaleString()}`
+                        ? `RSI14 ${(s.rsi14||0).toFixed(1)} (${(s.rsi_at_low||0).toFixed(1)}) | SwLow ${(s.swing_low||0).toLocaleString()}${rDivLabel}`
                         : `EMA20 ${s.ema20.toLocaleString()}`;
                     const stopVal = s.strategy === 'J' ? s.stop : s.strategy === 'R' ? s.stop : Math.round(s.price * 0.95);
                     const ibsVal = s.strategy === 'J' ? s.ibs : 0;
@@ -3049,10 +3054,17 @@
                 html += `<p><span class="detail-label">Pullback Depth:</span> <span class="detail-value">${s.pullback_depth}</span></p>`;
             } else if (s.strategy === 'R') {
                 if (s.swing_low_1) {
+                    const isHidden = s.div_type === 'hidden';
+                    const divLabel = isHidden ? 'Hidden Bullish Divergence (continuation)' : 'Regular Bullish Divergence (reversal)';
+                    html += `<p><span class="detail-label">Type:</span> <span class="detail-value" style="color:${isHidden ? '#9c27b0' : '#ab47bc'}">${divLabel}</span></p>`;
                     html += `<p><span class="detail-label">Swing Low 1:</span> <span class="detail-value">&#8377;${fmt(s.swing_low_1.price)} on ${s.swing_low_1.date} (RSI ${s.swing_low_1.rsi})</span></p>`;
                     html += `<p><span class="detail-label">Swing Low 2:</span> <span class="detail-value">&#8377;${fmt(s.swing_low_2.price)} on ${s.swing_low_2.date} (RSI ${s.swing_low_2.rsi})</span></p>`;
                     html += `<p><span class="detail-label">RSI Divergence:</span> <span class="detail-value">${s.rsi_divergence}</span></p>`;
-                    html += `<p><span class="detail-label">Price Drop:</span> <span class="detail-value">${s.price_drop}</span></p>`;
+                    if (isHidden) {
+                        html += `<p><span class="detail-label">Price Rise:</span> <span class="detail-value">${s.price_rise}</span></p>`;
+                    } else {
+                        html += `<p><span class="detail-label">Price Drop:</span> <span class="detail-value">${s.price_drop}</span></p>`;
+                    }
                     html += `<p><span class="detail-label">Structural Stop:</span> <span class="detail-value">&#8377;${fmt(s.structural_stop)} (${s.stop_distance} away)</span></p>`;
                 }
             }

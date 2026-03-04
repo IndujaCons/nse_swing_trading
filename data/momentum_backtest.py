@@ -18,9 +18,12 @@ Strategy T — Keltner Channel Pullback:
   Exit (2-stage): +6% sell 1/3, upper Keltner sell remaining 2/3
   Stop: 5% hard SL (tightens to 3% after first partial)
 
-Strategy R — Bullish RSI Divergence:
-  Entry: Price makes lower low but RSI(14) makes higher low (bullish divergence)
-         AND RSI(14) < 40 AND green candle AND no gap-down
+Strategy R — Bullish RSI Divergence (Regular + Hidden):
+  Regular: Price makes lower low but RSI(14) makes higher low (reversal)
+           AND RSI(14) < 40 AND RSI divergence >= 3pt
+  Hidden:  Price makes higher low but RSI(14) makes lower low (continuation)
+           AND close > EMA(50) AND RSI(14) < 60 AND RSI divergence >= 5pt
+  Entry: Green candle AND no gap-down AND min 2% stop distance
   Exit (2-stage like T): structural SL (1% below swing low), +6% sell 1/3,
          tight 3% SL after first exit, upper Keltner sell remaining
 """
@@ -130,6 +133,82 @@ class MomentumBacktester:
             if curr_rsi >= rsi_threshold:
                 continue
             return True, curr_low
+        return False, None
+
+    @staticmethod
+    def _detect_hidden_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
+                                          max_lookback=50, min_sep=5,
+                                          rsi_threshold=60, min_rsi_divergence=5):
+        """Check for hidden bullish RSI divergence at bar i.
+
+        Hidden bullish divergence (uptrend continuation):
+        - Price: current swing low > previous swing low (higher low)
+        - RSI(14): current < previous - min_rsi_divergence (lower low in RSI)
+        - RSI(14) < rsi_threshold at current swing low (relaxed from 40)
+
+        Returns (True, swing_low_price) or (False, None).
+        """
+        recent = [(idx, val) for idx, val in swing_lows
+                  if idx <= i and i - idx <= max_lookback]
+        if len(recent) < 2:
+            return False, None
+
+        for k in range(len(recent) - 1, 0, -1):
+            curr_idx, curr_low = recent[k]
+            prev_idx, prev_low = recent[k - 1]
+            if curr_idx - prev_idx < min_sep:
+                continue
+            # Higher low in price (uptrend continuation)
+            if curr_low <= prev_low:
+                continue
+            # Lower low in RSI (>= min_rsi_divergence points)
+            curr_rsi = rsi14_vals[curr_idx]
+            prev_rsi = rsi14_vals[prev_idx]
+            if np.isnan(curr_rsi) or np.isnan(prev_rsi):
+                continue
+            if prev_rsi - curr_rsi < min_rsi_divergence:
+                continue
+            # RSI below relaxed threshold
+            if curr_rsi >= rsi_threshold:
+                continue
+            return True, curr_low
+        return False, None
+
+    @staticmethod
+    def _explain_hidden_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
+                                            max_lookback=50, min_sep=5,
+                                            rsi_threshold=60, min_rsi_divergence=5):
+        """Like _detect_hidden_bullish_divergence but returns full detail.
+
+        Returns (True, detail_dict) or (False, None).
+        detail_dict has: prev_idx, prev_low, prev_rsi, curr_idx, curr_low, curr_rsi
+        """
+        recent = [(idx, val) for idx, val in swing_lows
+                  if idx <= i and i - idx <= max_lookback]
+        if len(recent) < 2:
+            return False, None
+
+        for k in range(len(recent) - 1, 0, -1):
+            curr_idx, curr_low = recent[k]
+            prev_idx, prev_low = recent[k - 1]
+            if curr_idx - prev_idx < min_sep:
+                continue
+            if curr_low <= prev_low:
+                continue
+            curr_rsi = rsi14_vals[curr_idx]
+            prev_rsi = rsi14_vals[prev_idx]
+            if np.isnan(curr_rsi) or np.isnan(prev_rsi):
+                continue
+            if prev_rsi - curr_rsi < min_rsi_divergence:
+                continue
+            if curr_rsi >= rsi_threshold:
+                continue
+            return True, {
+                "prev_idx": prev_idx, "prev_low": float(prev_low),
+                "prev_rsi": float(prev_rsi),
+                "curr_idx": curr_idx, "curr_low": float(curr_low),
+                "curr_rsi": float(curr_rsi),
+            }
         return False, None
 
     @staticmethod
@@ -635,10 +714,18 @@ class MomentumBacktester:
                     lows_vals = lows.values
                     divergence, swing_low_val = self._detect_bullish_divergence(
                         lows_vals, rsi14_vals, i, swing_lows)
+                    is_hidden_div = False
+                    if not divergence:
+                        # Try hidden bullish divergence if price > EMA50 (uptrend)
+                        if price > ema50:
+                            divergence, swing_low_val = self._detect_hidden_bullish_divergence(
+                                lows_vals, rsi14_vals, i, swing_lows)
+                            if divergence:
+                                is_hidden_div = True
                     if divergence and swing_low_val is not None:
                         r_swing_low_stop_cand = swing_low_val * 0.99
                         r_stop_pct_cand = (price - r_swing_low_stop_cand) / price * 100 if price > 0 else 99.0
-                        if 0 < r_stop_pct_cand <= 5.0:  # Skip if stop above entry or too far
+                        if 2.0 <= r_stop_pct_cand <= 5.0:  # Min 2% stop distance
                             shares = int(capital // price)
                             if shares > 0:
                                 entry_price = price
@@ -929,30 +1016,57 @@ class MomentumBacktester:
             rsi14_vals = rsi14_series.values
             lows_vals = lows.values
 
+            # Try regular divergence first, then hidden
             found, detail = self._explain_bullish_divergence(
                 lows_vals, rsi14_vals, entry_i, swing_lows)
+            div_type = "regular"
+
+            if not found:
+                found, detail = self._explain_hidden_bullish_divergence(
+                    lows_vals, rsi14_vals, entry_i, swing_lows)
+                div_type = "hidden"
 
             if found and detail:
                 prev_date = raw.index[detail["prev_idx"]].strftime("%b %d")
                 curr_date = raw.index[detail["curr_idx"]].strftime("%b %d")
-                rsi_div = round(detail["curr_rsi"] - detail["prev_rsi"], 1)
-                price_drop = round(((detail["curr_low"] - detail["prev_low"]) / detail["prev_low"]) * 100, 1)
                 struct_stop = round(detail["curr_low"] * 0.99, 2)
                 stop_pct = round(((entry_price - struct_stop) / entry_price) * 100, 1)
 
-                setup["description"] = f"{symbol} showed bullish RSI divergence — price made lower low but RSI made higher low"
-                setup["swing_low_1"] = {
-                    "date": prev_date,
-                    "price": round(detail["prev_low"], 2),
-                    "rsi": round(detail["prev_rsi"], 1),
-                }
-                setup["swing_low_2"] = {
-                    "date": curr_date,
-                    "price": round(detail["curr_low"], 2),
-                    "rsi": round(detail["curr_rsi"], 1),
-                }
-                setup["rsi_divergence"] = f"+{rsi_div} points"
-                setup["price_drop"] = f"{price_drop}%"
+                if div_type == "hidden":
+                    rsi_div = round(detail["prev_rsi"] - detail["curr_rsi"], 1)
+                    price_rise = round(((detail["curr_low"] - detail["prev_low"]) / detail["prev_low"]) * 100, 1)
+                    setup["description"] = f"{symbol} showed hidden bullish RSI divergence — price made higher low but RSI made lower low (continuation in uptrend)"
+                    setup["swing_low_1"] = {
+                        "date": prev_date,
+                        "price": round(detail["prev_low"], 2),
+                        "rsi": round(detail["prev_rsi"], 1),
+                    }
+                    setup["swing_low_2"] = {
+                        "date": curr_date,
+                        "price": round(detail["curr_low"], 2),
+                        "rsi": round(detail["curr_rsi"], 1),
+                    }
+                    setup["rsi_divergence"] = f"-{rsi_div} points"
+                    setup["price_rise"] = f"+{price_rise}%"
+                    setup["div_type"] = "hidden"
+                else:
+                    rsi_div = round(detail["curr_rsi"] - detail["prev_rsi"], 1)
+                    price_drop = round(((detail["curr_low"] - detail["prev_low"]) / detail["prev_low"]) * 100, 1)
+                    setup["description"] = f"{symbol} showed bullish RSI divergence — price made lower low but RSI made higher low"
+                    setup["swing_low_1"] = {
+                        "date": prev_date,
+                        "price": round(detail["prev_low"], 2),
+                        "rsi": round(detail["prev_rsi"], 1),
+                    }
+                    setup["swing_low_2"] = {
+                        "date": curr_date,
+                        "price": round(detail["curr_low"], 2),
+                        "rsi": round(detail["curr_rsi"], 1),
+                    }
+                    setup["rsi_divergence"] = f"+{rsi_div} points"
+                    setup["price_drop"] = f"{price_drop}%"
+                    setup["div_type"] = "regular"
+
                 setup["structural_stop"] = struct_stop
                 setup["stop_distance"] = f"{stop_pct}%"
             else:
@@ -1484,10 +1598,19 @@ class MomentumBacktester:
                         lows_vals = ind["lows"].values
                         divergence, swing_low_val = self._detect_bullish_divergence(
                             lows_vals, rsi14_vals, i, ind["swing_lows"])
+                        r_div_type = "regular"
+                        if not divergence:
+                            # Try hidden bullish divergence if price > EMA50 (uptrend)
+                            ema50_val = float(ind["ema50"].iloc[i])
+                            if price > ema50_val:
+                                divergence, swing_low_val = self._detect_hidden_bullish_divergence(
+                                    lows_vals, rsi14_vals, i, ind["swing_lows"])
+                                if divergence:
+                                    r_div_type = "hidden"
                         if divergence and swing_low_val is not None:
                             r_struct_stop = swing_low_val * 0.99
                             r_stop_pct = (price - r_struct_stop) / price * 100 if price > 0 else 99.0
-                            if 0 < r_stop_pct <= 5.0:  # Skip if stop above entry or too far
+                            if 2.0 <= r_stop_pct <= 5.0:  # Min 2% stop distance
                                 signals.append({
                                     "symbol": ticker,
                                     "strategy": "R",
@@ -1496,6 +1619,7 @@ class MomentumBacktester:
                                     "stop_pct": r_stop_pct,
                                     "atr_norm": sig_atr14 / price if price > 0 else 99.0,
                                     "r_swing_low_stop": r_struct_stop,
+                                    "div_type": r_div_type,
                                 })
 
             total_signals += len(signals)

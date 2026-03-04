@@ -103,6 +103,44 @@ def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
     return False, None, None
 
 
+def _detect_hidden_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
+                                       max_lookback=50, min_sep=5,
+                                       rsi_threshold=60, min_rsi_divergence=5):
+    """Check for hidden bullish RSI divergence at bar i.
+
+    Hidden bullish divergence (uptrend continuation):
+    - Price: current swing low > previous swing low (higher low)
+    - RSI(14): current < previous - min_rsi_divergence (lower low in RSI)
+    - RSI(14) < rsi_threshold at current swing low
+
+    Returns (True, swing_low_val, rsi_at_low) or (False, None, None).
+    """
+    recent = [(idx, val) for idx, val in swing_lows
+              if idx <= i and i - idx <= max_lookback]
+    if len(recent) < 2:
+        return False, None, None
+    for k in range(len(recent) - 1, 0, -1):
+        curr_idx, curr_low = recent[k]
+        prev_idx, prev_low = recent[k - 1]
+        if curr_idx - prev_idx < min_sep:
+            continue
+        # Higher low in price (uptrend continuation)
+        if curr_low <= prev_low:
+            continue
+        # Lower low in RSI (>= min_rsi_divergence points)
+        curr_rsi = rsi14_vals[curr_idx]
+        prev_rsi = rsi14_vals[prev_idx]
+        if np.isnan(curr_rsi) or np.isnan(prev_rsi):
+            continue
+        if prev_rsi - curr_rsi < min_rsi_divergence:
+            continue
+        # RSI below relaxed threshold
+        if curr_rsi >= rsi_threshold:
+            continue
+        return True, curr_low, curr_rsi
+    return False, None, None
+
+
 class LiveSignalsEngine:
     """Scans J/T/R entry signals, manages positions with 3-stage exits, checks exit conditions."""
 
@@ -300,7 +338,7 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
-            # Strategy R: Bullish RSI Divergence
+            # Strategy R: Bullish RSI Divergence (Regular + Hidden)
             try:
                 # Skip R if stock already has J or T signal (dedup)
                 already_jt = any(s["ticker"] == ticker for s in j_signals + t_signals)
@@ -311,11 +349,20 @@ class LiveSignalsEngine:
                     lows_vals = lows.values
                     divergence, swing_low_val, rsi_at_low = _detect_bullish_divergence(
                         lows_vals, rsi14_vals, i, swing_lows)
+                    r_div_type = "regular"
+                    if not divergence:
+                        # Try hidden bullish divergence if price > EMA50 (uptrend)
+                        ema50_val = float(closes.ewm(span=50, adjust=False).mean().iloc[i])
+                        if price > ema50_val:
+                            divergence, swing_low_val, rsi_at_low = _detect_hidden_bullish_divergence(
+                                lows_vals, rsi14_vals, i, swing_lows)
+                            if divergence:
+                                r_div_type = "hidden"
                     if divergence and swing_low_val is not None:
                         rsi14_at_bar = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 0.0
                         r_struct_stop = round(swing_low_val * 0.99, 2)
                         r_stop_pct = round((price - r_struct_stop) / price * 100, 2) if price > 0 else 99.0
-                        if 0 < r_stop_pct <= 5.0:  # Skip if stop above entry or too far
+                        if 2.0 <= r_stop_pct <= 5.0:  # Min 2% stop distance
                             # ATR14 for volatility ranking
                             prev_close_r = closes.shift(1)
                             tr1_r = highs - lows
@@ -333,6 +380,7 @@ class LiveSignalsEngine:
                                 "stop": r_struct_stop,
                                 "stop_pct": r_stop_pct,
                                 "atr_pct": atr_norm_r,
+                                "div_type": r_div_type,
                             })
             except Exception:
                 pass
