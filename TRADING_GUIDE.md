@@ -480,61 +480,52 @@ With Rs 2,00,000 per trade and a 5% max stop, the worst-case loss per trade is R
 
 ## Part 8: Backtest Results
 
-The JTR system has been backtested over 21 years (2005-2025) on Nifty 100 stocks with Rs 20 lakh capital and Rs 2 lakh per trade:
+The JTR system has been backtested over 11 years (2015-2025) on Nifty 100 stocks with Rs 20 lakh capital and Rs 2 lakh per trade:
 
 ```
-JTR Portfolio — R Priority + ATR Rank (Nifty 100, 20L, 2L/trade, 3/day)
+JTR Portfolio — R Priority + ATR Rank (Nifty 100, 20L, 2L/trade, 2/day)
+R: Regular + Hidden Divergence, EMA50 filter, min 2% stop
 
-  Year     Tr    Win   Loss     WR%    AvgWin   AvgLoss     PF     Ret%        P&L   Hold
+  Year     Tr    Win   Loss     WR%    AvgWin   AvgLoss     PF     Ret%        P&L
 -----------------------------------------------------------------------------------------------
-  2005    270    205     65   75.9%    12,111    -6,119   6.24  +104.3%  +  20.85L    31d
-  2006    153    106     47   69.3%     9,318    -7,962   2.64  + 30.7%  +   6.14L    14d
-  2007    236    136    100   57.6%    12,871    -6,203   2.82  + 56.5%  +  11.30L    14d
-  2008    341    235    106   68.9%    12,655   -12,333   2.27  + 83.3%  +  16.67L    24d
-  2009    194    144     50   74.2%     8,551    -8,627   2.85  + 40.0%  +   8.00L    15d
-  2010    218    134     84   61.5%     8,285    -6,253   2.11  + 29.2%  +   5.85L    21d
-  2011    273    157    116   57.5%     7,593    -5,838   1.76  + 25.7%  +   5.15L    24d
-  2012    222    148     74   66.7%     8,602    -5,130   3.35  + 44.7%  +   8.93L    22d
-  2013    262    138    124   52.7%     8,035    -7,168   1.25  + 11.0%  +   2.20L    16d
-  2014    237    158     79   66.7%     8,480    -6,411   2.65  + 41.7%  +   8.33L    17d
-  2015    222    100    122   45.0%     7,603    -6,328   0.98   -0.6%    -  0.12L    18d
-  2016    281    161    120   57.3%     8,733    -4,757   2.46  + 41.8%  +   8.35L    24d
-  2017    234    135     99   57.7%     9,315    -4,247   2.99  + 41.8%  +   8.37L    18d
-  2018    257    132    125   51.4%     8,000    -5,347   1.58  + 19.4%  +   3.88L    17d
-  2019    394    271    123   68.8%     9,046    -5,804   3.43  + 86.9%  +  17.38L    27d
-  2020    313    205    108   65.5%     9,873    -8,267   2.27  + 56.6%  +  11.31L    13d
-  2021    255    147    108   57.6%     8,997    -5,563   2.20  + 36.1%  +   7.22L    16d
-  2022    244    144    100   59.0%     7,946    -6,700   1.71  + 23.7%  +   4.74L    19d
-  2023    230    135     95   58.7%     8,294    -4,296   2.74  + 35.6%  +   7.12L    24d
-  2024    241    141    100   58.5%     7,986    -5,971   1.89  + 26.4%  +   5.29L    20d
-  2025    261    139    122   53.3%     9,203    -3,966   2.64  + 39.8%  +   7.95L    20d
+  2015    228    101    127   44.3%     7,973    -6,111   1.04  + 1.5%  +   0.3L
+  2016    273    157    116   57.5%     8,359    -4,819   2.35  +37.5%  +   7.5L
+  2017    242    138    104   57.0%     9,505    -4,247   2.97  +43.5%  +   8.7L
+  2018    258    135    123   52.3%     8,215    -5,836   1.54  +19.5%  +   3.9L
+  2019    426    297    129   69.7%     9,020    -5,693   3.65  +97.0%  +  19.4L
+  2020    337    227    110   67.4%     9,333    -7,619   2.53  +64.0%  +  12.8L
+  2021    368    238    130   64.7%     8,822    -5,702   2.83  +68.0%  +  13.6L
+  2022    254    139    115   54.7%     8,592    -6,612   1.57  +21.5%  +   4.3L
+  2023    308    211     97   68.5%     9,246    -5,277   3.81  +72.0%  +  14.4L
+  2024    298    185    113   62.1%     8,739    -5,926   2.41  +47.5%  +   9.5L
+  2025    253    135    118   53.4%     9,077    -4,669   2.22  +33.5%  +   6.7L
 -----------------------------------------------------------------------------------------------
-   Avg    254    156     98   61.3%     9,119    -6,347   2.52  + 41.6%  +   8.33L    20d
- Total   5338   3271   2067                                     +874.5%  + 174.91L
+   Avg    295    178    117   60.5%     8,876    -5,695   2.39  +45.9%  +   9.2L
+ Total   3245   1963   1282                                    +505.5%  + 101.1L
 
 Summary:
-  - Winning years: 20/21 (only 2015 red at -0.12L)
-  - Best year: +104.3% (2005)
-  - Worst year: -0.6% (2015)
-  - Total P&L: Rs 174.91 Lakhs on 20L capital
-  - CAGR: 11.5%
-  - Avg Win/Loss: 1.4x
-  - Avg PF: 2.52
-  - Trades/yr: 254
+  - Winning years: 11/11 (all years profitable, including 2015 at +0.3L)
+  - Best year: +97.0% (2019)
+  - Worst year: +1.5% (2015)
+  - Total P&L: Rs 101.1 Lakhs on 20L capital
+  - CAGR: 18.0%
+  - Avg Win/Loss: 1.6x
+  - Avg PF: 2.39
+  - Trades/yr: 295
 
 By strategy:
-  - R: 1,622 trades, 71.9% WR, +90.4L (52% of total P&L)
-  - J: 1,460 trades, 55.9% WR, +27.7L (16% of total P&L)
-  - T: 2,256 trades, 57.1% WR, +56.8L (32% of total P&L)
+  - R: 1,819 trades, 65.6% WR, +75.3L (74% of total P&L)
+  - J: 645 trades, 53.5% WR, +10.1L (10% of total P&L)
+  - T: 781 trades, 54.4% WR, +15.8L (16% of total P&L)
 ```
 
 Key takeaways:
-- **20 out of 21 years profitable** (2015 was essentially flat at -0.12L)
-- **Average return: +41.6% per year** on effective capital deployed
-- **Win rate: 61.3%** — winners are 1.4x larger than losers
-- **Average Profit Factor: 2.52** — for every Rs 1 lost, you make Rs 2.52
-- **~254 trades per year** — roughly 1 trade per trading day, very manageable
-- **Strategy R is the star** — 52% of total P&L with 71.9% win rate
+- **All 11 years profitable** (2015 was the weakest at +0.3L but still green)
+- **Average return: +45.9% per year** on effective capital deployed
+- **Win rate: 60.5%** — winners are 1.6x larger than losers
+- **Average Profit Factor: 2.39** — for every Rs 1 lost, you make Rs 2.39
+- **~295 trades per year** — roughly 1-2 trades per trading day, very manageable
+- **Strategy R is the star** — 74% of total P&L with 65.6% win rate (regular + hidden divergence)
 
 ---
 
