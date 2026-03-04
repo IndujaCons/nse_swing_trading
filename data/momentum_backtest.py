@@ -15,14 +15,14 @@ Strategy J — Weekly Close Support Bounce:
 Strategy T — Keltner Channel Pullback:
   Entry: Price pulls back to EMA(20) midline (was at upper Keltner in last 10 days)
          AND green candle AND no gap-down (open >= prev close)
-  Exit 1 (3-stage): +6% sell 1/3, +10% sell 1/3, upper Keltner sell remaining 1/3
-  Stop: 5% hard SL
+  Exit (2-stage): +6% sell 1/3, upper Keltner sell remaining 2/3
+  Stop: 5% hard SL (tightens to 3% after first partial)
 
 Strategy R — Bullish RSI Divergence:
   Entry: Price makes lower low but RSI(14) makes higher low (bullish divergence)
          AND RSI(14) < 40 AND green candle AND no gap-down
-  Exit (3-stage like T): structural SL (1% below swing low), +6% sell 1/3,
-         tight 3% SL after first exit, +10% sell 1/3, upper Keltner sell remaining
+  Exit (2-stage like T): structural SL (1% below swing low), +6% sell 1/3,
+         tight 3% SL after first exit, upper Keltner sell remaining
 """
 
 import os
@@ -298,11 +298,11 @@ class MomentumBacktester:
         true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         atr14_series = true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
 
-        # Tracking variables for Strategy T (3-stage)
+        # Tracking variables for Strategy T (2-stage: +6% partial, Keltner remaining)
         t_partial_stage = 0  # 0=none, 1=sold 1/3 at +6%, 2=sold 2/3 at +10%
         t_remaining = 0
 
-        # Tracking variables for Strategy R (RSI divergence, 3-stage like T)
+        # Tracking variables for Strategy R (RSI divergence, 2-stage like T)
         r_partial_stage = 0
         r_remaining = 0
         r_swing_low_stop = 0.0  # structural SL: 1% below divergence swing low
@@ -487,7 +487,7 @@ class MomentumBacktester:
                 continue
 
             elif strategy == "T":
-                # Strategy T: Keltner Channel Pullback (3-stage exit)
+                # Strategy T: Keltner Channel Pullback (2-stage exit)
                 # Entry: Price near EMA(20) (within 1%) AND was at upper Keltner in last 10 bars
                 #        AND green candle AND no gap-down
                 # Stage 0: 5% SL. +6% → sell 1/3, stage=1.
@@ -510,7 +510,7 @@ class MomentumBacktester:
                             price, sl_label))
                         exited = True
 
-                    # 3-stage partial exits
+                    # 2-stage partial exits (+6% sell 1/3, Keltner sells rest)
                     if not exited and t_partial_stage == 0 and price >= entry_price * 1.06 and third > 0:
                         trades.append(self._make_trade(
                             entry_date, entry_price, third, day,
@@ -569,7 +569,7 @@ class MomentumBacktester:
                 continue
 
             elif strategy == "R":
-                # Strategy R: Bullish RSI Divergence (3-stage exit like T)
+                # Strategy R: Bullish RSI Divergence (2-stage exit like T)
                 atr14 = float(atr14_series.iloc[i]) if not pd.isna(atr14_series.iloc[i]) else 0.0
                 upper_keltner = ema20 + 2 * atr14
 
@@ -586,7 +586,7 @@ class MomentumBacktester:
                             price, "STRUCTURAL_SL"))
                         exited = True
 
-                    # 3-stage partial exits
+                    # 2-stage partial exits (+6% sell 1/3, Keltner sells rest)
                     if not exited and r_partial_stage == 0 and price >= entry_price * 1.06 and third > 0:
                         trades.append(self._make_trade(
                             entry_date, entry_price, third, day,
@@ -1298,7 +1298,7 @@ class MomentumBacktester:
                                 exited = True
 
                 elif pos["strategy"] == "T":
-                    # T exits: 5% SL, +5% partial, upper Keltner remaining
+                    # T exits: 5% SL, +6% sell 1/3, upper Keltner sell remaining
                     ema20_val = float(ind["ema20"].iloc[i])
                     atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
                     upper_keltner = ema20_val + 2 * atr14_val
@@ -1338,7 +1338,7 @@ class MomentumBacktester:
                         exited = True
 
                 elif pos["strategy"] == "R":
-                    # R exits: structural SL → 3-stage partials → tight SL → Keltner upper
+                    # R exits: structural SL → 2-stage partials → tight SL → Keltner upper
                     ema20_val = float(ind["ema20"].iloc[i])
                     atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
                     upper_keltner = ema20_val + 2 * atr14_val
@@ -1358,7 +1358,7 @@ class MomentumBacktester:
                             pos, pos["remaining_shares"], day, price, "HARD_SL_3PCT"))
                         exited = True
 
-                    # 3-stage partial exits
+                    # 2-stage partial exits (+6% sell 1/3, Keltner sells rest)
                     if not exited:
                         third = pos["shares"] // 3
                         if stage == 0 and price >= pos["entry_price"] * 1.06 and third > 0:

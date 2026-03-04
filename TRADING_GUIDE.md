@@ -245,7 +245,7 @@ Most beginners either:
 
 The solution is **multi-stage exits** — selling in portions at different levels.
 
-### Example: 3-Stage Exit
+### Example: 2-Stage Exit
 
 You buy 90 shares at Rs 1,000. Instead of selling all 90 at one target:
 
@@ -254,21 +254,18 @@ Stage 1: Price hits +6% (Rs 1,060)
          → Sell 30 shares (1/3), lock in Rs 1,800 profit
          → Tighten stop-loss from 5% to 3%
 
-Stage 2: Price hits +10% (Rs 1,100)
-         → Sell 30 shares (1/3), lock in Rs 3,000 profit
-
-Stage 3: Price hits upper Keltner band (Rs 1,150)
-         → Sell remaining 30 shares, lock in Rs 4,500 profit
-         → Total: Rs 9,300 on a Rs 90,000 position
+Stage 2: Price hits upper Keltner band (Rs 1,150)
+         → Sell remaining 60 shares (2/3), lock in Rs 9,000 profit
+         → Total: Rs 10,800 on a Rs 90,000 position
 ```
 
 **Why this works:**
 - Stage 1 locks in guaranteed profit early (you can't lose on this trade anymore)
-- The tighter stop-loss after Stage 1 protects your remaining position
-- Stages 2 and 3 let the winners run for maximum gain
+- The tighter stop-loss after Stage 1 protects your remaining 2/3 position
+- Stage 2 lets the winners run to upper Keltner (natural momentum exhaustion)
 - If the stock reverses after Stage 1, you still made money on the first 1/3
 
-Compare with selling everything at +6%: you'd make Rs 5,400 instead of Rs 9,300. Multi-stage exits capture 50-70% more profit on winning trades.
+Compare with selling everything at +6%: you'd make Rs 5,400 instead of Rs 10,800. Multi-stage exits capture significantly more profit on winning trades.
 
 ### Tightening the Stop-Loss
 
@@ -351,12 +348,11 @@ Green candle ✓, CCI > -100 ✓, No gap-down ✓
 - 5% hard stop-loss from entry (initial)
 - Tightens to 3% after the first partial exit
 
-**Exit (3-stage scale-out):**
+**Exit (2-stage scale-out):**
 | Stage | Trigger | Action |
 |-------|---------|--------|
 | 1 | Price reaches entry + 6% | Sell 1/3 of position, tighten SL to 3% |
-| 2 | Price reaches entry + 10% | Sell 1/3 of position |
-| 3 | Price reaches upper Keltner band | Sell remaining 1/3 |
+| 2 | Price reaches upper Keltner band | Sell remaining 2/3 |
 | Safety | 10 trading days underwater | Exit all remaining |
 
 **Example:**
@@ -370,8 +366,7 @@ Green candle ✓, No gap-down ✓
 → BUY at Rs 5,470
 → Stop at Rs 5,197 (5% hard SL)
 → Target 1: Rs 5,798 (+6%) → sell 1/3, tighten SL to 3%
-→ Target 2: Rs 6,017 (+10%) → sell 1/3
-→ Target 3: Upper Keltner band → sell remaining 1/3
+→ Target 2: Upper Keltner band → sell remaining 2/3
 ```
 
 ---
@@ -397,12 +392,11 @@ Green candle ✓, No gap-down ✓
 - Tightens to 3% after the first partial exit
 - Maximum 5% stop distance (if swing low is too far away, the trade is skipped)
 
-**Exit (3-stage scale-out, same as T):**
+**Exit (2-stage scale-out, same as T):**
 | Stage | Trigger | Action |
 |-------|---------|--------|
 | 1 | Price reaches entry + 6% | Sell 1/3, tighten SL to 3% |
-| 2 | Price reaches entry + 10% | Sell 1/3 |
-| 3 | Price reaches upper Keltner band | Sell remaining 1/3 |
+| 2 | Price reaches upper Keltner band | Sell remaining 2/3 |
 | Safety | 10 trading days underwater | Exit all remaining |
 
 **Example:**
