@@ -16,7 +16,7 @@ Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J
 
 ### Strategy T — Keltner Channel Pullback
 - **Condition**: Price within 1% of EMA(20), stock touched upper Keltner band (EMA20 + 2x ATR14) in last 10 bars, green candle, **no gap-down** (open >= prev close)
-- **Stop**: 5% hard SL (tightens to 3% after first +6% partial exit — see Exit Rules)
+- **Stop**: 5% hard SL (shifts up to 3% below entry after first +6% partial exit — see Exit Rules)
 - **Edge**: Buying a pullback in a confirmed uptrend (was recently at upper band = strong momentum)
 
 ### Strategy R — Bullish RSI Divergence
@@ -43,14 +43,14 @@ J uses its own exit logic (2-stage):
 
 ### Strategy T Exits (2-Stage)
 1. **Hard SL**: 5% below entry — exit all remaining shares
-2. **+6%**: Sell 1/3 of shares (lock in first profit), SL tightens from 5% to **3%**
+2. **+6%**: Sell 1/3 of shares (lock in first profit), SL shifts up from 5% to **3% below entry** (entry × 0.97)
 3. **Upper Keltner band**: Sell remaining 2/3 (EMA20 + 2x ATR14)
 
 Note: The code contains a +10% stage that can fire before Keltner, but in practice Keltner almost always triggers first (~13% of all exits, +60L P&L — the single biggest profit contributor).
 
 ### Strategy R Exits (2-Stage, mirrors T)
 1. **Structural SL**: 1% below the divergence swing low — exit all remaining shares (natural invalidation)
-2. **+6%**: Sell 1/3 of shares (lock in first profit), SL tightens to **3%**
+2. **+6%**: Sell 1/3 of shares (lock in first profit), SL shifts up to **3% below entry** (entry × 0.97)
 3. **Upper Keltner band**: Sell remaining 2/3 (EMA20 + 2x ATR14)
 
 ### Underwater Exit (applies to J, T, and R)
@@ -60,7 +60,7 @@ Note: The code contains a +10% stage that can fire before Keltner, but in practi
 - **Nifty shield NOT used**: Tested shielding underwater exit when Nifty itself was underwater — it neutralized the benefit entirely (-865 vs baseline). Pure discipline of cutting losers works better.
 
 ### Why 3% Tight SL After First Target
-After Strategy T hits the first +6% target and sells 1/3, the remaining 2/3 position has a real risk: the stock can reverse and hit the original 5% SL, giving back more than the +6% partial profit.
+After Strategy T hits the first +6% target and sells 1/3, the remaining 2/3 position has a real risk: the stock can reverse and hit the original 5% SL, giving back more than the +6% partial profit. So the SL is shifted up from 5% to 3% below entry price, reducing downside on the remaining position.
 
 Tested across 11 years (2015-2025):
 

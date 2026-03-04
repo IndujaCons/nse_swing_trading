@@ -252,7 +252,7 @@ You buy 90 shares at Rs 1,000. Instead of selling all 90 at one target:
 ```
 Stage 1: Price hits +6% (Rs 1,060)
          → Sell 30 shares (1/3), lock in Rs 1,800 profit
-         → Tighten stop-loss from 5% to 3%
+         → SL shifts up from 5% to 3% below entry (Rs 950 → Rs 970)
 
 Stage 2: Price hits upper Keltner band (Rs 1,150)
          → Sell remaining 60 shares (2/3), lock in Rs 9,000 profit
@@ -346,12 +346,12 @@ Green candle ✓, CCI > -100 ✓, No gap-down ✓
 
 **Stop-Loss:**
 - 5% hard stop-loss from entry (initial)
-- Tightens to 3% after the first partial exit
+- After Stage 1 (+6%), SL shifts up to 3% below entry price
 
 **Exit (2-stage scale-out):**
 | Stage | Trigger | Action |
 |-------|---------|--------|
-| 1 | Price reaches entry + 6% | Sell 1/3 of position, tighten SL to 3% |
+| 1 | Price reaches entry + 6% | Sell 1/3 of position, SL shifts up to 3% below entry |
 | 2 | Price reaches upper Keltner band | Sell remaining 2/3 |
 | Safety | 10 trading days underwater | Exit all remaining |
 
@@ -365,7 +365,7 @@ Green candle ✓, No gap-down ✓
 
 → BUY at Rs 5,470
 → Stop at Rs 5,197 (5% hard SL)
-→ Target 1: Rs 5,798 (+6%) → sell 1/3, tighten SL to 3%
+→ Target 1: Rs 5,798 (+6%) → sell 1/3, SL shifts up to Rs 5,306 (3% below entry)
 → Target 2: Upper Keltner band → sell remaining 2/3
 ```
 
@@ -389,13 +389,13 @@ Green candle ✓, No gap-down ✓
 
 **Stop-Loss:**
 - **Structural stop**: 1% below the most recent swing low (this is the "structure" that must hold for the reversal to be valid)
-- Tightens to 3% after the first partial exit
+- After Stage 1 (+6%), SL shifts up to 3% below entry price
 - Maximum 5% stop distance (if swing low is too far away, the trade is skipped)
 
 **Exit (2-stage scale-out, same as T):**
 | Stage | Trigger | Action |
 |-------|---------|--------|
-| 1 | Price reaches entry + 6% | Sell 1/3, tighten SL to 3% |
+| 1 | Price reaches entry + 6% | Sell 1/3, SL shifts up to 3% below entry |
 | 2 | Price reaches upper Keltner band | Sell remaining 2/3 |
 | Safety | 10 trading days underwater | Exit all remaining |
 
@@ -441,8 +441,8 @@ The system allocates a fixed amount per trade (e.g., Rs 2,00,000) regardless of 
 
 Every trade has a predefined maximum loss:
 - **J**: Distance to weekly low support (typically 2-5%)
-- **T**: 5% hard stop, tightening to 3% after first exit
-- **R**: 1% below swing low (typically 2-5%), tightening to 3% after first exit
+- **T**: 5% hard stop, shifts up to 3% below entry after first exit
+- **R**: 1% below swing low (typically 2-5%), shifts up to 3% below entry after first exit
 
 With Rs 2,00,000 per trade and a 5% max stop, the worst-case loss per trade is Rs 10,000. With a 55% win rate and 1.5x reward/risk ratio, the system generates consistent profits over time.
 
