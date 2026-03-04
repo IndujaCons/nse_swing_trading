@@ -130,27 +130,30 @@ The UI shows both ATR% (ranking column) and Stop% (SL distance) in the Top Picks
 
 ### Current Baseline — JTR (2-Stage 6%+Keltner + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T Tight SL 3% + R filters: RSI<40, divergence>=3pt, stop cap 5% + 3 entries/day)
 
-| Year | Trades | WR% | Return% | P&L | AvgWin | AvgLoss | PF |
-|---|---|---|---|---|---|---|---|
-| 2025 | 275 | 52.7% | +40.2% | +8,04,706 | 9,020 | -3,870 | 2.60 |
-| 2024 | 235 | 57.9% | +26.8% | +5,36,923 | 8,251 | -5,911 | 1.92 |
-| 2023 | 228 | 56.1% | +32.7% | +6,54,489 | 8,467 | -4,293 | 2.52 |
-| 2022 | 308 | 67.2% | +52.3% | +10,46,944 | 8,375 | -6,800 | 2.52 |
-| 2021 | 269 | 57.2% | +39.9% | +7,98,983 | 9,143 | -5,296 | 2.31 |
-| 2020 | 326 | 66.0% | +62.9% | +12,57,276 | 9,953 | -7,953 | 2.42 |
-| 2019 | 373 | 63.5% | +68.7% | +13,73,115 | 9,028 | -5,636 | 2.79 |
-| 2018 | 271 | 51.3% | +22.0% | +4,39,425 | 8,279 | -5,389 | 1.62 |
-| 2017 | 239 | 58.6% | +45.9% | +9,18,746 | 9,520 | -4,182 | 3.22 |
-| 2016 | 271 | 53.1% | +33.2% | +6,64,514 | 8,792 | -4,737 | 2.10 |
-| 2015 | 203 | 43.3% | -3.0% | -59,876 | 7,909 | -6,573 | 0.92 |
-| **Avg/yr** | **272** | **57.8%** | **+38.3%** | **+7,66,840** | **8,875** | **-5,491** | **2.21** |
+| Year | Trades | Win | Loss | WR% | AvgWin | AvgLoss | PF | Return% | P&L | Hold |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 2015 | 223 | 99 | 124 | 44.4% | 7,131 | -6,276 | 0.91 | -3.6% | -0.72L | 16d |
+| 2016 | 279 | 143 | 136 | 51.3% | 8,297 | -4,469 | 1.95 | +28.9% | +5.79L | 23d |
+| 2017 | 270 | 161 | 109 | 59.6% | 9,179 | -4,240 | 3.20 | +50.8% | +10.16L | 17d |
+| 2018 | 306 | 156 | 150 | 51.0% | 7,670 | -4,956 | 1.61 | +22.7% | +4.53L | 18d |
+| 2019 | 447 | 305 | 142 | 68.2% | 8,829 | -5,520 | 3.44 | +95.5% | +19.09L | 26d |
+| 2020 | 345 | 217 | 128 | 62.9% | 9,120 | -7,582 | 2.04 | +50.4% | +10.08L | 19d |
+| 2021 | 274 | 160 | 114 | 58.4% | 9,203 | -5,285 | 2.44 | +43.5% | +8.70L | 16d |
+| 2022 | 345 | 234 | 111 | 67.8% | 7,787 | -6,422 | 2.56 | +55.5% | +11.09L | 26d |
+| 2023 | 242 | 138 | 104 | 57.0% | 8,159 | -4,569 | 2.37 | +32.5% | +6.51L | 25d |
+| 2024 | 267 | 160 | 107 | 59.9% | 7,996 | -5,836 | 2.05 | +32.7% | +6.55L | 18d |
+| 2025 | 292 | 156 | 136 | 53.4% | 7,862 | -3,372 | 2.67 | +38.4% | +7.68L | 21d |
+| **Avg** | **299** | **175** | **124** | **57.6%** | **8,294** | **-5,321** | **2.29** | **+40.7%** | **+8.13L** | **21d** |
+| **Total** | **3,290** | **1,929** | **1,361** | | | | | **+447.3%** | **+89.46L** | |
 
-- **Positive years: 10/11** (2015 is the only negative year at -3.0%)
-- **Best year: +68.7% (2019)**
-- **Worst year: -3.0% (2015)**
-- **Total P&L: Rs ~84.4 Lakhs on 20L capital over 11 years (422% cumulative)**
-- **Avg Win/Loss ratio: 1.6x** (make Rs 8,875 on winners, lose Rs 5,491 on losers)
-- **R adds significant value** — 938 trades with 66.4% WR, highest P&L contributor at 42.0L
+- **Winning years: 10/11** (only 2015 red at -0.72L)
+- **Best year: +95.5% (2019)**
+- **Worst year: -3.6% (2015)**
+- **Total P&L: Rs 89.5 Lakhs on 20L capital**
+- **CAGR: 16.7%**
+- **Avg Win/Loss ratio: 1.6x** (make Rs 8,294 on winners, lose Rs 5,321 on losers)
+- **Avg PF: 2.29**
+- **By strategy**: R: 1,288 trades, 65.4% WR, +49.7L (56% of total) | J: 795 trades, 54.5% WR, +14.1L | T: 1,207 trades, 54.2% WR, +25.6L
 
 ### Previous JT-only Baseline (before Strategy R)
 
@@ -259,12 +262,12 @@ The strategy runs in three places. All three use identical entry/exit logic:
 
 ## Risk Notes
 
-- 2015 is the only negative year (-3.0%) — survivorship bias (current Nifty 100 stocks tested on 2015 data).
-- 2018 is weakest positive year (+22.0%) due to broad market correction.
+- 2015 is the only negative year (-3.6%) — survivorship bias (current Nifty 100 stocks tested on 2015 data).
+- 2018 is weakest positive year (+22.7%) due to broad market correction.
 - ATR% ranking can underperform in strong trending markets where volatile stocks are the big runners.
 - Results are based on daily closing prices. Live execution at different prices will cause slippage.
 - T strategy SL slippage in backtest is an artifact of daily-bar checking. Live trading with actual SL orders will have tighter stops.
 - Capital check: entries are skipped if trade cost would exceed available capital (20L + running PnL - deployed). Prevents over-leveraging after losses.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).
-- ~203-373 trades per year (avg 272), mix of J, T, and R.
+- ~223-447 trades per year (avg 299), mix of J, T, and R.
 - yfinance data variability: backtest numbers can shift ~0.5-1% between runs due to Yahoo Finance adjusting historical prices for splits/dividends.
