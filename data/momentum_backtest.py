@@ -935,6 +935,16 @@ class MomentumBacktester:
         if entry_i is None:
             return {"error": f"Entry date {target_date} not found in price data"}
 
+        # Signal bar index: the backtest evaluates entry conditions on this bar
+        # (entry_i may be +1 day ahead for display purposes)
+        signal_i = None
+        for idx_i, ts in enumerate(raw.index):
+            if ts.date() == entry_date_bt:
+                signal_i = idx_i
+                break
+        if signal_i is None:
+            signal_i = entry_i  # fallback
+
         closes = raw["Close"]
         opens = raw["Open"]
         highs = raw["High"]
@@ -954,14 +964,12 @@ class MomentumBacktester:
             w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min().shift(2)
             w_low_stop_daily = w_low_stop.reindex(raw.index, method="ffill")
 
-            ws = float(w_support_daily.iloc[entry_i]) if not pd.isna(w_support_daily.iloc[entry_i]) else 0
-            wls = float(w_low_stop_daily.iloc[entry_i]) if not pd.isna(w_low_stop_daily.iloc[entry_i]) else 0
+            ws = float(w_support_daily.iloc[signal_i]) if not pd.isna(w_support_daily.iloc[signal_i]) else 0
+            wls = float(w_low_stop_daily.iloc[signal_i]) if not pd.isna(w_low_stop_daily.iloc[signal_i]) else 0
 
             # Find which week formed the support/stop levels
-            entry_date_val = raw.index[entry_i]
-            # Find the weekly bar index corresponding to entry date (shifted by 2)
-            weekly_idx = weekly.index.searchsorted(entry_date_val)
-            # The shifted window ends 2 weeks before, and spans 26 weeks
+            signal_date_val = raw.index[signal_i]
+            weekly_idx = weekly.index.searchsorted(signal_date_val)
             ws_formed_week = ""
             wls_formed_week = ""
             if weekly_idx >= 2:
@@ -974,12 +982,14 @@ class MomentumBacktester:
                     wls_week_idx = window["Low"].idxmin()
                     wls_formed_week = str(wls_week_idx.date()) if pd.notna(wls_week_idx) else ""
 
-            hl_range = highs.iloc[entry_i] - lows.iloc[entry_i]
-            ibs_val = float((closes.iloc[entry_i] - lows.iloc[entry_i]) / hl_range) if hl_range > 0 else 0.5
+            # Use signal bar (backtest date) for setup indicators, not display date
+            hl_range = highs.iloc[signal_i] - lows.iloc[signal_i]
+            ibs_val = float((closes.iloc[signal_i] - lows.iloc[signal_i]) / hl_range) if hl_range > 0 else 0.5
             cci_series = self._calculate_cci_series(highs, lows, closes, 20)
-            cci_val = float(cci_series.iloc[entry_i]) if not pd.isna(cci_series.iloc[entry_i]) else 0
+            cci_val = float(cci_series.iloc[signal_i]) if not pd.isna(cci_series.iloc[signal_i]) else 0
 
-            dist_pct = round(((entry_price - ws) / ws) * 100, 2) if ws > 0 else 0
+            sig_price = float(closes.iloc[signal_i])
+            dist_pct = round(((sig_price - ws) / ws) * 100, 2) if ws > 0 else 0
             stop_dist = round(((entry_price - wls) / entry_price) * 100, 2) if wls > 0 else 0
 
             setup["description"] = f"{symbol} was trading near its 26-week support level (weekly close support at {ws:,.2f})"
@@ -1002,14 +1012,14 @@ class MomentumBacktester:
             true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
             atr14_series = true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
 
-            ema20_val = float(ema20_series.iloc[entry_i])
-            atr14_val = float(atr14_series.iloc[entry_i]) if not pd.isna(atr14_series.iloc[entry_i]) else 0
+            ema20_val = float(ema20_series.iloc[signal_i])
+            atr14_val = float(atr14_series.iloc[signal_i]) if not pd.isna(atr14_series.iloc[signal_i]) else 0
             upper_k = ema20_val + 2 * atr14_val
 
             # Find last touch of upper Keltner
             last_touch_date = None
             pullback_high = 0
-            for lb in range(entry_i - 1, max(entry_i - 11, -1), -1):
+            for lb in range(signal_i - 1, max(signal_i - 11, -1), -1):
                 past_h = float(highs.iloc[lb])
                 past_ema20 = float(ema20_series.iloc[lb])
                 past_atr14 = float(atr14_series.iloc[lb]) if not pd.isna(atr14_series.iloc[lb]) else 0
@@ -1038,12 +1048,12 @@ class MomentumBacktester:
 
             # Try regular divergence first, then hidden
             found, detail = self._explain_bullish_divergence(
-                lows_vals, rsi14_vals, entry_i, swing_lows)
+                lows_vals, rsi14_vals, signal_i, swing_lows)
             div_type = "regular"
 
             if not found:
                 found, detail = self._explain_hidden_bullish_divergence(
-                    lows_vals, rsi14_vals, entry_i, swing_lows)
+                    lows_vals, rsi14_vals, signal_i, swing_lows)
                 div_type = "hidden"
 
             if found and detail:
@@ -1092,11 +1102,11 @@ class MomentumBacktester:
             else:
                 setup["description"] = f"{symbol} had bullish RSI divergence signal (detail unavailable for exact entry bar)"
 
-        # Entry details
-        o = round(float(opens.iloc[entry_i]), 2)
-        h = round(float(highs.iloc[entry_i]), 2)
-        l = round(float(lows.iloc[entry_i]), 2)
-        c = round(float(closes.iloc[entry_i]), 2)
+        # Entry details — use signal bar (backtest evaluates and enters at signal bar close)
+        o = round(float(opens.iloc[signal_i]), 2)
+        h = round(float(highs.iloc[signal_i]), 2)
+        l = round(float(lows.iloc[signal_i]), 2)
+        c = round(float(closes.iloc[signal_i]), 2)
 
         entry_info = {
             "date": entry_date_display.strftime("%b %d, %Y"),
