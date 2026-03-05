@@ -895,6 +895,19 @@ class MomentumBacktester:
                     matched.append(t)
 
         if not matched:
+            # Wider fallback: find nearest trade within ±10 days
+            # (portfolio backtest may enter on different day than single-stock)
+            candidates = []
+            for t in trades:
+                t_entry = dt.strptime(t["entry_date"], "%Y-%m-%d").date()
+                gap = abs((t_entry - target_date).days)
+                if gap <= 10:
+                    candidates.append((gap, t))
+            if candidates:
+                candidates.sort(key=lambda x: x[0])
+                matched = [candidates[0][1]]
+
+        if not matched:
             # List available entry dates for debugging
             available = sorted(set(t["entry_date"] for t in trades))
             return {"error": f"No trade on {entry_date_str}. Nearby entry dates: {', '.join(available[:10])}"}
