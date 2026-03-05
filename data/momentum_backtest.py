@@ -636,7 +636,8 @@ class MomentumBacktester:
                             was_at_upper = True
                             break
                     no_gap_down_t = (prev_close is None or open_price >= prev_close)
-                    if near_ema20 and was_at_upper and price > open_price and no_gap_down_t:
+                    _t_rsi14 = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 50.0
+                    if near_ema20 and was_at_upper and price > open_price and no_gap_down_t and _t_rsi14 < 51:
                         shares = int(capital // price)
                         if shares > 0:
                             entry_price = price
@@ -1578,7 +1579,8 @@ class MomentumBacktester:
                             if past_high >= past_ema20 + 2 * past_atr14:
                                 was_at_upper = True
                                 break
-                        if near_ema20 and was_at_upper and is_green:
+                        _t_rsi14 = float(ind["rsi14"].iloc[i]) if not pd.isna(ind["rsi14"].iloc[i]) else 50.0
+                        if near_ema20 and was_at_upper and is_green and _t_rsi14 < 51:
                             already = any(s["symbol"] == ticker for s in signals)
                             if not already:
                                 signals.append({

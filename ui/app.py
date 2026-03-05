@@ -488,9 +488,26 @@ def buy_live_signal():
 def get_live_exit_signals():
     """Check exit conditions for all active positions (merged across users)."""
     try:
+        # Fetch live LTPs from Zerodha if connected
+        ltps = {}
+        all_tickers = set()
+        for engine in user_engines.values():
+            for p in engine.get_positions():
+                all_tickers.add(p["ticker"])
+        if all_tickers:
+            for broker in brokers.values():
+                if broker.is_connected():
+                    instruments = [f"NSE:{t}" for t in all_tickers]
+                    ltp_data = broker.get_ltp(instruments)
+                    for t in all_tickers:
+                        key = f"NSE:{t}"
+                        if key in ltp_data:
+                            ltps[t] = ltp_data[key].get("last_price")
+                    break
+
         all_exits = []
         for uid, engine in user_engines.items():
-            exits = engine.check_exit_signals()
+            exits = engine.check_exit_signals(ltps=ltps if ltps else None)
             for e in exits:
                 e["user_id"] = uid
             all_exits.extend(exits)

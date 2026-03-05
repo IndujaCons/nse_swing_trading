@@ -325,7 +325,9 @@ class LiveSignalsEngine:
                             break
                     # Skip T if stock already has a J signal (match backtest dedup)
                     already_j = any(s["ticker"] == ticker for s in j_signals)
-                    if near_ema20 and was_at_upper and is_green and not already_j:
+                    _t_rsi14_series = _calculate_rsi_series(closes, 14)
+                    _t_rsi14 = float(_t_rsi14_series.iloc[i]) if not pd.isna(_t_rsi14_series.iloc[i]) else 50.0
+                    if near_ema20 and was_at_upper and is_green and not already_j and _t_rsi14 < 51:
                         atr_norm_t = round(atr14 / price * 100, 2) if price > 0 else 99.0
                         t_signals.append({
                             "ticker": ticker,
@@ -582,8 +584,9 @@ class LiveSignalsEngine:
 
     # ==================== Exit Signal Checking ====================
 
-    def check_exit_signals(self):
-        """Check exit conditions for all active positions."""
+    def check_exit_signals(self, ltps=None):
+        """Check exit conditions for all active positions.
+        ltps: optional dict {ticker: live_price} from Zerodha. Falls back to yfinance close."""
         positions = self.get_positions()
         if not positions:
             return []
@@ -612,7 +615,7 @@ class LiveSignalsEngine:
             if daily.empty or len(daily) < 2:
                 continue
 
-            current_price = float(daily["Close"].iloc[-1])
+            current_price = ltps.get(ticker) if ltps and ticker in ltps else float(daily["Close"].iloc[-1])
             highs = daily["High"]
 
             entry_price = pos["entry_price"]
@@ -657,6 +660,8 @@ class LiveSignalsEngine:
                         # Chandelier exit: highest high since entry - 3x ATR(14)
                         entry_date_str = pos.get("entry_date", "")
                         entry_dt = pd.Timestamp(entry_date_str) if entry_date_str else daily.index[0]
+                        if entry_dt.tzinfo is None and daily.index.tz is not None:
+                            entry_dt = entry_dt.tz_localize(daily.index.tz)
                         since_entry = daily[daily.index >= entry_dt]
                         if len(since_entry) >= 2:
                             highest_high = float(since_entry["High"].max())
@@ -777,13 +782,15 @@ class LiveSignalsEngine:
             if daily.empty or len(daily) < 2:
                 continue
 
-            current_price = float(daily["Close"].iloc[-1])
+            current_price = ltps.get(pos["ticker"]) if ltps and pos["ticker"] in ltps else float(daily["Close"].iloc[-1])
             entry_price = pos["entry_price"]
 
             if current_price >= entry_price:
                 continue  # Not underwater
 
             entry_dt = pd.Timestamp(entry_date_str)
+            if entry_dt.tzinfo is None and daily.index.tz is not None:
+                entry_dt = entry_dt.tz_localize(daily.index.tz)
             trading_days_held = len(daily[daily.index >= entry_dt])
             if trading_days_held >= 10:
                 pnl_pct = round(((current_price - entry_price) / entry_price) * 100, 2)
