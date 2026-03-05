@@ -636,8 +636,7 @@ class MomentumBacktester:
                             was_at_upper = True
                             break
                     no_gap_down_t = (prev_close is None or open_price >= prev_close)
-                    _t_rsi14 = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 50.0
-                    if near_ema20 and was_at_upper and price > open_price and no_gap_down_t and _t_rsi14 < 51 and ibs > 0.5:
+                    if near_ema20 and was_at_upper and price > open_price and no_gap_down_t and ibs > 0.5:
                         shares = int(capital // price)
                         if shares > 0:
                             entry_price = price
@@ -726,7 +725,8 @@ class MomentumBacktester:
                     if divergence and swing_low_val is not None:
                         r_swing_low_stop_cand = swing_low_val * 0.99
                         r_stop_pct_cand = (price - r_swing_low_stop_cand) / price * 100 if price > 0 else 99.0
-                        if 2.0 <= r_stop_pct_cand <= 5.0:  # Min 2% stop distance
+                        r_min_stop = 2.0 if is_hidden_div else 0.0
+                        if r_min_stop < r_stop_pct_cand <= 5.0:
                             shares = int(capital // price)
                             if shares > 0:
                                 entry_price = price
@@ -1579,8 +1579,7 @@ class MomentumBacktester:
                             if past_high >= past_ema20 + 2 * past_atr14:
                                 was_at_upper = True
                                 break
-                        _t_rsi14 = float(ind["rsi14"].iloc[i]) if not pd.isna(ind["rsi14"].iloc[i]) else 50.0
-                        if near_ema20 and was_at_upper and is_green and _t_rsi14 < 51 and float(ind["ibs"].iloc[i]) > 0.5:
+                        if near_ema20 and was_at_upper and is_green and float(ind["ibs"].iloc[i]) > 0.5:
                             already = any(s["symbol"] == ticker for s in signals)
                             if not already:
                                 signals.append({
@@ -1612,7 +1611,8 @@ class MomentumBacktester:
                         if divergence and swing_low_val is not None:
                             r_struct_stop = swing_low_val * 0.99
                             r_stop_pct = (price - r_struct_stop) / price * 100 if price > 0 else 99.0
-                            if 2.0 <= r_stop_pct <= 5.0:  # Min 2% stop distance
+                            r_min_stop = 2.0 if r_div_type == "hidden" else 0.0
+                            if r_min_stop < r_stop_pct <= 5.0:
                                 signals.append({
                                     "symbol": ticker,
                                     "strategy": "R",

@@ -325,9 +325,7 @@ class LiveSignalsEngine:
                             break
                     # Skip T if stock already has a J signal (match backtest dedup)
                     already_j = any(s["ticker"] == ticker for s in j_signals)
-                    _t_rsi14_series = _calculate_rsi_series(closes, 14)
-                    _t_rsi14 = float(_t_rsi14_series.iloc[i]) if not pd.isna(_t_rsi14_series.iloc[i]) else 50.0
-                    if near_ema20 and was_at_upper and is_green and not already_j and _t_rsi14 < 51 and ibs > 0.5:
+                    if near_ema20 and was_at_upper and is_green and not already_j and ibs > 0.5:
                         atr_norm_t = round(atr14 / price * 100, 2) if price > 0 else 99.0
                         t_signals.append({
                             "ticker": ticker,
@@ -364,7 +362,8 @@ class LiveSignalsEngine:
                         rsi14_at_bar = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 0.0
                         r_struct_stop = round(swing_low_val * 0.99, 2)
                         r_stop_pct = round((price - r_struct_stop) / price * 100, 2) if price > 0 else 99.0
-                        if 2.0 <= r_stop_pct <= 5.0:  # Min 2% stop distance
+                        r_min_stop = 2.0 if r_div_type == "hidden" else 0.0
+                        if r_min_stop < r_stop_pct <= 5.0:
                             # ATR14 for volatility ranking
                             prev_close_r = closes.shift(1)
                             tr1_r = highs - lows
