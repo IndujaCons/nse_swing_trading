@@ -1711,6 +1711,7 @@ class MomentumBacktester:
                             pos["entry_stop_j"] = sig["entry_stop_j"]
                         elif sig["strategy"] == "R":
                             pos["r_swing_low_stop"] = sig["r_swing_low_stop"]
+                            pos["div_type"] = sig.get("div_type", "regular")
                         positions.append(pos)
             elif signals and available_slots <= 0:
                 missed_signals += len(signals)
@@ -1782,6 +1783,8 @@ class MomentumBacktester:
         trade["strategy"] = pos["strategy"]
         trade["capital_used"] = round(shares * pos["entry_price"], 2)
         trade["capital_available"] = pos.get("capital_available", 0)
+        if "div_type" in pos:
+            trade["div_type"] = pos["div_type"]
         return trade
 
     def run_all_stocks(self, period_days, capital=100000, progress_callback=None, universe=50, end_date=None):
