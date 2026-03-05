@@ -342,6 +342,7 @@ Green candle ✓, CCI > -100 ✓, No gap-down ✓
 | Price within 1% of EMA(20) | Stock has pulled back to the midline |
 | High touched upper Keltner in last 10 bars | Confirms recent strength |
 | Green candle (close > open) | Bounce is starting |
+| IBS > 0.5 | Close in upper half of bar (bullish) |
 | No gap-down | No overnight panic |
 
 **Stop-Loss:**
@@ -384,7 +385,7 @@ Green candle ✓, No gap-down ✓
 | Two swing lows where price: lower low, RSI(14): higher low | Bullish divergence confirmed |
 | RSI divergence >= 3 points | Meaningful divergence, not noise |
 | RSI(14) < 40 at current swing low | Stock is in oversold zone |
-| Structural stop 2–5% from entry | Risk is manageable (min 2% to avoid too-tight stops) |
+| Structural stop 0–5% from entry | Risk is manageable |
 | Green candle (close > open) | Reversal candle |
 | No gap-down | No continued panic |
 
@@ -395,14 +396,15 @@ Green candle ✓, No gap-down ✓
 | RSI divergence >= 5 points | Stronger threshold for continuation signals |
 | RSI(14) < 60 at current swing low | Relaxed threshold (stock is in uptrend) |
 | Close > EMA(50) | Confirms stock is in an uptrend |
-| Structural stop 2–5% from entry | Risk is manageable |
+| Structural stop 2–5% from entry | Min 2% for hidden (avoid too-tight continuation entries) |
 | Green candle (close > open) | Continuation candle |
 | No gap-down | No sudden weakness |
 
 **Stop-Loss:**
 - **Structural stop**: 1% below the most recent swing low (this is the "structure" that must hold for the divergence to be valid)
 - After Stage 1 (+6%), SL shifts up to 3% below entry price
-- Stop distance must be 2–5% (minimum 2% to avoid tight stops, maximum 5% to skip stale divergence)
+- **Regular divergence**: stop distance 0–5% (max 5% to skip stale divergence)
+- **Hidden divergence**: stop distance 2–5% (min 2% to avoid too-tight continuation entries)
 
 **Exit (2-stage scale-out, same as T):**
 | Stage | Trigger | Action |
@@ -465,7 +467,7 @@ In a trending market, T generates the most signals. In a rangebound market, J sh
 
 ### Capital Allocation
 
-The system allocates a fixed amount per trade (e.g., Rs 2,00,000) regardless of which strategy generated the signal. A maximum of **3 new trades per day** is enforced — even if 10 signals fire on the same day, only the best 3 are taken. Signals are ranked by risk (lowest volatility first) so the system prefers calmer stocks over volatile ones.
+The system allocates a fixed amount per trade (e.g., Rs 2,00,000) regardless of which strategy generated the signal. A maximum of **2 new trades per day** is enforced — even if 10 signals fire on the same day, only the best 2 are taken. Signals are ranked by risk (lowest volatility first) so the system prefers calmer stocks over volatile ones.
 
 ### Risk Management
 
@@ -483,49 +485,59 @@ With Rs 2,00,000 per trade and a 5% max stop, the worst-case loss per trade is R
 The JTR system has been backtested over 11 years (2015-2025) on Nifty 100 stocks with Rs 20 lakh capital and Rs 2 lakh per trade:
 
 ```
-JTR Portfolio — R Priority + ATR Rank (Nifty 100, 20L, 2L/trade, 2/day)
-R: Regular + Hidden Divergence, EMA50 filter, min 2% stop
+TR Portfolio — R Priority + ATR Rank (Nifty 100, 20L, 2L/trade, 2/day)
+R: Regular (stop 0-5%) + Hidden Divergence (stop 2-5%), T: IBS > 0.5
 
-  Year     Tr    Win   Loss     WR%    AvgWin   AvgLoss     PF     Ret%        P&L
+  Year     Tr    Win   Loss     WR%    AvgWin   AvgLoss     PF   Gross    Net     Ret%
 -----------------------------------------------------------------------------------------------
-  2015    228    101    127   44.3%     7,973    -6,111   1.04  + 1.5%  +   0.3L
-  2016    273    157    116   57.5%     8,359    -4,819   2.35  +37.5%  +   7.5L
-  2017    242    138    104   57.0%     9,505    -4,247   2.97  +43.5%  +   8.7L
-  2018    258    135    123   52.3%     8,215    -5,836   1.54  +19.5%  +   3.9L
-  2019    426    297    129   69.7%     9,020    -5,693   3.65  +97.0%  +  19.4L
-  2020    337    227    110   67.4%     9,333    -7,619   2.53  +64.0%  +  12.8L
-  2021    368    238    130   64.7%     8,822    -5,702   2.83  +68.0%  +  13.6L
-  2022    254    139    115   54.7%     8,592    -6,612   1.57  +21.5%  +   4.3L
-  2023    308    211     97   68.5%     9,246    -5,277   3.81  +72.0%  +  14.4L
-  2024    298    185    113   62.1%     8,739    -5,926   2.41  +47.5%  +   9.5L
-  2025    253    135    118   53.4%     9,077    -4,669   2.22  +33.5%  +   6.7L
+  2015    197     84    113   42.6%    +8,879    -6,209   1.06   +0.4L   -0.0L   -0.1%
+  2016    290    175    115   60.3%    +8,840    -5,127   2.62   +9.6L   +7.2L  +36.0%
+  2017    282    170    112   60.3%    +9,641    -4,239   3.45  +11.6L   +8.8L  +44.1%
+  2018    287    165    122   57.5%    +8,322    -6,035   1.87   +6.4L   +4.6L  +23.2%
+  2019    403    289    114   71.7%    +9,105    -5,226   4.42  +20.4L  +15.7L  +78.7%
+  2020    302    205     97   67.9%   +10,145    -7,666   2.80  +13.4L  +10.2L  +51.2%
+  2021    357    226    131   63.3%    +8,826    -5,421   2.81  +12.8L   +9.7L  +48.6%
+  2022    235    124    111   52.8%    +8,517    -6,385   1.49   +3.5L   +2.4L  +11.9%
+  2023    266    172     94   64.7%    +8,841    -4,596   3.52  +10.9L   +8.2L  +41.2%
+  2024    302    179    123   59.3%    +8,937    -5,246   2.48   +9.5L   +7.1L  +35.6%
+  2025    280    156    124   55.7%    +9,680    -4,343   2.80   +9.7L   +7.3L  +36.4%
 -----------------------------------------------------------------------------------------------
-   Avg    295    178    117   60.5%     8,876    -5,695   2.39  +45.9%  +   9.2L
- Total   3245   1963   1282                                    +505.5%  + 101.1L
+   Avg    291    177    114   60.8%    +9,099    -5,475   2.57   +9.8L   +7.4L  +37.0%
+ Total   3201   1945   1256                                    +108.2L  +81.3L   +407%
+
+Money Flow:
+  Gross P&L:          +108.2L (100%)
+  STT:                  -4.4L (4.1%)
+  Other charges:        -1.0L (0.9%)
+  STCG tax (20%):      -21.4L (19.8%)
+  Net in your pocket:  +81.3L (75.2%)
 
 Summary:
-  - Winning years: 11/11 (all years profitable, including 2015 at +0.3L)
-  - Best year: +97.0% (2019)
-  - Worst year: +1.5% (2015)
-  - Total P&L: Rs 101.1 Lakhs on 20L capital
-  - CAGR: 18.0%
-  - Avg Win/Loss: 1.6x
-  - Avg PF: 2.39
-  - Trades/yr: 295
+  - Winning years: 11/11 (all years profitable gross, 2015 breakeven net)
+  - Best year: +78.7% net (2019)
+  - Worst year: -0.1% net (2015)
+  - Net CAGR: 15.9% after all charges and taxes
+  - Avg Win/Loss: 1.7x
+  - Avg PF: 2.57
+  - Trades/yr: 291, avg hold: 24 days
+
+Risk Metrics:
+  Sharpe: 2.00  |  Sortino: 6.25  |  Max DD: -13.4%  |  Vol: 21.6%  |  R² vs Nifty: 0.377
 
 By strategy:
-  - R: 1,819 trades, 65.6% WR, +75.3L (74% of total P&L)
-  - J: 645 trades, 53.5% WR, +10.1L (10% of total P&L)
-  - T: 781 trades, 54.4% WR, +15.8L (16% of total P&L)
+  - R: 2,304 trades, 63.3% WR, +89.4L (83% of gross)
+    Regular: 1,202 trades, 68.3% WR, +57.3L
+    Hidden:  1,102 trades, 57.9% WR, +32.3L
+  - T: 897 trades, 54.2% WR, +18.8L (17% of gross)
 ```
 
 Key takeaways:
-- **All 11 years profitable** (2015 was the weakest at +0.3L but still green)
-- **Average return: +45.9% per year** on effective capital deployed
-- **Win rate: 60.5%** — winners are 1.6x larger than losers
-- **Average Profit Factor: 2.39** — for every Rs 1 lost, you make Rs 2.39
-- **~295 trades per year** — roughly 1-2 trades per trading day, very manageable
-- **Strategy R is the star** — 74% of total P&L with 65.6% win rate (regular + hidden divergence)
+- **All 11 years profitable** (gross), net post-tax 2015 is breakeven
+- **Net CAGR: 15.9%** after STT, charges, and 20% STCG tax — you keep 75 paise per rupee earned
+- **Win rate: 60.8%** — winners are 1.7x larger than losers
+- **Average Profit Factor: 2.57** — for every Rs 1 lost, you make Rs 2.57
+- **~291 trades per year** — roughly 1-2 trades per trading day, very manageable
+- **Strategy R is the star** — 83% of gross P&L (Regular 68.3% WR + Hidden 57.9% WR)
 
 ---
 

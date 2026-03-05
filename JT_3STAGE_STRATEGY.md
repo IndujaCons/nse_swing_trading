@@ -2,7 +2,7 @@
 
 ## Overview
 
-Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J, T, R) with a 2-stage partial exit system. Capital: 20L, 2L per trade, 3 entries/day.
+Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J, T, R) with a 2-stage partial exit system. Capital: 20L, 2L per trade, 2 entries/day.
 
 ---
 
@@ -15,17 +15,17 @@ Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J
 - **Edge**: Defined structural support gives tight risk
 
 ### Strategy T — Keltner Channel Pullback
-- **Condition**: Price within 1% of EMA(20), stock touched upper Keltner band (EMA20 + 2x ATR14) in last 10 bars, green candle, **no gap-down** (open >= prev close)
+- **Condition**: Price within 1% of EMA(20), stock touched upper Keltner band (EMA20 + 2x ATR14) in last 10 bars, green candle, **IBS > 0.5** (close in upper half of bar), **no gap-down** (open >= prev close)
 - **Stop**: 5% hard SL (shifts up to 3% below entry after first +6% partial exit — see Exit Rules)
 - **Edge**: Buying a pullback in a confirmed uptrend (was recently at upper band = strong momentum)
 
 ### Strategy R — Bullish RSI Divergence (Regular + Hidden)
 - **Regular Divergence** (reversal): Price makes a lower low but RSI(14) makes a higher low, **RSI(14) < 40** at the divergence point, **min 3-point RSI divergence**
 - **Hidden Divergence** (continuation): Price makes a higher low but RSI(14) makes a lower low, **RSI(14) < 60** (relaxed), **min 5-point RSI divergence**, **close > EMA(50)** (uptrend filter)
-- **Common Filters**: Green candle, **no gap-down** (open >= prev close), **min stop distance: 2%**
+- **Common Filters**: Green candle, **no gap-down** (open >= prev close)
 - **Swing Low Detection**: Low[i] is minimum of surrounding window (5 bars left, 3 bars right). Signal confirmed 3 bars after actual low. Min 5 bars separation between the two swing lows.
 - **Divergence Window**: Looks back up to 50 bars for two qualifying swing lows
-- **Stop**: Structural SL — 1% below the divergence swing low (natural invalidation level). **Stop distance: 2–5%** — skip signal if structural stop is <2% (too tight) or >5% away (stale divergence).
+- **Stop**: Structural SL — 1% below the divergence swing low (natural invalidation level). **Regular: stop 0–5%**, **Hidden: stop 2–5%** (min 2% for hidden to avoid too-tight continuation entries).
 - **Priority**: Regular divergence checked first; hidden only if regular not found
 - **Dedup**: Skip if J or T already fired for the same stock on the same day
 - **Edge**: Regular divergence = momentum improving despite price weakness (reversal). Hidden divergence = uptrend continuation despite temporary RSI dip.
@@ -92,7 +92,7 @@ The original system sold 1/2 at +5% and exited the other 1/2 on indicator. The 2
 | Capital | 20 Lakhs |
 | Per trade | 2 Lakhs |
 | Max positions | 10 (20L / 2L) |
-| Entries per day | 3 |
+| Entries per day | 2 |
 | Strategies | J + T + R |
 | Underwater exit | 10 trading days |
 | T tight SL | 3% after first +6% exit |
@@ -131,32 +131,33 @@ The UI shows both ATR% (ranking column) and Stop% (SL distance) in the Top Picks
 
 ## Backtest Results — 11 Years (2015-2025), Nifty 100
 
-### Current Baseline — JTR (2-Stage 6%+Keltner + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T Tight SL 3% + R: regular+hidden divergence, RSI<40/60, div>=3/5pt, EMA50 filter, stop 2-5% + 2 entries/day)
+### Current Baseline — JTR (2-Stage 6%+Keltner + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T: IBS>0.5 + tight SL 3% + R: regular+hidden divergence, RSI<40/60, div>=3/5pt, EMA50 filter, regular stop 0-5%, hidden stop 2-5% + 2 entries/day)
 
-| Year | Trades | Win | Loss | WR% | AvgWin | AvgLoss | PF | Return% | P&L |
-|---|---|---|---|---|---|---|---|---|---|
-| 2015 | 228 | 101 | 127 | 44.3% | 7,973 | -6,111 | 1.04 | +1.5% | +0.3L |
-| 2016 | 273 | 157 | 116 | 57.5% | 8,359 | -4,819 | 2.35 | +37.5% | +7.5L |
-| 2017 | 242 | 138 | 104 | 57.0% | 9,505 | -4,247 | 2.97 | +43.5% | +8.7L |
-| 2018 | 258 | 135 | 123 | 52.3% | 8,215 | -5,836 | 1.54 | +19.5% | +3.9L |
-| 2019 | 426 | 297 | 129 | 69.7% | 9,020 | -5,693 | 3.65 | +97.0% | +19.4L |
-| 2020 | 337 | 227 | 110 | 67.4% | 9,333 | -7,619 | 2.53 | +64.0% | +12.8L |
-| 2021 | 368 | 238 | 130 | 64.7% | 8,822 | -5,702 | 2.83 | +68.0% | +13.6L |
-| 2022 | 254 | 139 | 115 | 54.7% | 8,592 | -6,612 | 1.57 | +21.5% | +4.3L |
-| 2023 | 308 | 211 | 97 | 68.5% | 9,246 | -5,277 | 3.81 | +72.0% | +14.4L |
-| 2024 | 298 | 185 | 113 | 62.1% | 8,739 | -5,926 | 2.41 | +47.5% | +9.5L |
-| 2025 | 253 | 135 | 118 | 53.4% | 9,077 | -4,669 | 2.22 | +33.5% | +6.7L |
-| **Avg** | **295** | **178** | **117** | **60.5%** | **8,876** | **-5,695** | **2.39** | **+45.9%** | **+9.2L** |
-| **Total** | **3,245** | **1,963** | **1,282** | | | | | **+505.5%** | **+101.1L** |
+| Year | Trades | Win | Loss | WR% | AvgWin | AvgLoss | PF | Gross | Net Post-Tax | Return% |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 2015 | 197 | 84 | 113 | 42.6% | +8,879 | -6,209 | 1.06 | +0.4L | -0.0L | -0.1% |
+| 2016 | 290 | 175 | 115 | 60.3% | +8,840 | -5,127 | 2.62 | +9.6L | +7.2L | +36.0% |
+| 2017 | 282 | 170 | 112 | 60.3% | +9,641 | -4,239 | 3.45 | +11.6L | +8.8L | +44.1% |
+| 2018 | 287 | 165 | 122 | 57.5% | +8,322 | -6,035 | 1.87 | +6.4L | +4.6L | +23.2% |
+| 2019 | 403 | 289 | 114 | 71.7% | +9,105 | -5,226 | 4.42 | +20.4L | +15.7L | +78.7% |
+| 2020 | 302 | 205 | 97 | 67.9% | +10,145 | -7,666 | 2.80 | +13.4L | +10.2L | +51.2% |
+| 2021 | 357 | 226 | 131 | 63.3% | +8,826 | -5,421 | 2.81 | +12.8L | +9.7L | +48.6% |
+| 2022 | 235 | 124 | 111 | 52.8% | +8,517 | -6,385 | 1.49 | +3.5L | +2.4L | +11.9% |
+| 2023 | 266 | 172 | 94 | 64.7% | +8,841 | -4,596 | 3.52 | +10.9L | +8.2L | +41.2% |
+| 2024 | 302 | 179 | 123 | 59.3% | +8,937 | -5,246 | 2.48 | +9.5L | +7.1L | +35.6% |
+| 2025 | 280 | 156 | 124 | 55.7% | +9,680 | -4,343 | 2.80 | +9.7L | +7.3L | +36.4% |
+| **Avg** | **291** | **177** | **114** | **60.8%** | **+9,099** | **-5,475** | **2.57** | **+9.8L** | **+7.4L** | **+37.0%** |
+| **Total** | **3,201** | **1,945** | **1,256** | | | | | **+108.2L** | **+81.3L** | **+407%** |
 
-- **Winning years: 11/11** (all years profitable, including 2015 at +0.3L)
-- **Best year: +97.0% (2019)**
-- **Worst year: +1.5% (2015)**
-- **Total P&L: Rs 101.1 Lakhs on 20L capital**
-- **CAGR: 18.0%**
-- **Avg Win/Loss ratio: 1.6x** (make Rs 8,876 on winners, lose Rs 5,695 on losers)
-- **Avg PF: 2.39**
-- **By strategy**: R: 1,819 trades, 65.6% WR, +75.3L (74% of total) | J: 645 trades, 53.5% WR, +10.1L | T: 781 trades, 54.4% WR, +15.8L
+- **Winning years: 11/11** (all years profitable gross, 2015 breakeven net)
+- **Best year: +78.7% net (2019)**
+- **Worst year: -0.1% net (2015)**
+- **Gross P&L: Rs 108.2 Lakhs → Net post-tax: Rs 81.3 Lakhs** (you keep 75 paise per rupee)
+- **Net CAGR: 15.9%** after STT, charges, and 20% STCG tax
+- **Avg Win/Loss ratio: 1.7x** (make Rs 9,099 on winners, lose Rs 5,475 on losers)
+- **Avg PF: 2.57**
+- **Risk metrics**: Sharpe 2.00, Sortino 6.25, Max DD -13.4%, Vol 21.6%, R² vs Nifty 0.377
+- **By strategy**: R: 2,304 trades (Regular 1,202 @ 68.3% WR +57.3L, Hidden 1,102 @ 57.9% WR +32.3L) = 83% of gross | T: 897 trades, 54.2% WR, +18.8L = 17% of gross
 
 ### Previous JT-only Baseline (before Strategy R)
 
@@ -265,12 +266,13 @@ The strategy runs in three places. All three use identical entry/exit logic:
 
 ## Risk Notes
 
-- 2015 is the only negative year (-3.6%) — survivorship bias (current Nifty 100 stocks tested on 2015 data).
-- 2018 is weakest positive year (+22.7%) due to broad market correction.
+- 2015 is the weakest year (breakeven net) — survivorship bias (current Nifty 100 stocks tested on 2015 data).
+- 2022 is weakest positive year (+11.9% net) due to broad market correction and choppy conditions.
 - ATR% ranking can underperform in strong trending markets where volatile stocks are the big runners.
 - Results are based on daily closing prices. Live execution at different prices will cause slippage.
 - T strategy SL slippage in backtest is an artifact of daily-bar checking. Live trading with actual SL orders will have tighter stops.
 - Capital check: entries are skipped if trade cost would exceed available capital (20L + running PnL - deployed). Prevents over-leveraging after losses.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).
-- ~223-447 trades per year (avg 299), mix of J, T, and R.
+- ~197-403 trades per year (avg 291), mix of T and R.
 - yfinance data variability: backtest numbers can shift ~0.5-1% between runs due to Yahoo Finance adjusting historical prices for splits/dividends.
+- yfinance returns adjusted prices (for splits and dividends), so historical prices in explain_trade may differ from actual traded prices on TradingView charts.
