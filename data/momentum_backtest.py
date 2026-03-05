@@ -957,6 +957,23 @@ class MomentumBacktester:
             ws = float(w_support_daily.iloc[entry_i]) if not pd.isna(w_support_daily.iloc[entry_i]) else 0
             wls = float(w_low_stop_daily.iloc[entry_i]) if not pd.isna(w_low_stop_daily.iloc[entry_i]) else 0
 
+            # Find which week formed the support/stop levels
+            entry_date_val = raw.index[entry_i]
+            # Find the weekly bar index corresponding to entry date (shifted by 2)
+            weekly_idx = weekly.index.searchsorted(entry_date_val)
+            # The shifted window ends 2 weeks before, and spans 26 weeks
+            ws_formed_week = ""
+            wls_formed_week = ""
+            if weekly_idx >= 2:
+                end_idx = weekly_idx - 2  # shift(2) means we skip last 2
+                start_idx = max(0, end_idx - 26)
+                window = weekly.iloc[start_idx:end_idx]
+                if len(window) > 0:
+                    ws_week_idx = window["Close"].idxmin()
+                    ws_formed_week = str(ws_week_idx.date()) if pd.notna(ws_week_idx) else ""
+                    wls_week_idx = window["Low"].idxmin()
+                    wls_formed_week = str(wls_week_idx.date()) if pd.notna(wls_week_idx) else ""
+
             hl_range = highs.iloc[entry_i] - lows.iloc[entry_i]
             ibs_val = float((closes.iloc[entry_i] - lows.iloc[entry_i]) / hl_range) if hl_range > 0 else 0.5
             cci_series = self._calculate_cci_series(highs, lows, closes, 20)
@@ -967,7 +984,9 @@ class MomentumBacktester:
 
             setup["description"] = f"{symbol} was trading near its 26-week support level (weekly close support at {ws:,.2f})"
             setup["weekly_support"] = round(ws, 2)
+            setup["weekly_support_formed"] = ws_formed_week
             setup["weekly_low_stop"] = round(wls, 2)
+            setup["weekly_low_stop_formed"] = wls_formed_week
             setup["ibs"] = round(ibs_val, 2)
             setup["cci20"] = round(cci_val, 1)
             setup["distance_from_support"] = f"{dist_pct}%"

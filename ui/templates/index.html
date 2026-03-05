@@ -3041,8 +3041,8 @@
                 html += `<p class="explain-desc">"${s.description}"</p>`;
             }
             if (s.strategy === 'J') {
-                html += `<p><span class="detail-label">Weekly Support:</span> <span class="detail-value">&#8377;${fmt(s.weekly_support)}</span></p>`;
-                html += `<p><span class="detail-label">Weekly Low Stop:</span> <span class="detail-value">&#8377;${fmt(s.weekly_low_stop)}</span></p>`;
+                html += `<p><span class="detail-label">Weekly Support:</span> <span class="detail-value">&#8377;${fmt(s.weekly_support)}${s.weekly_support_formed ? ' (week of ' + s.weekly_support_formed + ')' : ''}</span></p>`;
+                html += `<p><span class="detail-label">Weekly Low Stop:</span> <span class="detail-value">&#8377;${fmt(s.weekly_low_stop)}${s.weekly_low_stop_formed ? ' (week of ' + s.weekly_low_stop_formed + ')' : ''}</span></p>`;
                 html += `<p><span class="detail-label">IBS:</span> <span class="detail-value">${s.ibs}</span></p>`;
                 html += `<p><span class="detail-label">CCI(20):</span> <span class="detail-value">${s.cci20}</span></p>`;
                 html += `<p><span class="detail-label">Distance from Support:</span> <span class="detail-value">${s.distance_from_support}</span></p>`;
