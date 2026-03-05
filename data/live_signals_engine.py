@@ -327,7 +327,7 @@ class LiveSignalsEngine:
                     already_j = any(s["ticker"] == ticker for s in j_signals)
                     _t_rsi14_series = _calculate_rsi_series(closes, 14)
                     _t_rsi14 = float(_t_rsi14_series.iloc[i]) if not pd.isna(_t_rsi14_series.iloc[i]) else 50.0
-                    if near_ema20 and was_at_upper and is_green and not already_j and _t_rsi14 < 51:
+                    if near_ema20 and was_at_upper and is_green and not already_j and _t_rsi14 < 51 and ibs > 0.5:
                         atr_norm_t = round(atr14 / price * 100, 2) if price > 0 else 99.0
                         t_signals.append({
                             "ticker": ticker,
