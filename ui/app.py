@@ -373,6 +373,11 @@ def get_live_positions():
                     except Exception:
                         pass
 
+        # Attach sector info to each position for diversity cap
+        from sector_mapping import STOCK_SECTOR_MAP
+        for p in all_positions:
+            p["sector"] = STOCK_SECTOR_MAP.get(p["ticker"], "OTHER")
+
         return jsonify({"success": True, "positions": all_positions, "ltps": ltps})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

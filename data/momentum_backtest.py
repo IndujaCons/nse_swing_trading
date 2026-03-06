@@ -1188,7 +1188,8 @@ class MomentumBacktester:
                               no_gap_down=True, rank_by_risk=True,
                               t_target1=0.06, t_target2=0.10,
                               underwater_exit_days=None,
-                              t_tight_sl=None):
+                              t_tight_sl=None,
+                              rank_by_sector_momentum=False):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -1222,6 +1223,19 @@ class MomentumBacktester:
             nifty_raw = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
         except Exception:
             nifty_raw = pd.DataFrame()
+
+        # Fetch sector index data for sector momentum ranking
+        sector_index_data = {}  # sector_name -> closes Series
+        if rank_by_sector_momentum:
+            from sector_mapping import STOCK_SECTOR_MAP
+            from data.live_signals_engine import SECTORAL_INDICES
+            for sec_name, sec_symbol in SECTORAL_INDICES.items():
+                try:
+                    sec_df = yf.Ticker(sec_symbol).history(start=daily_start, end=end_date)
+                    if not sec_df.empty and len(sec_df) > 30:
+                        sector_index_data[sec_name] = sec_df["Close"]
+                except Exception:
+                    pass
 
         for idx, ticker in enumerate(tickers):
             if progress_callback:
@@ -1330,6 +1344,34 @@ class MomentumBacktester:
                 "ema200": ema200_series,
                 "bt_indices": bt_indices,
             }
+
+        # Pre-compute rolling sector RS momentum (20-day RS, 5-day delta)
+        sector_momentum_by_date = {}  # date -> {sector_name: momentum_score}
+        if rank_by_sector_momentum and not nifty_raw.empty and sector_index_data:
+            from sector_mapping import STOCK_SECTOR_MAP as _SECTOR_MAP
+            nifty_closes = nifty_raw["Close"]
+            rs_period = 20
+            for sec_name, sec_closes in sector_index_data.items():
+                common = nifty_closes.index.intersection(sec_closes.index)
+                if len(common) < rs_period + 10:
+                    continue
+                n_al = nifty_closes.reindex(common)
+                s_al = sec_closes.reindex(common)
+                # Compute rolling RS at each date
+                n_ret = n_al.pct_change(rs_period) * 100
+                s_ret = s_al.pct_change(rs_period) * 100
+                rs_series = s_ret - n_ret
+                rs_delta_5 = rs_series - rs_series.shift(5)
+                rs_delta_10 = rs_series - rs_series.shift(10)
+                # momentum = delta_5d * 3 + delta_10d * 2
+                mom_series = rs_delta_5 * 3 + rs_delta_10 * 2
+                for ts, mom_val in mom_series.items():
+                    d = ts.date()
+                    if pd.isna(mom_val):
+                        continue
+                    if d not in sector_momentum_by_date:
+                        sector_momentum_by_date[d] = {}
+                    sector_momentum_by_date[d][sec_name] = float(mom_val)
 
         # --- Phase 3: Build union of all trading dates ---
         all_dates = set()
@@ -1673,10 +1715,20 @@ class MomentumBacktester:
             max_today = min(entries_per_day, available_slots)
             if signals and max_today > 0:
                 if rank_by_risk:
-                    # Priority strategy first (R), then lowest ATR
                     rng = random.Random(seed)
-                    strat_priority = {"R": 0, "J": 1, "T": 2}
-                    signals.sort(key=lambda s: (strat_priority.get(s.get("strategy"), 9), s.get("atr_norm", 99.0), rng.random()))
+                    strat_priority = {"R": 0, "T": 1, "J": 2}
+                    if rank_by_sector_momentum:
+                        # Priority strategy first, then sector momentum (descending), then lowest ATR
+                        day_sec_mom = sector_momentum_by_date.get(day, {})
+                        from sector_mapping import STOCK_SECTOR_MAP as _SM
+                        def _sec_mom_key(s):
+                            sec = _SM.get(s["symbol"], "OTHER")
+                            mom = day_sec_mom.get(sec, 0.0)
+                            return (strat_priority.get(s.get("strategy"), 9), -mom, s.get("atr_norm", 99.0), rng.random())
+                        signals.sort(key=_sec_mom_key)
+                    else:
+                        # Priority strategy first (R), then lowest ATR
+                        signals.sort(key=lambda s: (strat_priority.get(s.get("strategy"), 9), s.get("atr_norm", 99.0), rng.random()))
                 else:
                     random.Random(seed).shuffle(signals)
                 taken = min(len(signals), max_today)

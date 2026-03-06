@@ -528,6 +528,50 @@
             color: var(--red);
         }
 
+        .sector-heatmap-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .sector-pill {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            min-width: 80px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sector-pill .sec-name {
+            font-size: 9px;
+            opacity: 0.7;
+            margin-bottom: 2px;
+        }
+
+        .sector-pill .sec-rs {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .sector-pill .sec-delta {
+            font-size: 9px;
+            margin-top: 1px;
+        }
+
+        .sector-warn {
+            background: rgba(255, 152, 0, 0.15);
+            border: 1px solid rgba(255, 152, 0, 0.4);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: var(--orange, #ff9800);
+            margin-top: 6px;
+        }
+
         .trade-btn {
             padding: 4px 10px;
             font-family: inherit;
@@ -1514,9 +1558,28 @@
                     </div>
                 </div>
 
+                <div class="panel ls-sector-heatmap" style="grid-column: 1 / -1;">
+                    <div class="panel-header">
+                        <span class="panel-title" style="color: var(--orange, #ff9800);">Sector Momentum Heatmap</span>
+                        <span style="cursor:pointer;margin-left:6px;font-size:12px;color:var(--text-muted);border:1px solid var(--text-muted);border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;opacity:0.7;" onclick="document.getElementById('ls-heatmap-info').classList.toggle('hidden')">i</span>
+                    </div>
+                    <div id="ls-heatmap-info" class="hidden" style="padding:10px 14px;font-size:11px;line-height:1.6;color:var(--text-muted);background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <b style="color:var(--orange,#ff9800);">How to read the heatmap:</b><br>
+                        Each pill shows 3 lines — <b>Sector Name</b>, <b>RS %</b>, and <b>Momentum Score</b>.<br>
+                        <b>RS %</b> (middle) — Sector's 20-day return minus Nifty's 20-day return. <span style="color:var(--green);">Green = outperforming Nifty</span>, <span style="color:var(--red);">Red = underperforming</span>.<br>
+                        <b>Momentum</b> (bottom) — How fast the RS is changing. <span style="color:var(--green);">&#9650;&#9650; positive</span> = sector RS is rising (getting stronger). <span style="color:var(--red);">&#9660;&#9660; negative</span> = sector RS is falling (weakening).<br>
+                        <b>Key insight:</b> A sector at <span style="color:var(--red);">-11%</span> RS but <span style="color:var(--green);">&#9650;&#9650; +27</span> momentum means it was deeply weak but is now recovering fast — <em>early reversal catch</em>. This often scores higher than a sector sitting flat at +4%.<br>
+                        <b>Background:</b> Green tint = momentum positive (sector strengthening). Red tint = momentum negative (sector weakening).<br>
+                        Sorted left-to-right by momentum score (strongest rising first). Hover any pill for full 5d/10d/20d delta breakdown.
+                    </div>
+                    <div class="panel-body" id="ls-sector-heatmap" style="padding:8px;">
+                        <div class="empty-state" style="font-size:11px;">Scan to load sector data</div>
+                    </div>
+                </div>
+
                 <div class="panel ls-top-picks" style="grid-column: 1 / -1;">
                     <div class="panel-header">
-                        <span class="panel-title" style="color: var(--yellow, #f0c040);">Top Picks — Ranked by ATR%</span>
+                        <span class="panel-title" style="color: var(--yellow, #f0c040);">Top Picks — Ranked by Sector Momentum + ATR%</span>
                         <span class="panel-count" id="ls-picks-count">0</span>
                     </div>
                     <div class="panel-body" id="ls-picks-panel">
@@ -2316,9 +2379,44 @@
 
         function renderEntrySignals(data, isHistorical) {
             isHistorical = isHistorical || false;
+
+            // ===== Sector Heatmap =====
+            const sectorMomentum = data.sector_momentum || {};
+            const heatmapPanel = document.getElementById('ls-sector-heatmap');
+            const sectorEntries = Object.entries(sectorMomentum)
+                .sort((a, b) => b[1].momentum - a[1].momentum);
+
+            if (sectorEntries.length > 0) {
+                const pills = sectorEntries.map(([name, d]) => {
+                    const rs = d.rs || 0;
+                    const mom = d.momentum || 0;
+                    const d5 = d.delta_5d || 0;
+                    const d10 = d.delta_10d || 0;
+                    const d20 = d.delta_20d || 0;
+                    // Color: green if momentum positive (RS rising), red if falling
+                    const bgColor = mom > 2 ? 'rgba(76,175,80,0.2)' : mom > 0 ? 'rgba(76,175,80,0.08)' : mom > -2 ? 'rgba(255,152,0,0.08)' : 'rgba(244,67,54,0.15)';
+                    const rsColor = rs > 0 ? 'var(--green)' : 'var(--red)';
+                    const momColor = mom > 0 ? 'var(--green)' : mom < 0 ? 'var(--red)' : 'var(--text-muted)';
+                    const arrow = mom > 1 ? '&uarr;&uarr;' : mom > 0 ? '&uarr;' : mom > -1 ? '&darr;' : '&darr;&darr;';
+                    const shortName = name.replace('NIFTY ', '');
+                    return `<div class="sector-pill" style="background:${bgColor};" title="RS: ${rs.toFixed(1)}% | 5d: ${d5>0?'+':''}${d5.toFixed(1)} | 10d: ${d10>0?'+':''}${d10.toFixed(1)} | 20d: ${d20>0?'+':''}${d20.toFixed(1)}">
+                        <span class="sec-name">${shortName}</span>
+                        <span class="sec-rs" style="color:${rsColor};">${rs>0?'+':''}${rs.toFixed(1)}%</span>
+                        <span class="sec-delta" style="color:${momColor};">${arrow} ${mom>0?'+':''}${mom.toFixed(1)}</span>
+                    </div>`;
+                }).join('');
+                heatmapPanel.innerHTML = `<div class="sector-heatmap-grid">${pills}</div>`;
+            } else {
+                heatmapPanel.innerHTML = '<div class="empty-state" style="font-size:11px;">No sector data</div>';
+            }
+
             // J signals
             const jPanel = document.getElementById('ls-j-panel');
             const jSignals = data.j_signals || [];
+            // Store globally for sector lookup
+            window._lsJSignals = jSignals;
+            window._lsTSignals = data.t_signals || [];
+            window._lsRSignals = data.r_signals || [];
             document.getElementById('ls-j-count').textContent = jSignals.length;
 
             if (jSignals.length === 0) {
@@ -2397,14 +2495,42 @@
                 `;
             }
 
-            // Top Picks — combine J+T+R, rank by R priority then ATR% (lowest volatility first)
+            // ===== Top Picks — Ranked by Strategy Priority + Sector Momentum + ATR% =====
+            // With sector diversity cap (max 4 per sector including active positions)
             const picksPanel = document.getElementById('ls-picks-panel');
-            const stratPriority = {'R': 0, 'J': 1, 'T': 2};
+            const stratPriority = {'R': 0, 'T': 1, 'J': 2};
             const allSignals = [
                 ...jSignals.map(s => ({...s, strategy: 'J', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
                 ...tSignals.map(s => ({...s, strategy: 'T', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
                 ...rSignals.map(s => ({...s, strategy: 'R', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
-            ].sort((a, b) => (stratPriority[a.strategy] ?? 9) - (stratPriority[b.strategy] ?? 9) || a.atr_pct - b.atr_pct);
+            ];
+
+            // Sort: strategy priority (R > J > T), then sector momentum (highest first), then ATR%
+            allSignals.sort((a, b) => {
+                // Strategy priority first (R > J > T)
+                const sp = (stratPriority[a.strategy] ?? 9) - (stratPriority[b.strategy] ?? 9);
+                if (sp !== 0) return sp;
+                // Then sector momentum descending (rising sectors first)
+                const momDiff = (b.sector_momentum || 0) - (a.sector_momentum || 0);
+                if (Math.abs(momDiff) > 0.5) return momDiff;
+                // Then ATR% ascending (calmest first)
+                return a.atr_pct - b.atr_pct;
+            });
+
+            // Count sectors for concentration warning (positions + signals)
+            const positionSectorCounts = {};
+            const activePositions = window._lsActivePositions || [];
+            activePositions.forEach(p => {
+                const sec = p.sector || 'OTHER';
+                positionSectorCounts[sec] = (positionSectorCounts[sec] || 0) + 1;
+            });
+
+            const sectorCounts = {...positionSectorCounts};
+            for (const s of allSignals) {
+                const sec = s.sector || 'OTHER';
+                sectorCounts[sec] = (sectorCounts[sec] || 0) + 1;
+            }
+
             document.getElementById('ls-picks-count').textContent = allSignals.length;
 
             if (allSignals.length === 0) {
@@ -2430,12 +2556,19 @@
                     const stopVal = s.strategy === 'J' ? s.stop : s.strategy === 'R' ? s.stop : Math.round(s.price * 0.95);
                     const ibsVal = s.strategy === 'J' ? s.ibs : 0;
                     const atrColor = s.atr_pct < 2 ? 'var(--green)' : s.atr_pct < 3.5 ? 'var(--text-muted)' : 'var(--red)';
+                    // Sector info
+                    const secShort = (s.sector || 'OTHER').replace('NIFTY ', '');
+                    const secMom = s.sector_momentum || 0;
+                    const secRs = s.sector_rs || 0;
+                    const secColor = secMom > 1 ? 'var(--green)' : secMom > -1 ? 'var(--text-muted)' : 'var(--red)';
+                    const secArrow = secMom > 1 ? '&#9650;' : secMom > -1 ? '&#9644;' : '&#9660;';
                     return `
                         <tr style="${rowStyle}">
                             <td>${isTop ? '&#9733;' : rank}</td>
                             <td>${badge}</td>
                             <td class="ticker">${s.ticker}</td>
                             <td class="price">${s.price.toLocaleString()}</td>
+                            <td style="color:${secColor};font-size:10px;white-space:nowrap;" title="Sector RS: ${secRs>0?'+':''}${secRs.toFixed(1)}% | Mom: ${secMom>0?'+':''}${secMom.toFixed(1)}">${secArrow} ${secShort}</td>
                             <td style="color:${atrColor};font-weight:600;">${s.atr_pct.toFixed(1)}%</td>
                             <td style="color:${stopColor};">${s.stop_pct.toFixed(1)}%</td>
                             <td class="price">${stopVal.toLocaleString()}</td>
@@ -2446,21 +2579,54 @@
                             </td>`}
                         </tr>`;
                 }).join('');
+
+                // Sector concentration warning
+                let sectorWarning = '';
+                const warnSectors = Object.entries(sectorCounts).filter(([, c]) => c >= 3);
+                if (warnSectors.length > 0) {
+                    const warns = warnSectors.map(([sec, c]) => {
+                        const posCount = positionSectorCounts[sec] || 0;
+                        const sigCount = c - posCount;
+                        return `${sec.replace('NIFTY ', '')}: ${c} total (${posCount} held + ${sigCount} new)`;
+                    }).join(' | ');
+                    sectorWarning = `<div class="sector-warn">&#9888; Sector concentration: ${warns}</div>`;
+                }
+
                 picksPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>#</th><th>Str</th><th>Stock</th><th>Close</th><th>ATR%</th><th>Stop%</th><th>Stop</th><th>Detail</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
+                        <thead><tr><th>#</th><th>Str</th><th>Stock</th><th>Close</th><th>Sector</th><th>ATR%</th><th>Stop%</th><th>Stop</th><th>Detail</th>${isHistorical ? '' : '<th></th>'}</tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
+                    ${sectorWarning}
                 `;
             }
 
 
         }
 
+        // Sector mapping lookup (loaded from backend signals)
+        function getTickerSector(ticker) {
+            // Check from signals data
+            const allSigs = [...(window._lsJSignals || []), ...(window._lsTSignals || []), ...(window._lsRSignals || [])];
+            const sig = allSigs.find(s => s.ticker === ticker);
+            return sig ? (sig.sector || 'OTHER') : 'OTHER';
+        }
+
         async function buyLiveSignal(ticker, strategy, price, support, ibs, btn) {
             if (!selectedTradeUser) {
                 showToast('Select a connected user to trade as', 'error');
                 return;
+            }
+
+            // Sector concentration warning before buying
+            const sector = getTickerSector(ticker);
+            const activePos = window._lsActivePositions || [];
+            const sameSecPositions = activePos.filter(p => (p.sector || 'OTHER') === sector);
+            if (sameSecPositions.length >= 3) {
+                const proceed = confirm(`Warning: You already have ${sameSecPositions.length} positions in ${sector.replace('NIFTY ', '')} sector (${sameSecPositions.map(p=>p.ticker).join(', ')}). Continue?`);
+                if (!proceed) {
+                    return;
+                }
             }
 
             const amtInput = btn.parentElement.querySelector('.buy-input');
@@ -2570,6 +2736,9 @@
             const panel = document.getElementById('ls-positions-panel');
             document.getElementById('ls-positions-count').textContent = positions.length;
             ltps = ltps || {};
+
+            // Store for sector diversity cap in Top Picks
+            window._lsActivePositions = positions || [];
 
             if (!positions || positions.length === 0) {
                 panel.innerHTML = '<div class="empty-state">No active positions</div>';

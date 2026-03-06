@@ -21,6 +21,28 @@ from config.settings import (
     get_cache_ttl, load_config
 )
 from nifty500_tickers import NIFTY_500_TICKERS
+from sector_mapping import STOCK_SECTOR_MAP
+
+# Sectoral Indices (Yahoo Finance symbols) for RS momentum
+SECTORAL_INDICES = {
+    "NIFTY PVT BANK": "NIFTY_PVT_BANK.NS",
+    "NIFTY PSU BANK": "^CNXPSUBANK",
+    "NIFTY IT": "^CNXIT",
+    "NIFTY PHARMA": "^CNXPHARMA",
+    "NIFTY AUTO": "^CNXAUTO",
+    "NIFTY METAL": "^CNXMETAL",
+    "NIFTY REALTY": "^CNXREALTY",
+    "NIFTY ENERGY": "^CNXENERGY",
+    "NIFTY FMCG": "^CNXFMCG",
+    "NIFTY MEDIA": "^CNXMEDIA",
+    "NIFTY INFRA": "^CNXINFRA",
+    "NIFTY FIN SERVICE": "NIFTY_FIN_SERVICE.NS",
+    "NIFTY COMMODITIES": "^CNXCMDT",
+    "NIFTY CONSUMPTION": "^CNXCONSUM",
+    "NIFTY HEALTHCARE": "^CNXPHARMA",
+    "NIFTY MNC": "^CNXMNC",
+    "NIFTY PSE": "^CNXPSE",
+}
 
 # Actual Nifty 50 constituents
 NIFTY_50_TICKERS = [
@@ -157,6 +179,82 @@ class LiveSignalsEngine:
     def _ensure_dirs(self):
         os.makedirs(os.path.dirname(self.cache_file), exist_ok=True)
         os.makedirs(os.path.dirname(self.positions_file), exist_ok=True)
+
+    # ==================== Sector RS Momentum ====================
+
+    def _compute_sector_momentum(self, end_date):
+        """Compute sector RS vs Nifty 50 with multi-day momentum.
+
+        Returns dict: sector_name -> {rs_today, rs_5d_ago, rs_10d_ago, rs_20d_ago,
+                                       delta_5d, delta_10d, delta_20d, momentum_score}
+        momentum_score: weighted sum of deltas — captures sectors gaining RS fast.
+        """
+        try:
+            nifty = yf.Ticker("^NSEI").history(
+                start=end_date - timedelta(days=120), end=end_date)
+            if nifty.empty or len(nifty) < 30:
+                return {}
+            nifty_closes = nifty["Close"]
+        except Exception:
+            return {}
+
+        sector_momentum = {}
+        rs_period = 20  # 20-day return for RS calculation
+
+        for sector_name, symbol in SECTORAL_INDICES.items():
+            try:
+                sec_data = yf.Ticker(symbol).history(
+                    start=end_date - timedelta(days=120), end=end_date)
+                if sec_data.empty or len(sec_data) < 30:
+                    continue
+                sec_closes = sec_data["Close"]
+
+                # Align dates
+                common = nifty_closes.index.intersection(sec_closes.index)
+                if len(common) < rs_period + 20:
+                    continue
+                n_aligned = nifty_closes.reindex(common)
+                s_aligned = sec_closes.reindex(common)
+
+                # Compute rolling RS (sector return - nifty return) at multiple points
+                def rs_at(idx):
+                    if idx < rs_period:
+                        return None
+                    n_ret = (float(n_aligned.iloc[idx]) / float(n_aligned.iloc[idx - rs_period]) - 1) * 100
+                    s_ret = (float(s_aligned.iloc[idx]) / float(s_aligned.iloc[idx - rs_period]) - 1) * 100
+                    return round(s_ret - n_ret, 2)
+
+                last = len(common) - 1
+                rs_today = rs_at(last)
+                rs_5d = rs_at(max(rs_period, last - 5))
+                rs_10d = rs_at(max(rs_period, last - 10))
+                rs_20d = rs_at(max(rs_period, last - 20))
+
+                if rs_today is None:
+                    continue
+
+                delta_5d = round(rs_today - rs_5d, 2) if rs_5d is not None else 0
+                delta_10d = round(rs_today - rs_10d, 2) if rs_10d is not None else 0
+                delta_20d = round(rs_today - rs_20d, 2) if rs_20d is not None else 0
+
+                # Momentum score: weighted — recent change matters more
+                # Positive = sector RS is rising (from -10 to -3 = +7 = good)
+                momentum_score = round(delta_5d * 3 + delta_10d * 2 + delta_20d * 1, 2)
+
+                sector_momentum[sector_name] = {
+                    "rs": rs_today,
+                    "rs_5d_ago": rs_5d,
+                    "rs_10d_ago": rs_10d,
+                    "rs_20d_ago": rs_20d,
+                    "delta_5d": delta_5d,
+                    "delta_10d": delta_10d,
+                    "delta_20d": delta_20d,
+                    "momentum": momentum_score,
+                }
+            except Exception:
+                continue
+
+        return sector_momentum
 
     # ==================== Entry Signal Scanning ====================
 
@@ -386,6 +484,19 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
+        # Compute sector momentum
+        sector_momentum = self._compute_sector_momentum(end_date)
+
+        # Attach sector info to each signal
+        for sig_list in [j_signals, t_signals, r_signals]:
+            for s in sig_list:
+                sector = STOCK_SECTOR_MAP.get(s["ticker"], "OTHER")
+                s["sector"] = sector
+                sec_data = sector_momentum.get(sector, {})
+                s["sector_rs"] = sec_data.get("rs", 0)
+                s["sector_momentum"] = sec_data.get("momentum", 0)
+                s["sector_delta_5d"] = sec_data.get("delta_5d", 0)
+
         # Sort by volatility (lowest ATR% first = calmest stocks)
         # R gets priority in combined ranking (best WR + P&L historically)
         j_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
@@ -396,6 +507,7 @@ class LiveSignalsEngine:
             "j_signals": j_signals,
             "t_signals": t_signals,
             "r_signals": r_signals,
+            "sector_momentum": sector_momentum,
             "last_updated": datetime.now().isoformat(),
             "universe": universe,
         }
