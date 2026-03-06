@@ -467,7 +467,18 @@ In a trending market, T generates the most signals. In a rangebound market, J sh
 
 ### Capital Allocation
 
-The system allocates a fixed amount per trade (e.g., Rs 2,00,000) regardless of which strategy generated the signal. A maximum of **2 new trades per day** is enforced — even if 10 signals fire on the same day, only the best 2 are taken. Signals are ranked by risk (lowest volatility first) so the system prefers calmer stocks over volatile ones.
+The system allocates a fixed amount per trade (e.g., Rs 2,00,000) regardless of which strategy generated the signal. A maximum of **3 new trades per day** is enforced — even if 10 signals fire on the same day, only the best 3 are taken.
+
+### Signal Ranking — Strategy Priority + Sector Momentum
+
+Signals are ranked in this order:
+1. **Strategy priority**: R → T → J (R signals always come first)
+2. **Sector momentum** (descending): Stocks in sectors with rising relative strength rank higher
+3. **ATR%** (ascending): Among equal sector momentum, calmer stocks rank higher
+
+**Sector momentum** measures whether a sector's relative strength vs Nifty 50 is accelerating or decelerating. The score uses a weighted formula: `delta_5d × 3 + delta_10d × 2 + delta_20d × 1`, where each delta is the change in the sector's 20-day rolling RS over that period. A sector at -11% RS but +27 momentum is recovering fast — it ranks higher than a flat +4% sector.
+
+The UI includes a **Sector Momentum Heatmap** showing all 17 Nifty sector indices with their RS% and momentum direction, plus **sector concentration warnings** when 3+ stocks from the same sector appear in signals or positions.
 
 ### Risk Management
 
@@ -482,62 +493,89 @@ With Rs 2,00,000 per trade and a 5% max stop, the worst-case loss per trade is R
 
 ## Part 8: Backtest Results
 
-The JTR system has been backtested over 11 years (2015-2025) on Nifty 100 stocks with Rs 20 lakh capital and Rs 2 lakh per trade:
+The TR system has been backtested over 11 years (2015-2025) on Nifty 100 stocks with Rs 20 lakh capital, Rs 2 lakh per trade, and 3 entries per day. Signals ranked by strategy priority (R→T→J) then sector momentum then ATR%.
+
+Charges: Zerodha delivery (₹0 brokerage, STT 0.1% both sides, exchange txn 0.00307%, SEBI 0.0001%, stamp duty 0.015% buy side, GST 18%). Tax: STCG 20%.
 
 ```
-TR Portfolio — R Priority + ATR Rank (Nifty 100, 20L, 2L/trade, 2/day)
+TR Portfolio — Sector Momentum Ranking (Nifty 100, 20L, 2L/trade, 3/day)
 R: Regular (stop 0-5%) + Hidden Divergence (stop 2-5%), T: IBS > 0.5
+Charges: Zerodha delivery (₹0 brokerage, STT 0.1% both sides, exchange/SEBI/stamp/GST)
+Tax: STCG 20% on (gross P&L - deductible charges). STT is NOT deductible.
 
-  Year     Tr    Win   Loss     WR%    AvgWin   AvgLoss     PF   Gross    Net     Ret%
------------------------------------------------------------------------------------------------
-  2015    197     84    113   42.6%    +8,879    -6,209   1.06   +0.4L   -0.0L   -0.1%
-  2016    290    175    115   60.3%    +8,840    -5,127   2.62   +9.6L   +7.2L  +36.0%
-  2017    282    170    112   60.3%    +9,641    -4,239   3.45  +11.6L   +8.8L  +44.1%
-  2018    287    165    122   57.5%    +8,322    -6,035   1.87   +6.4L   +4.6L  +23.2%
-  2019    403    289    114   71.7%    +9,105    -5,226   4.42  +20.4L  +15.7L  +78.7%
-  2020    302    205     97   67.9%   +10,145    -7,666   2.80  +13.4L  +10.2L  +51.2%
-  2021    357    226    131   63.3%    +8,826    -5,421   2.81  +12.8L   +9.7L  +48.6%
-  2022    235    124    111   52.8%    +8,517    -6,385   1.49   +3.5L   +2.4L  +11.9%
-  2023    266    172     94   64.7%    +8,841    -4,596   3.52  +10.9L   +8.2L  +41.2%
-  2024    302    179    123   59.3%    +8,937    -5,246   2.48   +9.5L   +7.1L  +35.6%
-  2025    280    156    124   55.7%    +9,680    -4,343   2.80   +9.7L   +7.3L  +36.4%
------------------------------------------------------------------------------------------------
-   Avg    291    177    114   60.8%    +9,099    -5,475   2.57   +9.8L   +7.4L  +37.0%
- Total   3201   1945   1256                                    +108.2L  +81.3L   +407%
+  Year    Tr   W    L    WR%    PF   AvgW     AvgL     AvgW%  AvgL%  Hold  Gross    Chg     Tax      Net     Ret%   NetR%
+------------------------------------------------------------------------------------------------------------------------------
+  2015   237  116  121  48.9%  1.56  +9,512   -5,864   +4.8%  -2.9%  18d   +3.9L   77.2K   77.2K    +2.4L  +19.7%  +12.0%
+  2016   311  197  114  63.3%  2.96  +8,881   -5,182   +4.4%  -2.6%  26d  +11.6L   89.2K  230.0K    +8.4L  +57.9%  +42.0%
+  2017   256  135  121  52.7%  2.35  +9,796   -4,643   +4.9%  -2.3%  17d   +7.6L   90.6K  150.3K    +5.2L  +38.0%  +26.0%
+  2018   290  159  131  54.8%  1.77  +8,351   -5,713   +4.2%  -2.9%  19d   +5.8L   87.8K  114.1K    +3.8L  +29.0%  +18.9%
+  2019   383  263  120  68.7%  3.95  +9,280   -5,144   +4.6%  -2.6%  28d  +18.2L  100.0K  362.7K   +13.6L  +91.2%  +68.0%
+  2020   310  213   97  68.7%  2.84 +10,262   -7,931   +5.1%  -4.0%  16d  +14.2L   86.5K  281.6K   +10.5L  +70.8%  +52.4%
+  2021   386  252  134  65.3%  2.85  +8,673   -5,731   +4.4%  -2.9%  24d  +14.2L  108.0K  281.4K   +10.3L  +70.9%  +51.4%
+  2022   247  135  112  54.7%  1.54  +8,493   -6,650   +4.3%  -3.3%  18d   +4.0L   77.8K   78.8K    +2.5L  +20.1%  +12.3%
+  2023   332  232  100  69.9%  4.53  +9,456   -4,839   +4.7%  -2.4%  26d  +17.1L  100.9K  340.0K   +12.7L  +85.5%  +63.5%
+  2024   311  195  116  62.7%  2.51  +8,916   -5,979   +4.5%  -3.0%  23d  +10.5L   93.5K  207.1K    +7.4L  +52.3%  +37.2%
+  2025   287  161  126  56.1%  2.93  +9,575   -4,181   +4.8%  -2.1%  22d  +10.1L   92.9K  201.1K    +7.2L  +50.7%  +36.0%
+------------------------------------------------------------------------------------------------------------------------------
+ Total  3350 2058 1292  61.4%  2.62  +9,201   -5,584   +4.6%  -2.8%  22d +117.2L 1004.4K 2324.3K   +83.9L
 
 Money Flow:
-  Gross P&L:          +108.2L (100%)
-  STT:                  -4.4L (4.1%)
-  Other charges:        -1.0L (0.9%)
-  STCG tax (20%):      -21.4L (19.8%)
-  Net in your pocket:  +81.3L (75.2%)
+  Gross P&L:          +117.2L (100%)
+  STT (not deduct.):    -9.0L (7.7%)
+  Other charges:        -1.0L (0.9%) — deductible from taxable gains
+  Total charges:       -10.0L (8.6%)
+  STCG tax (20%):      -23.2L (19.8%) — computed on gross - deductible charges
+  Net in your pocket:  +83.9L (71.6%)
 
 Summary:
-  - Winning years: 11/11 (all years profitable gross, 2015 breakeven net)
-  - Best year: +78.7% net (2019)
-  - Worst year: -0.1% net (2015)
-  - Net CAGR: 15.9% after all charges and taxes
-  - Avg Win/Loss: 1.7x
-  - Avg PF: 2.57
-  - Trades/yr: 291, avg hold: 24 days
+  - CAGR gross: +19.1%  |  CAGR net: +16.2%
+  - Winning years: 11/11 (all years profitable)
+  - Best year: +68.0% net (2019)
+  - Worst year: +12.0% net (2015)
+  - 20L → 137.2L gross → 103.9L net
 
-Risk Metrics:
-  Sharpe: 2.00  |  Sortino: 6.25  |  Max DD: -13.4%  |  Vol: 21.6%  |  R² vs Nifty: 0.377
+Risk Ratios:
+  Sharpe: 1.65  |  Sortino: very high (no negative years)  |  Calmar: 1.69
+  Information Ratio: 1.34 (vs Nifty ~12%)  |  R²: 0.081  |  Max DD: 9.6%
+
+Trade Quality:
+  Expectancy/trade: +₹2,505 (+1.61%)  |  Payoff Ratio: 1.65x
+  Best win streak: 41  |  Worst loss streak: 28  |  Avg holding: 22 days
 
 By strategy:
-  - R: 2,304 trades, 63.3% WR, +89.4L (83% of gross)
-    Regular: 1,202 trades, 68.3% WR, +57.3L
-    Hidden:  1,102 trades, 57.9% WR, +32.3L
-  - T: 897 trades, 54.2% WR, +18.8L (17% of gross)
+  - R: 2,335 trades, 64% WR, +96.2L gross (82% of total), charges 673K
+  - T: 1,015 trades, 55% WR, +21.0L gross (18% of total), charges 331K
 ```
 
+### Sector Momentum vs Baseline Comparison
+
+| Metric | TR Baseline (ATR rank) | TR Sector Momentum | Delta |
+|---|---|---|---|
+| Trades | 3,270 | 3,350 | +80 |
+| Win Rate | 60.1% | 61.4% | +1.3% |
+| Profit Factor | 2.51 | 2.62 | +0.11 |
+| Gross P&L | +108.7L | +117.2L | +8.5L |
+| Total Charges | 10.0L | 10.0L | — |
+| Tax | 21.5L | 23.2L | +1.7L |
+| **Net P&L** | **+77.2L** | **+83.9L** | **+6.8L** |
+| CAGR (net) | 15.5% | 16.2% | +0.7% |
+| Sharpe | 1.45 | 1.65 | +0.19 |
+| Calmar | 1.08 | 1.69 | +0.60 |
+| Max Drawdown | 14.3% | 9.6% | **-4.7%** |
+| R² | 0.108 | 0.081 | -0.027 |
+
+**Sector Momentum wins 10/11 years** (Baseline wins only 2018). Biggest edges: 2015 (+13.0%), 2023 (+6.0%), 2021 (+4.9%).
+
+Charges note: STT (0.1% on both buy and sell) is NOT deductible from capital gains. Other charges (exchange txn, SEBI, stamp duty, GST) ARE deductible and reduce taxable income. Brokerage is ₹0 on Zerodha delivery.
+
 Key takeaways:
-- **All 11 years profitable** (gross), net post-tax 2015 is breakeven
-- **Net CAGR: 15.9%** after STT, charges, and 20% STCG tax — you keep 75 paise per rupee earned
-- **Win rate: 60.8%** — winners are 1.7x larger than losers
-- **Average Profit Factor: 2.57** — for every Rs 1 lost, you make Rs 2.57
-- **~291 trades per year** — roughly 1-2 trades per trading day, very manageable
-- **Strategy R is the star** — 83% of gross P&L (Regular 68.3% WR + Hidden 57.9% WR)
+- **All 11 years profitable** — worst year +12.0% net (2015)
+- **Net CAGR: 16.2%** after STT, charges, and 20% STCG tax — you keep 72 paise per rupee earned
+- **Win rate: 61.4%** — winners are 1.65x larger than losers
+- **Profit Factor: 2.62** — for every Rs 1 lost, you make Rs 2.62
+- **~305 trades per year** — roughly 1-2 trades per trading day, very manageable
+- **Max DD only 9.6%** — sector momentum reduces drawdown by 4.7% vs baseline
+- **Strategy R is the star** — 82% of gross P&L at 64% WR
 
 ---
 

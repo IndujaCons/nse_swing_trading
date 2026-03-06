@@ -2,7 +2,7 @@
 
 ## Overview
 
-Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J, T, R) with a 2-stage partial exit system. Capital: 20L, 2L per trade, 2 entries/day.
+Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J, T, R) with a 2-stage partial exit system. Capital: 20L, 2L per trade, 3 entries/day. Signals ranked by strategy priority (R→T→J) then sector momentum then ATR%.
 
 ---
 
@@ -92,72 +92,75 @@ The original system sold 1/2 at +5% and exited the other 1/2 on indicator. The 2
 | Capital | 20 Lakhs |
 | Per trade | 2 Lakhs |
 | Max positions | 10 (20L / 2L) |
-| Entries per day | 2 |
+| Entries per day | 3 |
 | Strategies | J + T + R |
 | Underwater exit | 10 trading days |
 | T tight SL | 3% after first +6% exit |
 
 ---
 
-## Signal Ranking — ATR% (Lowest Volatility First)
+## Signal Ranking — Strategy Priority + Sector Momentum + ATR%
 
-When multiple signals fire on the same day and you have limited slots (2/day):
+When multiple signals fire on the same day and you have limited slots (3/day):
 
-### Current Method: Rank by ATR% (ATR14 / Price)
-- **Sort**: Lowest `atr_norm` first — prefer calmer, less volatile stocks
-- **Logic**: Lower volatility stocks are less likely to gap through stops and more likely to have orderly pullbacks that recover to targets
-- **Tiebreaker**: Seed-based random jitter for reproducibility
+### Current Method: R → T → J → Sector Momentum (desc) → ATR% (asc)
 
-### Why ATR% over Stop%
-Four ranking strategies were tested across 11 years (2015-2025):
+Signals are ranked in priority order:
+1. **Strategy priority**: R → T → J (R signals always come first)
+2. **Sector momentum** (descending): Stocks in sectors with rising relative strength rank higher
+3. **ATR%** (ascending): Among equal sector momentum, calmer stocks preferred
 
-| Rank Method | Total PnL | Avg Ret/yr | Positive Yrs | Avg WR | Avg PF |
-|---|---|---|---|---|---|
-| **B: ATR% (current)** | **+43.88L** | **+19.95%** | **11/11** | **67.1%** | **1.79** |
-| A: Stop% (old) | +40.40L | +18.36% | 9/11 | 66.6% | 1.79 |
-| C: Trend/Risk | +42.42L | +19.28% | 10/11 | 68.5% | 1.75 |
-| D: Composite | +42.48L | +19.31% | 11/11 | 67.8% | 1.82 |
+### Sector Momentum Score
+- Measures whether a sector's RS vs Nifty 50 is accelerating or decelerating
+- Formula: `delta_5d × 3 + delta_10d × 2 + delta_20d × 1` (weighted sum of RS changes)
+- A sector at -11% RS but +27 momentum = recovering fast → ranks higher than flat +4%
+- Uses 17 Nifty sectoral indices (IT, Bank, Pharma, Auto, etc.)
 
-ATR% ranking:
-- **+3.48L more** than old Stop% ranking over 11 years
-- **Eliminates both losing years** (2015: -2.0% -> +0.6%, 2018: -2.6% -> +5.0%)
-- Entry conditions already filter for trend quality, so ranking by volatility avoids double-counting
-- Slight weakness in very strong trending markets (2019, 2023) where volatile runners get skipped
+### 11-Year Backtest: Sector Momentum vs ATR-only Ranking
 
-### Stop% is still displayed
-The UI shows both ATR% (ranking column) and Stop% (SL distance) in the Top Picks panel so you can see the risk profile of each signal.
+| Metric | ATR Baseline | Sector Momentum | Delta |
+|---|---|---|---|
+| Net P&L | +77.2L | +83.9L | **+6.8L** |
+| CAGR (net) | 15.5% | 16.2% | +0.7% |
+| Max Drawdown | 14.3% | 9.6% | **-4.7%** |
+| Sharpe | 1.45 | 1.65 | +0.19 |
+| Calmar | 1.08 | 1.69 | +0.60 |
+| Wins | — | **10/11 years** | — |
+
+### Stop% and ATR% are still displayed
+The UI shows ATR%, Stop% (SL distance), and Sector column with momentum arrows in the Top Picks panel.
 
 ---
 
 ## Backtest Results — 11 Years (2015-2025), Nifty 100
 
-### Current Baseline — JTR (2-Stage 6%+Keltner + Gap-Down + ATR% Ranking + Skip 2wk Support + UW Exit 10d + T: IBS>0.5 + tight SL 3% + R: regular+hidden divergence, RSI<40/60, div>=3/5pt, EMA50 filter, regular stop 0-5%, hidden stop 2-5% + 2 entries/day)
+### Current — TR Sector Momentum (2-Stage 6%+Keltner + Gap-Down + Sector Momentum Ranking + Skip 2wk Support + UW Exit 10d + T: IBS>0.5 + tight SL 3% + R: regular+hidden divergence, RSI<40/60, div>=3/5pt, EMA50 filter, regular stop 0-5%, hidden stop 2-5% + 3 entries/day)
 
-| Year | Trades | Win | Loss | WR% | AvgWin | AvgLoss | PF | Gross | Net Post-Tax | Return% |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 2015 | 197 | 84 | 113 | 42.6% | +8,879 | -6,209 | 1.06 | +0.4L | -0.0L | -0.1% |
-| 2016 | 290 | 175 | 115 | 60.3% | +8,840 | -5,127 | 2.62 | +9.6L | +7.2L | +36.0% |
-| 2017 | 282 | 170 | 112 | 60.3% | +9,641 | -4,239 | 3.45 | +11.6L | +8.8L | +44.1% |
-| 2018 | 287 | 165 | 122 | 57.5% | +8,322 | -6,035 | 1.87 | +6.4L | +4.6L | +23.2% |
-| 2019 | 403 | 289 | 114 | 71.7% | +9,105 | -5,226 | 4.42 | +20.4L | +15.7L | +78.7% |
-| 2020 | 302 | 205 | 97 | 67.9% | +10,145 | -7,666 | 2.80 | +13.4L | +10.2L | +51.2% |
-| 2021 | 357 | 226 | 131 | 63.3% | +8,826 | -5,421 | 2.81 | +12.8L | +9.7L | +48.6% |
-| 2022 | 235 | 124 | 111 | 52.8% | +8,517 | -6,385 | 1.49 | +3.5L | +2.4L | +11.9% |
-| 2023 | 266 | 172 | 94 | 64.7% | +8,841 | -4,596 | 3.52 | +10.9L | +8.2L | +41.2% |
-| 2024 | 302 | 179 | 123 | 59.3% | +8,937 | -5,246 | 2.48 | +9.5L | +7.1L | +35.6% |
-| 2025 | 280 | 156 | 124 | 55.7% | +9,680 | -4,343 | 2.80 | +9.7L | +7.3L | +36.4% |
-| **Avg** | **291** | **177** | **114** | **60.8%** | **+9,099** | **-5,475** | **2.57** | **+9.8L** | **+7.4L** | **+37.0%** |
-| **Total** | **3,201** | **1,945** | **1,256** | | | | | **+108.2L** | **+81.3L** | **+407%** |
+Charges: Zerodha delivery (₹0 brokerage, STT 0.1% both sides). Tax: STCG 20% on (gross - deductible charges). STT not deductible.
 
-- **Winning years: 11/11** (all years profitable gross, 2015 breakeven net)
-- **Best year: +78.7% net (2019)**
-- **Worst year: -0.1% net (2015)**
-- **Gross P&L: Rs 108.2 Lakhs → Net post-tax: Rs 81.3 Lakhs** (you keep 75 paise per rupee)
-- **Net CAGR: 15.9%** after STT, charges, and 20% STCG tax
-- **Avg Win/Loss ratio: 1.7x** (make Rs 9,099 on winners, lose Rs 5,475 on losers)
-- **Avg PF: 2.57**
-- **Risk metrics**: Sharpe 2.00, Sortino 6.25, Max DD -13.4%, Vol 21.6%, R² vs Nifty 0.377
-- **By strategy**: R: 2,304 trades (Regular 1,202 @ 68.3% WR +57.3L, Hidden 1,102 @ 57.9% WR +32.3L) = 83% of gross | T: 897 trades, 54.2% WR, +18.8L = 17% of gross
+| Year | Trades | Win | Loss | WR% | AvgWin | AvgLoss | PF | Gross | Chg | Tax | Net | NetR% |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2015 | 237 | 116 | 121 | 48.9% | +9,512 | -5,864 | 1.56 | +3.9L | 77K | 77K | +2.4L | +12.0% |
+| 2016 | 311 | 197 | 114 | 63.3% | +8,881 | -5,182 | 2.96 | +11.6L | 89K | 230K | +8.4L | +42.0% |
+| 2017 | 256 | 135 | 121 | 52.7% | +9,796 | -4,643 | 2.35 | +7.6L | 91K | 150K | +5.2L | +26.0% |
+| 2018 | 290 | 159 | 131 | 54.8% | +8,351 | -5,713 | 1.77 | +5.8L | 88K | 114K | +3.8L | +18.9% |
+| 2019 | 383 | 263 | 120 | 68.7% | +9,280 | -5,144 | 3.95 | +18.2L | 100K | 363K | +13.6L | +68.0% |
+| 2020 | 310 | 213 | 97 | 68.7% | +10,262 | -7,931 | 2.84 | +14.2L | 87K | 282K | +10.5L | +52.4% |
+| 2021 | 386 | 252 | 134 | 65.3% | +8,673 | -5,731 | 2.85 | +14.2L | 108K | 281K | +10.3L | +51.4% |
+| 2022 | 247 | 135 | 112 | 54.7% | +8,493 | -6,650 | 1.54 | +4.0L | 78K | 79K | +2.5L | +12.3% |
+| 2023 | 332 | 232 | 100 | 69.9% | +9,456 | -4,839 | 4.53 | +17.1L | 101K | 340K | +12.7L | +63.5% |
+| 2024 | 311 | 195 | 116 | 62.7% | +8,916 | -5,979 | 2.51 | +10.5L | 94K | 207K | +7.4L | +37.2% |
+| 2025 | 287 | 161 | 126 | 56.1% | +9,575 | -4,181 | 2.93 | +10.1L | 93K | 201K | +7.2L | +36.0% |
+| **Total** | **3,350** | **2,058** | **1,292** | **61.4%** | **+9,201** | **-5,584** | **2.62** | **+117.2L** | **1004K** | **2324K** | **+83.9L** | |
+
+- **Winning years: 11/11** (all years profitable, worst +12.0% net)
+- **Best year: +68.0% net (2019)**
+- **Gross P&L: Rs 117.2L → Net post-tax: Rs 83.9L** (you keep 72 paise per rupee)
+- **Net CAGR: 16.2%** after STT, charges, and 20% STCG tax
+- **Avg Win/Loss ratio: 1.65x** (make Rs 9,201 on winners, lose Rs 5,584 on losers)
+- **Avg PF: 2.62**
+- **Risk metrics**: Sharpe 1.65, Calmar 1.69, Max DD 9.6%, R² 0.081
+- **By strategy**: R: 2,335 trades, 64% WR, +96.2L (82% of gross) | T: 1,015 trades, 55% WR, +21.0L (18% of gross)
 
 ### Previous JT-only Baseline (before Strategy R)
 
@@ -228,6 +231,7 @@ The strategy runs in three places. All three use identical entry/exit logic:
 | File | `data/momentum_backtest.py` | `data/live_signals_engine.py` | `ui/app.py` |
 | Gap-down filter | `no_gap_down=True` | Open < prev close → skip | `no_gap_down=True` |
 | ATR% ranking | `rank_by_risk=True` | Sort by `atr_pct` | `rank_by_risk=True` |
+| Sector momentum | `rank_by_sector_momentum=True` | Sector RS momentum score | R→T→J → momentum → ATR% |
 | Underwater exit | `underwater_exit_days=10` | 10 trading days check | `underwater_exit_days=10` |
 | T tight SL | `t_tight_sl=0.03` | 3% after stage >= 1 | `t_tight_sl=0.03` |
 | J Nifty shield | SL skip if Nifty fell more | SL skip if Nifty fell more | — |
@@ -242,12 +246,22 @@ The strategy runs in three places. All three use identical entry/exit logic:
 ## Live Signals UI
 
 ### Top Picks Panel
-- Combined J+T+R signals ranked by ATR% (lowest volatility first)
-- Top 2 signals highlighted with star and green background
-- Columns: Rank, Strategy (J/T/R), Stock, Close, **ATR%** (ranking), **Stop%** (SL distance), Stop Price, Detail, Buy button
+- Combined J+T+R signals ranked by: Strategy priority (R→T→J) → Sector momentum (desc) → ATR% (asc)
+- Top 3 signals highlighted with star and green background
+- Columns: Rank, Strategy (J/T/R), Stock, Close, **Sector** (with momentum arrow), **ATR%**, **Stop%** (SL distance), Stop Price, Detail, Buy button
+- Sector column: green arrow up = rising RS, red arrow down = falling RS
 - ATR% color: green (<2%), gray (2-3.5%), red (>3.5%)
 - Stop% color: green (<5%), gray (=5%), red (>5%)
 - R badge: purple (#ab47bc)
+- Sector concentration warning bar when 3+ stocks from same sector
+- Buy button shows confirm dialog when 3+ same-sector positions already held
+
+### Sector Momentum Heatmap Panel
+- Always visible regardless of strategy selection
+- Shows all 17 Nifty sector indices with RS% and momentum direction
+- Color-coded pills: green = positive RS, red = negative RS, arrow = momentum direction
+- (i) info button explaining how to read the heatmap
+- Sorted by momentum score (strongest momentum first)
 
 ### Entered Signals (Positions) Panel
 - Shows active positions with: Strategy badge (J green / T blue / R purple), User, Entry Date, Entry Price
