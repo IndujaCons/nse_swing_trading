@@ -94,31 +94,44 @@ def _find_swing_lows(lows: pd.Series, left: int = 5, right: int = 3) -> list:
     return result
 
 
+def _rsi_near_swing(rsi14_vals, idx, window=3):
+    """Get min RSI within ±window bars of a swing low index.
+
+    Price low and RSI low often don't land on the same bar —
+    use the lowest RSI in the zone to match how traders read charts.
+    """
+    start = max(0, idx - window)
+    end = min(len(rsi14_vals), idx + window + 1)
+    chunk = rsi14_vals[start:end]
+    valid = [v for v in chunk if not np.isnan(v)]
+    return min(valid) if valid else rsi14_vals[idx]
+
+
 def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
                                max_lookback=50, min_sep=5,
                                rsi_threshold=40, min_rsi_divergence=3,
                                min_price_drop=0.0):
-    """Check for bullish RSI divergence at bar i."""
+    """Check for bullish RSI divergence at bar i.
+
+    Uses min RSI within ±3 bars of each swing low to match visual chart reading.
+    """
     recent = [(idx, val) for idx, val in swing_lows
               if idx <= i and i - idx <= max_lookback]
     if len(recent) < 2:
-        return False, None
+        return False, None, None
     for k in range(len(recent) - 1, 0, -1):
         curr_idx, curr_low = recent[k]
         prev_idx, prev_low = recent[k - 1]
         if curr_idx - prev_idx < min_sep:
             continue
-        # Meaningful lower low in price (>= min_price_drop)
         if curr_low >= prev_low * (1 - min_price_drop):
             continue
-        # Meaningful higher low in RSI(14) (>= min_rsi_divergence points)
-        curr_rsi = rsi14_vals[curr_idx]
-        prev_rsi = rsi14_vals[prev_idx]
+        curr_rsi = _rsi_near_swing(rsi14_vals, curr_idx)
+        prev_rsi = _rsi_near_swing(rsi14_vals, prev_idx)
         if np.isnan(curr_rsi) or np.isnan(prev_rsi):
             continue
         if curr_rsi - prev_rsi < min_rsi_divergence:
             continue
-        # RSI below threshold at current swing low (oversold zone)
         if curr_rsi >= rsi_threshold:
             continue
         return True, curr_low, curr_rsi
@@ -135,6 +148,8 @@ def _detect_hidden_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
     - RSI(14): current < previous - min_rsi_divergence (lower low in RSI)
     - RSI(14) < rsi_threshold at current swing low
 
+    Uses min RSI within ±3 bars of each swing low to match visual chart reading.
+
     Returns (True, swing_low_val, rsi_at_low) or (False, None, None).
     """
     recent = [(idx, val) for idx, val in swing_lows
@@ -146,17 +161,14 @@ def _detect_hidden_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
         prev_idx, prev_low = recent[k - 1]
         if curr_idx - prev_idx < min_sep:
             continue
-        # Higher low in price (uptrend continuation)
         if curr_low <= prev_low:
             continue
-        # Lower low in RSI (>= min_rsi_divergence points)
-        curr_rsi = rsi14_vals[curr_idx]
-        prev_rsi = rsi14_vals[prev_idx]
+        curr_rsi = _rsi_near_swing(rsi14_vals, curr_idx)
+        prev_rsi = _rsi_near_swing(rsi14_vals, prev_idx)
         if np.isnan(curr_rsi) or np.isnan(prev_rsi):
             continue
         if prev_rsi - curr_rsi < min_rsi_divergence:
             continue
-        # RSI below relaxed threshold
         if curr_rsi >= rsi_threshold:
             continue
         return True, curr_low, curr_rsi

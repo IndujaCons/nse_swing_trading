@@ -94,6 +94,19 @@ class MomentumBacktester:
         return result
 
     @staticmethod
+    def _rsi_near_swing(rsi14_vals, idx, window=3):
+        """Get min RSI within ±window bars of a swing low index.
+
+        Price low and RSI low often don't land on the same bar —
+        use the lowest RSI in the zone to match how traders read charts.
+        """
+        start = max(0, idx - window)
+        end = min(len(rsi14_vals), idx + window + 1)
+        chunk = rsi14_vals[start:end]
+        valid = [v for v in chunk if not np.isnan(v)]
+        return min(valid) if valid else rsi14_vals[idx]
+
+    @staticmethod
     def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
                                    max_lookback=50, min_sep=5,
                                    rsi_threshold=40, min_rsi_divergence=3,
@@ -104,6 +117,8 @@ class MomentumBacktester:
         - Price: current swing low < previous * (1 - min_price_drop) (meaningful lower low)
         - RSI(14): current > previous + min_rsi_divergence (meaningful higher low)
         - RSI(14) < rsi_threshold at the current swing low (oversold zone)
+
+        Uses min RSI within ±3 bars of each swing low to match visual chart reading.
 
         Returns (True, swing_low_price) or (False, None).
         """
@@ -122,9 +137,9 @@ class MomentumBacktester:
             # Meaningful lower low in price (>= min_price_drop)
             if curr_low >= prev_low * (1 - min_price_drop):
                 continue
-            # Meaningful higher low in RSI(14) (>= min_rsi_divergence points)
-            curr_rsi = rsi14_vals[curr_idx]
-            prev_rsi = rsi14_vals[prev_idx]
+            # Use min RSI near each swing low (±3 bars)
+            curr_rsi = MomentumBacktester._rsi_near_swing(rsi14_vals, curr_idx)
+            prev_rsi = MomentumBacktester._rsi_near_swing(rsi14_vals, prev_idx)
             if np.isnan(curr_rsi) or np.isnan(prev_rsi):
                 continue
             if curr_rsi - prev_rsi < min_rsi_divergence:
@@ -146,6 +161,8 @@ class MomentumBacktester:
         - RSI(14): current < previous - min_rsi_divergence (lower low in RSI)
         - RSI(14) < rsi_threshold at current swing low (relaxed from 40)
 
+        Uses min RSI within ±3 bars of each swing low to match visual chart reading.
+
         Returns (True, swing_low_price) or (False, None).
         """
         recent = [(idx, val) for idx, val in swing_lows
@@ -161,9 +178,9 @@ class MomentumBacktester:
             # Higher low in price (uptrend continuation)
             if curr_low <= prev_low:
                 continue
-            # Lower low in RSI (>= min_rsi_divergence points)
-            curr_rsi = rsi14_vals[curr_idx]
-            prev_rsi = rsi14_vals[prev_idx]
+            # Use min RSI near each swing low (±3 bars)
+            curr_rsi = MomentumBacktester._rsi_near_swing(rsi14_vals, curr_idx)
+            prev_rsi = MomentumBacktester._rsi_near_swing(rsi14_vals, prev_idx)
             if np.isnan(curr_rsi) or np.isnan(prev_rsi):
                 continue
             if prev_rsi - curr_rsi < min_rsi_divergence:
@@ -195,8 +212,8 @@ class MomentumBacktester:
                 continue
             if curr_low <= prev_low:
                 continue
-            curr_rsi = rsi14_vals[curr_idx]
-            prev_rsi = rsi14_vals[prev_idx]
+            curr_rsi = MomentumBacktester._rsi_near_swing(rsi14_vals, curr_idx)
+            prev_rsi = MomentumBacktester._rsi_near_swing(rsi14_vals, prev_idx)
             if np.isnan(curr_rsi) or np.isnan(prev_rsi):
                 continue
             if prev_rsi - curr_rsi < min_rsi_divergence:
@@ -218,6 +235,8 @@ class MomentumBacktester:
                                      min_price_drop=0.0):
         """Like _detect_bullish_divergence but returns full detail for explanation.
 
+        Uses min RSI within ±3 bars of each swing low to match visual chart reading.
+
         Returns (True, detail_dict) or (False, None).
         detail_dict has: prev_idx, prev_low, prev_rsi, curr_idx, curr_low, curr_rsi
         """
@@ -233,8 +252,8 @@ class MomentumBacktester:
                 continue
             if curr_low >= prev_low * (1 - min_price_drop):
                 continue
-            curr_rsi = rsi14_vals[curr_idx]
-            prev_rsi = rsi14_vals[prev_idx]
+            curr_rsi = MomentumBacktester._rsi_near_swing(rsi14_vals, curr_idx)
+            prev_rsi = MomentumBacktester._rsi_near_swing(rsi14_vals, prev_idx)
             if np.isnan(curr_rsi) or np.isnan(prev_rsi):
                 continue
             if curr_rsi - prev_rsi < min_rsi_divergence:
@@ -261,7 +280,8 @@ class MomentumBacktester:
 
     def run(self, symbol: str, period_days: int, strategy: str = "B",
             capital: int = 100000, exit_target: str = None,
-            _daily_data=None, end_date=None) -> Dict:
+            _daily_data=None, end_date=None,
+            _stop_tolerance: float = 0.0) -> Dict:
         """
         Run daily-only backtest for a single symbol.
 
@@ -726,7 +746,7 @@ class MomentumBacktester:
                         r_swing_low_stop_cand = swing_low_val * 0.99
                         r_stop_pct_cand = (price - r_swing_low_stop_cand) / price * 100 if price > 0 else 99.0
                         r_min_stop = 2.0 if is_hidden_div else 0.0
-                        if r_min_stop < r_stop_pct_cand <= 5.0:
+                        if r_min_stop < r_stop_pct_cand <= 5.0 + _stop_tolerance:
                             shares = int(capital // price)
                             if shares > 0:
                                 entry_price = price
@@ -871,7 +891,8 @@ class MomentumBacktester:
             window_end = datetime.combine(window_end, datetime.min.time())
 
         period_days = (window_end.date() - window_start).days if hasattr(window_end, 'date') else (window_end - window_start).days
-        result = self.run(symbol, period_days, strategy=strategy, end_date=window_end)
+        result = self.run(symbol, period_days, strategy=strategy, end_date=window_end,
+                          _stop_tolerance=0.5)
 
         if "error" in result:
             return {"error": result["error"]}
