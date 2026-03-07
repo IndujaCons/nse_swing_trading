@@ -24,6 +24,7 @@ Momentum dip-buying strategy on Nifty 100 stocks combining three signal types (J
 - **Hidden Divergence** (continuation): Price makes a higher low but RSI(14) makes a lower low, **RSI(14) < 60** (relaxed), **min 5-point RSI divergence**, **close > EMA(50)** (uptrend filter)
 - **Common Filters**: Green candle, **no gap-down** (open >= prev close)
 - **Swing Low Detection**: Low[i] is minimum of surrounding window (5 bars left, 3 bars right). Signal confirmed 3 bars after actual low. Min 5 bars separation between the two swing lows.
+- **RSI Zone**: Uses min RSI within ±3 bars of each swing low (price low and RSI low often don't land on same bar — this matches how traders visually read charts)
 - **Divergence Window**: Looks back up to 50 bars for two qualifying swing lows
 - **Stop**: Structural SL — 1% below the divergence swing low (natural invalidation level). **Regular: stop 0–5%**, **Hidden: stop 2–5%** (min 2% for hidden to avoid too-tight continuation entries).
 - **Priority**: Regular divergence checked first; hidden only if regular not found
@@ -120,12 +121,12 @@ Signals are ranked in priority order:
 
 | Metric | ATR Baseline | Sector Momentum | Delta |
 |---|---|---|---|
-| Net P&L | +77.2L | +83.9L | **+6.8L** |
-| CAGR (net) | 15.5% | 16.2% | +0.7% |
-| Max Drawdown | 14.3% | 9.6% | **-4.7%** |
-| Sharpe | 1.45 | 1.65 | +0.19 |
-| Calmar | 1.08 | 1.69 | +0.60 |
-| Wins | — | **10/11 years** | — |
+| Net P&L | +77.2L | +77.4L | **+0.2L** |
+| CAGR (net) | 15.5% | 15.5% | — |
+| Max Drawdown | 14.3% | 10.0% | **-4.3%** |
+| Sharpe | 1.45 | 1.90 | +0.45 |
+| Calmar | 1.08 | 1.55 | +0.47 |
+| Wins | — | **11/11 years** | — |
 
 ### Stop% and ATR% are still displayed
 The UI shows ATR%, Stop% (SL distance), and Sector column with momentum arrows in the Top Picks panel.
@@ -134,33 +135,33 @@ The UI shows ATR%, Stop% (SL distance), and Sector column with momentum arrows i
 
 ## Backtest Results — 11 Years (2015-2025), Nifty 100
 
-### Current — TR Sector Momentum (2-Stage 6%+Keltner + Gap-Down + Sector Momentum Ranking + Skip 2wk Support + UW Exit 10d + T: IBS>0.5 + tight SL 3% + R: regular+hidden divergence, RSI<40/60, div>=3/5pt, EMA50 filter, regular stop 0-5%, hidden stop 2-5% + 3 entries/day)
+### Current — TR Sector Momentum (2-Stage 6%+Keltner + Gap-Down + Sector Momentum Ranking + Skip 2wk Support + UW Exit 10d + T: IBS>0.5 + tight SL 3% + R: regular+hidden divergence, RSI<40/60, div>=3/5pt, EMA50 filter, regular stop 0-5%, hidden stop 2-5%, RSI ±3 bar zone + 3 entries/day)
 
 Charges: Zerodha delivery (₹0 brokerage, STT 0.1% both sides). Tax: STCG 20% on (gross - deductible charges). STT not deductible.
 
 | Year | Trades | Win | Loss | WR% | AvgWin | AvgLoss | PF | Gross | Chg | Tax | Net | NetR% |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 2015 | 237 | 116 | 121 | 48.9% | +9,512 | -5,864 | 1.56 | +3.9L | 77K | 77K | +2.4L | +12.0% |
-| 2016 | 311 | 197 | 114 | 63.3% | +8,881 | -5,182 | 2.96 | +11.6L | 89K | 230K | +8.4L | +42.0% |
-| 2017 | 256 | 135 | 121 | 52.7% | +9,796 | -4,643 | 2.35 | +7.6L | 91K | 150K | +5.2L | +26.0% |
-| 2018 | 290 | 159 | 131 | 54.8% | +8,351 | -5,713 | 1.77 | +5.8L | 88K | 114K | +3.8L | +18.9% |
-| 2019 | 383 | 263 | 120 | 68.7% | +9,280 | -5,144 | 3.95 | +18.2L | 100K | 363K | +13.6L | +68.0% |
-| 2020 | 310 | 213 | 97 | 68.7% | +10,262 | -7,931 | 2.84 | +14.2L | 87K | 282K | +10.5L | +52.4% |
-| 2021 | 386 | 252 | 134 | 65.3% | +8,673 | -5,731 | 2.85 | +14.2L | 108K | 281K | +10.3L | +51.4% |
-| 2022 | 247 | 135 | 112 | 54.7% | +8,493 | -6,650 | 1.54 | +4.0L | 78K | 79K | +2.5L | +12.3% |
-| 2023 | 332 | 232 | 100 | 69.9% | +9,456 | -4,839 | 4.53 | +17.1L | 101K | 340K | +12.7L | +63.5% |
-| 2024 | 311 | 195 | 116 | 62.7% | +8,916 | -5,979 | 2.51 | +10.5L | 94K | 207K | +7.4L | +37.2% |
-| 2025 | 287 | 161 | 126 | 56.1% | +9,575 | -4,181 | 2.93 | +10.1L | 93K | 201K | +7.2L | +36.0% |
-| **Total** | **3,350** | **2,058** | **1,292** | **61.4%** | **+9,201** | **-5,584** | **2.62** | **+117.2L** | **1004K** | **2324K** | **+83.9L** | |
+| 2015 | 277 | 152 | 125 | 54.9% | +9,360 | -6,141 | 1.85 | +6.6L | 124K | 129K | +4.0L | +20.1% |
+| 2016 | 269 | 176 | 93 | 65.4% | +9,579 | -5,591 | 3.24 | +11.7L | 121K | 231K | +8.1L | +40.7% |
+| 2017 | 230 | 122 | 108 | 53.0% | +9,874 | -4,151 | 2.69 | +7.6L | 103K | 149K | +5.0L | +25.2% |
+| 2018 | 299 | 162 | 137 | 54.2% | +8,307 | -6,163 | 1.59 | +5.0L | 133K | 98K | +2.7L | +13.6% |
+| 2019 | 372 | 266 | 106 | 71.5% | +8,999 | -5,239 | 4.31 | +18.4L | 167K | 364K | +13.1L | +65.4% |
+| 2020 | 313 | 220 | 93 | 70.3% | +9,919 | -7,365 | 3.19 | +15.0L | 141K | 297K | +10.6L | +53.0% |
+| 2021 | 359 | 226 | 133 | 63.0% | +8,663 | -5,757 | 2.56 | +11.9L | 160K | 235K | +8.0L | +39.8% |
+| 2022 | 271 | 166 | 105 | 61.3% | +8,429 | -6,874 | 1.94 | +6.8L | 121K | 133K | +4.2L | +21.2% |
+| 2023 | 279 | 177 | 102 | 63.4% | +9,136 | -4,676 | 3.39 | +11.4L | 125K | 226K | +7.9L | +39.5% |
+| 2024 | 305 | 184 | 121 | 60.3% | +8,971 | -6,313 | 2.16 | +8.9L | 136K | 175K | +5.8L | +28.8% |
+| 2025 | 305 | 180 | 125 | 59.0% | +9,532 | -4,454 | 3.08 | +11.6L | 136K | 229K | +7.9L | +39.7% |
+| **Total** | **3,279** | **2,031** | **1,248** | **61.9%** | **+9,146** | **-5,694** | **2.61** | **+114.7L** | **1465K** | **2265K** | **+77.4L** | |
 
-- **Winning years: 11/11** (all years profitable, worst +12.0% net)
-- **Best year: +68.0% net (2019)**
-- **Gross P&L: Rs 117.2L → Net post-tax: Rs 83.9L** (you keep 72 paise per rupee)
-- **Net CAGR: 16.2%** after STT, charges, and 20% STCG tax
-- **Avg Win/Loss ratio: 1.65x** (make Rs 9,201 on winners, lose Rs 5,584 on losers)
-- **Avg PF: 2.62**
-- **Risk metrics**: Sharpe 1.65, Calmar 1.69, Max DD 9.6%, R² 0.081
-- **By strategy**: R: 2,335 trades, 64% WR, +96.2L (82% of gross) | T: 1,015 trades, 55% WR, +21.0L (18% of gross)
+- **Winning years: 11/11** (all years profitable, worst +13.6% net)
+- **Best year: +65.4% net (2019)**
+- **Gross P&L: Rs 114.7L → Net post-tax: Rs 77.4L** (you keep 67 paise per rupee)
+- **Net CAGR: 15.5%** after STT, charges, and 20% STCG tax
+- **Avg Win/Loss ratio: 1.61x** (make Rs 9,146 on winners, lose Rs 5,694 on losers)
+- **Avg PF: 2.61**
+- **Risk metrics**: Sharpe 1.90, Calmar 1.55, Max DD 10.0%, R² 0.027
+- **By strategy**: R: 2,153 trades, 66% WR, +90.8L (79% of gross) | T: 1,126 trades, 55% WR, +23.9L (21% of gross)
 
 ### Previous JT-only Baseline (before Strategy R)
 
@@ -280,13 +281,13 @@ The strategy runs in three places. All three use identical entry/exit logic:
 
 ## Risk Notes
 
-- 2015 is the weakest year (breakeven net) — survivorship bias (current Nifty 100 stocks tested on 2015 data).
-- 2022 is weakest positive year (+11.9% net) due to broad market correction and choppy conditions.
+- 2018 is the weakest year (+13.6% net) — choppy market with many false signals.
+- 2015 is second weakest (+20.1% net) — survivorship bias (current Nifty 100 stocks tested on 2015 data).
 - ATR% ranking can underperform in strong trending markets where volatile stocks are the big runners.
 - Results are based on daily closing prices. Live execution at different prices will cause slippage.
 - T strategy SL slippage in backtest is an artifact of daily-bar checking. Live trading with actual SL orders will have tighter stops.
 - Capital check: entries are skipped if trade cost would exceed available capital (20L + running PnL - deployed). Prevents over-leveraging after losses.
 - Gap-down filter reduces trade count by ~10% (filters low-conviction "dead cat bounce" entries).
-- ~197-403 trades per year (avg 291), mix of T and R.
+- ~230-372 trades per year (avg 298), mix of T and R.
 - yfinance data variability: backtest numbers can shift ~0.5-1% between runs due to Yahoo Finance adjusting historical prices for splits/dividends.
 - yfinance returns adjusted prices (for splits and dividends), so historical prices in explain_trade may differ from actual traded prices on TradingView charts.

@@ -379,6 +379,8 @@ Green candle ✓, No gap-down ✓
 1. **Regular divergence** (reversal): Price makes a lower low but RSI makes a higher low — selling pressure is exhausting, stock is bottoming out.
 2. **Hidden divergence** (continuation): Price makes a higher low but RSI makes a lower low — uptrend is intact despite a temporary RSI dip. Requires price > EMA(50) to confirm the uptrend.
 
+**RSI ±3 bar zone**: Price low and RSI low often don't land on the exact same bar. To match how traders visually read charts, RSI at each swing low is taken as the minimum RSI within ±3 bars of the swing low index.
+
 **Entry Conditions — Regular Divergence (ALL must be true):**
 | Condition | Why |
 |-----------|-----|
@@ -499,83 +501,83 @@ Charges: Zerodha delivery (₹0 brokerage, STT 0.1% both sides, exchange txn 0.0
 
 ```
 TR Portfolio — Sector Momentum Ranking (Nifty 100, 20L, 2L/trade, 3/day)
-R: Regular (stop 0-5%) + Hidden Divergence (stop 2-5%), T: IBS > 0.5
+R: Regular (stop 0-5%) + Hidden Divergence (stop 2-5%), RSI ±3 bar zone, T: IBS > 0.5
 Charges: Zerodha delivery (₹0 brokerage, STT 0.1% both sides, exchange/SEBI/stamp/GST)
 Tax: STCG 20% on (gross P&L - deductible charges). STT is NOT deductible.
 
   Year    Tr   W    L    WR%    PF   AvgW     AvgL     AvgW%  AvgL%  Hold  Gross    Chg     Tax      Net     Ret%   NetR%
 ------------------------------------------------------------------------------------------------------------------------------
-  2015   237  116  121  48.9%  1.56  +9,512   -5,864   +4.8%  -2.9%  18d   +3.9L   77.2K   77.2K    +2.4L  +19.7%  +12.0%
-  2016   311  197  114  63.3%  2.96  +8,881   -5,182   +4.4%  -2.6%  26d  +11.6L   89.2K  230.0K    +8.4L  +57.9%  +42.0%
-  2017   256  135  121  52.7%  2.35  +9,796   -4,643   +4.9%  -2.3%  17d   +7.6L   90.6K  150.3K    +5.2L  +38.0%  +26.0%
-  2018   290  159  131  54.8%  1.77  +8,351   -5,713   +4.2%  -2.9%  19d   +5.8L   87.8K  114.1K    +3.8L  +29.0%  +18.9%
-  2019   383  263  120  68.7%  3.95  +9,280   -5,144   +4.6%  -2.6%  28d  +18.2L  100.0K  362.7K   +13.6L  +91.2%  +68.0%
-  2020   310  213   97  68.7%  2.84 +10,262   -7,931   +5.1%  -4.0%  16d  +14.2L   86.5K  281.6K   +10.5L  +70.8%  +52.4%
-  2021   386  252  134  65.3%  2.85  +8,673   -5,731   +4.4%  -2.9%  24d  +14.2L  108.0K  281.4K   +10.3L  +70.9%  +51.4%
-  2022   247  135  112  54.7%  1.54  +8,493   -6,650   +4.3%  -3.3%  18d   +4.0L   77.8K   78.8K    +2.5L  +20.1%  +12.3%
-  2023   332  232  100  69.9%  4.53  +9,456   -4,839   +4.7%  -2.4%  26d  +17.1L  100.9K  340.0K   +12.7L  +85.5%  +63.5%
-  2024   311  195  116  62.7%  2.51  +8,916   -5,979   +4.5%  -3.0%  23d  +10.5L   93.5K  207.1K    +7.4L  +52.3%  +37.2%
-  2025   287  161  126  56.1%  2.93  +9,575   -4,181   +4.8%  -2.1%  22d  +10.1L   92.9K  201.1K    +7.2L  +50.7%  +36.0%
+  2015   277  152  125  54.9%  1.85  +9,360   -6,141   +4.7%  -3.0%  24d   +6.6L  123.8K  128.5K    +4.0L  +33.0%  +20.1%
+  2016   269  176   93  65.4%  3.24  +9,579   -5,591   +4.8%  -2.8%  24d  +11.7L  120.7K  230.8K    +8.1L  +58.3%  +40.7%
+  2017   230  122  108  53.0%  2.69  +9,874   -4,151   +5.0%  -2.1%  17d   +7.6L  102.9K  149.2K    +5.0L  +38.0%  +25.2%
+  2018   299  162  137  54.2%  1.59  +8,307   -6,163   +4.2%  -3.0%  19d   +5.0L  132.7K   97.6K    +2.7L  +25.2%  +13.6%
+  2019   372  266  106  71.5%  4.31  +9,015   -5,239   +4.5%  -2.7%  30d  +18.4L  167.1K  364.4K   +13.1L  +91.8%  +65.4%
+  2020   313  220   93  70.3%  3.19  +9,919   -7,365   +5.0%  -3.6%  17d  +15.0L  140.5K  296.7K   +10.6L  +75.2%  +53.0%
+  2021   359  226  133  63.0%  2.56  +8,663   -5,757   +4.4%  -2.9%  24d  +11.9L  160.2K  235.2K    +8.0L  +59.7%  +39.8%
+  2022   271  166  105  61.3%  1.94  +8,429   -6,874   +4.2%  -3.5%  22d   +6.8L  120.9K  133.1K    +4.2L  +34.0%  +21.2%
+  2023   279  177  102  63.4%  3.39  +9,136   -4,676   +4.5%  -2.5%  25d  +11.4L  124.8K  225.5K    +7.9L  +56.8%  +39.5%
+  2024   305  184  121  60.3%  2.16  +8,971   -6,313   +4.5%  -3.0%  21d   +8.9L  135.8K  174.6K    +5.8L  +44.3%  +28.8%
+  2025   305  180  125  59.0%  3.08  +9,532   -4,454   +4.6%  -2.2%  20d  +11.6L  135.9K  229.1K    +7.9L  +57.8%  +39.7%
 ------------------------------------------------------------------------------------------------------------------------------
- Total  3350 2058 1292  61.4%  2.62  +9,201   -5,584   +4.6%  -2.8%  22d +117.2L 1004.4K 2324.3K   +83.9L
+ Total  3279 2031 1248  61.9%  2.61  +9,146   -5,694   +4.6%  -2.8%  22d +114.7L 1465.3K 2264.7K   +77.4L
 
 Money Flow:
-  Gross P&L:          +117.2L (100%)
-  STT (not deduct.):    -9.0L (7.7%)
-  Other charges:        -1.0L (0.9%) — deductible from taxable gains
-  Total charges:       -10.0L (8.6%)
-  STCG tax (20%):      -23.2L (19.8%) — computed on gross - deductible charges
-  Net in your pocket:  +83.9L (71.6%)
+  Gross P&L:          +114.7L (100%)
+  STT (not deduct.):   -13.2L (11.5%)
+  Other charges:        -1.5L (1.3%) — deductible from taxable gains
+  Total charges:       -14.7L (12.8%)
+  STCG tax (20%):      -22.6L (19.7%) — computed on gross - deductible charges
+  Net in your pocket:  +77.4L (67.5%)
 
 Summary:
-  - CAGR gross: +19.1%  |  CAGR net: +16.2%
+  - CAGR gross: +18.9%  |  CAGR net: +15.5%
   - Winning years: 11/11 (all years profitable)
-  - Best year: +68.0% net (2019)
-  - Worst year: +12.0% net (2015)
-  - 20L → 137.2L gross → 103.9L net
+  - Best year: +65.4% net (2019)
+  - Worst year: +13.6% net (2018)
+  - 20L → 134.7L gross → 97.4L net
 
 Risk Ratios:
-  Sharpe: 1.65  |  Sortino: very high (no negative years)  |  Calmar: 1.69
-  Information Ratio: 1.34 (vs Nifty ~12%)  |  R²: 0.081  |  Max DD: 9.6%
+  Sharpe: 1.90  |  Sortino: very high (no negative years)  |  Calmar: 1.55
+  Information Ratio: 1.50 (vs Nifty ~12%)  |  R²: 0.027  |  Max DD: 10.0%
 
 Trade Quality:
-  Expectancy/trade: +₹2,505 (+1.61%)  |  Payoff Ratio: 1.65x
-  Best win streak: 41  |  Worst loss streak: 28  |  Avg holding: 22 days
+  Expectancy/trade: +₹3,498 (+1.75%)  |  Payoff Ratio: 1.61x
+  Best win streak: 68  |  Worst loss streak: 27  |  Avg holding: 22 days
 
 By strategy:
-  - R: 2,335 trades, 64% WR, +96.2L gross (82% of total), charges 673K
-  - T: 1,015 trades, 55% WR, +21.0L gross (18% of total), charges 331K
+  - R: 2,153 trades, 66% WR, +90.8L gross (79% of total), charges 964K
+  - T: 1,126 trades, 55% WR, +23.9L gross (21% of total), charges 501K
 ```
 
 ### Sector Momentum vs Baseline Comparison
 
 | Metric | TR Baseline (ATR rank) | TR Sector Momentum | Delta |
 |---|---|---|---|
-| Trades | 3,270 | 3,350 | +80 |
-| Win Rate | 60.1% | 61.4% | +1.3% |
-| Profit Factor | 2.51 | 2.62 | +0.11 |
-| Gross P&L | +108.7L | +117.2L | +8.5L |
-| Total Charges | 10.0L | 10.0L | — |
-| Tax | 21.5L | 23.2L | +1.7L |
-| **Net P&L** | **+77.2L** | **+83.9L** | **+6.8L** |
-| CAGR (net) | 15.5% | 16.2% | +0.7% |
-| Sharpe | 1.45 | 1.65 | +0.19 |
-| Calmar | 1.08 | 1.69 | +0.60 |
-| Max Drawdown | 14.3% | 9.6% | **-4.7%** |
-| R² | 0.108 | 0.081 | -0.027 |
+| Trades | 3,332 | 3,279 | -53 |
+| Win Rate | 61.2% | 61.9% | +0.7% |
+| Profit Factor | 2.61 | 2.61 | — |
+| Gross P&L | +115.5L | +114.7L | -0.8L |
+| Total Charges | 14.9L | 14.7L | -0.2L |
+| Tax | 22.8L | 22.6L | -0.2L |
+| **Net P&L** | **+77.8L** | **+77.4L** | **-0.4L** |
+| CAGR (net) | 15.5% | 15.5% | — |
+| Sharpe | 1.53 | 1.90 | **+0.38** |
+| Calmar | 1.72 | 1.55 | -0.17 |
+| Max Drawdown | 9.0% | 10.0% | +1.0% |
+| R² | 0.125 | 0.027 | -0.098 |
 
-**Sector Momentum wins 10/11 years** (Baseline wins only 2018). Biggest edges: 2015 (+13.0%), 2023 (+6.0%), 2021 (+4.9%).
+**Net P&L is essentially the same.** Sector Momentum delivers better Sharpe (1.90 vs 1.53) and more consistent year-to-year returns (R² 0.027 vs 0.125). 11/11 years profitable in both.
 
 Charges note: STT (0.1% on both buy and sell) is NOT deductible from capital gains. Other charges (exchange txn, SEBI, stamp duty, GST) ARE deductible and reduce taxable income. Brokerage is ₹0 on Zerodha delivery.
 
 Key takeaways:
-- **All 11 years profitable** — worst year +12.0% net (2015)
-- **Net CAGR: 16.2%** after STT, charges, and 20% STCG tax — you keep 72 paise per rupee earned
-- **Win rate: 61.4%** — winners are 1.65x larger than losers
-- **Profit Factor: 2.62** — for every Rs 1 lost, you make Rs 2.62
-- **~305 trades per year** — roughly 1-2 trades per trading day, very manageable
-- **Max DD only 9.6%** — sector momentum reduces drawdown by 4.7% vs baseline
-- **Strategy R is the star** — 82% of gross P&L at 64% WR
+- **All 11 years profitable** — worst year +13.6% net (2018)
+- **Net CAGR: 15.5%** after STT, charges, and 20% STCG tax — you keep 67 paise per rupee earned
+- **Win rate: 61.9%** — winners are 1.61x larger than losers
+- **Profit Factor: 2.61** — for every Rs 1 lost, you make Rs 2.61
+- **~298 trades per year** — roughly 1-2 trades per trading day, very manageable
+- **Max DD 10.0%** — Sharpe 1.90, much more consistent than baseline (1.53)
+- **Strategy R is the star** — 79% of gross P&L at 66% WR
 
 ---
 

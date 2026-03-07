@@ -339,6 +339,7 @@ class LiveSignalsEngine:
         t_signals = []
         r_signals = []
         rw_signals = []
+        tw_signals = []
         actual_date = None  # Track actual last trading date from data
 
         for idx, ticker in enumerate(tickers):
@@ -577,11 +578,61 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
+            # Strategy TW: Weekly Keltner Pullback (no filters)
+            try:
+                already_any = any(s["ticker"] == ticker for s in j_signals + t_signals + r_signals + rw_signals + tw_signals)
+                if is_green and not already_any:
+                    weekly = daily.resample("W-FRI").agg({
+                        "Open": "first", "High": "max", "Low": "min",
+                        "Close": "last", "Volume": "sum"
+                    }).dropna()
+                    if len(weekly) >= 22:
+                        w_ema20 = weekly["Close"].ewm(span=20, adjust=False).mean()
+                        w_prev_c = weekly["Close"].shift(1)
+                        w_tr1 = weekly["High"] - weekly["Low"]
+                        w_tr2 = (weekly["High"] - w_prev_c).abs()
+                        w_tr3 = (weekly["Low"] - w_prev_c).abs()
+                        w_tr = pd.concat([w_tr1, w_tr2, w_tr3], axis=1).max(axis=1)
+                        w_atr14 = w_tr.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+                        w_idx = len(weekly) - 1
+                        if not pd.isna(w_ema20.iloc[w_idx]) and not pd.isna(w_atr14.iloc[w_idx]):
+                            w_ema20_val = float(w_ema20.iloc[w_idx])
+                            w_atr14_val = float(w_atr14.iloc[w_idx])
+                            if w_ema20_val > 0 and w_atr14_val > 0:
+                                near_w_ema20 = abs(price - w_ema20_val) / w_ema20_val <= 0.02
+                                was_at_w_upper = False
+                                for wb in range(max(0, w_idx - 5), w_idx):
+                                    pw_high = float(weekly["High"].iloc[wb])
+                                    pw_ema20 = float(w_ema20.iloc[wb]) if not pd.isna(w_ema20.iloc[wb]) else 0
+                                    pw_atr14 = float(w_atr14.iloc[wb]) if not pd.isna(w_atr14.iloc[wb]) else 0
+                                    if pw_ema20 > 0 and pw_atr14 > 0 and pw_high >= pw_ema20 + 2 * pw_atr14:
+                                        was_at_w_upper = True
+                                        break
+                                if near_w_ema20 and was_at_w_upper:
+                                    prev_close_tw = closes.shift(1)
+                                    tr1_tw = highs - lows
+                                    tr2_tw = (highs - prev_close_tw).abs()
+                                    tr3_tw = (lows - prev_close_tw).abs()
+                                    tr_tw = pd.concat([tr1_tw, tr2_tw, tr3_tw], axis=1).max(axis=1)
+                                    atr14_tw = float(tr_tw.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
+                                    atr_norm_tw = round(atr14_tw / price * 100, 2) if price > 0 else 99.0
+                                    w_upper_keltner = w_ema20_val + 2 * w_atr14_val
+                                    tw_signals.append({
+                                        "ticker": ticker,
+                                        "price": round(price, 2),
+                                        "w_ema20": round(w_ema20_val, 2),
+                                        "w_upper_keltner": round(w_upper_keltner, 2),
+                                        "stop_pct": 5.0,
+                                        "atr_pct": atr_norm_tw,
+                                    })
+            except Exception:
+                pass
+
         # Compute sector momentum
         sector_momentum = self._compute_sector_momentum(end_date)
 
         # Attach sector info to each signal
-        for sig_list in [j_signals, t_signals, r_signals, rw_signals]:
+        for sig_list in [j_signals, t_signals, r_signals, rw_signals, tw_signals]:
             for s in sig_list:
                 sector = STOCK_SECTOR_MAP.get(s["ticker"], "OTHER")
                 s["sector"] = sector
@@ -596,12 +647,14 @@ class LiveSignalsEngine:
         t_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         r_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         rw_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
+        tw_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
 
         result = {
             "j_signals": j_signals,
             "t_signals": t_signals,
             "r_signals": r_signals,
             "rw_signals": rw_signals,
+            "tw_signals": tw_signals,
             "sector_momentum": sector_momentum,
             "last_updated": datetime.now().isoformat(),
             "universe": universe,
@@ -613,7 +666,7 @@ class LiveSignalsEngine:
             result["scan_date"] = scan_date
         else:
             self._save_cache(result)
-            self._append_signals_history(j_signals, t_signals, r_signals, rw_signals)
+            self._append_signals_history(j_signals, t_signals, r_signals, rw_signals, tw_signals)
 
         return result
 
@@ -642,7 +695,7 @@ class LiveSignalsEngine:
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)
 
-    def _append_signals_history(self, j_signals, t_signals=None, r_signals=None, rw_signals=None):
+    def _append_signals_history(self, j_signals, t_signals=None, r_signals=None, rw_signals=None, tw_signals=None):
         """Append today's scan results to the history CSV."""
         history_file = LIVE_SIGNALS_HISTORY_FILE
         scan_date = datetime.now().strftime("%Y-%m-%d")
@@ -680,6 +733,12 @@ class LiveSignalsEngine:
                 writer.writerow([
                     scan_date, scan_time, "RW", s["ticker"], s["price"],
                     s.get("swing_low", ""), "", "",
+                ])
+
+            for s in (tw_signals or []):
+                writer.writerow([
+                    scan_date, scan_time, "TW", s["ticker"], s["price"],
+                    "", "", "",
                 ])
 
     # ==================== Position Management ====================
