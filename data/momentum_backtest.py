@@ -786,7 +786,7 @@ class MomentumBacktester:
                         r_swing_low_stop_cand = swing_low_val * 0.99
                         r_stop_pct_cand = (price - r_swing_low_stop_cand) / price * 100 if price > 0 else 99.0
                         r_min_stop = 2.0 if is_hidden_div else 0.0
-                        if r_min_stop < r_stop_pct_cand <= 8.0 + _stop_tolerance:
+                        if r_min_stop < r_stop_pct_cand <= 6.0 + _stop_tolerance:
                             shares = int(capital // price)
                             if shares > 0:
                                 entry_price = price
@@ -1902,7 +1902,7 @@ class MomentumBacktester:
                             r_struct_stop = swing_low_val * 0.99
                             r_stop_pct = (price - r_struct_stop) / price * 100 if price > 0 else 99.0
                             r_min_stop = 2.0 if r_div_type == "hidden" else 0.0
-                            if r_min_stop < r_stop_pct <= 8.0:
+                            if r_min_stop < r_stop_pct <= 6.0:
                                 signals.append({
                                     "symbol": ticker,
                                     "strategy": "R",

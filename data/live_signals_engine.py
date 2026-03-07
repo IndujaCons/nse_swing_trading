@@ -501,7 +501,7 @@ class LiveSignalsEngine:
                         r_struct_stop = round(swing_low_val * 0.99, 2)
                         r_stop_pct = round((price - r_struct_stop) / price * 100, 2) if price > 0 else 99.0
                         r_min_stop = 2.0 if r_div_type == "hidden" else 0.0
-                        if r_min_stop < r_stop_pct <= 8.0:
+                        if r_min_stop < r_stop_pct <= 6.0:
                             # ATR14 for volatility ranking
                             prev_close_r = closes.shift(1)
                             tr1_r = highs - lows
