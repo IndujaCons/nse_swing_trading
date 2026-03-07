@@ -441,9 +441,7 @@ class MomentumBacktester:
         rw_weekly_rsi14_vals = None
         rw_weekly_lows_vals = None
         rw_weekly_swing_lows = None
-        tw_weekly_ema20 = None
-        tw_weekly_atr14 = None
-        if strategy in ("RW", "TW"):
+        if strategy == "RW":
             rw_weekly = daily.resample("W-FRI").agg({
                 "Open": "first", "High": "max", "Low": "min",
                 "Close": "last", "Volume": "sum"
@@ -452,14 +450,6 @@ class MomentumBacktester:
             rw_weekly_rsi14_vals = rw_weekly_rsi14.values
             rw_weekly_lows_vals = rw_weekly["Low"].values
             rw_weekly_swing_lows = self._find_swing_lows(rw_weekly["Low"], left=3, right=2)
-            # Weekly Keltner for TW
-            tw_weekly_ema20 = rw_weekly["Close"].ewm(span=20, adjust=False).mean()
-            tw_w_prev = rw_weekly["Close"].shift(1)
-            tw_wtr1 = rw_weekly["High"] - rw_weekly["Low"]
-            tw_wtr2 = (rw_weekly["High"] - tw_w_prev).abs()
-            tw_wtr3 = (rw_weekly["Low"] - tw_w_prev).abs()
-            tw_w_tr = pd.concat([tw_wtr1, tw_wtr2, tw_wtr3], axis=1).max(axis=1)
-            tw_weekly_atr14 = tw_w_tr.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
 
         # Determine backtest start index (need 200+ bars warmup)
         bt_start_date = (end_date - timedelta(days=period_days)).date()
@@ -895,83 +885,6 @@ class MomentumBacktester:
                                     r_swing_low_stop = rw_stop_cand
                 continue
 
-            elif strategy == "TW":
-                # Strategy TW: Weekly Keltner pullback (same exits as T, 50d underwater)
-                atr14 = float(atr14_series.iloc[i]) if not pd.isna(atr14_series.iloc[i]) else 0.0
-                upper_keltner = ema20 + 2 * atr14
-
-                if in_position:
-                    exited = False
-                    if price <= entry_price * 0.95:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, t_remaining, day,
-                            price, "HARD_SL_5PCT"))
-                        exited = True
-                    if not exited:
-                        third = shares // 3
-                        if t_partial_stage == 0 and price >= entry_price * 1.06 and third > 0:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, third, day,
-                                price, "PARTIAL_6PCT_1of3"))
-                            t_remaining = shares - third
-                            t_partial_stage = 1
-                        elif t_partial_stage == 1 and price >= entry_price * 1.10 and third > 0:
-                            trades.append(self._make_trade(
-                                entry_date, entry_price, third, day,
-                                price, "PARTIAL_10PCT_2of3"))
-                            t_remaining = shares - 2 * third
-                            t_partial_stage = 2
-                    if not exited and price >= upper_keltner:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, t_remaining, day,
-                            price, "KELTNER_UPPER_EXIT"))
-                        exited = True
-                    if not exited and (i - entry_bar) >= 50 and price < entry_price:
-                        trades.append(self._make_trade(
-                            entry_date, entry_price, t_remaining, day,
-                            price, "UNDERWATER_EXIT"))
-                        exited = True
-                    if exited:
-                        in_position = False
-                        t_partial_stage = 0
-                        t_remaining = 0
-                    continue
-
-                # TW entry: weekly Keltner pullback, no filters
-                no_gap_down_tw = (prev_close is None or open_price >= prev_close)
-                is_green_tw = price > open_price
-                if is_green_tw and no_gap_down_tw and rw_weekly is not None:
-                    w_dates = rw_weekly.index
-                    day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
-                    w_before = w_dates[w_dates < day_ts]
-                    if len(w_before) >= 2:
-                        w_idx = len(w_before) - 1
-                        if w_idx < len(tw_weekly_ema20) and not pd.isna(tw_weekly_ema20.iloc[w_idx]) and not pd.isna(tw_weekly_atr14.iloc[w_idx]):
-                            w_ema20_val = float(tw_weekly_ema20.iloc[w_idx])
-                            w_atr14_val = float(tw_weekly_atr14.iloc[w_idx])
-                            if w_ema20_val > 0 and w_atr14_val > 0:
-                                near_w_ema20 = abs(price - w_ema20_val) / w_ema20_val <= 0.02
-                                was_at_w_upper = False
-                                for wb in range(max(0, w_idx - 5), w_idx):
-                                    if wb < len(rw_weekly):
-                                        past_w_high = float(rw_weekly["High"].iloc[wb])
-                                        past_w_ema20 = float(tw_weekly_ema20.iloc[wb]) if not pd.isna(tw_weekly_ema20.iloc[wb]) else 0
-                                        past_w_atr14 = float(tw_weekly_atr14.iloc[wb]) if not pd.isna(tw_weekly_atr14.iloc[wb]) else 0
-                                        if past_w_ema20 > 0 and past_w_atr14 > 0:
-                                            if past_w_high >= past_w_ema20 + 2 * past_w_atr14:
-                                                was_at_w_upper = True
-                                                break
-                                if near_w_ema20 and was_at_w_upper:
-                                    shares = int(capital // price)
-                                    if shares > 0:
-                                        entry_price = price
-                                        entry_date = day
-                                        entry_bar = i
-                                        in_position = True
-                                        t_partial_stage = 0
-                                        t_remaining = shares
-                continue
-
         # Close open position at end of backtest
         if in_position:
             last_day = daily.index[bt_indices[-1]].date()
@@ -983,10 +896,6 @@ class MomentumBacktester:
             elif strategy in ("R", "RW"):
                 trades.append(self._make_trade(
                     entry_date, entry_price, r_remaining, last_day,
-                    last_price, "BACKTEST_END"))
-            elif strategy in ("T", "TW"):
-                trades.append(self._make_trade(
-                    entry_date, entry_price, t_remaining, last_day,
                     last_price, "BACKTEST_END"))
             elif partial_exit_done:
                 trades.append(self._make_trade(
@@ -1551,18 +1460,6 @@ class MomentumBacktester:
             weekly_lows_vals = weekly["Low"].values
             weekly_rsi14_vals = weekly_rsi14_series.values
 
-            # Weekly EMA20 and ATR14 for Strategy TW (Keltner on weekly)
-            w_closes = weekly["Close"]
-            w_highs = weekly["High"]
-            w_lows_s = weekly["Low"]
-            weekly_ema20 = w_closes.ewm(span=20, adjust=False).mean()
-            w_prev_close = w_closes.shift(1)
-            w_tr1 = w_highs - w_lows_s
-            w_tr2 = (w_highs - w_prev_close).abs()
-            w_tr3 = (w_lows_s - w_prev_close).abs()
-            w_true_range = pd.concat([w_tr1, w_tr2, w_tr3], axis=1).max(axis=1)
-            weekly_atr14 = w_true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
-
             # CCI(20) for Strategy J entry confirmation
             cci20_series = self._calculate_cci_series(highs, lows, closes, 20)
 
@@ -1608,8 +1505,6 @@ class MomentumBacktester:
                 "weekly_swing_lows": weekly_swing_lows,
                 "weekly_lows_vals": weekly_lows_vals,
                 "weekly_rsi14_vals": weekly_rsi14_vals,
-                "weekly_ema20": weekly_ema20,
-                "weekly_atr14": weekly_atr14,
             }
 
         # Pre-compute rolling sector RS momentum (20-day RS, 5-day delta)
@@ -1886,42 +1781,9 @@ class MomentumBacktester:
                             pos, sz, day, price, "KELTNER_UPPER_EXIT"))
                         exited = True
 
-                elif pos["strategy"] == "TW":
-                    # TW exits: same as T (5% SL, 3-stage partials, Keltner upper)
-                    ema20_val = float(ind["ema20"].iloc[i])
-                    atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
-                    upper_keltner = ema20_val + 2 * atr14_val
-                    t_sl_pct = t_tight_sl if (t_tight_sl and pos.get("partial_stage", 0) >= 1) else 0.05
-                    if price <= pos["entry_price"] * (1 - t_sl_pct):
-                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                        sl_label = f"HARD_SL_{int(t_sl_pct*100)}PCT" if t_sl_pct != 0.05 else "HARD_SL_5PCT"
-                        trades.append(self._make_portfolio_trade(
-                            pos, sz, day, price, sl_label))
-                        exited = True
-                    if not exited and not pos["partial_exit_done"]:
-                        if three_stage_exit:
-                            stage = pos.get("partial_stage", 0)
-                            third = pos["shares"] // 3
-                            if stage == 0 and price >= pos["entry_price"] * (1 + t_target1) and third > 0:
-                                trades.append(self._make_portfolio_trade(
-                                    pos, third, day, price, f"PARTIAL_{int(t_target1*100)}PCT_1of3"))
-                                pos["remaining_shares"] = pos["shares"] - third
-                                pos["partial_stage"] = 1
-                            elif stage == 1 and price >= pos["entry_price"] * (1 + t_target2) and third > 0:
-                                trades.append(self._make_portfolio_trade(
-                                    pos, third, day, price, f"PARTIAL_{int(t_target2*100)}PCT_2of3"))
-                                pos["remaining_shares"] = pos["shares"] - 2 * third
-                                pos["partial_exit_done"] = True
-                                pos["partial_stage"] = 2
-                    if not exited and price >= upper_keltner:
-                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
-                        trades.append(self._make_portfolio_trade(
-                            pos, sz, day, price, "KELTNER_UPPER_EXIT"))
-                        exited = True
-
                 # Underwater exit — if held >= N trading days and still underwater, cut it
-                # RW/TW get 50d underwater; TR uses configured value
-                uw_days = 50 if pos["strategy"] in ("RW", "TW") else underwater_exit_days
+                # RW gets 50d underwater; TR uses configured value
+                uw_days = 50 if pos["strategy"] == "RW" else underwater_exit_days
                 if not exited and uw_days:
                     trading_days_held = day_idx - pos.get("entry_day_idx", day_idx)
                     if trading_days_held >= uw_days and price < pos["entry_price"]:
@@ -2096,49 +1958,7 @@ class MomentumBacktester:
                                             "div_type": rw_div_type,
                                         })
 
-                # Strategy TW: Weekly Keltner pullback (no filters)
-                if "TW" in strategies:
-                    tw_open = sum(1 for p in positions if p["strategy"] == "TW")
-                    if tw_open < 4:
-                        already_any = any(s["symbol"] == ticker for s in signals) or any(s["symbol"] == ticker for s in rw_signals)
-                        if not already_any and is_green:
-                            weekly_raw = ind["weekly_raw"]
-                            w_dates = weekly_raw.index
-                            day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
-                            w_before = w_dates[w_dates < day_ts]
-                            if len(w_before) >= 2:
-                                w_idx = len(w_before) - 1
-                                w_ema20 = ind["weekly_ema20"]
-                                w_atr14 = ind["weekly_atr14"]
-                                if w_idx < len(w_ema20) and not pd.isna(w_ema20.iloc[w_idx]) and not pd.isna(w_atr14.iloc[w_idx]):
-                                    w_ema20_val = float(w_ema20.iloc[w_idx])
-                                    w_atr14_val = float(w_atr14.iloc[w_idx])
-                                    if w_ema20_val > 0 and w_atr14_val > 0:
-                                        # Price near weekly EMA20 (within 2%)
-                                        near_w_ema20 = abs(price - w_ema20_val) / w_ema20_val <= 0.02
-                                        # Was at weekly upper Keltner in last 5 weekly bars
-                                        w_upper_keltner = w_ema20_val + 2 * w_atr14_val
-                                        was_at_w_upper = False
-                                        for wb in range(max(0, w_idx - 5), w_idx):
-                                            if wb < len(weekly_raw):
-                                                past_w_high = float(weekly_raw["High"].iloc[wb])
-                                                past_w_ema20 = float(w_ema20.iloc[wb]) if not pd.isna(w_ema20.iloc[wb]) else 0
-                                                past_w_atr14 = float(w_atr14.iloc[wb]) if not pd.isna(w_atr14.iloc[wb]) else 0
-                                                if past_w_ema20 > 0 and past_w_atr14 > 0:
-                                                    if past_w_high >= past_w_ema20 + 2 * past_w_atr14:
-                                                        was_at_w_upper = True
-                                                        break
-                                        if near_w_ema20 and was_at_w_upper:
-                                            rw_signals.append({
-                                                "symbol": ticker,
-                                                "strategy": "TW",
-                                                "price": price,
-                                                "atr14": sig_atr14,
-                                                "stop_pct": 5.0,
-                                                "atr_norm": sig_atr14 / price if price > 0 else 99.0,
-                                            })
-
-            # RW/TW fill in only when no TR signals available that day
+            # RW fills in only when no TR signals available that day
             if not signals and rw_signals:
                 signals = rw_signals
 
@@ -2150,7 +1970,7 @@ class MomentumBacktester:
             if signals and max_today > 0:
                 if rank_by_risk:
                     rng = random.Random(seed)
-                    strat_priority = {"R": 0, "T": 1, "J": 2, "RW": 3, "TW": 4}
+                    strat_priority = {"R": 0, "T": 1, "J": 2, "RW": 3}
                     if rank_by_sector_momentum:
                         # Priority strategy first, then sector momentum (descending), then lowest ATR
                         day_sec_mom = sector_momentum_by_date.get(day, {})
@@ -2179,8 +1999,8 @@ class MomentumBacktester:
                             missed_signals += 1
                             continue  # Not enough capital
                         # Enforce max 4 RW/TW positions each
-                        if sig["strategy"] in ("RW", "TW"):
-                            w_open = sum(1 for p in positions if p["strategy"] == sig["strategy"])
+                        if sig["strategy"] == "RW":
+                            w_open = sum(1 for p in positions if p["strategy"] == "RW")
                             if w_open >= 4:
                                 missed_signals += 1
                                 continue

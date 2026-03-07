@@ -439,8 +439,8 @@ def buy_live_signal():
     if not ticker or not strategy or not price:
         return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
 
-    if strategy not in ("J", "T", "R", "RW", "TW"):
-        return jsonify({"success": False, "error": "strategy must be J, T, R, RW, or TW"}), 400
+    if strategy not in ("J", "T", "R", "RW"):
+        return jsonify({"success": False, "error": "strategy must be J, T, R, or RW"}), 400
 
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Valid user_id required"}), 400
@@ -676,7 +676,7 @@ def run_momentum_backtest():
     if not symbol:
         return jsonify({"success": False, "error": "Symbol required"}), 400
 
-    if strategy not in ("J", "T", "R", "RW", "TW"):
+    if strategy not in ("J", "T", "R", "RW"):
         strategy = "J"
 
     # exit_ema can be "5","8","10","20" (EMA) or "pct5" (% target)
@@ -708,8 +708,8 @@ def explain_trade():
     if not symbol or not strategy or not entry_date:
         return jsonify({"success": False, "error": "symbol, strategy, entry_date required"}), 400
 
-    if strategy not in ("J", "T", "R", "RW", "TW"):
-        return jsonify({"success": False, "error": "strategy must be J, T, R, RW, or TW"}), 400
+    if strategy not in ("J", "T", "R", "RW"):
+        return jsonify({"success": False, "error": "strategy must be J, T, R, or RW"}), 400
 
     try:
         backtester = MomentumBacktester()

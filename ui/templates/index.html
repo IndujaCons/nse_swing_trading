@@ -743,7 +743,6 @@
         .panel.ls-j-signals .panel-title { color: var(--green); }
         .panel.ls-t-signals .panel-title { color: var(--blue); }
         .panel.ls-rw-signals .panel-title { color: #7e57c2; }
-        .panel.ls-tw-signals .panel-title { color: #5c6bc0; }
         .panel.ls-positions .panel-title { color: var(--green); }
         .panel.ls-exits .panel-title { color: var(--red); }
 
@@ -1191,7 +1190,6 @@
                         <option value="T">Strategy T — Keltner pullback</option>
                         <option value="R">Strategy R — RSI divergence</option>
                         <option value="RW">Strategy RW — weekly RSI divergence</option>
-                        <option value="TW">Strategy TW — weekly Keltner pullback</option>
                     </select>
                     <select class="backtest-select" id="backtest-symbol">
                         <option value="">-- Select Symbol --</option>
@@ -1327,10 +1325,8 @@
                     <select class="backtest-select" id="portfolio-strategy">
                         <option value="TR3" selected>T + R (3-Stage)</option>
                         <option value="TRWW3">T + R + RW (3-Stage)</option>
-                        <option value="TRWWTW3">T + R + RW + TW (3-Stage)</option>
                         <option value="JTR3">J + T + R (3-Stage)</option>
                         <option value="RW3">RW Only (3-Stage)</option>
-                        <option value="TW3">TW Only (3-Stage)</option>
                         <option value="J3">J Only (3-Stage)</option>
                         <option value="T3">T Only (3-Stage)</option>
                         <option value="R3">R Only (3-Stage)</option>
@@ -1371,7 +1367,6 @@
                     <option value="T">Strategy T — Keltner pullback</option>
                     <option value="R">Strategy R — RSI divergence</option>
                     <option value="RW">Strategy RW — weekly RSI divergence</option>
-                    <option value="TW">Strategy TW — weekly Keltner pullback</option>
                 </select>
                 <select class="backtest-select" id="explain-symbol">
                     <option value="">-- Select Symbol --</option>
@@ -1577,16 +1572,6 @@
                         <span class="panel-count" id="ls-rw-count">0</span>
                     </div>
                     <div class="panel-body" id="ls-rw-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
-
-                <div class="panel ls-tw-signals">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color:#5c6bc0;">TW — Weekly Keltner Pullback</span>
-                        <span class="panel-count" id="ls-tw-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-tw-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
@@ -2282,7 +2267,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-rw-panel', 'ls-tw-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-rw-panel', 'ls-picks-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="loading-container">
                         <div class="loader"></div>
@@ -2359,7 +2344,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-rw-panel', 'ls-tw-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-rw-panel', 'ls-picks-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="loading-container">
                         <div class="loader"></div>
@@ -2559,42 +2544,15 @@
                 `;
             }
 
-            // TW signals (weekly Keltner pullback)
-            const twPanel = document.getElementById('ls-tw-panel');
-            const twSignals = data.tw_signals || [];
-            window._lsTWSignals = twSignals;
-            document.getElementById('ls-tw-count').textContent = twSignals.length;
-
-            if (twSignals.length === 0) {
-                twPanel.innerHTML = '<div class="empty-state">No TW signals</div>';
-            } else {
-                const rows = twSignals.map(s => `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td class="price">${(s.w_ema20||0).toLocaleString()}</td>
-                        <td class="price">${(s.w_upper_keltner||0).toLocaleString()}</td>
-                        <td style="color:var(--text-muted)">5.0%</td>
-                    </tr>
-                `).join('');
-                twPanel.innerHTML = `
-                    <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>wEMA20</th><th>wUpKelt</th><th>Stop%</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
-            }
-
             // ===== Top Picks — Ranked by Strategy Priority + Sector Momentum + ATR% =====
             // With sector diversity cap (max 4 per sector including active positions)
             const picksPanel = document.getElementById('ls-picks-panel');
-            const stratPriority = {'R': 0, 'T': 1, 'J': 2, 'RW': 3, 'TW': 4};
+            const stratPriority = {'R': 0, 'T': 1, 'J': 2, 'RW': 3};
             const allSignals = [
                 ...jSignals.map(s => ({...s, strategy: 'J', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
                 ...tSignals.map(s => ({...s, strategy: 'T', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
                 ...rSignals.map(s => ({...s, strategy: 'R', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
                 ...rwSignals.map(s => ({...s, strategy: 'RW', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
-                ...twSignals.map(s => ({...s, strategy: 'TW', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
             ];
 
             // Sort: strategy priority (R > J > T), then sector momentum (highest first), then ATR%
@@ -3046,7 +3004,7 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-rw-panel', 'ls-tw-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-rw-panel', 'ls-picks-panel'].forEach(id => {
                 document.getElementById(id).innerHTML = `
                     <div class="empty-state" style="color: var(--text-muted);">${message}</div>
                 `;
@@ -3129,7 +3087,7 @@
             const s = data.summary;
             const periodLabel = document.getElementById('backtest-from').value + ' to ' + document.getElementById('backtest-to').value;
             let stratLabel;
-            const stratLabels = {'J': 'Strategy J (weekly support)', 'T': 'Strategy T (Keltner)', 'RW': 'Strategy RW (weekly RSI divergence)', 'TW': 'Strategy TW (weekly Keltner)'};
+            const stratLabels = {'J': 'Strategy J (weekly support)', 'T': 'Strategy T (Keltner)', 'RW': 'Strategy RW (weekly RSI divergence)'};
             stratLabel = stratLabels[data.strategy] || data.strategy;
 
             // Title
@@ -3517,7 +3475,7 @@
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'TR3': ['T','R'], 'TRWW3': ['T','R','RW'], 'TRWWTW3': ['T','R','RW','TW'], 'JTR3': ['J','T','R'], 'RW3': ['RW'], 'TW3': ['TW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R']};
+            const stratMap = {'TR3': ['T','R'], 'TRWW3': ['T','R','RW'], 'JTR3': ['J','T','R'], 'RW3': ['RW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R']};
             const strategies = stratMap[stratVal] || [stratVal];
             const threeStageExit = true;
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
