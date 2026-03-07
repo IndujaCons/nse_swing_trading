@@ -1321,8 +1321,8 @@
                         <option value="500000">5L / trade</option>
                     </select>
                     <select class="backtest-select" id="portfolio-strategy">
+                        <option value="TR3" selected>T + R (3-Stage)</option>
                         <option value="JTR3">J + T + R (3-Stage)</option>
-                        <option value="JT3">J + T (3-Stage)</option>
                         <option value="J3">J Only (3-Stage)</option>
                         <option value="T3">T Only (3-Stage)</option>
                         <option value="R3">R Only (3-Stage)</option>
@@ -3428,7 +3428,7 @@
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'JTR3': ['J','T','R'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R']};
+            const stratMap = {'TR3': ['T','R'], 'JTR3': ['J','T','R'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R']};
             const strategies = stratMap[stratVal] || [stratVal];
             const threeStageExit = true;
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
