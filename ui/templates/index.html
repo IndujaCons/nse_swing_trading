@@ -1165,6 +1165,7 @@
                     <select class="setting-select" id="ls-universe">
                         <option value="50" selected>Nifty 50</option>
                         <option value="100">Nifty 100</option>
+                        <option value="200">Nifty 200</option>
                         <option value="150">Midcap 150</option>
                     </select>
                 </div>
@@ -1303,6 +1304,7 @@
                     <div class="section-title">Batch</div>
                     <button class="btn btn-backtest" id="run-batch-btn" onclick="runBatchBacktest(50)">Backtest All (Nifty 50)</button>
                     <button class="btn btn-backtest" id="run-batch100-btn" onclick="runBatchBacktest(100)">Backtest All (Nifty 100)</button>
+                    <button class="btn btn-backtest" id="run-batch200-btn" onclick="runBatchBacktest(200)">Backtest All (Nifty 200)</button>
                     <div style="margin: 8px 0; height: 1px; background: var(--border-color);"></div>
                     <div class="section-title">Portfolio</div>
                     <select class="backtest-select" id="portfolio-capital">
@@ -1332,6 +1334,7 @@
                     </select>
                     <button class="btn btn-backtest" id="run-portfolio50-btn" onclick="runPortfolioBacktest(50)">Backtest (Nifty 50)</button>
                     <button class="btn btn-backtest" id="run-portfolio100-btn" onclick="runPortfolioBacktest(100)">Backtest (Nifty 100)</button>
+                    <button class="btn btn-backtest" id="run-portfolio200-btn" onclick="runPortfolioBacktest(200)">Backtest (Nifty 200)</button>
                 </div>
             </div>
 
@@ -3282,16 +3285,15 @@
             const periodLabel = document.getElementById('backtest-from').value + ' to ' + document.getElementById('backtest-to').value;
             const universeLabel = `Nifty ${universe}`;
 
-            const btnId = universe === 100 ? 'run-batch100-btn' : 'run-batch-btn';
+            const btnId = universe === 200 ? 'run-batch200-btn' : universe === 100 ? 'run-batch100-btn' : 'run-batch-btn';
             const btn = document.getElementById(btnId);
             btn.classList.add('loading');
             btn.disabled = true;
             btn.textContent = 'Running...';
 
-            // Disable the other button too
-            const otherBtnId = universe === 100 ? 'run-batch-btn' : 'run-batch100-btn';
-            const otherBtn = document.getElementById(otherBtnId);
-            otherBtn.disabled = true;
+            // Disable the other buttons too
+            const allBatchBtns = ['run-batch-btn', 'run-batch100-btn', 'run-batch200-btn'];
+            allBatchBtns.filter(id => id !== btnId).forEach(id => document.getElementById(id).disabled = true);
 
             // Show batch results area with loading
                         document.getElementById('backtest-results').classList.add('hidden');
@@ -3347,7 +3349,7 @@
                 btn.classList.remove('loading');
                 btn.disabled = false;
                 btn.textContent = `Backtest All (${universeLabel})`;
-                otherBtn.disabled = false;
+                allBatchBtns.filter(id => id !== btnId).forEach(id => document.getElementById(id).disabled = false);
             }
         }
 
@@ -3431,16 +3433,15 @@
             const threeStageExit = true;
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
 
-            const btnId = universe === 100 ? 'run-portfolio100-btn' : 'run-portfolio50-btn';
+            const btnId = universe === 200 ? 'run-portfolio200-btn' : universe === 100 ? 'run-portfolio100-btn' : 'run-portfolio50-btn';
             const btn = document.getElementById(btnId);
             btn.classList.add('loading');
             btn.disabled = true;
             btn.textContent = 'Running...';
 
-            // Disable the other portfolio button too
-            const otherBtnId = universe === 100 ? 'run-portfolio50-btn' : 'run-portfolio100-btn';
-            const otherBtn = document.getElementById(otherBtnId);
-            otherBtn.disabled = true;
+            // Disable the other portfolio buttons too
+            const allPortBtns = ['run-portfolio50-btn', 'run-portfolio100-btn', 'run-portfolio200-btn'];
+            allPortBtns.filter(id => id !== btnId).forEach(id => document.getElementById(id).disabled = true);
 
             // Show backtest results area with loading
                         document.getElementById('batch-results').classList.add('hidden');
@@ -3498,7 +3499,7 @@
                 btn.classList.remove('loading');
                 btn.disabled = false;
                 btn.textContent = `Backtest (${universeLabel})`;
-                otherBtn.disabled = false;
+                allPortBtns.filter(id => id !== btnId).forEach(id => document.getElementById(id).disabled = false);
             }
         }
 

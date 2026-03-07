@@ -743,7 +743,7 @@ def run_batch_backtest():
     data = request.get_json() or {}
     period_days, end_date = _parse_date_range(data)
     universe = int(data.get("universe", 50))
-    if universe not in (50, 100):
+    if universe not in (50, 100, 200):
         universe = 50
 
     try:
@@ -795,7 +795,7 @@ def run_portfolio_backtest():
     data = request.get_json() or {}
     period_days, end_date = _parse_date_range(data)
     universe = int(data.get("universe", 50))
-    if universe not in (50, 100):
+    if universe not in (50, 100, 200):
         universe = 50
     capital_lakhs = int(data.get("capital_lakhs", 10))
     if capital_lakhs not in (10, 20, 50, 80, 100):
@@ -1025,7 +1025,7 @@ def update_settings():
 
     if "live_signals_universe" in data:
         val = int(data["live_signals_universe"])
-        if val in [50, 100, 150] and val != config.get("live_signals_universe"):
+        if val in [50, 100, 150, 200] and val != config.get("live_signals_universe"):
             config["live_signals_universe"] = val
             live_signals_changed = True
 

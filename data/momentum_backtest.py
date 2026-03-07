@@ -56,6 +56,31 @@ NIFTY_NEXT50_TICKERS = [
     "TRENT", "TVSMOTOR", "UNITDSPR", "VEDL", "ZOMATO",
 ]
 
+# Nifty 200 constituents (next 100 beyond Nifty 100)
+NIFTY_200_NEXT100_TICKERS = [
+    "360ONE", "ABCAPITAL", "ALKEM", "APLAPOLLO", "ASHOKLEY",
+    "ASTRAL", "AUBANK", "BAJAJHFL", "BANKINDIA", "BDL",
+    "BHARATFORG", "BHARTIHEXA", "BIOCON", "BLUESTARCO", "BSE",
+    "CGPOWER", "COCHINSHIP", "COFORGE", "CONCOR", "COROMANDEL",
+    "CUMMINSIND", "DIVISLAB", "DIXON", "DMART", "ENRIN",
+    "EXIDEIND", "FEDERALBNK", "FORTIS", "GLENMARK", "GMRAIRPORT",
+    "GODFRYPHLP", "GODREJPROP", "HDFCAMC", "HINDZINC", "HUDCO",
+    "HYUNDAI", "IDEA", "IDFCFIRSTB", "IGL", "INDHOTEL",
+    "INDIANB", "IRCTC", "IREDA", "ITCHOTELS", "JINDALSTEL",
+    "JUBLFOOD", "KALYANKJIL", "KEI", "KPITTECH", "LICHSGFIN",
+    "LTF", "LTM", "M&MFIN", "MAXHEALTH", "MAZDOCK",
+    "MFSL", "MOTILALOFS", "MPHASIS", "MRF", "MUTHOOTFIN",
+    "NATIONALUM", "NMDC", "NTPCGREEN", "NYKAA", "OBEROIRLTY",
+    "OFSS", "OIL", "PAGEIND", "PATANJALI", "PAYTM",
+    "PERSISTENT", "PHOENIXLTD", "PIIND", "POLICYBZR", "POWERINDIA",
+    "PREMIERENE", "PRESTIGE", "HINDPETRO", "IRB", "RVNL",
+    "SAIL", "SBICARD", "SHRIRAMFIN", "SOLARINDS", "SONACOMS",
+    "SUPREMEIND", "SUZLON", "SWIGGY", "TATACOMM", "TATAELXSI",
+    "TATATECH", "TIINDIA", "TMPV", "TORNTPOWER", "UNIONBANK",
+    "UPL", "VBL", "VMM", "VOLTAS", "WAAREEENER",
+    "YESBANK", "ZYDUSLIFE",
+]
+
 BATCH_VARIANTS = [
     ("J", None, "J: Weekly Support"),
     ("T", None, "T: Keltner Pullback"),
@@ -746,7 +771,7 @@ class MomentumBacktester:
                         r_swing_low_stop_cand = swing_low_val * 0.99
                         r_stop_pct_cand = (price - r_swing_low_stop_cand) / price * 100 if price > 0 else 99.0
                         r_min_stop = 2.0 if is_hidden_div else 0.0
-                        if r_min_stop < r_stop_pct_cand <= 5.0 + _stop_tolerance:
+                        if r_min_stop < r_stop_pct_cand <= 8.0 + _stop_tolerance:
                             shares = int(capital // price)
                             if shares > 0:
                                 entry_price = price
@@ -1228,8 +1253,10 @@ class MomentumBacktester:
 
         if universe <= 50:
             tickers = NIFTY_50_TICKERS
-        else:
+        elif universe <= 100:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
+        else:
+            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
 
         end_date = end_date or datetime.now()
         daily_start = end_date - timedelta(days=period_days + 500)
@@ -1544,6 +1571,7 @@ class MomentumBacktester:
                                     pos, third, day, price, f"PARTIAL_{int(t_target2*100)}PCT_2of3"))
                                 pos["remaining_shares"] = pos["shares"] - 2 * third
                                 pos["partial_exit_done"] = True
+                                pos["partial_stage"] = 2
                         elif price >= pos["entry_price"] * 1.05:
                             half = pos["shares"] // 2
                             if half > 0:
@@ -1591,6 +1619,7 @@ class MomentumBacktester:
                                 pos, third, day, price, "PARTIAL_10PCT_2of3"))
                             pos["remaining_shares"] = pos["shares"] - 2 * third
                             pos["partial_exit_done"] = True
+                            pos["partial_stage"] = 2
 
                     # Upper Keltner exit on remaining
                     if not exited and price >= upper_keltner:
@@ -1717,7 +1746,7 @@ class MomentumBacktester:
                             r_struct_stop = swing_low_val * 0.99
                             r_stop_pct = (price - r_struct_stop) / price * 100 if price > 0 else 99.0
                             r_min_stop = 2.0 if r_div_type == "hidden" else 0.0
-                            if r_min_stop < r_stop_pct <= 5.0:
+                            if r_min_stop < r_stop_pct <= 8.0:
                                 signals.append({
                                     "symbol": ticker,
                                     "strategy": "R",
@@ -1866,8 +1895,10 @@ class MomentumBacktester:
 
         if universe <= 50:
             tickers = NIFTY_50_TICKERS
-        else:
+        elif universe <= 100:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
+        else:
+            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
 
         results = []
         total = len(tickers)

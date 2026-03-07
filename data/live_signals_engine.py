@@ -71,6 +71,31 @@ NIFTY_NEXT50_TICKERS = [
     "TRENT", "TVSMOTOR", "UNITDSPR", "VEDL", "ZOMATO",
 ]
 
+# Nifty 200 constituents (next 100 beyond Nifty 100)
+NIFTY_200_NEXT100_TICKERS = [
+    "360ONE", "ABCAPITAL", "ALKEM", "APLAPOLLO", "ASHOKLEY",
+    "ASTRAL", "AUBANK", "BAJAJHFL", "BANKINDIA", "BDL",
+    "BHARATFORG", "BHARTIHEXA", "BIOCON", "BLUESTARCO", "BSE",
+    "CGPOWER", "COCHINSHIP", "COFORGE", "CONCOR", "COROMANDEL",
+    "CUMMINSIND", "DIVISLAB", "DIXON", "DMART", "ENRIN",
+    "EXIDEIND", "FEDERALBNK", "FORTIS", "GLENMARK", "GMRAIRPORT",
+    "GODFRYPHLP", "GODREJPROP", "HDFCAMC", "HINDZINC", "HUDCO",
+    "HYUNDAI", "IDEA", "IDFCFIRSTB", "IGL", "INDHOTEL",
+    "INDIANB", "IRCTC", "IREDA", "ITCHOTELS", "JINDALSTEL",
+    "JUBLFOOD", "KALYANKJIL", "KEI", "KPITTECH", "LICHSGFIN",
+    "LTF", "LTM", "M&MFIN", "MAXHEALTH", "MAZDOCK",
+    "MFSL", "MOTILALOFS", "MPHASIS", "MRF", "MUTHOOTFIN",
+    "NATIONALUM", "NMDC", "NTPCGREEN", "NYKAA", "OBEROIRLTY",
+    "OFSS", "OIL", "PAGEIND", "PATANJALI", "PAYTM",
+    "PERSISTENT", "PHOENIXLTD", "PIIND", "POLICYBZR", "POWERINDIA",
+    "PREMIERENE", "PRESTIGE", "HINDPETRO", "IRB", "RVNL",
+    "SAIL", "SBICARD", "SHRIRAMFIN", "SOLARINDS", "SONACOMS",
+    "SUPREMEIND", "SUZLON", "SWIGGY", "TATACOMM", "TATAELXSI",
+    "TATATECH", "TIINDIA", "TMPV", "TORNTPOWER", "UNIONBANK",
+    "UPL", "VBL", "VMM", "VOLTAS", "WAAREEENER",
+    "YESBANK", "ZYDUSLIFE",
+]
+
 
 def _calculate_rsi_series(closes: pd.Series, period: int) -> pd.Series:
     delta = closes.diff()
@@ -289,6 +314,8 @@ class LiveSignalsEngine:
             tickers = NIFTY_50_TICKERS
         elif universe <= 100:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
+        elif universe <= 200:
+            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
         else:
             # Midcap 150: Nifty 500 tickers 101-250 (by market cap ranking)
             nifty100_set = set(NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS)
@@ -473,7 +500,7 @@ class LiveSignalsEngine:
                         r_struct_stop = round(swing_low_val * 0.99, 2)
                         r_stop_pct = round((price - r_struct_stop) / price * 100, 2) if price > 0 else 99.0
                         r_min_stop = 2.0 if r_div_type == "hidden" else 0.0
-                        if r_min_stop < r_stop_pct <= 5.0:
+                        if r_min_stop < r_stop_pct <= 8.0:
                             # ATR14 for volatility ranking
                             prev_close_r = closes.shift(1)
                             tr1_r = highs - lows
