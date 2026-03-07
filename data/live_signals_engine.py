@@ -135,10 +135,11 @@ def _rsi_near_swing(rsi14_vals, idx, window=3):
 def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
                                max_lookback=50, min_sep=5,
                                rsi_threshold=40, min_rsi_divergence=3,
-                               min_price_drop=0.0):
+                               min_price_drop=0.0, max_curr_age=None):
     """Check for bullish RSI divergence at bar i.
 
     Uses min RSI within ±3 bars of each swing low to match visual chart reading.
+    If max_curr_age set, current swing low must be within that many bars of i.
     """
     recent = [(idx, val) for idx, val in swing_lows
               if idx <= i and i - idx <= max_lookback]
@@ -147,6 +148,8 @@ def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
     for k in range(len(recent) - 1, 0, -1):
         curr_idx, curr_low = recent[k]
         prev_idx, prev_low = recent[k - 1]
+        if max_curr_age is not None and i - curr_idx > max_curr_age:
+            continue
         if curr_idx - prev_idx < min_sep:
             continue
         if curr_low >= prev_low * (1 - min_price_drop):
@@ -165,15 +168,15 @@ def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
 
 def _detect_hidden_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
                                        max_lookback=50, min_sep=5,
-                                       rsi_threshold=60, min_rsi_divergence=5):
+                                       rsi_threshold=60, min_rsi_divergence=5,
+                                       max_curr_age=None):
     """Check for hidden bullish RSI divergence at bar i.
 
     Hidden bullish divergence (uptrend continuation):
     - Price: current swing low > previous swing low (higher low)
     - RSI(14): current < previous - min_rsi_divergence (lower low in RSI)
     - RSI(14) < rsi_threshold at current swing low
-
-    Uses min RSI within ±3 bars of each swing low to match visual chart reading.
+    If max_curr_age set, current swing low must be within that many bars of i.
 
     Returns (True, swing_low_val, rsi_at_low) or (False, None, None).
     """
@@ -184,6 +187,8 @@ def _detect_hidden_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
     for k in range(len(recent) - 1, 0, -1):
         curr_idx, curr_low = recent[k]
         prev_idx, prev_low = recent[k - 1]
+        if max_curr_age is not None and i - curr_idx > max_curr_age:
+            continue
         if curr_idx - prev_idx < min_sep:
             continue
         if curr_low <= prev_low:
@@ -524,7 +529,7 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
-            # Strategy RW: Weekly RSI Divergence (Regular + Hidden, no filters)
+            # Strategy RW: Weekly RSI Divergence (>=3pt RSI div)
             try:
                 already_any = any(s["ticker"] == ticker for s in j_signals + t_signals + r_signals + rw_signals)
                 if is_green and not already_any:
@@ -541,13 +546,13 @@ class LiveSignalsEngine:
 
                         divergence, swing_low_val, rsi_at_low = _detect_bullish_divergence(
                             w_lows, w_rsi14_vals, w_idx, w_swing_lows,
-                            max_lookback=15, min_sep=2,
+                            max_lookback=26, min_sep=2,
                             rsi_threshold=100, min_rsi_divergence=3)
                         rw_div_type = "regular"
                         if not divergence:
                             divergence, swing_low_val, rsi_at_low = _detect_hidden_bullish_divergence(
                                 w_lows, w_rsi14_vals, w_idx, w_swing_lows,
-                                max_lookback=15, min_sep=2,
+                                max_lookback=26, min_sep=2,
                                 rsi_threshold=100, min_rsi_divergence=3)
                             if divergence:
                                 rw_div_type = "hidden"

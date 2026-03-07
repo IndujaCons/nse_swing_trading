@@ -135,13 +135,14 @@ class MomentumBacktester:
     def _detect_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
                                    max_lookback=50, min_sep=5,
                                    rsi_threshold=40, min_rsi_divergence=3,
-                                   min_price_drop=0.0):
+                                   min_price_drop=0.0, max_curr_age=None):
         """Check for bullish RSI divergence at bar i.
 
         Looks for two swing lows in the last max_lookback bars where:
         - Price: current swing low < previous * (1 - min_price_drop) (meaningful lower low)
         - RSI(14): current > previous + min_rsi_divergence (meaningful higher low)
         - RSI(14) < rsi_threshold at the current swing low (oversold zone)
+        - If max_curr_age set, current swing low must be within that many bars of i.
 
         Uses min RSI within ±3 bars of each swing low to match visual chart reading.
 
@@ -157,6 +158,9 @@ class MomentumBacktester:
         for k in range(len(recent) - 1, 0, -1):
             curr_idx, curr_low = recent[k]
             prev_idx, prev_low = recent[k - 1]
+            # Current swing low must be fresh if max_curr_age is set
+            if max_curr_age is not None and i - curr_idx > max_curr_age:
+                continue
             if curr_idx - prev_idx < min_sep:
                 continue
             # Meaningful lower low in price (>= min_price_drop)
@@ -178,13 +182,15 @@ class MomentumBacktester:
     @staticmethod
     def _detect_hidden_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
                                           max_lookback=50, min_sep=5,
-                                          rsi_threshold=60, min_rsi_divergence=5):
+                                          rsi_threshold=60, min_rsi_divergence=5,
+                                          max_curr_age=None):
         """Check for hidden bullish RSI divergence at bar i.
 
         Hidden bullish divergence (uptrend continuation):
         - Price: current swing low > previous swing low (higher low)
         - RSI(14): current < previous - min_rsi_divergence (lower low in RSI)
         - RSI(14) < rsi_threshold at current swing low (relaxed from 40)
+        - If max_curr_age set, current swing low must be within that many bars of i.
 
         Uses min RSI within ±3 bars of each swing low to match visual chart reading.
 
@@ -198,6 +204,8 @@ class MomentumBacktester:
         for k in range(len(recent) - 1, 0, -1):
             curr_idx, curr_low = recent[k]
             prev_idx, prev_low = recent[k - 1]
+            if max_curr_age is not None and i - curr_idx > max_curr_age:
+                continue
             if curr_idx - prev_idx < min_sep:
                 continue
             # Higher low in price (uptrend continuation)
@@ -852,7 +860,7 @@ class MomentumBacktester:
                         r_remaining = 0
                     continue
 
-                # RW entry: weekly RSI divergence (recent swings, >=3pt RSI div)
+                # RW entry: weekly RSI divergence (>=3pt RSI div)
                 no_gap_down_rw = (prev_close is None or open_price >= prev_close)
                 is_green_rw = price > open_price
                 if is_green_rw and no_gap_down_rw and rw_weekly is not None:
@@ -863,12 +871,12 @@ class MomentumBacktester:
                         w_idx = len(w_before) - 1
                         divergence, swing_low_val = self._detect_bullish_divergence(
                             rw_weekly_lows_vals, rw_weekly_rsi14_vals, w_idx, rw_weekly_swing_lows,
-                            max_lookback=15, min_sep=2,
+                            max_lookback=26, min_sep=2,
                             rsi_threshold=100, min_rsi_divergence=3)
                         if not divergence:
                             divergence, swing_low_val = self._detect_hidden_bullish_divergence(
                                 rw_weekly_lows_vals, rw_weekly_rsi14_vals, w_idx, rw_weekly_swing_lows,
-                                max_lookback=15, min_sep=2,
+                                max_lookback=26, min_sep=2,
                                 rsi_threshold=100, min_rsi_divergence=3)
                         if divergence and swing_low_val is not None:
                             rw_stop_cand = swing_low_val * 0.99
@@ -1915,6 +1923,7 @@ class MomentumBacktester:
                                 })
 
                 # Strategy RW: collect weekly divergence signals separately
+                # Strategy RW: collect weekly divergence signals separately (>=3pt RSI div)
                 if "RW" in strategies:
                     rw_open = sum(1 for p in positions if p["strategy"] == "RW")
                     if rw_open < 4:
@@ -1932,13 +1941,13 @@ class MomentumBacktester:
 
                                 divergence, swing_low_val = self._detect_bullish_divergence(
                                     w_lows, w_rsi14, w_idx, w_swing_lows,
-                                    max_lookback=15, min_sep=2,
+                                    max_lookback=26, min_sep=2,
                                     rsi_threshold=100, min_rsi_divergence=3)
                                 rw_div_type = "regular"
                                 if not divergence:
                                     divergence, swing_low_val = self._detect_hidden_bullish_divergence(
                                         w_lows, w_rsi14, w_idx, w_swing_lows,
-                                        max_lookback=15, min_sep=2,
+                                        max_lookback=26, min_sep=2,
                                         rsi_threshold=100, min_rsi_divergence=3)
                                     if divergence:
                                         rw_div_type = "hidden"
