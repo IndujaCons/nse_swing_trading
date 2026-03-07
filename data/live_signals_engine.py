@@ -338,6 +338,7 @@ class LiveSignalsEngine:
         j_signals = []
         t_signals = []
         r_signals = []
+        rw_signals = []
         actual_date = None  # Track actual last trading date from data
 
         for idx, ticker in enumerate(tickers):
@@ -523,11 +524,64 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
+            # Strategy RW: Weekly RSI Divergence (Regular + Hidden, no filters)
+            try:
+                already_any = any(s["ticker"] == ticker for s in j_signals + t_signals + r_signals + rw_signals)
+                if is_green and not already_any:
+                    weekly = daily.resample("W-FRI").agg({
+                        "Open": "first", "High": "max", "Low": "min",
+                        "Close": "last", "Volume": "sum"
+                    }).dropna()
+                    if len(weekly) >= 16:
+                        w_rsi14 = _calculate_rsi_series(weekly["Close"], 14)
+                        w_swing_lows = _find_swing_lows(weekly["Low"], left=3, right=2)
+                        w_lows = weekly["Low"].values
+                        w_rsi14_vals = w_rsi14.values
+                        w_idx = len(weekly) - 1  # latest weekly bar
+
+                        divergence, swing_low_val, rsi_at_low = _detect_bullish_divergence(
+                            w_lows, w_rsi14_vals, w_idx, w_swing_lows,
+                            max_lookback=26, min_sep=2,
+                            rsi_threshold=100, min_rsi_divergence=0)
+                        rw_div_type = "regular"
+                        if not divergence:
+                            divergence, swing_low_val, rsi_at_low = _detect_hidden_bullish_divergence(
+                                w_lows, w_rsi14_vals, w_idx, w_swing_lows,
+                                max_lookback=26, min_sep=2,
+                                rsi_threshold=100, min_rsi_divergence=0)
+                            if divergence:
+                                rw_div_type = "hidden"
+                        if divergence and swing_low_val is not None:
+                            rw_rsi14_at_bar = float(w_rsi14.iloc[w_idx]) if not pd.isna(w_rsi14.iloc[w_idx]) else 0.0
+                            rw_struct_stop = round(swing_low_val * 0.99, 2)
+                            rw_stop_pct = round((price - rw_struct_stop) / price * 100, 2) if price > 0 else 99.0
+                            if 2.0 <= rw_stop_pct <= 8.0:
+                                prev_close_rw = closes.shift(1)
+                                tr1_rw = highs - lows
+                                tr2_rw = (highs - prev_close_rw).abs()
+                                tr3_rw = (lows - prev_close_rw).abs()
+                                tr_rw = pd.concat([tr1_rw, tr2_rw, tr3_rw], axis=1).max(axis=1)
+                                atr14_rw = float(tr_rw.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
+                                atr_norm_rw = round(atr14_rw / price * 100, 2) if price > 0 else 99.0
+                                rw_signals.append({
+                                    "ticker": ticker,
+                                    "price": round(price, 2),
+                                    "rsi14": round(rw_rsi14_at_bar, 1),
+                                    "rsi_at_low": round(float(rsi_at_low), 1),
+                                    "swing_low": round(swing_low_val, 2),
+                                    "stop": rw_struct_stop,
+                                    "stop_pct": rw_stop_pct,
+                                    "atr_pct": atr_norm_rw,
+                                    "div_type": rw_div_type,
+                                })
+            except Exception:
+                pass
+
         # Compute sector momentum
         sector_momentum = self._compute_sector_momentum(end_date)
 
         # Attach sector info to each signal
-        for sig_list in [j_signals, t_signals, r_signals]:
+        for sig_list in [j_signals, t_signals, r_signals, rw_signals]:
             for s in sig_list:
                 sector = STOCK_SECTOR_MAP.get(s["ticker"], "OTHER")
                 s["sector"] = sector
@@ -541,11 +595,13 @@ class LiveSignalsEngine:
         j_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         t_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         r_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
+        rw_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
 
         result = {
             "j_signals": j_signals,
             "t_signals": t_signals,
             "r_signals": r_signals,
+            "rw_signals": rw_signals,
             "sector_momentum": sector_momentum,
             "last_updated": datetime.now().isoformat(),
             "universe": universe,
@@ -557,7 +613,7 @@ class LiveSignalsEngine:
             result["scan_date"] = scan_date
         else:
             self._save_cache(result)
-            self._append_signals_history(j_signals, t_signals, r_signals)
+            self._append_signals_history(j_signals, t_signals, r_signals, rw_signals)
 
         return result
 
@@ -586,7 +642,7 @@ class LiveSignalsEngine:
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)
 
-    def _append_signals_history(self, j_signals, t_signals=None, r_signals=None):
+    def _append_signals_history(self, j_signals, t_signals=None, r_signals=None, rw_signals=None):
         """Append today's scan results to the history CSV."""
         history_file = LIVE_SIGNALS_HISTORY_FILE
         scan_date = datetime.now().strftime("%Y-%m-%d")
@@ -617,6 +673,12 @@ class LiveSignalsEngine:
             for s in (r_signals or []):
                 writer.writerow([
                     scan_date, scan_time, "R", s["ticker"], s["price"],
+                    s.get("swing_low", ""), "", "",
+                ])
+
+            for s in (rw_signals or []):
+                writer.writerow([
+                    scan_date, scan_time, "RW", s["ticker"], s["price"],
                     s.get("swing_low", ""), "", "",
                 ])
 
