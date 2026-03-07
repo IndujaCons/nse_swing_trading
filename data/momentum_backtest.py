@@ -852,7 +852,7 @@ class MomentumBacktester:
                         r_remaining = 0
                     continue
 
-                # RW entry: weekly RSI divergence, no filters
+                # RW entry: weekly RSI divergence (recent swings, >=3pt RSI div)
                 no_gap_down_rw = (prev_close is None or open_price >= prev_close)
                 is_green_rw = price > open_price
                 if is_green_rw and no_gap_down_rw and rw_weekly is not None:
@@ -863,13 +863,13 @@ class MomentumBacktester:
                         w_idx = len(w_before) - 1
                         divergence, swing_low_val = self._detect_bullish_divergence(
                             rw_weekly_lows_vals, rw_weekly_rsi14_vals, w_idx, rw_weekly_swing_lows,
-                            max_lookback=26, min_sep=2,
-                            rsi_threshold=100, min_rsi_divergence=0)
+                            max_lookback=15, min_sep=2,
+                            rsi_threshold=100, min_rsi_divergence=3)
                         if not divergence:
                             divergence, swing_low_val = self._detect_hidden_bullish_divergence(
                                 rw_weekly_lows_vals, rw_weekly_rsi14_vals, w_idx, rw_weekly_swing_lows,
-                                max_lookback=26, min_sep=2,
-                                rsi_threshold=100, min_rsi_divergence=0)
+                                max_lookback=15, min_sep=2,
+                                rsi_threshold=100, min_rsi_divergence=3)
                         if divergence and swing_low_val is not None:
                             rw_stop_cand = swing_low_val * 0.99
                             rw_stop_pct = (price - rw_stop_cand) / price * 100 if price > 0 else 99.0
@@ -1932,14 +1932,14 @@ class MomentumBacktester:
 
                                 divergence, swing_low_val = self._detect_bullish_divergence(
                                     w_lows, w_rsi14, w_idx, w_swing_lows,
-                                    max_lookback=26, min_sep=2,
-                                    rsi_threshold=100, min_rsi_divergence=0)
+                                    max_lookback=15, min_sep=2,
+                                    rsi_threshold=100, min_rsi_divergence=3)
                                 rw_div_type = "regular"
                                 if not divergence:
                                     divergence, swing_low_val = self._detect_hidden_bullish_divergence(
                                         w_lows, w_rsi14, w_idx, w_swing_lows,
-                                        max_lookback=26, min_sep=2,
-                                        rsi_threshold=100, min_rsi_divergence=0)
+                                        max_lookback=15, min_sep=2,
+                                        rsi_threshold=100, min_rsi_divergence=3)
                                     if divergence:
                                         rw_div_type = "hidden"
 

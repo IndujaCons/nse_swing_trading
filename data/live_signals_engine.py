@@ -541,14 +541,14 @@ class LiveSignalsEngine:
 
                         divergence, swing_low_val, rsi_at_low = _detect_bullish_divergence(
                             w_lows, w_rsi14_vals, w_idx, w_swing_lows,
-                            max_lookback=26, min_sep=2,
-                            rsi_threshold=100, min_rsi_divergence=0)
+                            max_lookback=15, min_sep=2,
+                            rsi_threshold=100, min_rsi_divergence=3)
                         rw_div_type = "regular"
                         if not divergence:
                             divergence, swing_low_val, rsi_at_low = _detect_hidden_bullish_divergence(
                                 w_lows, w_rsi14_vals, w_idx, w_swing_lows,
-                                max_lookback=26, min_sep=2,
-                                rsi_threshold=100, min_rsi_divergence=0)
+                                max_lookback=15, min_sep=2,
+                                rsi_threshold=100, min_rsi_divergence=3)
                             if divergence:
                                 rw_div_type = "hidden"
                         if divergence and swing_low_val is not None:
