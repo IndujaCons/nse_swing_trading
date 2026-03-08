@@ -748,7 +748,7 @@
 
         .ls-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
             grid-template-rows: auto auto auto;
             gap: 10px;
             min-width: 700px;
@@ -1189,7 +1189,7 @@
                         <option value="J">Strategy J — weekly support</option>
                         <option value="T">Strategy T — Keltner pullback</option>
                         <option value="R">Strategy R — RSI divergence</option>
-                        <option value="RW">Strategy RW — weekly RSI divergence</option>
+                        <option value="MW">Strategy MW — Weekly ADX</option>
                     </select>
                     <select class="backtest-select" id="backtest-symbol">
                         <option value="">-- Select Symbol --</option>
@@ -1323,13 +1323,14 @@
                         <option value="500000">5L / trade</option>
                     </select>
                     <select class="backtest-select" id="portfolio-strategy">
-                        <option value="TR3" selected>T + R (3-Stage)</option>
-                        <option value="TRWW3">T + R + RW (3-Stage)</option>
+                        <option value="RMW3" selected>R + MW (3-Stage)</option>
+                        <option value="TRMW3">T + R + MW (3-Stage)</option>
+                        <option value="TR3">T + R (3-Stage)</option>
                         <option value="JTR3">J + T + R (3-Stage)</option>
-                        <option value="RW3">RW Only (3-Stage)</option>
                         <option value="J3">J Only (3-Stage)</option>
                         <option value="T3">T Only (3-Stage)</option>
                         <option value="R3">R Only (3-Stage)</option>
+                        <option value="MW3">MW Only (3-Stage)</option>
                     </select>
                     <select class="backtest-select" id="portfolio-entries-per-day">
                         <option value="1">1 trade / day</option>
@@ -1366,7 +1367,7 @@
                     <option value="J">Strategy J — weekly support</option>
                     <option value="T">Strategy T — Keltner pullback</option>
                     <option value="R">Strategy R — RSI divergence</option>
-                    <option value="RW">Strategy RW — weekly RSI divergence</option>
+                    <option value="MW">Strategy MW — Weekly ADX</option>
                 </select>
                 <select class="backtest-select" id="explain-symbol">
                     <option value="">-- Select Symbol --</option>
@@ -1566,12 +1567,12 @@
                     </div>
                 </div>
 
-                <div class="panel ls-rw-signals">
+                <div class="panel ls-mw-signals">
                     <div class="panel-header">
-                        <span class="panel-title" style="color:#7e57c2;">RW — Weekly RSI Divergence</span>
-                        <span class="panel-count" id="ls-rw-count">0</span>
+                        <span class="panel-title" style="color:#e67e22;">MW — Weekly ADX</span>
+                        <span class="panel-count" id="ls-mw-count">0</span>
                     </div>
-                    <div class="panel-body" id="ls-rw-panel">
+                    <div class="panel-body" id="ls-mw-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
@@ -2435,6 +2436,7 @@
             window._lsJSignals = jSignals;
             window._lsTSignals = data.t_signals || [];
             window._lsRSignals = data.r_signals || [];
+            window._lsMWSignals = data.mw_signals || [];
             document.getElementById('ls-j-count').textContent = jSignals.length;
 
             if (jSignals.length === 0) {
@@ -2513,32 +2515,27 @@
                 `;
             }
 
-            // RW signals (weekly RSI divergence)
-            const rwPanel = document.getElementById('ls-rw-panel');
-            const rwSignals = data.rw_signals || [];
-            window._lsRWSignals = rwSignals;
-            document.getElementById('ls-rw-count').textContent = rwSignals.length;
+            // MW signals
+            const mwPanel = document.getElementById('ls-mw-panel');
+            const mwSignals = data.mw_signals || [];
+            document.getElementById('ls-mw-count').textContent = mwSignals.length;
 
-            if (rwSignals.length === 0) {
-                rwPanel.innerHTML = '<div class="empty-state">No RW signals</div>';
+            if (mwSignals.length === 0) {
+                mwPanel.innerHTML = '<div class="empty-state">No MW signals</div>';
             } else {
-                const rows = rwSignals.map(s => {
-                    const divBadge = s.div_type === 'hidden'
-                        ? '<span style="color:#9c27b0;font-weight:700;font-size:10px;margin-left:4px;" title="Hidden Bullish Divergence">H</span>'
-                        : '<span style="color:#7e57c2;font-weight:700;font-size:10px;margin-left:4px;" title="Regular Bullish Divergence">R</span>';
-                    return `
+                const rows = mwSignals.map(s => `
                     <tr>
-                        <td class="ticker">${s.ticker}${divBadge}</td>
+                        <td class="ticker">${s.ticker}</td>
                         <td class="price">${s.price.toLocaleString()}</td>
-                        <td>${(s.rsi14||0).toFixed(1)} <span style="color:var(--green);font-size:11px;">(${(s.rsi_at_low||0).toFixed(1)})</span></td>
-                        <td class="price">${(s.swing_low||0).toLocaleString()}</td>
-                        <td class="price">${(s.stop||0).toLocaleString()}</td>
-                        <td style="color:${(s.stop_pct||0)<5?'var(--green)':'var(--red)'}">${(s.stop_pct||0).toFixed(1)}%</td>
+                        <td>${(s.adx||0).toFixed(1)}</td>
+                        <td style="color:var(--green)">${(s.plus_di||0).toFixed(1)}</td>
+                        <td style="color:var(--red)">${(s.minus_di||0).toFixed(1)}</td>
+                        <td style="color:var(--text-muted)">${(s.stop_pct||5).toFixed(1)}%</td>
                     </tr>
-                `}).join('');
-                rwPanel.innerHTML = `
+                `).join('');
+                mwPanel.innerHTML = `
                     <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>RSI14 (Low)</th><th>SwLow</th><th>Stop</th><th>Stop%</th></tr></thead>
+                        <thead><tr><th>Stock</th><th>Close</th><th>ADX</th><th>+DI</th><th>-DI</th><th>Stop%</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
@@ -2547,12 +2544,12 @@
             // ===== Top Picks — Ranked by Strategy Priority + Sector Momentum + ATR% =====
             // With sector diversity cap (max 4 per sector including active positions)
             const picksPanel = document.getElementById('ls-picks-panel');
-            const stratPriority = {'R': 0, 'T': 1, 'J': 2, 'RW': 3};
+            const stratPriority = {'R': 0, 'MW': 1, 'T': 2, 'J': 3};
             const allSignals = [
                 ...jSignals.map(s => ({...s, strategy: 'J', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
                 ...tSignals.map(s => ({...s, strategy: 'T', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
                 ...rSignals.map(s => ({...s, strategy: 'R', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
-                ...rwSignals.map(s => ({...s, strategy: 'RW', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
+                ...mwSignals.map(s => ({...s, strategy: 'MW', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
             ];
 
             // Sort: strategy priority (R > J > T), then sector momentum (highest first), then ATR%
@@ -2594,6 +2591,7 @@
                         'J': '<span style="color:var(--green);font-weight:700;">J</span>',
                         'T': '<span style="color:var(--blue);font-weight:700;">T</span>',
                         'R': '<span style="color:#ab47bc;font-weight:700;">R</span>',
+                        'MW': '<span style="color:#e67e22;font-weight:700;">MW</span>',
                     };
                     const badge = badgeMap[s.strategy] || s.strategy;
                     const stopColor = s.stop_pct < 5 ? 'var(--green)' : s.stop_pct === 5 ? 'var(--text-muted)' : 'var(--red)';
@@ -3087,7 +3085,7 @@
             const s = data.summary;
             const periodLabel = document.getElementById('backtest-from').value + ' to ' + document.getElementById('backtest-to').value;
             let stratLabel;
-            const stratLabels = {'J': 'Strategy J (weekly support)', 'T': 'Strategy T (Keltner)', 'RW': 'Strategy RW (weekly RSI divergence)'};
+            const stratLabels = {'J': 'Strategy J (weekly support)', 'T': 'Strategy T (Keltner)', 'R': 'Strategy R (RSI divergence)', 'MW': 'Strategy MW (Weekly ADX)'};
             stratLabel = stratLabels[data.strategy] || data.strategy;
 
             // Title
@@ -3475,7 +3473,7 @@
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'TR3': ['T','R'], 'TRWW3': ['T','R','RW'], 'JTR3': ['J','T','R'], 'RW3': ['RW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R']};
+            const stratMap = {'RMW3': ['R','MW'], 'TR3': ['T','R'], 'JTR3': ['J','T','R'], 'TRMW3': ['T','R','MW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R'], 'MW3': ['MW']};
             const strategies = stratMap[stratVal] || [stratVal];
             const threeStageExit = true;
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);

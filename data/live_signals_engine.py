@@ -1,5 +1,5 @@
 """
-Live Signals Engine — scans for Strategy J, T, and R entry signals in real-time,
+Live Signals Engine — scans for Strategy J, T, R, and MW entry signals in real-time,
 manages positions (with 3-stage exits for T and R), and checks exit conditions.
 """
 
@@ -205,8 +205,37 @@ def _detect_hidden_bullish_divergence(lows_vals, rsi14_vals, i, swing_lows,
     return False, None, None
 
 
+def _calculate_adx_series(highs: pd.Series, lows: pd.Series, closes: pd.Series, period: int = 14):
+    """Calculate ADX, +DI, and -DI series using Wilder's smoothing."""
+    prev_high = highs.shift(1)
+    prev_low = lows.shift(1)
+    prev_close = closes.shift(1)
+
+    tr1 = highs - lows
+    tr2 = (highs - prev_close).abs()
+    tr3 = (lows - prev_close).abs()
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+
+    up_move = highs - prev_high
+    down_move = prev_low - lows
+    plus_dm = pd.Series(np.where((up_move > down_move) & (up_move > 0), up_move, 0.0), index=highs.index)
+    minus_dm = pd.Series(np.where((down_move > up_move) & (down_move > 0), down_move, 0.0), index=highs.index)
+
+    atr = tr.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+    smooth_plus_dm = plus_dm.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+    smooth_minus_dm = minus_dm.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+
+    plus_di = 100 * smooth_plus_dm / atr
+    minus_di = 100 * smooth_minus_dm / atr
+
+    dx = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di)
+    adx = dx.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+
+    return adx, plus_di, minus_di
+
+
 class LiveSignalsEngine:
-    """Scans J/T/R entry signals, manages positions with 3-stage exits, checks exit conditions."""
+    """Scans J/T/R/MW entry signals, manages positions with 3-stage exits, checks exit conditions."""
 
     def __init__(self, user_id=None):
         self.user_id = user_id
@@ -344,6 +373,7 @@ class LiveSignalsEngine:
         t_signals = []
         r_signals = []
         rw_signals = []
+        mw_signals = []
         actual_date = None  # Track actual last trading date from data
 
         for idx, ticker in enumerate(tickers):
@@ -529,55 +559,48 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
-            # Strategy RW: Weekly RSI Divergence (>=3pt RSI div)
+            # Strategy RW: DISABLED — weekly RSI divergence (code preserved in momentum_backtest.py)
+
+            # Strategy MW: Weekly ADX >= 20 and rising with DI+ > DI-
             try:
-                already_any = any(s["ticker"] == ticker for s in j_signals + t_signals + r_signals + rw_signals)
+                already_any = any(s["ticker"] == ticker for s in j_signals + t_signals + r_signals)
                 if is_green and not already_any:
-                    weekly = daily.resample("W-FRI").agg({
+                    weekly_mw = daily.resample("W-FRI").agg({
                         "Open": "first", "High": "max", "Low": "min",
                         "Close": "last", "Volume": "sum"
                     }).dropna()
-                    if len(weekly) >= 16:
-                        w_rsi14 = _calculate_rsi_series(weekly["Close"], 14)
-                        w_swing_lows = _find_swing_lows(weekly["Low"], left=3, right=2)
-                        w_lows = weekly["Low"].values
-                        w_rsi14_vals = w_rsi14.values
-                        w_idx = len(weekly) - 1  # latest weekly bar
-
-                        divergence, swing_low_val, rsi_at_low = _detect_bullish_divergence(
-                            w_lows, w_rsi14_vals, w_idx, w_swing_lows,
-                            max_lookback=26, min_sep=2,
-                            rsi_threshold=100, min_rsi_divergence=3)
-                        rw_div_type = "regular"
-                        if not divergence:
-                            divergence, swing_low_val, rsi_at_low = _detect_hidden_bullish_divergence(
-                                w_lows, w_rsi14_vals, w_idx, w_swing_lows,
-                                max_lookback=26, min_sep=2,
-                                rsi_threshold=100, min_rsi_divergence=3)
-                            if divergence:
-                                rw_div_type = "hidden"
-                        if divergence and swing_low_val is not None:
-                            rw_rsi14_at_bar = float(w_rsi14.iloc[w_idx]) if not pd.isna(w_rsi14.iloc[w_idx]) else 0.0
-                            rw_struct_stop = round(swing_low_val * 0.99, 2)
-                            rw_stop_pct = round((price - rw_struct_stop) / price * 100, 2) if price > 0 else 99.0
-                            if 2.0 <= rw_stop_pct <= 8.0:
-                                prev_close_rw = closes.shift(1)
-                                tr1_rw = highs - lows
-                                tr2_rw = (highs - prev_close_rw).abs()
-                                tr3_rw = (lows - prev_close_rw).abs()
-                                tr_rw = pd.concat([tr1_rw, tr2_rw, tr3_rw], axis=1).max(axis=1)
-                                atr14_rw = float(tr_rw.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
-                                atr_norm_rw = round(atr14_rw / price * 100, 2) if price > 0 else 99.0
-                                rw_signals.append({
+                    if len(weekly_mw) >= 28:
+                        mw_adx, mw_pdi, mw_mdi = _calculate_adx_series(
+                            weekly_mw["High"], weekly_mw["Low"], weekly_mw["Close"])
+                        w_dates = weekly_mw.index
+                        day_ts = pd.Timestamp(actual_date or datetime.now().date())
+                        if w_dates.tz:
+                            day_ts = day_ts.tz_localize(w_dates.tz)
+                        w_before = w_dates[w_dates < day_ts]
+                        if len(w_before) >= 2:
+                            w_idx = len(w_before) - 1
+                            curr_adx = float(mw_adx.iloc[w_idx])
+                            prev_adx = float(mw_adx.iloc[w_idx - 1])
+                            plus_di = float(mw_pdi.iloc[w_idx])
+                            minus_di = float(mw_mdi.iloc[w_idx])
+                            if (not np.isnan(curr_adx) and not np.isnan(prev_adx)
+                                    and curr_adx >= 20 and curr_adx > prev_adx
+                                    and plus_di > minus_di):
+                                prev_close_mw = closes.shift(1)
+                                tr1_mw = highs - lows
+                                tr2_mw = (highs - prev_close_mw).abs()
+                                tr3_mw = (lows - prev_close_mw).abs()
+                                tr_mw = pd.concat([tr1_mw, tr2_mw, tr3_mw], axis=1).max(axis=1)
+                                atr14_mw = float(tr_mw.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
+                                atr_norm_mw = round(atr14_mw / price * 100, 2) if price > 0 else 99.0
+                                mw_signals.append({
                                     "ticker": ticker,
                                     "price": round(price, 2),
-                                    "rsi14": round(rw_rsi14_at_bar, 1),
-                                    "rsi_at_low": round(float(rsi_at_low), 1),
-                                    "swing_low": round(swing_low_val, 2),
-                                    "stop": rw_struct_stop,
-                                    "stop_pct": rw_stop_pct,
-                                    "atr_pct": atr_norm_rw,
-                                    "div_type": rw_div_type,
+                                    "adx": round(curr_adx, 1),
+                                    "plus_di": round(plus_di, 1),
+                                    "minus_di": round(minus_di, 1),
+                                    "stop_pct": 5.0,
+                                    "atr_pct": atr_norm_mw,
                                 })
             except Exception:
                 pass
@@ -586,7 +609,7 @@ class LiveSignalsEngine:
         sector_momentum = self._compute_sector_momentum(end_date)
 
         # Attach sector info to each signal
-        for sig_list in [j_signals, t_signals, r_signals, rw_signals]:
+        for sig_list in [j_signals, t_signals, r_signals, mw_signals]:
             for s in sig_list:
                 sector = STOCK_SECTOR_MAP.get(s["ticker"], "OTHER")
                 s["sector"] = sector
@@ -600,12 +623,13 @@ class LiveSignalsEngine:
         j_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         t_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         r_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
-        rw_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
+        mw_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         result = {
             "j_signals": j_signals,
             "t_signals": t_signals,
             "r_signals": r_signals,
-            "rw_signals": rw_signals,
+            "rw_signals": [],  # RW disabled
+            "mw_signals": mw_signals,
             "sector_momentum": sector_momentum,
             "last_updated": datetime.now().isoformat(),
             "universe": universe,
@@ -617,7 +641,7 @@ class LiveSignalsEngine:
             result["scan_date"] = scan_date
         else:
             self._save_cache(result)
-            self._append_signals_history(j_signals, t_signals, r_signals, rw_signals)
+            self._append_signals_history(j_signals, t_signals, r_signals, rw_signals, mw_signals)
 
         return result
 
@@ -646,7 +670,7 @@ class LiveSignalsEngine:
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)
 
-    def _append_signals_history(self, j_signals, t_signals=None, r_signals=None, rw_signals=None):
+    def _append_signals_history(self, j_signals, t_signals=None, r_signals=None, rw_signals=None, mw_signals=None):
         """Append today's scan results to the history CSV."""
         history_file = LIVE_SIGNALS_HISTORY_FILE
         scan_date = datetime.now().strftime("%Y-%m-%d")
@@ -684,6 +708,12 @@ class LiveSignalsEngine:
                 writer.writerow([
                     scan_date, scan_time, "RW", s["ticker"], s["price"],
                     s.get("swing_low", ""), "", "",
+                ])
+
+            for s in (mw_signals or []):
+                writer.writerow([
+                    scan_date, scan_time, "MW", s["ticker"], s["price"],
+                    "", "", "",
                 ])
 
     # ==================== Position Management ====================

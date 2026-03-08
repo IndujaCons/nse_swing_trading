@@ -26,6 +26,12 @@ Strategy R — Bullish RSI Divergence (Regular + Hidden):
   Entry: Green candle AND no gap-down AND min 2% stop distance
   Exit (2-stage like T): structural SL (1% below swing low), +6% sell 1/3,
          tight 3% SL after first exit, upper Keltner sell remaining
+
+Strategy MW — Weekly ADX Trend Entry:
+  Signal: Weekly ADX crosses above 20 (trend confirmed) AND DI+ > DI- (bullish)
+  Entry: Green candle AND no gap-down on the daily bar
+  Exit (2-stage like T): 8% hard SL, +6% sell 1/3, +10% sell 1/3,
+         tight 3% SL after first partial, upper Keltner sell remaining
 """
 
 import os
@@ -85,11 +91,12 @@ BATCH_VARIANTS = [
     ("J", None, "J: Weekly Support"),
     ("T", None, "T: Keltner Pullback"),
     ("R", None, "R: RSI Divergence"),
+    ("MW", None, "MW: Weekly ADX"),
 ]
 
 
 class MomentumBacktester:
-    """Single-stock daily backtest for swing trading strategies (J, T, R)."""
+    """Single-stock daily backtest for swing trading strategies (J, T, R, MW)."""
 
     def _calculate_rsi_series(self, closes: pd.Series, period: int) -> pd.Series:
         """Calculate full RSI series using Wilder's smoothing."""
@@ -117,6 +124,41 @@ class MomentumBacktester:
             if vals[i] == np.min(window):
                 result.append((i, float(vals[i])))
         return result
+
+    @staticmethod
+    def _calculate_adx_series(highs: pd.Series, lows: pd.Series, closes: pd.Series, period: int = 14):
+        """Calculate ADX, +DI, and -DI series using Wilder's smoothing.
+
+        Returns (adx, plus_di, minus_di) as pd.Series.
+        """
+        prev_high = highs.shift(1)
+        prev_low = lows.shift(1)
+        prev_close = closes.shift(1)
+
+        # True Range
+        tr1 = highs - lows
+        tr2 = (highs - prev_close).abs()
+        tr3 = (lows - prev_close).abs()
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+
+        # Directional Movement
+        up_move = highs - prev_high
+        down_move = prev_low - lows
+        plus_dm = pd.Series(np.where((up_move > down_move) & (up_move > 0), up_move, 0.0), index=highs.index)
+        minus_dm = pd.Series(np.where((down_move > up_move) & (down_move > 0), down_move, 0.0), index=highs.index)
+
+        # Wilder's smoothing (EWM with alpha=1/period)
+        atr = tr.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+        smooth_plus_dm = plus_dm.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+        smooth_minus_dm = minus_dm.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+
+        plus_di = 100 * smooth_plus_dm / atr
+        minus_di = 100 * smooth_minus_dm / atr
+
+        dx = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di)
+        adx = dx.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+
+        return adx, plus_di, minus_di
 
     @staticmethod
     def _rsi_near_swing(rsi14_vals, idx, window=3):
@@ -439,10 +481,30 @@ class MomentumBacktester:
         r_remaining = 0
         r_swing_low_stop = 0.0  # structural SL: 1% below divergence swing low
 
+        # Tracking variables for Strategy MW (Weekly MACD, 2-stage like T)
+        mw_partial_stage = 0
+        mw_remaining = 0
+
         # Pre-compute swing lows for Strategy R
         swing_lows = []
         if strategy == "R":
             swing_lows = self._find_swing_lows(lows)
+
+        # Pre-compute weekly ADX for Strategy MW
+        mw_weekly = None
+        mw_weekly_adx_vals = None
+        mw_weekly_plus_di_vals = None
+        mw_weekly_minus_di_vals = None
+        if strategy == "MW":
+            mw_weekly = daily.resample("W-FRI").agg({
+                "Open": "first", "High": "max", "Low": "min",
+                "Close": "last", "Volume": "sum"
+            }).dropna()
+            mw_adx, mw_plus_di, mw_minus_di = self._calculate_adx_series(
+                mw_weekly["High"], mw_weekly["Low"], mw_weekly["Close"])
+            mw_weekly_adx_vals = mw_adx.values
+            mw_weekly_plus_di_vals = mw_plus_di.values
+            mw_weekly_minus_di_vals = mw_minus_di.values
 
         # Pre-compute weekly data for Strategy RW / TW
         rw_weekly = None
@@ -871,12 +933,12 @@ class MomentumBacktester:
                         w_idx = len(w_before) - 1
                         divergence, swing_low_val = self._detect_bullish_divergence(
                             rw_weekly_lows_vals, rw_weekly_rsi14_vals, w_idx, rw_weekly_swing_lows,
-                            max_lookback=26, min_sep=2,
+                            max_lookback=13, min_sep=2,
                             rsi_threshold=100, min_rsi_divergence=3)
                         if not divergence:
                             divergence, swing_low_val = self._detect_hidden_bullish_divergence(
                                 rw_weekly_lows_vals, rw_weekly_rsi14_vals, w_idx, rw_weekly_swing_lows,
-                                max_lookback=26, min_sep=2,
+                                max_lookback=13, min_sep=2,
                                 rsi_threshold=100, min_rsi_divergence=3)
                         if divergence and swing_low_val is not None:
                             rw_stop_cand = swing_low_val * 0.99
@@ -893,6 +955,105 @@ class MomentumBacktester:
                                     r_swing_low_stop = rw_stop_cand
                 continue
 
+            elif strategy == "MW":
+                # Strategy MW: Weekly ADX Trend Entry (2-stage exit, weekly Keltner)
+                # Weekly upper Keltner for exit
+                mw_upper_keltner = 0.0
+                if mw_weekly is not None:
+                    w_dates = mw_weekly.index
+                    day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
+                    w_before = w_dates[w_dates < day_ts]
+                    if len(w_before) >= 1:
+                        w_idx = len(w_before) - 1
+                        w_closes = mw_weekly["Close"]
+                        w_ema20 = float(w_closes.ewm(span=20, adjust=False).mean().iloc[w_idx])
+                        w_highs = mw_weekly["High"]
+                        w_lows = mw_weekly["Low"]
+                        w_prev_close = w_closes.shift(1)
+                        w_tr = pd.concat([w_highs - w_lows, (w_highs - w_prev_close).abs(), (w_lows - w_prev_close).abs()], axis=1).max(axis=1)
+                        w_atr14 = float(w_tr.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[w_idx])
+                        mw_upper_keltner = w_ema20 + 2 * w_atr14
+
+                if in_position:
+                    third = shares // 3
+                    exited = False
+
+                    # Hard SL: 8% initial, 3% after P1, breakeven after P2
+                    if mw_partial_stage >= 2:
+                        mw_sl_price = entry_price
+                        sl_label = "BREAKEVEN_SL"
+                    elif mw_partial_stage >= 1:
+                        mw_sl_price = entry_price * 0.97
+                        sl_label = "HARD_SL_3PCT"
+                    else:
+                        mw_sl_price = entry_price * 0.92
+                        sl_label = "HARD_SL_8PCT"
+                    if price <= mw_sl_price:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, mw_remaining, day,
+                            price, sl_label))
+                        exited = True
+
+                    # 2-stage partial exits (+6% sell 1/3, +10% sell 1/3)
+                    if not exited and mw_partial_stage == 0 and price >= entry_price * 1.06 and third > 0:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, third, day,
+                            price, "PARTIAL_6PCT_1of3"))
+                        mw_remaining = shares - third
+                        mw_partial_stage = 1
+                    elif not exited and mw_partial_stage == 1 and price >= entry_price * 1.10 and third > 0:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, third, day,
+                            price, "PARTIAL_10PCT_2of3"))
+                        mw_remaining = shares - 2 * third
+                        mw_partial_stage = 2
+
+                    # Weekly upper Keltner exit on remaining (only after first partial)
+                    if not exited and mw_partial_stage >= 1 and mw_upper_keltner > 0 and price >= mw_upper_keltner:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, mw_remaining, day,
+                            price, "KELTNER_UPPER_EXIT"))
+                        exited = True
+
+                    # Underwater exit: 25 trading days below entry
+                    if not exited and (i - entry_bar) >= 25 and price < entry_price:
+                        trades.append(self._make_trade(
+                            entry_date, entry_price, mw_remaining, day,
+                            price, "UNDERWATER_EXIT"))
+                        exited = True
+
+                    if exited:
+                        in_position = False
+                        mw_partial_stage = 0
+                        mw_remaining = 0
+                    continue
+
+                # Entry check: weekly ADX crosses above 20 with DI+ > DI-
+                no_gap_down_mw = (prev_close is None or open_price >= prev_close)
+                is_green_mw = price > open_price
+                if is_green_mw and no_gap_down_mw and mw_weekly is not None:
+                    w_dates = mw_weekly.index
+                    day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
+                    w_before = w_dates[w_dates < day_ts]
+                    if len(w_before) >= 2:
+                        w_idx = len(w_before) - 1
+                        curr_adx = mw_weekly_adx_vals[w_idx]
+                        prev_adx = mw_weekly_adx_vals[w_idx - 1]
+                        plus_di = mw_weekly_plus_di_vals[w_idx]
+                        minus_di = mw_weekly_minus_di_vals[w_idx]
+                        if (not np.isnan(curr_adx) and not np.isnan(prev_adx)
+                                and curr_adx >= 20 and curr_adx > prev_adx
+                                and plus_di > minus_di):
+                                shares = int(capital // price)
+                                if shares > 0:
+                                    entry_price = price
+                                    entry_date = day
+                                    entry_bar = i
+                                    in_position = True
+                                    mw_partial_stage = 0
+                                    mw_remaining = shares
+                continue
+
         # Close open position at end of backtest
         if in_position:
             last_day = daily.index[bt_indices[-1]].date()
@@ -904,6 +1065,10 @@ class MomentumBacktester:
             elif strategy in ("R", "RW"):
                 trades.append(self._make_trade(
                     entry_date, entry_price, r_remaining, last_day,
+                    last_price, "BACKTEST_END"))
+            elif strategy == "MW":
+                trades.append(self._make_trade(
+                    entry_date, entry_price, mw_remaining, last_day,
                     last_price, "BACKTEST_END"))
             elif partial_exit_done:
                 trades.append(self._make_trade(
@@ -971,11 +1136,21 @@ class MomentumBacktester:
         gross_losses = abs(sum(t["pnl"] for t in losses))
         profit_factor = gross_wins / gross_losses if gross_losses > 0 else 999.99
 
+        # Position-level WR: group trades by (symbol, entry_date)
+        from collections import defaultdict
+        positions = defaultdict(float)
+        for t in trades:
+            key = (t.get("symbol", t.get("ticker", "")), t["entry_date"])
+            positions[key] += t["pnl"]
+        pos_wins = sum(1 for pnl in positions.values() if pnl > 0)
+        pos_losses = sum(1 for pnl in positions.values() if pnl <= 0)
+        pos_wr = round(pos_wins / len(positions) * 100, 1) if positions else 0
+
         return {
-            "total_trades": len(trades),
-            "winning_trades": len(wins),
-            "losing_trades": len(losses),
-            "win_rate": round(len(wins) / len(trades) * 100, 1),
+            "total_trades": len(positions),
+            "winning_trades": pos_wins,
+            "losing_trades": pos_losses,
+            "win_rate": pos_wr,
             "total_pnl": round(total_pnl, 2),
             "total_return_pct": round(total_pnl / capital * 100, 2),
             "avg_win": round(avg_win, 2),
@@ -1008,7 +1183,7 @@ class MomentumBacktester:
 
         Args:
             symbol: NSE ticker
-            strategy: "J", "T", or "R"
+            strategy: "J", "T", "R", or "MW"
             entry_date_str: "YYYY-MM-DD"
 
         Returns dict with {symbol, strategy, setup, entry, exits, result} or {error}.
@@ -1271,6 +1446,34 @@ class MomentumBacktester:
             else:
                 setup["description"] = f"{symbol} had bullish RSI divergence signal (detail unavailable for exact entry bar)"
 
+        elif strategy == "MW":
+            # Weekly ADX trend entry explanation
+            weekly_explain = raw.resample("W-FRI").agg({
+                "Open": "first", "High": "max", "Low": "min",
+                "Close": "last", "Volume": "sum"
+            }).dropna()
+            mw_adx_e, mw_pdi_e, mw_mdi_e = self._calculate_adx_series(
+                weekly_explain["High"], weekly_explain["Low"], weekly_explain["Close"])
+
+            signal_date_val = raw.index[signal_i]
+            w_dates = weekly_explain.index
+            day_ts = pd.Timestamp(signal_date_val).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(signal_date_val)
+            w_before = w_dates[w_dates < day_ts]
+            if len(w_before) >= 2:
+                w_idx = len(w_before) - 1
+                adx_val = float(mw_adx_e.iloc[w_idx])
+                pdi_val = float(mw_pdi_e.iloc[w_idx])
+                mdi_val = float(mw_mdi_e.iloc[w_idx])
+                signal_week = w_dates[w_idx].strftime("%b %d")
+                setup["description"] = f"{symbol} weekly ADX crossed above 25 with DI+ > DI- (bullish trend confirmed)"
+                setup["signal_week"] = signal_week
+                setup["adx"] = round(adx_val, 1)
+                setup["plus_di"] = round(pdi_val, 1)
+                setup["minus_di"] = round(mdi_val, 1)
+                setup["stop_distance"] = "8.0%"
+            else:
+                setup["description"] = f"{symbol} had weekly ADX trend signal (detail unavailable)"
+
         # Entry details — use signal bar (backtest evaluates and enters at signal bar close)
         o = round(float(opens.iloc[signal_i]), 2)
         h = round(float(highs.iloc[signal_i]), 2)
@@ -1296,6 +1499,10 @@ class MomentumBacktester:
             entry_info["stop"] = setup["structural_stop"]
             entry_info["stop_type"] = "Structural (1% below swing low)"
             entry_info["stop_pct"] = setup.get("stop_distance", "")
+        elif strategy == "MW":
+            entry_info["stop"] = round(entry_price * 0.92, 2)
+            entry_info["stop_type"] = "Hard 8% SL"
+            entry_info["stop_pct"] = "8.0%"
 
         # Exit progression
         exits = []
@@ -1460,6 +1667,23 @@ class MomentumBacktester:
             # Swing lows for Strategy R
             swing_lows = self._find_swing_lows(lows)
 
+            # Weekly ADX for Strategy MW
+            mw_adx_s, mw_plus_di_s, mw_minus_di_s = self._calculate_adx_series(
+                weekly["High"], weekly["Low"], weekly["Close"])
+            mw_weekly_adx_vals = mw_adx_s.values
+            mw_weekly_plus_di_vals = mw_plus_di_s.values
+            mw_weekly_minus_di_vals = mw_minus_di_s.values
+
+            # Weekly upper Keltner for Strategy MW exit
+            w_closes_k = weekly["Close"]
+            w_ema20_k = w_closes_k.ewm(span=20, adjust=False).mean()
+            w_prev_close_k = w_closes_k.shift(1)
+            w_tr_k = pd.concat([weekly["High"] - weekly["Low"],
+                                (weekly["High"] - w_prev_close_k).abs(),
+                                (weekly["Low"] - w_prev_close_k).abs()], axis=1).max(axis=1)
+            w_atr14_k = w_tr_k.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+            mw_weekly_upper_keltner = w_ema20_k + 2 * w_atr14_k
+
             # Weekly RSI14 and swing lows for Strategy RW
             weekly_rsi14_series = self._calculate_rsi_series(weekly["Close"], 14)
             weekly_lows_for_swings = weekly["Low"]
@@ -1498,6 +1722,10 @@ class MomentumBacktester:
                 "rsi3": rsi3_series,
                 "rsi14": rsi14_series,
                 "swing_lows": swing_lows,
+                "mw_weekly_adx_vals": mw_weekly_adx_vals,
+                "mw_weekly_plus_di_vals": mw_weekly_plus_di_vals,
+                "mw_weekly_minus_di_vals": mw_weekly_minus_di_vals,
+                "mw_weekly_upper_keltner": mw_weekly_upper_keltner,
                 "cci20": cci20_series,
                 "volume": vol_series,
                 "vol_avg20": vol_avg20,
@@ -1789,9 +2017,63 @@ class MomentumBacktester:
                             pos, sz, day, price, "KELTNER_UPPER_EXIT"))
                         exited = True
 
+                elif pos["strategy"] == "MW":
+                    # MW exits: 8% SL, 3% after P1, breakeven after P2, 2-stage partials, weekly Keltner upper
+                    # Compute weekly upper Keltner from pre-computed weekly series
+                    upper_keltner = 0.0
+                    weekly_raw = ind["weekly_raw"]
+                    w_dates = weekly_raw.index
+                    day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
+                    w_before = w_dates[w_dates < day_ts]
+                    if len(w_before) >= 1:
+                        w_idx = len(w_before) - 1
+                        wk_val = ind["mw_weekly_upper_keltner"].iloc[w_idx]
+                        if not pd.isna(wk_val):
+                            upper_keltner = float(wk_val)
+                    stage = pos.get("partial_stage", 0)
+
+                    # Hard SL: 8% initial, 3% after partial 1, breakeven after partial 2
+                    if stage >= 2:
+                        mw_sl_price = pos["entry_price"]
+                        sl_label = "BREAKEVEN_SL"
+                    elif stage >= 1:
+                        mw_sl_price = pos["entry_price"] * 0.97
+                        sl_label = "HARD_SL_3PCT"
+                    else:
+                        mw_sl_price = pos["entry_price"] * 0.92
+                        sl_label = "HARD_SL_8PCT"
+                    if price <= mw_sl_price:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, sl_label))
+                        exited = True
+
+                    # 2-stage partial exits (+6% sell 1/3, +10% sell 1/3)
+                    if not exited:
+                        third = pos["shares"] // 3
+                        if stage == 0 and price >= pos["entry_price"] * 1.06 and third > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, third, day, price, "PARTIAL_6PCT_1of3"))
+                            pos["remaining_shares"] = pos["shares"] - third
+                            pos["partial_stage"] = 1
+                        elif stage == 1 and price >= pos["entry_price"] * 1.10 and third > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, third, day, price, "PARTIAL_10PCT_2of3"))
+                            pos["remaining_shares"] = pos["shares"] - 2 * third
+                            pos["partial_exit_done"] = True
+                            pos["partial_stage"] = 2
+
+                    # Upper Keltner exit on remaining (only after first partial)
+                    if not exited and pos.get("partial_stage", 0) >= 1 and price >= upper_keltner:
+                        sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+                        trades.append(self._make_portfolio_trade(
+                            pos, sz, day, price, "KELTNER_UPPER_EXIT"))
+                        exited = True
+
                 # Underwater exit — if held >= N trading days and still underwater, cut it
-                # RW gets 50d underwater; TR uses configured value
-                uw_days = 50 if pos["strategy"] == "RW" else underwater_exit_days
+                # Strategy-dependent: MW 25d, RW 50d, others use configured value (default 10d)
+                uw_days_map = {"RW": 50, "MW": 25}
+                uw_days = uw_days_map.get(pos["strategy"], underwater_exit_days)
                 if not exited and uw_days:
                     trading_days_held = day_idx - pos.get("entry_day_idx", day_idx)
                     if trading_days_held >= uw_days and price < pos["entry_price"]:
@@ -1922,6 +2204,32 @@ class MomentumBacktester:
                                     "div_type": r_div_type,
                                 })
 
+                # Strategy MW entry: Weekly ADX crosses above 25 with DI+ > DI-
+                if "MW" in strategies:
+                    already_any = any(s["symbol"] == ticker for s in signals)
+                    if not already_any and is_green:
+                        weekly_raw = ind["weekly_raw"]
+                        w_dates = weekly_raw.index
+                        day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
+                        w_before = w_dates[w_dates < day_ts]
+                        if len(w_before) >= 2:
+                            w_idx = len(w_before) - 1
+                            curr_adx = ind["mw_weekly_adx_vals"][w_idx]
+                            prev_adx = ind["mw_weekly_adx_vals"][w_idx - 1]
+                            plus_di = ind["mw_weekly_plus_di_vals"][w_idx]
+                            minus_di = ind["mw_weekly_minus_di_vals"][w_idx]
+                            if (not np.isnan(curr_adx) and not np.isnan(prev_adx)
+                                    and curr_adx >= 20 and curr_adx > prev_adx
+                                    and plus_di > minus_di):
+                                    signals.append({
+                                        "symbol": ticker,
+                                        "strategy": "MW",
+                                        "price": price,
+                                        "atr14": sig_atr14,
+                                        "stop_pct": 5.0,
+                                        "atr_norm": sig_atr14 / price if price > 0 else 99.0,
+                                    })
+
                 # Strategy RW: collect weekly divergence signals separately
                 # Strategy RW: collect weekly divergence signals separately (>=3pt RSI div)
                 if "RW" in strategies:
@@ -1941,13 +2249,13 @@ class MomentumBacktester:
 
                                 divergence, swing_low_val = self._detect_bullish_divergence(
                                     w_lows, w_rsi14, w_idx, w_swing_lows,
-                                    max_lookback=26, min_sep=2,
+                                    max_lookback=13, min_sep=2,
                                     rsi_threshold=100, min_rsi_divergence=3)
                                 rw_div_type = "regular"
                                 if not divergence:
                                     divergence, swing_low_val = self._detect_hidden_bullish_divergence(
                                         w_lows, w_rsi14, w_idx, w_swing_lows,
-                                        max_lookback=26, min_sep=2,
+                                        max_lookback=13, min_sep=2,
                                         rsi_threshold=100, min_rsi_divergence=3)
                                     if divergence:
                                         rw_div_type = "hidden"
@@ -1973,13 +2281,23 @@ class MomentumBacktester:
 
             total_signals += len(signals)
 
+            # Filter out signals in sectors with negative momentum
+            if rank_by_sector_momentum:
+                day_sec_mom_filt = sector_momentum_by_date.get(day, {})
+                from sector_mapping import STOCK_SECTOR_MAP as _SM_FILT
+                before_filt = len(signals)
+                signals = [s for s in signals
+                           if day_sec_mom_filt.get(_SM_FILT.get(s["symbol"], "OTHER"), 0.0) >= 0]
+                filtered_out = before_filt - len(signals)
+                missed_signals += filtered_out
+
             # === 3. Allocate capital (max entries_per_day) ===
             available_slots = MAX_POSITIONS - len(positions)
             max_today = min(entries_per_day, available_slots)
             if signals and max_today > 0:
                 if rank_by_risk:
                     rng = random.Random(seed)
-                    strat_priority = {"R": 0, "T": 1, "J": 2, "RW": 3}
+                    strat_priority = {"R": 0, "MW": 1, "T": 2, "J": 3, "RW": 4}
                     if rank_by_sector_momentum:
                         # Priority strategy first, then sector momentum (descending), then lowest ATR
                         day_sec_mom = sector_momentum_by_date.get(day, {})
@@ -2033,6 +2351,7 @@ class MomentumBacktester:
                         elif sig["strategy"] in ("R", "RW"):
                             pos["r_swing_low_stop"] = sig["r_swing_low_stop"]
                             pos["div_type"] = sig.get("div_type", "regular")
+                        # MW uses same hard SL as T — no extra pos fields needed
                         positions.append(pos)
             elif signals and available_slots <= 0:
                 missed_signals += len(signals)
@@ -2072,7 +2391,7 @@ class MomentumBacktester:
         effective_capital = max_positions_used * PER_STOCK if max_positions_used > 0 else TOTAL_CAPITAL
         summary = self._calculate_summary(trades, effective_capital)
 
-        strat_labels = {"J": "J(Weekly Support)", "T": "T(Keltner)", "R": "R(RSI Divergence)"}
+        strat_labels = {"J": "J(Weekly Support)", "T": "T(Keltner)", "R": "R(RSI Divergence)", "MW": "MW(Weekly ADX)"}
         strat_label = " + ".join(strat_labels.get(s, s) for s in strategies)
 
         return {

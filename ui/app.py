@@ -439,8 +439,8 @@ def buy_live_signal():
     if not ticker or not strategy or not price:
         return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
 
-    if strategy not in ("J", "T", "R", "RW"):
-        return jsonify({"success": False, "error": "strategy must be J, T, R, or RW"}), 400
+    if strategy not in ("J", "T", "R", "MW"):
+        return jsonify({"success": False, "error": "strategy must be J, T, or R"}), 400
 
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Valid user_id required"}), 400
@@ -676,7 +676,7 @@ def run_momentum_backtest():
     if not symbol:
         return jsonify({"success": False, "error": "Symbol required"}), 400
 
-    if strategy not in ("J", "T", "R", "RW"):
+    if strategy not in ("J", "T", "R", "MW"):
         strategy = "J"
 
     # exit_ema can be "5","8","10","20" (EMA) or "pct5" (% target)
@@ -708,8 +708,8 @@ def explain_trade():
     if not symbol or not strategy or not entry_date:
         return jsonify({"success": False, "error": "symbol, strategy, entry_date required"}), 400
 
-    if strategy not in ("J", "T", "R", "RW"):
-        return jsonify({"success": False, "error": "strategy must be J, T, R, or RW"}), 400
+    if strategy not in ("J", "T", "R", "MW"):
+        return jsonify({"success": False, "error": "strategy must be J, T, or R"}), 400
 
     try:
         backtester = MomentumBacktester()
@@ -803,11 +803,11 @@ def run_portfolio_backtest():
     per_stock = int(data.get("per_stock", 50000))
     if per_stock not in (50000, 100000, 200000, 500000):
         per_stock = 50000
-    strategies = data.get("strategies", ["J", "T"])
-    valid_strats = {"J", "T", "R"}
+    strategies = data.get("strategies", ["R", "MW"])
+    valid_strats = {"J", "T", "R", "MW"}
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
-        strategies = ["J", "T"]
+        strategies = ["R", "MW"]
     entries_per_day = int(data.get("entries_per_day", 3))
     if entries_per_day not in (1, 2, 3):
         entries_per_day = 3
@@ -828,7 +828,8 @@ def run_portfolio_backtest():
             no_gap_down=True,
             rank_by_risk=True,
             underwater_exit_days=10,
-            t_tight_sl=0.03
+            t_tight_sl=0.03,
+            rank_by_sector_momentum=True
         )
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]})
