@@ -986,8 +986,8 @@ class MomentumBacktester:
                         mw_sl_price = entry_price * 0.97
                         sl_label = "HARD_SL_3PCT"
                     else:
-                        mw_sl_price = entry_price * 0.92
-                        sl_label = "HARD_SL_8PCT"
+                        mw_sl_price = entry_price * 0.94
+                        sl_label = "HARD_SL_6PCT"
                     if price <= mw_sl_price:
                         trades.append(self._make_trade(
                             entry_date, entry_price, mw_remaining, day,
@@ -1500,7 +1500,7 @@ class MomentumBacktester:
             entry_info["stop_type"] = "Structural (1% below swing low)"
             entry_info["stop_pct"] = setup.get("stop_distance", "")
         elif strategy == "MW":
-            entry_info["stop"] = round(entry_price * 0.92, 2)
+            entry_info["stop"] = round(entry_price * 0.94, 2)
             entry_info["stop_type"] = "Hard 8% SL"
             entry_info["stop_pct"] = "8.0%"
 
@@ -1726,6 +1726,8 @@ class MomentumBacktester:
                 "mw_weekly_plus_di_vals": mw_weekly_plus_di_vals,
                 "mw_weekly_minus_di_vals": mw_weekly_minus_di_vals,
                 "mw_weekly_upper_keltner": mw_weekly_upper_keltner,
+                "mw_weekly_close": w_closes_k,
+                "mw_weekly_ema20": w_ema20_k,
                 "cci20": cci20_series,
                 "volume": vol_series,
                 "vol_avg20": vol_avg20,
@@ -1854,7 +1856,7 @@ class MomentumBacktester:
 
                     # J exits: support break, +5% partial, chandelier trailing / +10% full
                     t1 = pos["entry_price"] * 1.05
-                    t2 = pos["entry_price"] * 1.10
+                    t2 = pos["entry_price"] * 1.15
                     # Track highest high since entry for Chandelier exit
                     if high > pos.get("j_highest_high", high):
                         pos["j_highest_high"] = high
@@ -1936,7 +1938,7 @@ class MomentumBacktester:
                         exited = True
 
                 elif pos["strategy"] == "R":
-                    # R exits: structural SL → 2-stage partials → tight SL → Keltner upper
+                    # R exits: structural SL → 3% after P1 → partials → Keltner upper
                     ema20_val = float(ind["ema20"].iloc[i])
                     atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
                     upper_keltner = ema20_val + 2 * atr14_val
@@ -1956,15 +1958,15 @@ class MomentumBacktester:
                             pos, pos["remaining_shares"], day, price, "HARD_SL_3PCT"))
                         exited = True
 
-                    # 2-stage partial exits (+6% sell 1/3, Keltner sells rest)
+                    # 2-stage partial exits (+6% sell 1/3, +10% sell 1/3)
                     if not exited:
                         third = pos["shares"] // 3
-                        if stage == 0 and price >= pos["entry_price"] * 1.06 and third > 0:
+                        if stage == 0 and price >= pos["entry_price"] * 1.08 and third > 0:
                             trades.append(self._make_portfolio_trade(
                                 pos, third, day, price, "PARTIAL_6PCT_1of3"))
                             pos["remaining_shares"] = pos["shares"] - third
                             pos["partial_stage"] = 1
-                        elif stage == 1 and price >= pos["entry_price"] * 1.10 and third > 0:
+                        elif stage == 1 and price >= pos["entry_price"] * 1.15 and third > 0:
                             trades.append(self._make_portfolio_trade(
                                 pos, third, day, price, "PARTIAL_10PCT_2of3"))
                             pos["remaining_shares"] = pos["shares"] - 2 * third
@@ -1999,12 +2001,12 @@ class MomentumBacktester:
 
                     if not exited:
                         third = pos["shares"] // 3
-                        if stage == 0 and price >= pos["entry_price"] * 1.06 and third > 0:
+                        if stage == 0 and price >= pos["entry_price"] * 1.08 and third > 0:
                             trades.append(self._make_portfolio_trade(
                                 pos, third, day, price, "PARTIAL_6PCT_1of3"))
                             pos["remaining_shares"] = pos["shares"] - third
                             pos["partial_stage"] = 1
-                        elif stage == 1 and price >= pos["entry_price"] * 1.10 and third > 0:
+                        elif stage == 1 and price >= pos["entry_price"] * 1.15 and third > 0:
                             trades.append(self._make_portfolio_trade(
                                 pos, third, day, price, "PARTIAL_10PCT_2of3"))
                             pos["remaining_shares"] = pos["shares"] - 2 * third
@@ -2040,8 +2042,8 @@ class MomentumBacktester:
                         mw_sl_price = pos["entry_price"] * 0.97
                         sl_label = "HARD_SL_3PCT"
                     else:
-                        mw_sl_price = pos["entry_price"] * 0.92
-                        sl_label = "HARD_SL_8PCT"
+                        mw_sl_price = pos["entry_price"] * 0.94
+                        sl_label = "HARD_SL_6PCT"
                     if price <= mw_sl_price:
                         sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
                         trades.append(self._make_portfolio_trade(
@@ -2051,12 +2053,12 @@ class MomentumBacktester:
                     # 2-stage partial exits (+6% sell 1/3, +10% sell 1/3)
                     if not exited:
                         third = pos["shares"] // 3
-                        if stage == 0 and price >= pos["entry_price"] * 1.06 and third > 0:
+                        if stage == 0 and price >= pos["entry_price"] * 1.08 and third > 0:
                             trades.append(self._make_portfolio_trade(
                                 pos, third, day, price, "PARTIAL_6PCT_1of3"))
                             pos["remaining_shares"] = pos["shares"] - third
                             pos["partial_stage"] = 1
-                        elif stage == 1 and price >= pos["entry_price"] * 1.10 and third > 0:
+                        elif stage == 1 and price >= pos["entry_price"] * 1.15 and third > 0:
                             trades.append(self._make_portfolio_trade(
                                 pos, third, day, price, "PARTIAL_10PCT_2of3"))
                             pos["remaining_shares"] = pos["shares"] - 2 * third
@@ -2297,9 +2299,9 @@ class MomentumBacktester:
             if signals and max_today > 0:
                 if rank_by_risk:
                     rng = random.Random(seed)
-                    strat_priority = {"R": 0, "MW": 1, "T": 2, "J": 3, "RW": 4}
+                    strat_priority = {"R": 0, "MW": 0, "T": 0, "J": 0, "RW": 0}
                     if rank_by_sector_momentum:
-                        # Priority strategy first, then sector momentum (descending), then lowest ATR
+                        # Sector momentum (descending), then lowest ATR — equal strategy priority
                         day_sec_mom = sector_momentum_by_date.get(day, {})
                         from sector_mapping import STOCK_SECTOR_MAP as _SM
                         def _sec_mom_key(s):
@@ -2308,7 +2310,7 @@ class MomentumBacktester:
                             return (strat_priority.get(s.get("strategy"), 9), -mom, s.get("atr_norm", 99.0), rng.random())
                         signals.sort(key=_sec_mom_key)
                     else:
-                        # Priority strategy first (R), then lowest ATR
+                        # Lowest ATR first — no strategy priority
                         signals.sort(key=lambda s: (strat_priority.get(s.get("strategy"), 9), s.get("atr_norm", 99.0), rng.random()))
                 else:
                     random.Random(seed).shuffle(signals)
