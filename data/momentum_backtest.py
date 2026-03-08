@@ -1856,7 +1856,7 @@ class MomentumBacktester:
 
                     # J exits: support break, +5% partial, chandelier trailing / +10% full
                     t1 = pos["entry_price"] * 1.05
-                    t2 = pos["entry_price"] * 1.15
+                    t2 = pos["entry_price"] * 1.10
                     # Track highest high since entry for Chandelier exit
                     if high > pos.get("j_highest_high", high):
                         pos["j_highest_high"] = high
