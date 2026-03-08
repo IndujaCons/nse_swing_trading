@@ -156,7 +156,7 @@ class MomentumBacktester:
         minus_di = 100 * smooth_minus_dm / atr
 
         dx = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di)
-        adx = dx.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+        adx = dx.rolling(window=period, min_periods=period).mean()
 
         return adx, plus_di, minus_di
 

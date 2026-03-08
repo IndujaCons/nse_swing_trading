@@ -2268,14 +2268,17 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-rw-panel', 'ls-picks-panel'].forEach(id => {
-                document.getElementById(id).innerHTML = `
-                    <div class="loading-container">
-                        <div class="loader"></div>
-                        <span>Scanning...</span>
-                        <span class="progress-text"></span>
-                    </div>
-                `;
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-picks-panel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = `
+                        <div class="loading-container">
+                            <div class="loader"></div>
+                            <span>Scanning...</span>
+                            <span class="progress-text"></span>
+                        </div>
+                    `;
+                }
             });
 
             const progressInterval = setInterval(async () => {
@@ -2298,10 +2301,15 @@
                 clearInterval(progressInterval);
 
                 if (data.success) {
-                    renderEntrySignals(data.data);
-                    updateLastUpdated(data.data.last_updated, 0);
-                    liveSignalsDataLoaded = true;
-                    showToast('Live signals refreshed!', 'success');
+                    try {
+                        renderEntrySignals(data.data);
+                        updateLastUpdated(data.data.last_updated, 0);
+                        liveSignalsDataLoaded = true;
+                        showToast('Live signals refreshed!', 'success');
+                    } catch (renderErr) {
+                        console.error('Render error:', renderErr);
+                        showToast('Scan OK but render failed: ' + renderErr.message, 'error');
+                    }
                     // Also refresh positions (LTP/P&L) and exits
                     loadLivePositions();
                     loadExitSignals();
@@ -2311,7 +2319,8 @@
                 }
             } catch (e) {
                 clearInterval(progressInterval);
-                showToast('Refresh failed', 'error');
+                console.error('Live signals refresh error:', e);
+                showToast('Refresh failed: ' + e.message, 'error');
                 loadLiveSignalsData();
             } finally {
                 btn.classList.remove('loading');
@@ -2345,14 +2354,17 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-rw-panel', 'ls-picks-panel'].forEach(id => {
-                document.getElementById(id).innerHTML = `
-                    <div class="loading-container">
-                        <div class="loader"></div>
-                        <span>Scanning ${dateStr}...</span>
-                        <span class="progress-text"></span>
-                    </div>
-                `;
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-picks-panel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = `
+                        <div class="loading-container">
+                            <div class="loader"></div>
+                            <span>Scanning ${dateStr}...</span>
+                            <span class="progress-text"></span>
+                        </div>
+                    `;
+                }
             });
 
             const progressInterval = setInterval(async () => {
@@ -2600,7 +2612,9 @@
                         ? `Supp ${s.support.toLocaleString()} | IBS ${s.ibs.toFixed(2)}`
                         : s.strategy === 'R'
                         ? `RSI14 ${(s.rsi14||0).toFixed(1)} (${(s.rsi_at_low||0).toFixed(1)}) | SwLow ${(s.swing_low||0).toLocaleString()}${rDivLabel}`
-                        : `EMA20 ${s.ema20.toLocaleString()}`;
+                        : s.strategy === 'MW'
+                        ? `ADX ${(s.adx||0).toFixed(1)} | +DI ${(s.plus_di||0).toFixed(1)} | -DI ${(s.minus_di||0).toFixed(1)}`
+                        : `EMA20 ${(s.ema20||0).toLocaleString()}`;
                     const stopVal = s.strategy === 'J' ? s.stop : s.strategy === 'R' ? s.stop : Math.round(s.price * 0.95);
                     const ibsVal = s.strategy === 'J' ? s.ibs : 0;
                     const atrColor = s.atr_pct < 2 ? 'var(--green)' : s.atr_pct < 3.5 ? 'var(--text-muted)' : 'var(--red)';
@@ -3002,10 +3016,13 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-rw-panel', 'ls-picks-panel'].forEach(id => {
-                document.getElementById(id).innerHTML = `
-                    <div class="empty-state" style="color: var(--text-muted);">${message}</div>
-                `;
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-picks-panel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = `
+                        <div class="empty-state" style="color: var(--text-muted);">${message}</div>
+                    `;
+                }
             });
         }
 
