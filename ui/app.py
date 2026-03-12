@@ -815,6 +815,20 @@ def run_portfolio_backtest():
 
     try:
         backtester = MomentumBacktester()
+        # Frozen IBD RS params when RS strategy is selected
+        rs_kwargs = {}
+        if "RS" in strategies:
+            rs_kwargs = {
+                "rs_entry_filters": ["dist_high"],
+                "rs_regime_mode": "simple",
+                "rs_hard_sl": 0.92,
+                "rs_uw_days": 0,
+                "rs_entry_mode": "rs_rating",
+                "rs_ibd_filters": ["regime"],
+                "rs_sl_cooldown": 40,
+                "rs_ibd_skip_top": 2,
+                "rs_ibd_consec_days": 5,
+            }
         result = backtester.run_portfolio_backtest(
             period_days,
             universe=universe,
@@ -829,7 +843,8 @@ def run_portfolio_backtest():
             rank_by_risk=True,
             underwater_exit_days=10,
             t_tight_sl=0.03,
-            rank_by_sector_momentum=True
+            rank_by_sector_momentum=True,
+            **rs_kwargs
         )
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]})

@@ -403,6 +403,8 @@ class LiveSignalsEngine:
         rw_signals = []
         mw_signals = []
         rs_signals = []
+        rs_ibd_candidates = []  # collect IBD weighted scores for ranking
+        rs_ibd_history = {}  # ticker -> list of weighted scores for last 5 days
         actual_date = None  # Track actual last trading date from data
 
         for idx, ticker in enumerate(tickers):
@@ -445,44 +447,60 @@ class LiveSignalsEngine:
                 if open_price < prev_close:
                     no_gap_down = False
 
-            # Strategy RS: Relative Strength Rotation watchlist (scans ALL stocks, even gap-down)
+            # Strategy RS (IBD): Collect weighted 12-month return for ranking
+            # Also collect last 5 days of weighted scores for consecutive-day filter
             try:
-                if is_green and no_gap_down and ibs > 0.5 and nifty_regime_on and i >= 160:
+                if i >= 252:
+                    # Compute weighted scores for last 5 trading days (for consecutive filter)
+                    day_scores = []
+                    for d_offset in range(4, -1, -1):  # days i-4 through i
+                        di = i - d_offset
+                        if di >= 252:
+                            dq4 = (float(closes.iloc[di]) / float(closes.iloc[di - 63]) - 1) * 100
+                            dq3 = (float(closes.iloc[di - 63]) / float(closes.iloc[di - 126]) - 1) * 100
+                            dq2 = (float(closes.iloc[di - 126]) / float(closes.iloc[di - 189]) - 1) * 100
+                            dq1 = (float(closes.iloc[di - 189]) / float(closes.iloc[di - 252]) - 1) * 100
+                            day_scores.append(0.4 * dq4 + 0.2 * dq3 + 0.2 * dq2 + 0.2 * dq1)
+                    rs_ibd_history[ticker] = day_scores
+
+                    weighted = day_scores[-1] if day_scores else 0
+
+                    # Also compute RS-123d for display
                     stock_ret123 = (price / float(closes.iloc[i - 123]) - 1) * 100
                     rs_val = stock_ret123 - bench_ret123_val
-                    if rs_val > 5.0:
-                        # RS rising: compare vs 28 trading days ago
-                        stock_ret123_28ago = (float(closes.iloc[i - 28]) / float(closes.iloc[i - 28 - 123]) - 1) * 100
-                        rs_28ago = stock_ret123_28ago - bench_ret123_28ago
-                        if rs_val > rs_28ago:
-                            # Price > 30-week EMA
-                            weekly_rs = daily.resample("W-FRI").agg({"Close": "last"}).dropna()
-                            if len(weekly_rs) >= 30:
-                                ema30w = weekly_rs["Close"].ewm(span=30, adjust=False).mean()
-                                ema30w_daily = ema30w.reindex(daily.index, method="ffill")
-                                ema30w_val = float(ema30w_daily.iloc[i])
-                                if not pd.isna(ema30w_val) and price > ema30w_val:
-                                    # dist_high filter: price >= 3% below 20d high
-                                    skip_rs = False
-                                    high_20d = float(highs.iloc[max(0, i - 20):i].max()) if i >= 20 else price
-                                    dist_high_pct = round((high_20d - price) / high_20d * 100, 1) if high_20d > 0 else 0.0
-                                    if i >= 20 and high_20d > 0 and (high_20d - price) / high_20d < 0.03:
-                                        skip_rs = True
-                                    if not skip_rs:
-                                        # ATR% for display
-                                        prev_cl_rs = closes.shift(1)
-                                        tr_rs = pd.concat([highs - lows, (highs - prev_cl_rs).abs(), (lows - prev_cl_rs).abs()], axis=1).max(axis=1)
-                                        atr14_rs = float(tr_rs.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
-                                        atr_pct_rs = round(atr14_rs / price * 100, 2) if price > 0 else 99.0
-                                        rs_signals.append({
-                                            "ticker": ticker,
-                                            "price": round(price, 2),
-                                            "rs_pct": round(rs_val, 1),
-                                            "dist_high_pct": dist_high_pct,
-                                            "atr_pct": atr_pct_rs,
-                                            "stop_pct": 8.0,
-                                            "sector": STOCK_SECTOR_MAP.get(ticker, "OTHER"),
-                                        })
+
+                    # Price > 30-week EMA check
+                    weekly_rs = daily.resample("W-FRI").agg({"Close": "last"}).dropna()
+                    ema30w_val = None
+                    if len(weekly_rs) >= 30:
+                        ema30w = weekly_rs["Close"].ewm(span=30, adjust=False).mean()
+                        ema30w_daily = ema30w.reindex(daily.index, method="ffill")
+                        ema30w_val = float(ema30w_daily.iloc[i])
+
+                    # dist_high: price >= 3% below 20d high
+                    high_20d = float(highs.iloc[max(0, i - 20):i].max()) if i >= 20 else price
+                    dist_high_pct = round((high_20d - price) / high_20d * 100, 1) if high_20d > 0 else 0.0
+
+                    # ATR%
+                    prev_cl_rs = closes.shift(1)
+                    tr_rs = pd.concat([highs - lows, (highs - prev_cl_rs).abs(), (lows - prev_cl_rs).abs()], axis=1).max(axis=1)
+                    atr14_rs = float(tr_rs.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
+                    atr_pct_rs = round(atr14_rs / price * 100, 2) if price > 0 else 99.0
+
+                    rs_ibd_candidates.append({
+                        "ticker": ticker,
+                        "price": round(price, 2),
+                        "weighted": weighted,
+                        "rs_pct": round(rs_val, 1),
+                        "dist_high_pct": dist_high_pct,
+                        "atr_pct": atr_pct_rs,
+                        "stop_pct": 8.0,
+                        "ema30w_val": ema30w_val,
+                        "above_ema": ema30w_val is not None and not pd.isna(ema30w_val) and price > ema30w_val,
+                        "dist_high_ok": not (i >= 20 and high_20d > 0 and (high_20d - price) / high_20d < 0.03),
+                        "sector": STOCK_SECTOR_MAP.get(ticker, "OTHER"),
+                        "regime_off": not nifty_regime_on,
+                    })
             except Exception:
                 pass
 
@@ -796,6 +814,59 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
+        # IBD RS Rating: rank all candidates by weighted score → percentile
+        # Apply 5-day consecutive filter, skip top 2, filter >= 80
+        if rs_ibd_candidates:
+            # Rank today's candidates
+            rs_ibd_candidates.sort(key=lambda c: c["weighted"])
+            n = len(rs_ibd_candidates)
+            for rank_i, c in enumerate(rs_ibd_candidates):
+                c["ibd_rating"] = max(1, min(99, int(round((rank_i + 1) / n * 99))))
+
+            # Compute ratings for past 4 days (for 5-day consecutive check)
+            # Build historical rankings: for each of last 4 days, rank by that day's score
+            past_ratings = {}  # ticker -> list of ratings for days -4 to -1
+            for day_offset in range(4):  # 0=4 days ago, 3=1 day ago
+                day_scores = {}
+                for c in rs_ibd_candidates:
+                    hist = rs_ibd_history.get(c["ticker"], [])
+                    if len(hist) >= 5 and day_offset < len(hist) - 1:
+                        day_scores[c["ticker"]] = hist[day_offset]
+                if len(day_scores) >= 10:
+                    sorted_t = sorted(day_scores.keys(), key=lambda t: day_scores[t])
+                    dn = len(sorted_t)
+                    for ri, t in enumerate(sorted_t):
+                        if t not in past_ratings:
+                            past_ratings[t] = []
+                        past_ratings[t].append(max(1, min(99, int(round((ri + 1) / dn * 99)))))
+
+            # Filter: today >= 80 + above EMA + dist_high + 5-day consecutive >= 80
+            qualified = []
+            for c in rs_ibd_candidates:
+                if c["ibd_rating"] < 80 or not c["above_ema"] or not c["dist_high_ok"]:
+                    continue
+                # 5-day consecutive: check past 4 days all >= 80
+                hist_ratings = past_ratings.get(c["ticker"], [])
+                if len(hist_ratings) >= 4 and all(r >= 80 for r in hist_ratings):
+                    qualified.append(c)
+
+            # Sort by rating descending, skip top 2, take rest
+            qualified.sort(key=lambda c: -c["ibd_rating"])
+            qualified = qualified[2:]  # skip top 2
+
+            for c in qualified:
+                rs_signals.append({
+                    "ticker": c["ticker"],
+                    "price": c["price"],
+                    "rs_pct": c["rs_pct"],
+                    "ibd_rating": c["ibd_rating"],
+                    "dist_high_pct": c["dist_high_pct"],
+                    "atr_pct": c["atr_pct"],
+                    "stop_pct": c["stop_pct"],
+                    "sector": c["sector"],
+                    "regime_off": c["regime_off"],
+                })
+
         # Compute sector momentum
         sector_momentum = self._compute_sector_momentum(end_date)
 
@@ -816,7 +887,7 @@ class LiveSignalsEngine:
         r_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         mw_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
         wt_signals.sort(key=lambda s: s.get("atr_pct", 99.0))
-        rs_signals.sort(key=lambda s: -s.get("rs_pct", 0))
+        rs_signals.sort(key=lambda s: -s.get("ibd_rating", 0))
         result = {
             "j_signals": j_signals,
             "t_signals": t_signals,

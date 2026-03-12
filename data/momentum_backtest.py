@@ -1667,7 +1667,15 @@ class MomentumBacktester:
                               rs_regime_mode="asymmetric",
                               rs_hard_sl=0.90,
                               rs_uw_days=0,
-                              rs_dist_high_pct=0.03):
+                              rs_dist_high_pct=0.03,
+                              rs_entry_mode="default",
+                              rs_ibd_lookback=12,
+                              rs_ibd_filters=None,
+                              rs_sl_cooldown=20,
+                              rs_ibd_min_rating=80,
+                              rs_ibd_max_rating=99,
+                              rs_ibd_skip_top=0,
+                              rs_ibd_consec_days=0):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -1916,6 +1924,19 @@ class MomentumBacktester:
                 # RS Rotation strategy indicators
                 "rs_21d": (closes / closes.shift(21) - 1) * 100 - (bench_ret21.reindex(daily.index, method="ffill") if not bench_ret21.empty else pd.Series(0.0, index=daily.index)),
                 "rs_123d": (closes / closes.shift(123) - 1) * 100 - (bench_ret123.reindex(daily.index, method="ffill") if not bench_ret123.empty else pd.Series(0.0, index=daily.index)),
+                # IBD-style weighted RS: 40% Q4 (0-63d) + 20% Q3 (63-126d) + 20% Q2 (126-189d) + 20% Q1 (189-252d)
+                "rs_weighted": (
+                    0.4 * (closes / closes.shift(63) - 1) * 100 +
+                    0.2 * (closes.shift(63) / closes.shift(126) - 1) * 100 +
+                    0.2 * (closes.shift(126) / closes.shift(189) - 1) * 100 +
+                    0.2 * (closes.shift(189) / closes.shift(252) - 1) * 100
+                ),
+                # IBD 6-month weighted RS: 50% latest quarter + 30% prior quarter + 20% quarter before
+                "rs_weighted_6m": (
+                    0.5 * (closes / closes.shift(63) - 1) * 100 +
+                    0.3 * (closes.shift(63) / closes.shift(126) - 1) * 100 +
+                    0.2 * (closes.shift(126) / closes.shift(189) - 1) * 100
+                ),
                 # 20-week EMA reindexed to daily for RS exit
                 "rs_ema20w_daily": weekly["Close"].ewm(span=20, adjust=False).mean().reindex(daily.index, method="ffill"),
                 # 30-week EMA reindexed to daily for RS entry/exit
@@ -2002,6 +2023,27 @@ class MomentumBacktester:
                 d = ind["daily"].index[i].date()
                 mapping[d] = i
             date_to_idx[ticker] = mapping
+
+        # Pre-compute IBD-style RS Rating percentile (1-99) for each stock on each date
+        rs_rating_by_date = {}  # date -> {ticker: percentile_1_99}
+        if "RS" in strategies:
+            for day in all_dates:
+                day_scores = {}
+                for ticker, ind in indicators.items():
+                    if day not in date_to_idx.get(ticker, {}):
+                        continue
+                    ci = date_to_idx[ticker][day]
+                    rs_w_key = "rs_weighted_6m" if rs_ibd_lookback == 6 else "rs_weighted"
+                    rs_w = ind.get(rs_w_key)
+                    if rs_w is not None and ci < len(rs_w) and not pd.isna(rs_w.iloc[ci]):
+                        day_scores[ticker] = float(rs_w.iloc[ci])
+                if len(day_scores) >= 10:
+                    sorted_tickers = sorted(day_scores.keys(), key=lambda t: day_scores[t])
+                    n = len(sorted_tickers)
+                    ratings = {}
+                    for rank_i, t in enumerate(sorted_tickers):
+                        ratings[t] = max(1, min(99, int(round((rank_i + 1) / n * 99))))
+                    rs_rating_by_date[day] = ratings
 
         # --- Phase 4: Day-by-day simulation ---
         positions: List[Dict] = []  # open positions
@@ -2359,12 +2401,21 @@ class MomentumBacktester:
                     # RS Rotation exits — no partials, full position out
                     rs_shares = pos["shares"]
 
-                    # 1. Hard SL from entry (default 10%, configurable)
-                    if not exited and price <= pos["entry_price"] * rs_hard_sl:
+                    # Nifty crash shield: skip SL if Nifty fell same or more since entry
+                    rs_nifty_shields = False
+                    rs_nifty_entry = pos.get("nifty_at_entry", 0.0)
+                    if rs_nifty_entry > 0 and nifty_today_close > 0:
+                        nifty_pct = (nifty_today_close - rs_nifty_entry) / rs_nifty_entry
+                        stock_pct = (price - pos["entry_price"]) / pos["entry_price"]
+                        if nifty_pct <= stock_pct and nifty_pct < 0:
+                            rs_nifty_shields = True
+
+                    # 1. Hard SL from entry (default 10%, configurable) — with Nifty shield
+                    if not exited and not rs_nifty_shields and price <= pos["entry_price"] * rs_hard_sl:
                         sl_pct = int(round((1 - rs_hard_sl) * 100))
                         trades.append(self._make_portfolio_trade(
                             pos, rs_shares, day, price, f"RS_HARD_SL_{sl_pct}PCT"))
-                        rs_cooldown[pos["symbol"]] = day_idx + 20
+                        rs_cooldown[pos["symbol"]] = day_idx + rs_sl_cooldown
                         exited = True
 
                     # 2. Price < 30-week EMA (trend break)
@@ -2391,6 +2442,7 @@ class MomentumBacktester:
                                     pos, rs_shares, day, price, "RS_UNDERPERFORM"))
                                 rs_cooldown[pos["symbol"]] = day_idx + 20
                                 exited = True
+
 
                 # Underwater exit — if held >= N trading days and still underwater, cut it
                 # Strategy-dependent: MW 25d, RW 50d, WT 30d, others use configured value (default 10d)
@@ -2649,7 +2701,10 @@ class MomentumBacktester:
                 nifty_regime_ok = nifty_rs_regime_ok.get(day, True)
                 rs_open = sum(1 for p in positions if p["strategy"] == "RS")
                 rs_slots = MAX_POSITIONS - rs_open - sum(1 for s in signals if s["strategy"] != "RS")
-                if rs_slots > 0 and nifty_regime_ok:
+                # For IBD mode, regime is optional (controlled by rs_ibd_filters)
+                ibd_filters = rs_ibd_filters if rs_ibd_filters is not None else ["regime"]
+                regime_gate = nifty_regime_ok if (rs_entry_mode != "rs_rating" or "regime" in ibd_filters) else True
+                if rs_slots > 0 and regime_gate:
                     rs_candidates = []
                     for ticker, ind in indicators.items():
                         if ticker in held_symbols:
@@ -2664,35 +2719,75 @@ class MomentumBacktester:
                         if rs_123d_s is None or ci >= len(rs_123d_s) or pd.isna(rs_123d_s.iloc[ci]):
                             continue
                         rs_val = float(rs_123d_s.iloc[ci])
-                        if rs_val <= 5.0:
-                            continue
-                        # RS must be rising vs 28 trading days ago
-                        if ci >= 28 and not pd.isna(rs_123d_s.iloc[ci - 28]):
-                            rs_28ago = float(rs_123d_s.iloc[ci - 28])
-                            if rs_val <= rs_28ago:
-                                continue
-                        else:
-                            continue
-                        # Price > 30-week EMA
-                        if rs_ema30w is None or ci >= len(rs_ema30w) or pd.isna(rs_ema30w.iloc[ci]):
-                            continue
                         cp = float(ind["closes"].iloc[ci])
                         co = float(ind["opens"].iloc[ci])
-                        if cp <= float(rs_ema30w.iloc[ci]):
-                            continue
-                        # Green candle + no gap-down + IBS > 0.5
-                        if cp <= co:
-                            continue
-                        rs_high = float(ind["highs"].iloc[ci])
-                        rs_low = float(ind["lows"].iloc[ci])
-                        rs_hl = rs_high - rs_low
-                        rs_ibs = (cp - rs_low) / rs_hl if rs_hl > 0 else 0.5
-                        if rs_ibs <= 0.5:
-                            continue
-                        if ci > 0:
-                            prev_cl = float(ind["closes"].iloc[ci - 1])
-                            if co < prev_cl:
+
+                        if rs_entry_mode == "rs_rating":
+                            # IBD-style: RS Rating >= 80 (top 20%), use weighted percentile
+                            day_ratings = rs_rating_by_date.get(day, {})
+                            rating = day_ratings.get(ticker, 0)
+                            if rating < rs_ibd_min_rating or rating > rs_ibd_max_rating:
                                 continue
+                            # Consecutive days filter: rating must be >= min for N consecutive days
+                            if rs_ibd_consec_days > 0 and day_idx >= rs_ibd_consec_days:
+                                consec_ok = True
+                                for lookback_d in range(1, rs_ibd_consec_days):
+                                    prev_day = all_dates[day_idx - lookback_d]
+                                    prev_rating = rs_rating_by_date.get(prev_day, {}).get(ticker, 0)
+                                    if prev_rating < rs_ibd_min_rating:
+                                        consec_ok = False
+                                        break
+                                if not consec_ok:
+                                    continue
+                            # Price > 30-week EMA (always required)
+                            if rs_ema30w is None or ci >= len(rs_ema30w) or pd.isna(rs_ema30w.iloc[ci]):
+                                continue
+                            if cp <= float(rs_ema30w.iloc[ci]):
+                                continue
+                            # Optional filters controlled by rs_ibd_filters
+                            if "green" in ibd_filters and cp <= co:
+                                continue
+                            if "ibs" in ibd_filters:
+                                rs_high = float(ind["highs"].iloc[ci])
+                                rs_low = float(ind["lows"].iloc[ci])
+                                rs_hl = rs_high - rs_low
+                                rs_ibs = (cp - rs_low) / rs_hl if rs_hl > 0 else 0.5
+                                if rs_ibs <= 0.5:
+                                    continue
+                            if "no_gap_down" in ibd_filters and ci > 0:
+                                prev_cl = float(ind["closes"].iloc[ci - 1])
+                                if co < prev_cl:
+                                    continue
+                            rs_val = rating  # use rating for ranking
+                        else:
+                            # Default frozen: RS > 5% and rising
+                            if rs_val <= 5.0:
+                                continue
+                            # RS must be rising vs 28 trading days ago
+                            if ci >= 28 and not pd.isna(rs_123d_s.iloc[ci - 28]):
+                                rs_28ago = float(rs_123d_s.iloc[ci - 28])
+                                if rs_val <= rs_28ago:
+                                    continue
+                            else:
+                                continue
+                            # Price > 30-week EMA
+                            if rs_ema30w is None or ci >= len(rs_ema30w) or pd.isna(rs_ema30w.iloc[ci]):
+                                continue
+                            if cp <= float(rs_ema30w.iloc[ci]):
+                                continue
+                            # Green candle + no gap-down + IBS > 0.5
+                            if cp <= co:
+                                continue
+                            rs_high = float(ind["highs"].iloc[ci])
+                            rs_low = float(ind["lows"].iloc[ci])
+                            rs_hl = rs_high - rs_low
+                            rs_ibs = (cp - rs_low) / rs_hl if rs_hl > 0 else 0.5
+                            if rs_ibs <= 0.5:
+                                continue
+                            if ci > 0:
+                                prev_cl = float(ind["closes"].iloc[ci - 1])
+                                if co < prev_cl:
+                                    continue
                         sig_atr = float(ind["atr14"].iloc[ci]) if not pd.isna(ind["atr14"].iloc[ci]) else 0.0
                         # --- Optional entry filters (controlled by rs_entry_filters) ---
                         rs_filters = rs_entry_filters or []
@@ -2746,8 +2841,10 @@ class MomentumBacktester:
                         rs_candidates.sort(key=lambda c: (-c["sector_mom"], -c["rs_123d"]))
                     else:
                         rs_candidates.sort(key=lambda c: -c["rs_123d"])
-                    rs_take = min(len(rs_candidates), rs_slots)
-                    signals.extend(rs_candidates[:rs_take])
+                    # Skip top N candidates if rs_ibd_skip_top > 0
+                    rs_pool = rs_candidates[rs_ibd_skip_top:] if rs_ibd_skip_top > 0 else rs_candidates
+                    rs_take = min(len(rs_pool), rs_slots)
+                    signals.extend(rs_pool[:rs_take])
 
             total_signals += len(signals)
 
