@@ -439,8 +439,8 @@ def buy_live_signal():
     if not ticker or not strategy or not price:
         return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
 
-    if strategy not in ("J", "T", "R", "MW"):
-        return jsonify({"success": False, "error": "strategy must be J, T, or R"}), 400
+    if strategy not in ("J", "T", "R", "MW", "WT"):
+        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, or WT"}), 400
 
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Valid user_id required"}), 400
@@ -468,7 +468,7 @@ def buy_live_signal():
 
     # Order placed — now record locally
     metadata["order_id"] = order_result.get("order_id")
-    # Store Nifty close at entry for drop shield (J)
+    # Store Nifty close at entry for crash shield (J, R, MW)
     try:
         import yfinance as yf
         nifty = yf.Ticker("^NSEI").history(period="5d")
@@ -708,8 +708,8 @@ def explain_trade():
     if not symbol or not strategy or not entry_date:
         return jsonify({"success": False, "error": "symbol, strategy, entry_date required"}), 400
 
-    if strategy not in ("J", "T", "R", "MW"):
-        return jsonify({"success": False, "error": "strategy must be J, T, or R"}), 400
+    if strategy not in ("J", "T", "R", "MW", "WT"):
+        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, or WT"}), 400
 
     try:
         backtester = MomentumBacktester()
@@ -743,7 +743,7 @@ def run_batch_backtest():
     data = request.get_json() or {}
     period_days, end_date = _parse_date_range(data)
     universe = int(data.get("universe", 50))
-    if universe not in (50, 100, 200):
+    if universe not in (50, 100, 200, 500):
         universe = 50
 
     try:
@@ -795,7 +795,7 @@ def run_portfolio_backtest():
     data = request.get_json() or {}
     period_days, end_date = _parse_date_range(data)
     universe = int(data.get("universe", 50))
-    if universe not in (50, 100, 200):
+    if universe not in (50, 100, 200, 500):
         universe = 50
     capital_lakhs = int(data.get("capital_lakhs", 10))
     if capital_lakhs not in (10, 20, 50, 80, 100):
@@ -804,7 +804,7 @@ def run_portfolio_backtest():
     if per_stock not in (50000, 100000, 200000, 500000):
         per_stock = 50000
     strategies = data.get("strategies", ["R", "MW"])
-    valid_strats = {"J", "T", "R", "MW"}
+    valid_strats = {"J", "T", "R", "MW", "WT", "RS"}
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
         strategies = ["R", "MW"]

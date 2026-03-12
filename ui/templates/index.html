@@ -862,7 +862,8 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            min-width: 700px;
+            min-width: 0;
+            width: 100%;
         }
 
         .backtest-summary {
@@ -1010,6 +1011,8 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            width: 100%;
+            min-width: 0;
         }
 
         .batch-title {
@@ -1017,6 +1020,9 @@
             font-weight: 600;
             color: var(--text-primary);
             padding: 4px 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .batch-table-container {
@@ -1331,6 +1337,8 @@
                         <option value="T3">T Only (3-Stage)</option>
                         <option value="R3">R Only (3-Stage)</option>
                         <option value="MW3">MW Only (3-Stage)</option>
+                        <option value="WT3">WT Only (3-Stage)</option>
+                        <option value="RS3">RS Rotation</option>
                     </select>
                     <select class="backtest-select" id="portfolio-entries-per-day">
                         <option value="1">1 trade / day</option>
@@ -1340,6 +1348,7 @@
                     <button class="btn btn-backtest" id="run-portfolio50-btn" onclick="runPortfolioBacktest(50)">Backtest (Nifty 50)</button>
                     <button class="btn btn-backtest" id="run-portfolio100-btn" onclick="runPortfolioBacktest(100)">Backtest (Nifty 100)</button>
                     <button class="btn btn-backtest" id="run-portfolio200-btn" onclick="runPortfolioBacktest(200)">Backtest (Nifty 200)</button>
+                    <button class="btn btn-backtest" id="run-portfolio500-btn" onclick="runPortfolioBacktest(500)">Backtest (Nifty 500)</button>
                 </div>
             </div>
 
@@ -1573,6 +1582,27 @@
                         <span class="panel-count" id="ls-mw-count">0</span>
                     </div>
                     <div class="panel-body" id="ls-mw-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel ls-rs-signals" style="grid-column: 1 / -1;">
+                    <div class="panel-header">
+                        <span class="panel-title" style="color:#2196f3;">RS — Relative Strength Watchlist</span>
+                        <span id="ls-rs-regime" style="margin-left:8px;font-size:11px;padding:2px 6px;border-radius:3px;"></span>
+                        <span class="panel-count" id="ls-rs-count">0</span>
+                    </div>
+                    <div class="panel-body" id="ls-rs-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel ls-wt-signals">
+                    <div class="panel-header">
+                        <span class="panel-title" style="color:#00bcd4;">WT — Weekly Trend (Nifty 500)</span>
+                        <span class="panel-count" id="ls-wt-count">0</span>
+                    </div>
+                    <div class="panel-body" id="ls-wt-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
@@ -2268,7 +2298,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -2354,7 +2384,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -2449,6 +2479,8 @@
             window._lsTSignals = data.t_signals || [];
             window._lsRSignals = data.r_signals || [];
             window._lsMWSignals = data.mw_signals || [];
+            window._lsRSSignals = data.rs_signals || [];
+            window._lsWTSignals = data.wt_signals || [];
             document.getElementById('ls-j-count').textContent = jSignals.length;
 
             if (jSignals.length === 0) {
@@ -2553,20 +2585,100 @@
                 `;
             }
 
+            // RS signals panel (watchlist)
+            const rsPanel = document.getElementById('ls-rs-panel');
+            const rsSignals = data.rs_signals || [];
+            document.getElementById('ls-rs-count').textContent = rsSignals.length;
+            const regimeEl = document.getElementById('ls-rs-regime');
+            const regime = data.nifty_regime || 'OFF';
+            regimeEl.textContent = `Regime: ${regime}`;
+            regimeEl.style.background = regime === 'ON' ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)';
+            regimeEl.style.color = regime === 'ON' ? 'var(--green)' : 'var(--red)';
+
+            if (rsSignals.length === 0) {
+                rsPanel.innerHTML = '<div class="empty-state">No RS signals' +
+                    (regime === 'OFF' ? ' (Nifty regime OFF — below 20w EMA)' : '') + '</div>';
+            } else {
+                const rows = rsSignals.map((s, idx) => {
+                    const secShort = (s.sector || 'OTHER').replace('NIFTY ', '');
+                    const secMom = s.sector_momentum || 0;
+                    const secColor = secMom > 1 ? 'var(--green)' : secMom > -1 ? 'var(--text-muted)' : 'var(--red)';
+                    return `
+                    <tr>
+                        <td style="color:var(--text-muted);font-size:10px;">${idx + 1}</td>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td style="color:var(--green);font-weight:600;">${(s.rs_pct||0).toFixed(1)}%</td>
+                        <td>${(s.dist_high_pct||0).toFixed(1)}%</td>
+                        <td style="color:var(--text-muted)">${(s.atr_pct||0).toFixed(1)}%</td>
+                        <td style="font-size:10px;color:${secColor}">${secShort}</td>
+                    </tr>`;
+                }).join('');
+                rsPanel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr>
+                            <th>#</th><th>Stock</th><th>Close</th>
+                            <th>RS%</th><th>Dist High</th><th>ATR%</th><th>Sector</th>
+                        </tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+
+            // WT signals panel
+            const wtPanel = document.getElementById('ls-wt-panel');
+            const wtSignals = data.wt_signals || [];
+            document.getElementById('ls-wt-count').textContent = wtSignals.length;
+
+            if (wtSignals.length === 0) {
+                wtPanel.innerHTML = '<div class="empty-state">No WT signals</div>';
+            } else {
+                const rows = wtSignals.map(s => {
+                    const secShort = (s.sector || 'OTHER').replace('NIFTY ', '');
+                    const secMom = s.sector_momentum || 0;
+                    const secColor = secMom > 1 ? 'var(--green)' : secMom > -1 ? 'var(--text-muted)' : 'var(--red)';
+                    const secArrow = secMom > 1 ? '&#9650;' : secMom > -1 ? '&#9644;' : '&#9660;';
+                    return `
+                    <tr>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td>${(s.slope||0).toFixed(1)}</td>
+                        <td>${(s.gap_pct||0).toFixed(1)}%</td>
+                        <td>${(s.vol_ratio||0).toFixed(1)}x</td>
+                        <td>${(s.week_return||0).toFixed(1)}%</td>
+                        <td style="color:${secColor};font-size:10px;" title="Mom: ${secMom.toFixed(1)}">${secArrow} ${secShort}</td>
+                        <td style="color:var(--text-muted)">${(s.atr_pct||0).toFixed(1)}%</td>
+                    </tr>`;
+                }).join('');
+                wtPanel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr><th>Stock</th><th>Close</th><th>Slope</th><th>Gap%</th><th>Vol</th><th>Wk%</th><th>Sector</th><th>ATR%</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+
             // ===== Top Picks — Ranked by Strategy Priority + Sector Momentum + ATR% =====
             // With sector diversity cap (max 4 per sector including active positions)
             const picksPanel = document.getElementById('ls-picks-panel');
-            const stratPriority = {'R': 0, 'MW': 1, 'T': 2, 'J': 3};
+            const stratPriority = {'R': 0, 'MW': 0, 'RS': 0, 'T': 2, 'J': 3, 'WT': 4};
             const allSignals = [
                 ...jSignals.map(s => ({...s, strategy: 'J', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
                 ...tSignals.map(s => ({...s, strategy: 'T', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
                 ...rSignals.map(s => ({...s, strategy: 'R', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
                 ...mwSignals.map(s => ({...s, strategy: 'MW', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
+                ...rsSignals.map(s => ({...s, strategy: 'RS', stop_pct: s.stop_pct || 8.0, atr_pct: s.atr_pct || 99})),
+                ...wtSignals.map(s => ({...s, strategy: 'WT', stop_pct: s.stop_pct || 12.0, atr_pct: s.atr_pct || 99})),
             ];
 
-            // Sort: strategy priority (R > J > T), then sector momentum (highest first), then ATR%
+            // Sort: both-green first (sector RS > 0 AND sector momentum > 0),
+            // then strategy priority (R=MW > T > J), then sector momentum, then ATR%
             allSignals.sort((a, b) => {
-                // Strategy priority first (R > J > T)
+                // Both-green flag: sector RS positive AND sector momentum positive
+                const aGreen = ((a.sector_rs || 0) > 0 && (a.sector_momentum || 0) > 0) ? 0 : 1;
+                const bGreen = ((b.sector_rs || 0) > 0 && (b.sector_momentum || 0) > 0) ? 0 : 1;
+                if (aGreen !== bGreen) return aGreen - bGreen;
+                // Strategy priority (R=MW > T > J)
                 const sp = (stratPriority[a.strategy] ?? 9) - (stratPriority[b.strategy] ?? 9);
                 if (sp !== 0) return sp;
                 // Then sector momentum descending (rising sectors first)
@@ -2596,7 +2708,8 @@
                 picksPanel.innerHTML = '<div class="empty-state">No signals</div>';
             } else {
                 const rows = allSignals.map((s, idx) => {
-                    const isTop = idx < 3;
+                    const bothGreen = (s.sector_rs || 0) > 0 && (s.sector_momentum || 0) > 0;
+                    const isTop = bothGreen && idx < 3;
                     const rowStyle = isTop ? 'background:rgba(76,175,80,0.12);font-weight:600;' : '';
                     const rank = idx + 1;
                     const badgeMap = {
@@ -2604,6 +2717,7 @@
                         'T': '<span style="color:var(--blue);font-weight:700;">T</span>',
                         'R': '<span style="color:#ab47bc;font-weight:700;">R</span>',
                         'MW': '<span style="color:#e67e22;font-weight:700;">MW</span>',
+                        'WT': '<span style="color:#00bcd4;font-weight:700;">WT</span>',
                     };
                     const badge = badgeMap[s.strategy] || s.strategy;
                     const stopColor = s.stop_pct < 5 ? 'var(--green)' : s.stop_pct === 5 ? 'var(--text-muted)' : 'var(--red)';
@@ -2614,6 +2728,8 @@
                         ? `RSI14 ${(s.rsi14||0).toFixed(1)} (${(s.rsi_at_low||0).toFixed(1)}) | SwLow ${(s.swing_low||0).toLocaleString()}${rDivLabel}`
                         : s.strategy === 'MW'
                         ? `ADX ${(s.adx||0).toFixed(1)} | +DI ${(s.plus_di||0).toFixed(1)} | -DI ${(s.minus_di||0).toFixed(1)}`
+                        : s.strategy === 'WT'
+                        ? `Slope ${(s.slope||0).toFixed(1)} | Gap ${(s.gap_pct||0).toFixed(1)}% | Vol ${(s.vol_ratio||0).toFixed(1)}x`
                         : `EMA20 ${(s.ema20||0).toLocaleString()}`;
                     const stopVal = s.strategy === 'J' ? s.stop : s.strategy === 'R' ? s.stop : Math.round(s.price * 0.95);
                     const ibsVal = s.strategy === 'J' ? s.ibs : 0;
@@ -3016,7 +3132,7 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -3102,26 +3218,53 @@
             const s = data.summary;
             const periodLabel = document.getElementById('backtest-from').value + ' to ' + document.getElementById('backtest-to').value;
             let stratLabel;
-            const stratLabels = {'J': 'Strategy J (weekly support)', 'T': 'Strategy T (Keltner)', 'R': 'Strategy R (RSI divergence)', 'MW': 'Strategy MW (Weekly ADX)'};
+            const stratLabels = {'J': 'Strategy J (weekly support)', 'T': 'Strategy T (Keltner)', 'R': 'Strategy R (RSI divergence)', 'MW': 'Strategy MW (Weekly ADX)', 'RS': 'Strategy RS (Relative Strength)'};
             stratLabel = stratLabels[data.strategy] || data.strategy;
 
             // Title
             document.getElementById('backtest-title').textContent = `${data.symbol} — ${stratLabel} — ${periodLabel} (${data.start_date} to ${data.end_date})`;
             document.getElementById('backtest-trade-count').textContent = `${s.total_trades} trades`;
 
+            // Compute Zerodha charges & STCG tax (single-stock)
+            let ssBuyTO = 0, ssSellTO = 0;
+            (data.trades || []).forEach(t => {
+                ssBuyTO += t.entry_price * t.shares;
+                ssSellTO += t.exit_price * t.shares;
+            });
+            const ssTO = ssBuyTO + ssSellTO;
+            const ssStt = 0.001 * ssTO;
+            const ssExchg = 0.0000307 * ssTO;
+            const ssSebi = 0.000001 * ssTO;
+            const ssStamp = 0.00015 * ssBuyTO;
+            const ssGst = 0.18 * (ssExchg + ssSebi);
+            const ssCharges = ssStt + ssExchg + ssSebi + ssStamp + ssGst;
+            const ssTaxable = s.total_pnl - (ssExchg + ssSebi + ssStamp + ssGst);
+            const ssTax = 0.20 * Math.max(0, ssTaxable);
+            const ssNet = s.total_pnl - ssCharges - ssTax;
+
             // Summary cards
             const pnlClass = s.total_pnl >= 0 ? 'positive' : 'negative';
             const pnlSign = s.total_pnl >= 0 ? '+' : '';
+            const ssNetClass = ssNet >= 0 ? 'positive' : 'negative';
+            const ssNetSign = ssNet >= 0 ? '+' : '';
             const retSign = s.total_return_pct >= 0 ? '+' : '';
 
             document.getElementById('backtest-summary').innerHTML = `
                 <div class="summary-card">
-                    <div class="label">Total P&L</div>
-                    <div class="value ${pnlClass}">${pnlSign}${s.total_pnl.toLocaleString()}</div>
+                    <div class="label">Gross P&L</div>
+                    <div class="value ${pnlClass}">${pnlSign}${Math.round(s.total_pnl).toLocaleString()}</div>
                 </div>
                 <div class="summary-card">
-                    <div class="label">Return</div>
-                    <div class="value ${pnlClass}">${retSign}${s.total_return_pct}%</div>
+                    <div class="label">Charges</div>
+                    <div class="value negative">-${Math.round(ssCharges).toLocaleString()}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">STCG Tax</div>
+                    <div class="value negative">-${Math.round(ssTax).toLocaleString()}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Net P&L</div>
+                    <div class="value ${ssNetClass}">${ssNetSign}${Math.round(ssNet).toLocaleString()}</div>
                 </div>
                 <div class="summary-card">
                     <div class="label">Win Rate</div>
@@ -3490,7 +3633,7 @@
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'RMW3': ['R','MW'], 'TR3': ['T','R'], 'JTR3': ['J','T','R'], 'TRMW3': ['T','R','MW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R'], 'MW3': ['MW']};
+            const stratMap = {'RMW3': ['R','MW'], 'TR3': ['T','R'], 'JTR3': ['J','T','R'], 'TRMW3': ['T','R','MW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R'], 'MW3': ['MW'], 'WT3': ['WT'], 'RS3': ['RS']};
             const strategies = stratMap[stratVal] || [stratVal];
             const threeStageExit = true;
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
@@ -3577,19 +3720,52 @@
                 `Portfolio ${capLabel} — ${stratLabel} — ${universeLabel} — ${periodLabel} (${data.start_date} to ${data.end_date})`;
             document.getElementById('backtest-trade-count').textContent = `${s.total_trades} trades`;
 
+            // Compute Zerodha charges & STCG tax
+            let totalBuyTO = 0, totalSellTO = 0;
+            (data.trades || []).forEach(t => {
+                totalBuyTO += t.entry_price * t.shares;
+                totalSellTO += t.exit_price * t.shares;
+            });
+            const totalTO = totalBuyTO + totalSellTO;
+            const stt = 0.001 * totalTO;
+            const exchgFee = 0.0000307 * totalTO;
+            const sebiFee = 0.000001 * totalTO;
+            const stampDuty = 0.00015 * totalBuyTO;
+            const gst = 0.18 * (exchgFee + sebiFee);
+            const totalCharges = stt + exchgFee + sebiFee + stampDuty + gst;
+            const taxableProfit = s.total_pnl - (exchgFee + sebiFee + stampDuty + gst);
+            const stcgTax = 0.20 * Math.max(0, taxableProfit);
+            const netPnl = s.total_pnl - totalCharges - stcgTax;
+            const effCap = (data.effective_capital_lakhs || data.capital_lakhs) * 100000;
+            const netRetPct = (netPnl / effCap * 100).toFixed(1);
+
             // Summary cards
             const pnlClass = s.total_pnl >= 0 ? 'positive' : 'negative';
             const pnlSign = s.total_pnl >= 0 ? '+' : '';
+            const netClass = netPnl >= 0 ? 'positive' : 'negative';
+            const netSign = netPnl >= 0 ? '+' : '';
             const retSign = s.total_return_pct >= 0 ? '+' : '';
 
             document.getElementById('backtest-summary').innerHTML = `
                 <div class="summary-card">
-                    <div class="label">Total P&L</div>
-                    <div class="value ${pnlClass}">${pnlSign}${s.total_pnl.toLocaleString()}</div>
+                    <div class="label">Gross P&L</div>
+                    <div class="value ${pnlClass}">${pnlSign}${Math.round(s.total_pnl).toLocaleString()}</div>
                 </div>
                 <div class="summary-card">
-                    <div class="label">Return (on ${data.effective_capital_lakhs || data.capital_lakhs}L)</div>
-                    <div class="value ${pnlClass}">${retSign}${s.total_return_pct}%</div>
+                    <div class="label">Charges (STT+Fees)</div>
+                    <div class="value negative">-${Math.round(totalCharges).toLocaleString()}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">STCG Tax (20%)</div>
+                    <div class="value negative">-${Math.round(stcgTax).toLocaleString()}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Net P&L</div>
+                    <div class="value ${netClass}">${netSign}${Math.round(netPnl).toLocaleString()}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Net Return (on ${data.effective_capital_lakhs || data.capital_lakhs}L)</div>
+                    <div class="value ${netClass}">${netSign}${netRetPct}%</div>
                 </div>
                 <div class="summary-card">
                     <div class="label">Win Rate</div>

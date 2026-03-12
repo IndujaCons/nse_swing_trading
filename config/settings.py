@@ -35,9 +35,9 @@ DEFAULTS = {
 }
 
 # Flask settings
-FLASK_HOST = "127.0.0.1"
-FLASK_PORT = 8080
-DEBUG_MODE = True
+FLASK_HOST = os.environ.get("FLASK_HOST", "127.0.0.1")
+FLASK_PORT = int(os.environ.get("FLASK_PORT", "8080"))
+DEBUG_MODE = os.environ.get("DEBUG_MODE", "true").lower() == "true"
 
 # Zerodha Kite settings
 KITE_API_KEY = os.environ.get("KITE_API_KEY", "")

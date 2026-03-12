@@ -1,6 +1,6 @@
-# JTR Swing Trading System — A Complete Guide
+# Swing Trading System — A Complete Guide
 
-A practical guide to understanding swing trading and the JTR strategy system, written for someone with zero trading background.
+A practical guide to understanding swing trading and the R+MW strategy system, written for someone with zero trading background.
 
 ---
 
@@ -23,11 +23,11 @@ Markets move in two modes:
 **Trending Market** — Prices move consistently in one direction. An uptrend makes higher highs and higher lows, like climbing stairs. Stocks in an uptrend are the best candidates for swing trades because momentum is on your side.
 
 ```
-        /\    /\     ← Higher highs
+        /\    /\     <- Higher highs
        /  \  /  \
-      /    \/    \   ← Higher lows
+      /    \/    \   <- Higher lows
      /
-    /                ← Uptrend
+    /                <- Uptrend
 ```
 
 **Rangebound Market** — Prices bounce between a ceiling (resistance) and a floor (support) without making progress in either direction. Trading here is harder — you can still profit from bounces off support, but gains are smaller and less reliable.
@@ -40,7 +40,7 @@ Markets move in two modes:
     --------- Support ----------
 ```
 
-Most of the time, individual stocks are in one mode or the other even if the overall market is mixed. The JTR system has strategies designed for both conditions.
+Most of the time, individual stocks are in one mode or the other even if the overall market is mixed. The system has strategies designed for both conditions.
 
 ---
 
@@ -53,30 +53,30 @@ A trading strategy is a **set of rules** that tell you:
 
 Without a strategy, you're gambling. With a strategy, you're running a business.
 
-### The Two Numbers That Matter
+### The Three Numbers That Matter
 
-If you run a strategy on 100 trades, two statistics determine whether you made money:
+If you run a strategy on 100 trades, three statistics determine whether you made money:
 
 **Win Rate (WR%)** — What percentage of your trades were profitable?
-- 55% win rate means 55 winners out of 100 trades
-- You do NOT need 80-90% win rate. Even 50-55% is excellent if your wins are bigger than your losses.
+- 50% win rate means 50 winners out of 100 trades
+- You do NOT need 80-90% win rate. Even 46-50% is profitable if your wins are bigger than your losses.
 
-**Average Win vs Average Loss** — How much do you make when right vs how much do you lose when wrong?
-- If you make Rs 8,000 on winners and lose Rs 5,000 on losers, your ratio is 1.6x
-- This is called the **reward-to-risk ratio**
+**Payoff Ratio (Avg Win / Avg Loss)** — How much do you make when right vs how much do you lose when wrong?
+- If you make Rs 12,500 on winners and lose Rs 9,500 on losers, your ratio is 1.31x
+- Target: **1.5x or higher**
 
 **Profit Factor (PF)** = (Total profits from winners) / (Total losses from losers)
 - PF > 1.0 means you're profitable
-- PF > 1.5 is good
+- PF > 1.7 is required to survive Indian charges + 20% STCG tax
 - PF > 2.0 is excellent
 
-Here's the key insight: **A 50% win rate with 1.6x reward/risk is very profitable.** You don't need to be right most of the time — you just need your winners to be bigger than your losers.
+Here's the key insight: **A 46% win rate with 1.3x payoff ratio is very profitable.** You don't need to be right most of the time — you just need your winners to be bigger than your losers.
 
 Example with 100 trades at Rs 2,00,000 per trade:
 ```
-55 winners × Rs 8,000 avg profit = Rs 4,40,000 gained
-45 losers  × Rs 5,000 avg loss   = Rs 2,25,000 lost
-                          Net P&L = Rs 2,15,000 profit
+46 winners x Rs 12,500 avg profit = Rs 5,75,000 gained
+54 losers  x Rs  9,500 avg loss   = Rs 5,13,000 lost
+                          Net P&L = Rs   62,000 profit (before charges/tax)
 ```
 
 This is why **cutting losses short** (stop-loss) and **letting winners run** (staged exits) is the foundation of every good strategy.
@@ -88,7 +88,7 @@ This is why **cutting losses short** (stop-loss) and **letting winners run** (st
 ### Entry — Getting In
 
 A good entry is when you buy a stock at a price where the odds of it going up are higher than going down. You look for **confirmation signals**:
-- The stock is near a support level (floor price that has held before)
+- The stock shows a technical pattern (divergence, momentum crossover)
 - The candle is green (close > open, meaning buyers won that day)
 - There's no gap-down (today's open is not below yesterday's close, which would signal panic selling)
 
@@ -121,6 +121,10 @@ Without a stop-loss, a 5% dip can turn into a 20-30% loss, and now you need the 
 
 **Golden rule: Always know your stop-loss BEFORE you enter a trade.**
 
+### Nifty Crash Shield
+
+One exception to the stop-loss rule: if the entire Nifty 50 index has fallen by the same or more percentage as your stock since entry, the SL is suppressed. This means the stock isn't falling due to its own weakness — it's falling because the entire market is crashing. In such cases, holding through the crash often leads to recovery.
+
 ---
 
 ## Part 4: Key Concepts
@@ -140,39 +144,6 @@ Without a stop-loss, a 5% dip can turn into a 20-30% loss, and now you need the 
     Rs 480 --------- Support (buyers here) -----------
 ```
 
-Why does this matter? Buying near support gives you a natural stop-loss (just below support) and a built-in target (up to resistance). Your risk is small and your reward is large.
-
-### Breakout
-
-A breakout happens when price smashes through resistance and keeps going. The old resistance becomes new support. This is a powerful signal — it means demand is so strong that it overwhelmed all the sellers at that level.
-
-```
-                         /
-                        /  ← Breakout!
-    Resistance → ------/----------
-                 /\   /
-                /  \ /
-    Support  → /----\
-              /
-```
-
-### Pullback (to EMA)
-
-After a stock has been trending up strongly, it often pauses and drops back a bit before continuing higher. This temporary drop is called a **pullback**.
-
-A common place for pullbacks to stop is at a **moving average** — specifically the **EMA(20)** (20-day Exponential Moving Average). The EMA is a smoothed average of the last 20 days' closing prices, giving more weight to recent prices.
-
-```
-                    *
-              *    * *     ← Price pulls back
-         *   * *  *   *
-    *   * * *   **     *   ← Touches EMA(20) = buy opportunity
-   * * *                *
-    *     ~~~~~~~~~~~~     ← EMA(20) line (smoothed average)
-```
-
-Buying on a pullback to the EMA in an uptrend is one of the highest-probability entries in swing trading. You're buying the dip in a strong stock.
-
 ### Keltner Channel
 
 The Keltner Channel is a technical indicator that draws an **envelope** around the price. It consists of:
@@ -181,19 +152,19 @@ The Keltner Channel is a technical indicator that draws an **envelope** around t
 - **Upper band**: EMA(20) + 2 x ATR(14) — the "expensive" zone
 - **Lower band**: EMA(20) - 2 x ATR(14) — the "cheap" zone
 
-**ATR(14)** is the Average True Range over 14 days — it measures how much the stock typically moves in a day. A stock that moves Rs 30/day has a higher ATR than one that moves Rs 10/day.
+**ATR(14)** is the Average True Range over 14 days — it measures how much the stock typically moves in a day.
 
 ```
-    ═══════════════════════════════  ← Upper Keltner (expensive)
+    ====================================  <- Upper Keltner (expensive)
          *  *     *
         * ** *   * *    *
-    ~~~*~~~~~~~~~*~~*~~*~*~~~~~~~~~  ← EMA(20) (middle)
+    ~~~*~~~~~~~~~*~~*~~*~*~~~~~~~~~  <- EMA(20) (middle)
        *        *    **
       *        *
-    ═══════════════════════════════  ← Lower Keltner (cheap)
+    ====================================  <- Lower Keltner (cheap)
 ```
 
-When price is at the upper Keltner band, the stock is stretched and may pull back. When it pulls back to the EMA(20) middle line, that's a buying opportunity (Strategy T uses exactly this).
+When price reaches the upper Keltner band, the stock is stretched and may pull back — this is where we take profits.
 
 ### RSI (Relative Strength Index)
 
@@ -202,8 +173,6 @@ RSI measures how "overbought" or "oversold" a stock is on a scale of 0-100:
 - **RSI < 30**: Oversold (may bounce)
 - **RSI 30-70**: Neutral zone
 
-RSI is calculated from the ratio of average gains to average losses over a period (typically 14 days).
-
 ### RSI Divergence
 
 This is a powerful reversal signal. It occurs when price and RSI disagree:
@@ -211,29 +180,27 @@ This is a powerful reversal signal. It occurs when price and RSI disagree:
 **Bullish RSI Divergence** — Price makes a **lower low** (new bottom) but RSI makes a **higher low** (less oversold). This means selling pressure is weakening even though price is still falling. A reversal upward is likely.
 
 ```
-    Price:  100 ──→ 90 ──→ 85     (lower lows — looks weak)
-    RSI:     25 ──→ 22 ──→ 28     (higher lows — actually strengthening!)
-                              ↑
+    Price:  100 --> 90 --> 85     (lower lows -- looks weak)
+    RSI:     25 --> 22 --> 28     (higher lows -- actually strengthening!)
+                              ^
                     Divergence = buying opportunity
 ```
 
 The market is telling you: "Yes the price dropped, but the momentum behind the drop is fading." Smart money is quietly accumulating.
 
-### IBS (Internal Bar Strength)
+### ADX (Average Directional Index)
 
-IBS measures where the close falls within the day's range:
+ADX measures the **strength** of a trend on a scale of 0-100, regardless of direction:
+- **ADX < 20**: Weak/no trend
+- **ADX 20-25**: Trend emerging
+- **ADX >= 25**: Strong trend confirmed
+- **ADX > 40**: Very strong trend
 
-```
-IBS = (Close - Low) / (High - Low)
-```
+ADX is used alongside **DI+ and DI-** (Directional Indicators):
+- **DI+ > DI-**: Uptrend (buyers dominating)
+- **DI- > DI+**: Downtrend (sellers dominating)
 
-- IBS close to 1.0 = closed near the day's high (bullish, buyers dominated)
-- IBS close to 0.0 = closed near the day's low (bearish, sellers dominated)
-- IBS > 0.5 = a bounce sign, used as a confirmation filter
-
-### CCI (Commodity Channel Index)
-
-CCI measures how far the price is from its average. In the JTR system, CCI(20) > -100 is used as a filter — it confirms the stock is not in deep freefall. A CCI below -100 indicates extreme weakness, and buying there is risky.
+Strategy MW uses weekly ADX crossing above 25 with DI+ > DI- as its entry signal — it catches the moment a trend shifts from "maybe" to "confirmed."
 
 ---
 
@@ -245,339 +212,260 @@ Most beginners either:
 
 The solution is **multi-stage exits** — selling in portions at different levels.
 
-### Example: 2-Stage Exit
+### Example: R Strategy 2-Stage Exit
 
 You buy 90 shares at Rs 1,000. Instead of selling all 90 at one target:
 
 ```
-Stage 1: Price hits +6% (Rs 1,060)
-         → Sell 30 shares (1/3), lock in Rs 1,800 profit
-         → SL shifts up from 5% to 3% below entry (Rs 950 → Rs 970)
+Stage 1: Price hits +8% (Rs 1,080)
+         -> Sell 30 shares (1/3), lock in Rs 2,400 profit
+         -> SL shifts up to 3% below entry (Rs 970)
 
-Stage 2: Price hits upper Keltner band (Rs 1,150)
-         → Sell remaining 60 shares (2/3), lock in Rs 9,000 profit
-         → Total: Rs 10,800 on a Rs 90,000 position
+Stage 2: Price hits +15% (Rs 1,150) OR upper Keltner band
+         -> Sell next 30 shares (1/3)
+         -> Remaining 30 ride to Keltner exit
+
+Final: Price hits upper Keltner band (Rs 1,200)
+       -> Sell remaining 30 shares, lock in Rs 6,000 profit
+       -> Total: Rs 12,600 on a Rs 90,000 position (+14%)
 ```
 
 **Why this works:**
 - Stage 1 locks in guaranteed profit early (you can't lose on this trade anymore)
-- The tighter stop-loss after Stage 1 protects your remaining 2/3 position
-- Stage 2 lets the winners run to upper Keltner (natural momentum exhaustion)
+- The tighter stop-loss after Stage 1 protects your remaining position
+- Stages 2 and Keltner let the winners run to natural momentum exhaustion
 - If the stock reverses after Stage 1, you still made money on the first 1/3
 
-Compare with selling everything at +6%: you'd make Rs 5,400 instead of Rs 10,800. Multi-stage exits capture significantly more profit on winning trades.
+---
 
-### Tightening the Stop-Loss
+## Part 6: The Strategies
 
-After the first partial exit, the stop-loss is brought closer to the entry price. This is called **trailing** or **tightening** the stop:
-
-```
-Entry:        Rs 1,000     Stop: Rs 950 (5% away)
-After +6%:    Rs 1,060     Stop: Rs 970 (3% below entry)
-```
-
-If the stock reverses after hitting +6%, you exit the remaining shares at Rs 970 instead of Rs 950 — reducing your maximum loss on the remaining position. You've already booked profit on the first 1/3, so the overall trade is still a winner even if the rest gets stopped out.
+The system runs two primary strategies (R and MW) on Nifty 200 stocks, with two secondary strategies (T and J) shown for reference.
 
 ---
 
-## Part 6: The JTR Strategies
+### Strategy R — Bullish RSI Divergence (PRIMARY)
 
-The JTR system runs three independent swing trading strategies on Nifty 100 stocks. Each strategy looks for a different setup, but they share the same principles: buy on confirmation, use stop-losses, exit in stages.
+**What it does:** Buys stocks showing bullish RSI divergence — price is making new lows but momentum is improving. Catches reversals.
 
----
+**Two types:**
+1. **Regular divergence** (reversal): Price makes a lower low but RSI makes a higher low. RSI < 35 required.
+2. **Hidden divergence** (continuation): Price makes a higher low but RSI makes a lower low — uptrend intact. RSI < 60, price > EMA(50).
 
-### Strategy J — Weekly Support Bounce
-
-**What it does:** Buys stocks that have pulled back to their 6-month support level and are showing signs of bouncing.
-
-**The Logic:** If a stock has held a price level for 26 weeks (6 months) and pulls back to that level again, buyers are likely to step in again. You're buying at a price where the market has repeatedly said "this is cheap enough."
-
-**Entry Conditions (ALL must be true):**
-| Condition | Why |
-|-----------|-----|
-| Price within 0-3% above 26-week weekly close support | Stock is near proven support |
-| IBS > 0.5 | Close is in upper half of day's range (bounce) |
-| Green candle (close > open) | Buyers won the day |
-| CCI(20) > -100 | Not in extreme freefall |
-| No gap-down (open >= previous close) | No panic selling overnight |
-
-**Stop-Loss:**
-- 26-week lowest weekly LOW (this is below the support level, giving the trade room to breathe)
-- Chandelier trailing stop after first partial exit: Highest High since entry - 3x ATR(14)
-- **Nifty drop shield**: If Nifty 50 index has fallen by the same or more than the stock since entry, the support break stop is suppressed (market-wide selloff, not stock-specific weakness)
-
-**Exit (2-stage scale-out):**
-| Stage | Trigger | Action |
-|-------|---------|--------|
-| 1 | Price reaches entry + 5% | Sell 50% of position |
-| 2 | Price reaches entry + 10% | Sell remaining 50% |
-| Trail | Chandelier exit (after Stage 1) | Highest high - 3x ATR(14) |
-| Safety | 10 trading days underwater | Exit all remaining |
-
-**Example:**
-```
-HDFCBANK — 26-week support at Rs 1,420
-Day's candle: Open 1,415, Low 1,410, High 1,445, Close 1,438
-IBS = (1438-1410)/(1445-1410) = 0.80 ✓
-Close near support: (1438-1420)/1420 = 1.3% ✓
-Green candle ✓, CCI > -100 ✓, No gap-down ✓
-
-→ BUY at Rs 1,438
-→ Stop at Rs 1,395 (26-week low)
-→ Target 1: Rs 1,510 (+5%) → sell half
-→ Target 2: Rs 1,582 (+10%) → sell rest
-```
-
----
-
-### Strategy T — Keltner Channel Pullback
-
-**What it does:** Buys strong stocks that have pulled back from the upper Keltner band to the EMA(20) midline. This is a classic "buy the dip in an uptrend" strategy.
-
-**The Logic:** A stock that recently touched the upper Keltner band is in a strong uptrend. When it pulls back to the EMA(20), the trend is intact but the stock is temporarily "on sale." You're buying a proven winner at a discount.
-
-**Entry Conditions (ALL must be true):**
-| Condition | Why |
-|-----------|-----|
-| Price within 1% of EMA(20) | Stock has pulled back to the midline |
-| High touched upper Keltner in last 10 bars | Confirms recent strength |
-| Green candle (close > open) | Bounce is starting |
-| IBS > 0.5 | Close in upper half of bar (bullish) |
-| No gap-down | No overnight panic |
-
-**Stop-Loss:**
-- 5% hard stop-loss from entry (initial)
-- After Stage 1 (+6%), SL shifts up to 3% below entry price
-
-**Exit (2-stage scale-out):**
-| Stage | Trigger | Action |
-|-------|---------|--------|
-| 1 | Price reaches entry + 6% | Sell 1/3 of position, SL shifts up to 3% below entry |
-| 2 | Price reaches upper Keltner band | Sell remaining 2/3 |
-| Safety | 10 trading days underwater | Exit all remaining |
-
-**Example:**
-```
-TRENT — Strong uptrend, touched upper Keltner at Rs 5,800 last week
-Today pulled back: EMA(20) = Rs 5,450, Close = Rs 5,470
-Distance from EMA(20): 0.4% ✓
-Was at upper Keltner 6 days ago ✓
-Green candle ✓, No gap-down ✓
-
-→ BUY at Rs 5,470
-→ Stop at Rs 5,197 (5% hard SL)
-→ Target 1: Rs 5,798 (+6%) → sell 1/3, SL shifts up to Rs 5,306 (3% below entry)
-→ Target 2: Upper Keltner band → sell remaining 2/3
-```
-
----
-
-### Strategy R — Bullish RSI Divergence (Regular + Hidden)
-
-**What it does:** Buys stocks showing bullish RSI divergence. Strategy R detects two types:
-
-1. **Regular divergence** (reversal): Price makes a lower low but RSI makes a higher low — selling pressure is exhausting, stock is bottoming out.
-2. **Hidden divergence** (continuation): Price makes a higher low but RSI makes a lower low — uptrend is intact despite a temporary RSI dip. Requires price > EMA(50) to confirm the uptrend.
-
-**RSI ±3 bar zone**: Price low and RSI low often don't land on the exact same bar. To match how traders visually read charts, RSI at each swing low is taken as the minimum RSI within ±3 bars of the swing low index.
-
-**Entry Conditions — Regular Divergence (ALL must be true):**
+**Entry Conditions — Regular Divergence:**
 | Condition | Why |
 |-----------|-----|
 | Two swing lows where price: lower low, RSI(14): higher low | Bullish divergence confirmed |
 | RSI divergence >= 3 points | Meaningful divergence, not noise |
-| RSI(14) < 40 at current swing low | Stock is in oversold zone |
-| Structural stop 0–5% from entry | Risk is manageable |
+| RSI(14) < 35 at current swing low | Stock is oversold |
+| Structural stop 0-6% from entry | Risk is manageable |
 | Green candle (close > open) | Reversal candle |
 | No gap-down | No continued panic |
 
-**Entry Conditions — Hidden Divergence (ALL must be true):**
+**Entry Conditions — Hidden Divergence:**
 | Condition | Why |
 |-----------|-----|
 | Two swing lows where price: higher low, RSI(14): lower low | Hidden bullish divergence |
-| RSI divergence >= 5 points | Stronger threshold for continuation signals |
-| RSI(14) < 60 at current swing low | Relaxed threshold (stock is in uptrend) |
-| Close > EMA(50) | Confirms stock is in an uptrend |
-| Structural stop 2–5% from entry | Min 2% for hidden (avoid too-tight continuation entries) |
-| Green candle (close > open) | Continuation candle |
-| No gap-down | No sudden weakness |
+| RSI divergence >= 5 points | Stronger threshold for continuation |
+| RSI(14) < 60 at current swing low | Relaxed (stock in uptrend) |
+| Close > EMA(50) | Confirms uptrend |
+| Structural stop 2-6% from entry | Min 2% for hidden |
+| Green candle, no gap-down | Confirmation |
 
 **Stop-Loss:**
-- **Structural stop**: 1% below the most recent swing low (this is the "structure" that must hold for the divergence to be valid)
-- After Stage 1 (+6%), SL shifts up to 3% below entry price
-- **Regular divergence**: stop distance 0–5% (max 5% to skip stale divergence)
-- **Hidden divergence**: stop distance 2–5% (min 2% to avoid too-tight continuation entries)
+- **Structural stop**: 1% below the most recent swing low
+- After first partial (+8%), SL shifts to 3% below entry
+- **Nifty crash shield**: Skip SL if Nifty 50 fell same or more since entry
 
-**Exit (2-stage scale-out, same as T):**
+**Exit (Portfolio 2-stage):**
 | Stage | Trigger | Action |
 |-------|---------|--------|
-| 1 | Price reaches entry + 6% | Sell 1/3, SL shifts up to 3% below entry |
-| 2 | Price reaches upper Keltner band | Sell remaining 2/3 |
+| 1 | Price reaches entry + 8% | Sell 1/3 of position |
+| 2 | Price reaches entry + 15% | Sell 1/3, SL shifts to 3% |
+| Final | Upper Keltner band (daily) | Sell remaining |
 | Safety | 10 trading days underwater | Exit all remaining |
 
-**Example — Regular Divergence:**
-```
-TATAPOWER — Two swing lows:
-  Swing Low 1: Rs 376 on Aug 08, RSI = 30.7
-  Swing Low 2: Rs 368 on Aug 29, RSI = 34.0
+---
 
-  Price: 376 → 368 (lower low ✓)
-  RSI:  30.7 → 34.0 (higher low ✓, divergence = +3.3 pts)
-  RSI < 40 ✓
+### Strategy MW — Weekly ADX Momentum (PRIMARY)
 
-Aug 29 candle is green, no gap-down
-Structural stop = 368 × 0.99 = Rs 364.32
+**What it does:** Buys stocks where weekly ADX just crossed above 25 with DI+ > DI- — confirming a strong new uptrend is beginning.
 
-→ BUY at Rs 374.15
-→ Stop at Rs 364.32 (structural, 2.6% away)
-→ Target 1: Rs 396.60 (+6%) → sell 1/3
-→ Target 2: Upper Keltner → sell remaining 2/3
-```
+**Entry Conditions (ALL must be true):**
+| Condition | Why |
+|-----------|-----|
+| Weekly ADX >= 25 and rising (curr > prev) | Trend strength confirmed |
+| Weekly DI+ > DI- | Uptrend direction confirmed |
+| Green candle (close > open) | Daily confirmation |
+| No gap-down | No overnight panic |
 
-**Example — Hidden Divergence:**
-```
-HAVELLS — Two swing lows (uptrend):
-  Swing Low 1: Rs 1420 on Sep 10, RSI = 45.2
-  Swing Low 2: Rs 1455 on Oct 01, RSI = 38.8
+**Stop-Loss:**
+- **Stage 0**: 6% hard SL
+- **After first partial (+6%)**: Tightens to 3%
+- **After second partial (+10%)**: Tightens to breakeven
+- **Nifty crash shield**: Skip SL if Nifty 50 fell same or more since entry
 
-  Price: 1420 → 1455 (higher low ✓)
-  RSI:  45.2 → 38.8 (lower low ✓, divergence = -6.4 pts)
-  RSI < 60 ✓, Close > EMA(50) ✓
+**Exit (2-stage):**
+| Stage | Trigger | Action |
+|-------|---------|--------|
+| 1 | Price reaches entry + 6% | Sell 1/3 |
+| 2 | Price reaches entry + 10% | Sell 1/3 |
+| Final | Weekly upper Keltner band | Sell remaining (after P1) |
+| Safety | 25 trading days underwater | Exit all remaining |
 
-Oct 01 candle is green, no gap-down
-Structural stop = 1455 × 0.99 = Rs 1440.45
+---
 
-→ BUY at Rs 1478 (continuation in uptrend)
-→ Stop at Rs 1440.45 (structural, 2.5% away)
-→ Target 1: Rs 1566.68 (+6%) → sell 1/3
-→ Target 2: Upper Keltner → sell remaining 2/3
-```
+### Strategy T — Keltner Channel Pullback (SECONDARY)
+
+**What it does:** Buys strong stocks that have pulled back from the upper Keltner band to the EMA(20) midline.
+
+**Entry:** Price within 1% of EMA(20), touched upper Keltner in last 10 bars, green candle, IBS > 0.5, no gap-down.
+
+**Exit:** 5% hard SL (3% after first partial), +6% sell 1/3, upper Keltner sell remaining. 10d underwater exit.
+
+---
+
+### Strategy J — Weekly Support Bounce (SECONDARY)
+
+**What it does:** Buys stocks at 26-week support levels showing bounce signs.
+
+**Entry:** Within 0-3% of weekly support, IBS > 0.5, green candle, CCI(20) > -100, no gap-down.
+
+**Exit:** Support break SL (with Nifty shield), +5% sell half, +10% or Chandelier (HH - 3x ATR14) sell rest. 10d underwater exit.
 
 ---
 
 ## Part 7: How the Strategies Work Together
 
-The JTR system runs all three strategies simultaneously on the Nifty 100 universe (top 100 Indian stocks by market cap). This diversification is important:
+The system runs R and MW as primary strategies on Nifty 200 stocks. T and J signals are still displayed but ranked lower.
 
-| Strategy | Market Condition | Style |
-|----------|-----------------|-------|
-| **J** | Rangebound / support bounce | Mean reversion |
-| **T** | Trending / pullback in uptrend | Trend following |
-| **R** | Bottoming / reversal | Divergence reversal |
-
-In a trending market, T generates the most signals. In a rangebound market, J shines. When stocks are bottoming after a correction, R catches the reversals. Together, they ensure you always have opportunities regardless of market conditions.
+| Strategy | Market Condition | Style | Priority |
+|----------|-----------------|-------|----------|
+| **R** | Bottoming / reversal | RSI Divergence | 0 (highest) |
+| **MW** | Trending / momentum | ADX Breakout | 0 (equal to R) |
+| **T** | Trending / pullback | Keltner Pullback | 2 (secondary) |
+| **J** | Rangebound / support | Support Bounce | 3 (lowest) |
 
 ### Capital Allocation
 
-The system allocates a fixed amount per trade (e.g., Rs 2,00,000) regardless of which strategy generated the signal. A maximum of **3 new trades per day** is enforced — even if 10 signals fire on the same day, only the best 3 are taken.
+- **Capital**: Rs 20 Lakhs
+- **Per trade**: Rs 2 Lakhs
+- **Max positions**: 10 (20L / 2L)
+- **Max new entries**: 3 per day
 
-### Signal Ranking — Strategy Priority + Sector Momentum
+### Signal Ranking
 
-Signals are ranked in this order:
-1. **Strategy priority**: R → T → J (R signals always come first)
+When R and MW both fire on the same day:
+1. **Strategy priority**: R = MW (equal) > T > J
 2. **Sector momentum** (descending): Stocks in sectors with rising relative strength rank higher
-3. **ATR%** (ascending): Among equal sector momentum, calmer stocks rank higher
+3. **ATR%** (ascending): Among equal momentum, calmer stocks preferred
 
-**Sector momentum** measures whether a sector's relative strength vs Nifty 50 is accelerating or decelerating. The score uses a weighted formula: `delta_5d × 3 + delta_10d × 2 + delta_20d × 1`, where each delta is the change in the sector's 20-day rolling RS over that period. A sector at -11% RS but +27 momentum is recovering fast — it ranks higher than a flat +4% sector.
-
-The UI includes a **Sector Momentum Heatmap** showing all 17 Nifty sector indices with their RS% and momentum direction, plus **sector concentration warnings** when 3+ stocks from the same sector appear in signals or positions.
+**Sector momentum** measures whether a sector's RS vs Nifty 50 is accelerating or decelerating. A sector at -11% RS but rising momentum is recovering fast — it ranks higher than a flat +4% sector.
 
 ### Risk Management
 
 Every trade has a predefined maximum loss:
-- **J**: Distance to weekly low support (typically 2-5%)
-- **T**: 5% hard stop, shifts up to 3% below entry after first exit
-- **R**: 1% below swing low (typically 2-5%), shifts up to 3% below entry after first exit
+- **R**: 1% below swing low (typically 2-6%)
+- **MW**: 6% hard stop
+- **T**: 5% hard stop
+- **J**: Distance to weekly low support
 
-With Rs 2,00,000 per trade and a 5% max stop, the worst-case loss per trade is Rs 10,000. With a 55% win rate and 1.5x reward/risk ratio, the system generates consistent profits over time.
+With Rs 2,00,000 per trade and ~6% max stop, the worst-case loss per trade is Rs 12,000.
+
+### Nifty Crash Shield (R, MW, J)
+
+If Nifty 50 has fallen by the same or more % as the stock since entry, stop-losses are suppressed. The stock is falling with the market, not on its own weakness. This prevents unnecessary stop-outs during broad market corrections.
 
 ---
 
 ## Part 8: Backtest Results
 
-The TR system has been backtested over 11 years (2015-2025) on Nifty 100 stocks with Rs 20 lakh capital, Rs 2 lakh per trade, and 3 entries per day. Signals ranked by strategy priority (R→T→J) then sector momentum then ATR%.
+The R+MW system has been backtested over 11 years (2015-2025) on Nifty 200 stocks with Rs 20 lakh capital, Rs 2 lakh per trade, and 3 entries per day. Signals ranked by strategy priority (R=MW) then sector momentum then ATR%.
 
-Charges: Zerodha delivery (₹0 brokerage, STT 0.1% both sides, exchange txn 0.00307%, SEBI 0.0001%, stamp duty 0.015% buy side, GST 18%). Tax: STCG 20%.
+Charges: Zerodha delivery (Rs 0 brokerage, STT 0.1% both sides, exchange txn 0.00307%, SEBI 0.0001%, stamp duty 0.015% buy side, GST 18%). Tax: STCG 20%.
 
 ```
-TR Portfolio — Sector Momentum Ranking (Nifty 100, 20L, 2L/trade, 3/day)
-R: Regular (stop 0-5%) + Hidden Divergence (stop 2-5%), RSI ±3 bar zone, T: IBS > 0.5
-Charges: Zerodha delivery (₹0 brokerage, STT 0.1% both sides, exchange/SEBI/stamp/GST)
-Tax: STCG 20% on (gross P&L - deductible charges). STT is NOT deductible.
+R+MW Portfolio — Nifty 200, 20L, 2L/trade, 3/day, Sector Momentum, Nifty Crash Shield
+R: RSI<35 regular + hidden divergence, structural SL (max 6%)
+MW: Weekly ADX >= 25, DI+ > DI-, 6% hard SL
 
-  Year    Tr   W    L    WR%    PF   AvgW     AvgL     AvgW%  AvgL%  Hold  Gross    Chg     Tax      Net     Ret%   NetR%
-------------------------------------------------------------------------------------------------------------------------------
-  2015   277  152  125  54.9%  1.85  +9,360   -6,141   +4.7%  -3.0%  24d   +6.6L  123.8K  128.5K    +4.0L  +33.0%  +20.1%
-  2016   269  176   93  65.4%  3.24  +9,579   -5,591   +4.8%  -2.8%  24d  +11.7L  120.7K  230.8K    +8.1L  +58.3%  +40.7%
-  2017   230  122  108  53.0%  2.69  +9,874   -4,151   +5.0%  -2.1%  17d   +7.6L  102.9K  149.2K    +5.0L  +38.0%  +25.2%
-  2018   299  162  137  54.2%  1.59  +8,307   -6,163   +4.2%  -3.0%  19d   +5.0L  132.7K   97.6K    +2.7L  +25.2%  +13.6%
-  2019   372  266  106  71.5%  4.31  +9,015   -5,239   +4.5%  -2.7%  30d  +18.4L  167.1K  364.4K   +13.1L  +91.8%  +65.4%
-  2020   313  220   93  70.3%  3.19  +9,919   -7,365   +5.0%  -3.6%  17d  +15.0L  140.5K  296.7K   +10.6L  +75.2%  +53.0%
-  2021   359  226  133  63.0%  2.56  +8,663   -5,757   +4.4%  -2.9%  24d  +11.9L  160.2K  235.2K    +8.0L  +59.7%  +39.8%
-  2022   271  166  105  61.3%  1.94  +8,429   -6,874   +4.2%  -3.5%  22d   +6.8L  120.9K  133.1K    +4.2L  +34.0%  +21.2%
-  2023   279  177  102  63.4%  3.39  +9,136   -4,676   +4.5%  -2.5%  25d  +11.4L  124.8K  225.5K    +7.9L  +56.8%  +39.5%
-  2024   305  184  121  60.3%  2.16  +8,971   -6,313   +4.5%  -3.0%  21d   +8.9L  135.8K  174.6K    +5.8L  +44.3%  +28.8%
-  2025   305  180  125  59.0%  3.08  +9,532   -4,454   +4.6%  -2.2%  20d  +11.6L  135.9K  229.1K    +7.9L  +57.8%  +39.7%
-------------------------------------------------------------------------------------------------------------------------------
- Total  3279 2031 1248  61.9%  2.61  +9,146   -5,694   +4.6%  -2.8%  22d +114.7L 1465.3K 2264.7K   +77.4L
+Year   Tr    W    L   WR%    PF    AvgW    AvgL  AvgW%  AvgL%  Hold    Gross     Chg     Tax      Net   Ret%  NetR%
+2015  157   53  104  33.8  1.26 +12,079  -9,776  +6.0%  -4.9%   21d    +2.7L   76.6K   52.6K    +1.4L +13.5%  +7.1%
+2016  133   55   78  41.4  1.60 +12,045 -10,844  +6.0%  -5.4%   23d    +5.2L   65.4K  102.2K    +3.5L +25.9% +17.5%
+2017  143   66   77  46.2  2.32 +12,352  -7,848  +6.2%  -3.9%   25d    +8.1L   71.4K  160.2K    +5.8L +40.4% +28.8%
+2018  138   63   75  45.7  2.26 +12,849  -9,243  +6.4%  -4.6%   24d    +9.1L   69.9K  180.8K    +6.6L +45.5% +33.0%
+2019  123   54   69  43.9  1.88 +11,893  -7,796  +5.9%  -3.9%   24d    +5.3L   60.3K  105.5K    +3.7L +26.7% +18.4%
+2020  177  104   73  58.8  2.76 +12,904 -12,947  +6.5%  -6.5%   17d   +17.1L   92.1K  340.8K   +12.8L +85.7% +64.0%
+2021  205   98  107  47.8  2.03 +13,109 -10,976  +6.6%  -5.5%   17d   +12.4L  105.5K  246.7K    +8.9L +62.2% +44.6%
+2022  170   80   90  47.1  2.00 +12,857 -10,417  +6.4%  -5.2%   18d    +9.7L   85.1K  192.8K    +6.9L +48.6% +34.7%
+2023  157   86   71  54.8  3.60 +12,694  -7,694  +6.3%  -3.8%   22d   +14.2L   80.8K  282.7K   +10.6L +71.1% +52.9%
+2024  164   69   95  42.1  1.70 +12,800 -10,804  +6.4%  -5.4%   22d    +7.1L   81.6K  141.3K    +4.9L +35.7% +24.6%
+2025  145   60   85  41.4  2.07 +12,172  -6,893  +6.1%  -3.4%   22d    +6.4L   70.0K  127.0K    +4.4L +32.1% +22.2%
+=============================================================================================================
+Total 1712  788  924  46.0  2.06 +12,523  -9,567  +6.3%  -4.8%   21d   +97.5L  858.7K 1932.5K   +69.6L
+
+Avg gross: +44.3%/yr  |  Avg net: +31.6%/yr  |  Neg years: 0
+20L -> 117.5L gross -> 89.6L net
 
 Money Flow:
-  Gross P&L:          +114.7L (100%)
-  STT (not deduct.):   -13.2L (11.5%)
-  Other charges:        -1.5L (1.3%) — deductible from taxable gains
-  Total charges:       -14.7L (12.8%)
-  STCG tax (20%):      -22.6L (19.7%) — computed on gross - deductible charges
-  Net in your pocket:  +77.4L (67.5%)
-
-Summary:
-  - CAGR gross: +18.9%  |  CAGR net: +15.5%
-  - Winning years: 11/11 (all years profitable)
-  - Best year: +65.4% net (2019)
-  - Worst year: +13.6% net (2018)
-  - 20L → 134.7L gross → 97.4L net
+    Gross P&L:         +97.5L (100%)
+    Charges:             8.6L (8.8%)
+    Tax:                19.3L (19.8%)
+    Net:               +69.6L (71.4%)
 
 Risk Ratios:
-  Sharpe: 1.90  |  Sortino: very high (no negative years)  |  Calmar: 1.55
-  Information Ratio: 1.50 (vs Nifty ~12%)  |  R²: 0.027  |  Max DD: 10.0%
+    Sharpe (net):       1.53  (rf=6%)
+    Sortino (net):      256.24
+    Calmar:             999.00  (no drawdown)
+    Max Drawdown:       0.0%
 
 Trade Quality:
-  Expectancy/trade: +₹3,498 (+1.75%)  |  Payoff Ratio: 1.61x
-  Best win streak: 68  |  Worst loss streak: 27  |  Avg holding: 22 days
+    Expectancy/trade:   +5,694 (+2.85%)
+    Payoff Ratio:       1.31x
+    Avg holding days:   21
 
-By strategy:
-  - R: 2,153 trades, 66% WR, +90.8L gross (79% of total), charges 964K
-  - T: 1,126 trades, 55% WR, +23.9L gross (21% of total), charges 501K
+Strategy Breakdown:
+    R: 510 trades | +23.8L gross | 41% WR | 242.1K charges
+    MW: 1202 trades | +73.7L gross | 48% WR | 616.5K charges
 ```
 
-### Sector Momentum vs Baseline Comparison
+### Key Takeaways
+- **All 11 years profitable** — worst year +7.1% net (2015)
+- **Best year: +64.0% net (2020)**
+- **Net return: +31.6%/yr avg** after STT, charges, and 20% STCG tax
+- **You keep 71 paise per rupee earned**
+- **PF 2.06** — for every Rs 1 lost, you make Rs 2.06
+- **MW is the workhorse** — 70% of trades, 76% of gross P&L, 48% WR
+- **R is the specialist** — 30% of trades, 24% of gross P&L, 41% WR, catches reversals
 
-| Metric | TR Baseline (ATR rank) | TR Sector Momentum | Delta |
-|---|---|---|---|
-| Trades | 3,332 | 3,279 | -53 |
-| Win Rate | 61.2% | 61.9% | +0.7% |
-| Profit Factor | 2.61 | 2.61 | — |
-| Gross P&L | +115.5L | +114.7L | -0.8L |
-| Total Charges | 14.9L | 14.7L | -0.2L |
-| Tax | 22.8L | 22.6L | -0.2L |
-| **Net P&L** | **+77.8L** | **+77.4L** | **-0.4L** |
-| CAGR (net) | 15.5% | 15.5% | — |
-| Sharpe | 1.53 | 1.90 | **+0.38** |
-| Calmar | 1.72 | 1.55 | -0.17 |
-| Max Drawdown | 9.0% | 10.0% | +1.0% |
-| R² | 0.125 | 0.027 | -0.098 |
+---
 
-**Net P&L is essentially the same.** Sector Momentum delivers better Sharpe (1.90 vs 1.53) and more consistent year-to-year returns (R² 0.027 vs 0.125). 11/11 years profitable in both.
+## Part 9: Charges & Tax (Zerodha Equity Delivery)
 
-Charges note: STT (0.1% on both buy and sell) is NOT deductible from capital gains. Other charges (exchange txn, SEBI, stamp duty, GST) ARE deductible and reduce taxable income. Brokerage is ₹0 on Zerodha delivery.
+### Per-Trade Charges
+```
+Brokerage:     Rs 0 (free for equity delivery)
+STT:           0.1% of total turnover (buy + sell)
+Exchange txn:  0.00307% of total turnover
+SEBI:          0.0001% of total turnover
+Stamp duty:    0.015% of buy side only
+GST:           18% of (exchange + SEBI)
 
-Key takeaways:
-- **All 11 years profitable** — worst year +13.6% net (2018)
-- **Net CAGR: 15.5%** after STT, charges, and 20% STCG tax — you keep 67 paise per rupee earned
-- **Win rate: 61.9%** — winners are 1.61x larger than losers
-- **Profit Factor: 2.61** — for every Rs 1 lost, you make Rs 2.61
-- **~298 trades per year** — roughly 1-2 trades per trading day, very manageable
-- **Max DD 10.0%** — Sharpe 1.90, much more consistent than baseline (1.53)
-- **Strategy R is the star** — 79% of gross P&L at 66% WR
+Round trip on Rs 2L position: ~Rs 445 (~0.22%)
+```
+
+### STCG Tax
+- **20% on net profit** (holding < 12 months = short-term)
+- STT is **NOT deductible** from capital gains
+- Other charges (exchange, SEBI, stamp, GST) **ARE deductible**
+
+### Money Flow Example (11 years)
+```
+Gross P&L:    +97.5L (100%)
+Charges:       -8.6L (8.8%)    <- cost of doing business
+Tax:          -19.3L (19.8%)   <- government's share
+Net:          +69.6L (71.4%)   <- what you keep
+```
 
 ---
 
@@ -585,18 +473,23 @@ Key takeaways:
 
 | Term | Definition |
 |------|-----------|
+| **ADX** | Average Directional Index — measures trend strength (0-100) |
 | **ATR** | Average True Range — measures daily price volatility |
-| **CCI** | Commodity Channel Index — measures distance from average price |
 | **Chandelier Exit** | Trailing stop based on highest high minus a multiple of ATR |
+| **DI+/DI-** | Directional Indicators — show uptrend (DI+>DI-) or downtrend |
 | **EMA** | Exponential Moving Average — weighted moving average favoring recent prices |
 | **EOD** | End of Day — analysis done after market close |
 | **Gap-down** | When today's open is below yesterday's close |
 | **Green candle** | Close is above open (buyers won the day) |
 | **IBS** | Internal Bar Strength — where close falls within the day's range |
 | **Keltner Channel** | EMA(20) with bands at +-2x ATR(14) |
+| **Nifty Crash Shield** | Skip SL if Nifty 50 fell same or more % since entry |
+| **Payoff Ratio** | Average Win / Average Loss (target >= 1.5x) |
 | **PF** | Profit Factor — total wins divided by total losses |
 | **RSI** | Relative Strength Index — momentum oscillator (0-100) |
 | **SL** | Stop-Loss — predetermined exit price to limit losses |
+| **STCG** | Short-Term Capital Gains — 20% tax on profits held < 12 months |
+| **STT** | Securities Transaction Tax — 0.1% on turnover, not tax-deductible |
 | **Support** | Price level where buyers have historically stepped in |
 | **Swing Low** | A local price bottom confirmed by higher prices on both sides |
 | **WR%** | Win Rate — percentage of profitable trades |

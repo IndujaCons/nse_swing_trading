@@ -87,6 +87,76 @@ NIFTY_200_NEXT100_TICKERS = [
     "YESBANK", "ZYDUSLIFE",
 ]
 
+# Ticker renames: new_name -> old_name (for yfinance historical data fallback)
+TICKER_ALIASES = {
+    "ETERNAL": "ZOMATO",      # Zomato -> Eternal (renamed 2025)
+    "TMPV": "TATAMOTORS",     # Tata Motors -> TMPV (demerged Oct 2025)
+}
+
+# Nifty 500 constituents beyond Nifty 200 (next 300 by market cap)
+NIFTY_500_BEYOND200_TICKERS = [
+    "3MINDIA", "AADHARHFC", "AARTIIND", "AAVAS", "ABBOTINDIA",
+    "ABFRL", "ABLBL", "ABREL", "ABSLAMC", "ACC",
+    "ACE", "ACMESOLAR", "AEGISLOG", "AEGISVOPAK", "AFCONS",
+    "AFFLE", "AGARWALEYE", "AIAENG", "AIIL", "AJANTPHARM",
+    "AKUMS", "AKZOINDIA", "ALKYLAMINE", "ALOKINDS", "AMBER",
+    "ANANDRATHI", "ANANTRAJ", "ANGELONE", "APARINDS", "APLLTD",
+    "APOLLOTYRE", "APTUS", "ASAHIINDIA", "ASTERDM",
+    "ASTRAZEN", "ATHERENERG", "ATUL", "AWL", "BALKRISIND",
+    "BALRAMCHIN", "BANDHANBNK", "BASF", "BATAINDIA", "BAYERCROP",
+    "BBTC", "BEML", "BERGEPAINT", "BIKAJI", "BLS",
+    "BLUEDART", "BLUEJET", "BRIGADE", "BSOFT", "CAMPUS",
+    "CAMS", "CANFINHOME", "CAPLIPOINT", "CARBORUNIV", "CASTROLIND",
+    "CCL", "CDSL", "CEATLTD", "CENTRALBK", "CENTURYPLY",
+    "CERA", "CESC", "CGCL", "CHALET", "CHAMBLFERT",
+    "CHENNPETRO", "CHOICEIN", "CHOLAHLDNG", "CLEAN", "COHANCE",
+    "CONCORDBIO", "CRAFTSMAN", "CREDITACC", "CRISIL", "CROMPTON",
+    "CUB", "CYIENT", "DALBHARAT", "DATAPATTNS", "DBREALTY",
+    "DCMSHRIRAM", "DEEPAKFERT", "DEEPAKNTR", "DELHIVERY", "DEVYANI",
+    "DOMS", "ECLERX", "EIDPARRY", "EIHOTEL", "ELECON",
+    "ELGIEQUIP", "EMAMILTD", "EMCURE", "ENDURANCE", "ENGINERSIN",
+    "ERIS", "ESCORTS", "FACT", "FINCABLES", "FINPIPE",
+    "FIRSTCRY", "FIVESTAR", "FLUOROCHEM", "FORCEMOT", "FSL",
+    "GESHIP", "GICRE", "GILLETTE", "GLAND", "GLAXO",
+    "GMDCLTD", "GODIGIT", "GODREJAGRO", "GODREJIND", "GPIL",
+    "GRANULES", "GRAPHITE", "GRAVITA", "GRSE", "GSPL",
+    "GUJGASLTD", "HAPPSTMNDS", "HBLENGINE", "HEG",
+    "HEXT", "HFCL", "HINDCOPPER", "HOMEFIRST", "HONASA",
+    "HONAUT", "HSCL", "IDBI", "IEX", "IFCI",
+    "IGIL", "IIFL", "INDIACEM",
+    "INDIAMART", "INOXINDIA", "INOXWIND", "INTELLECT", "IOB",
+    "IPCALAB", "IRCON", "ITI", "JBCHEPHARM",
+    "JBMA", "JINDALSAW", "JKCEMENT", "JKTYRE", "JMFINANCIL",
+    "JPPOWER", "JSL", "JSWCEMENT", "JSWINFRA", "JUBLINGREA",
+    "JUBLPHARMA", "JWL", "JYOTHYLAB", "JYOTICNC", "KAJARIACER",
+    "KARURVYSYA", "KAYNES", "KEC", "KFINTECH", "KIMS",
+    "KIRLOSBROS", "KIRLOSENG", "KPIL", "KPRMILL", "KSB",
+    "LALPATHLAB", "LATENTVIEW", "LAURUSLABS", "LEMONTREE", "LINDEINDIA",
+    "LLOYDSME", "LTFOODS", "LTTS", "MAHABANK", "MAHSCOOTER",
+    "MAHSEAMLES", "MANAPPURAM", "MANYAVAR", "MAPMYINDIA", "MCX",
+    "MEDANTA", "METROPOLIS", "MGL", "MINDACORP", "MMTC",
+    "MRPL", "MSUMI", "NATCOPHARM", "NAVA",
+    "NAVINFLUOR", "NBCC", "NCC", "NETWEB", "NEULANDLAB",
+    "NEWGEN", "NH", "NIACL", "NIVABUPA", "NLCINDIA",
+    "NSLNISP", "NUVAMA", "NUVOCO", "OLAELEC", "OLECTRA",
+    "ONESOURCE", "PCBL", "PETRONET", "PFIZER", "PGEL",
+    "PGHH", "PNBHOUSING", "POLYMED", "POONAWALLA", "PPLPHARMA",
+    "PRAJIND", "PTCIL", "PVRINOX", "RADICO", "RAILTEL",
+    "RAINBOW", "RAMCOCEM", "RBLBANK", "RCF", "REDINGTON",
+    "RELINFRA", "RHIM", "RITES", "RKFORGE", "RPOWER",
+    "RRKABEL", "SAGILITY", "SAILIFE", "SAMMAANCAP", "SAPPHIRE",
+    "SARDAEN", "SAREGAMA", "SBFC", "SCHAEFFLER", "SCHNEIDER",
+    "SCI", "SHYAMMETL", "SIGNATURE", "SJVN", "SOBHA",
+    "SONATSOFTW", "STARHEALTH", "SUMICHEM", "SUNDARMFIN", "SUNDRMFAST",
+    "SUNTV", "SWANCORP", "SYNGENE", "SYRMA", "TARIL",
+    "TATACHEM", "TATAINVEST", "TBOTEK", "TECHNOE", "TEJASNET",
+    "THELEELA", "THERMAX", "TIMKEN", "TITAGARH", "TRIDENT",
+    "TRITURBINE", "TRIVENI", "TTML", "UBL", "UCOBANK",
+    "UNOMINDA", "USHAMART", "UTIAMC", "VENTIVE", "VGUARD",
+    "VIJAYA", "VTL", "WELCORP", "WELSPUNLIV", "WHIRLPOOL",
+    "WOCKPHARMA", "ZEEL", "ZENSARTECH", "ZENTEC", "ZFCVINDIA",
+]
+
 BATCH_VARIANTS = [
     ("J", None, "J: Weekly Support"),
     ("T", None, "T: Keltner Pullback"),
@@ -385,6 +455,14 @@ class MomentumBacktester:
                 daily = yf.Ticker(nse_symbol).history(start=daily_start, end=end_date)
             except Exception:
                 daily = pd.DataFrame()
+
+            # Fallback to old ticker name if renamed
+            if (daily.empty or len(daily) < 210) and symbol in TICKER_ALIASES:
+                old_symbol = f"{TICKER_ALIASES[symbol]}.NS"
+                try:
+                    daily = yf.Ticker(old_symbol).history(start=daily_start, end=end_date)
+                except Exception:
+                    daily = pd.DataFrame()
 
         if daily.empty or len(daily) < 210:
             return {"error": f"Insufficient daily data for {symbol}",
@@ -788,8 +866,17 @@ class MomentumBacktester:
                     structural_stop = r_swing_low_stop
                     exited = False
 
+                    # Nifty crash shield for R: skip SL if Nifty fell same or more
+                    r_nifty_shields = False
+                    if nifty_at_entry > 0 and nifty_close is not None:
+                        nifty_now = float(nifty_close.iloc[i])
+                        nifty_pct = (nifty_now - nifty_at_entry) / nifty_at_entry
+                        stock_pct = (price - entry_price) / entry_price
+                        if nifty_pct <= stock_pct and nifty_pct < 0:
+                            r_nifty_shields = True
+
                     # Structural SL (1% below divergence swing low)
-                    if price <= structural_stop:
+                    if not r_nifty_shields and price <= structural_stop:
                         trades.append(self._make_trade(
                             entry_date, entry_price, r_remaining, day,
                             price, "STRUCTURAL_SL"))
@@ -809,8 +896,8 @@ class MomentumBacktester:
                         r_remaining = shares - 2 * third
                         r_partial_stage = 2
 
-                    # Tight SL after first partial (3%)
-                    if not exited and r_partial_stage >= 1 and price <= entry_price * (1 - 0.03):
+                    # Tight SL after first partial (3%) — also shielded
+                    if not exited and not r_nifty_shields and r_partial_stage >= 1 and price <= entry_price * (1 - 0.03):
                         trades.append(self._make_trade(
                             entry_date, entry_price, r_remaining, day,
                             price, "HARD_SL_3PCT"))
@@ -839,11 +926,12 @@ class MomentumBacktester:
                 # Entry check (not in position)
                 no_gap_down_r = (prev_close is None or open_price >= prev_close)
                 is_green_r = price > open_price
-                if is_green_r and no_gap_down_r:
+                if is_green_r and no_gap_down_r and ibs > 0.5:
                     rsi14_vals = rsi14_series.values
                     lows_vals = lows.values
                     divergence, swing_low_val = self._detect_bullish_divergence(
-                        lows_vals, rsi14_vals, i, swing_lows)
+                        lows_vals, rsi14_vals, i, swing_lows,
+                        rsi_threshold=35)
                     is_hidden_div = False
                     if not divergence:
                         # Try hidden bullish divergence if price > EMA50 (uptrend)
@@ -866,6 +954,7 @@ class MomentumBacktester:
                                 r_partial_stage = 0
                                 r_remaining = shares
                                 r_swing_low_stop = r_swing_low_stop_cand
+                                nifty_at_entry = float(nifty_close.iloc[i]) if nifty_close is not None else 0.0
                 continue
 
             elif strategy == "RW":
@@ -978,6 +1067,15 @@ class MomentumBacktester:
                     third = shares // 3
                     exited = False
 
+                    # Nifty crash shield for MW: skip SL if Nifty fell same or more
+                    mw_nifty_shields = False
+                    if nifty_at_entry > 0 and nifty_close is not None:
+                        nifty_now = float(nifty_close.iloc[i])
+                        nifty_pct = (nifty_now - nifty_at_entry) / nifty_at_entry
+                        stock_pct = (price - entry_price) / entry_price
+                        if nifty_pct <= stock_pct and nifty_pct < 0:
+                            mw_nifty_shields = True
+
                     # Hard SL: 8% initial, 3% after P1, breakeven after P2
                     if mw_partial_stage >= 2:
                         mw_sl_price = entry_price
@@ -988,7 +1086,7 @@ class MomentumBacktester:
                     else:
                         mw_sl_price = entry_price * 0.94
                         sl_label = "HARD_SL_6PCT"
-                    if price <= mw_sl_price:
+                    if not mw_nifty_shields and price <= mw_sl_price:
                         trades.append(self._make_trade(
                             entry_date, entry_price, mw_remaining, day,
                             price, sl_label))
@@ -1031,7 +1129,7 @@ class MomentumBacktester:
                 # Entry check: weekly ADX crosses above 20 with DI+ > DI-
                 no_gap_down_mw = (prev_close is None or open_price >= prev_close)
                 is_green_mw = price > open_price
-                if is_green_mw and no_gap_down_mw and mw_weekly is not None:
+                if is_green_mw and no_gap_down_mw and ibs > 0.5 and mw_weekly is not None:
                     w_dates = mw_weekly.index
                     day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
                     w_before = w_dates[w_dates < day_ts]
@@ -1042,7 +1140,7 @@ class MomentumBacktester:
                         plus_di = mw_weekly_plus_di_vals[w_idx]
                         minus_di = mw_weekly_minus_di_vals[w_idx]
                         if (not np.isnan(curr_adx) and not np.isnan(prev_adx)
-                                and curr_adx >= 20 and curr_adx > prev_adx
+                                and curr_adx >= 25 and curr_adx > prev_adx
                                 and plus_di > minus_di):
                                 shares = int(capital // price)
                                 if shares > 0:
@@ -1052,6 +1150,7 @@ class MomentumBacktester:
                                     in_position = True
                                     mw_partial_stage = 0
                                     mw_remaining = shares
+                                    nifty_at_entry = float(nifty_close.iloc[i]) if nifty_close is not None else 0.0
                 continue
 
         # Close open position at end of backtest
@@ -1170,7 +1269,9 @@ class MomentumBacktester:
         "UNDERWATER_EXIT": "Held 10+ days underwater, cut loss",
         "BACKTEST_END": "Position still open at backtest end",
         "PARTIAL_6PCT_1of3": "Hit +6% target, sold 1/3",
+        "PARTIAL_8PCT_1of3": "Hit +8% target, sold 1/3",
         "PARTIAL_10PCT_2of3": "Hit +10% target, sold 1/3",
+        "PARTIAL_15PCT_2of3": "Hit +15% target, sold 1/3",
         "KELTNER_UPPER_EXIT": "Upper Keltner band reached, sold remaining",
         "HARD_SL_5PCT": "Hard 5% stop-loss triggered",
         "HARD_SL_3PCT": "Tight 3% stop-loss triggered (post partial)",
@@ -1260,6 +1361,14 @@ class MomentumBacktester:
             raw = yf.Ticker(nse_symbol).history(start=fetch_start, end=window_end)
         except Exception:
             raw = pd.DataFrame()
+
+        # Fallback to old ticker name if renamed
+        if (raw.empty or len(raw) < 50) and symbol in TICKER_ALIASES:
+            old_symbol = f"{TICKER_ALIASES[symbol]}.NS"
+            try:
+                raw = yf.Ticker(old_symbol).history(start=fetch_start, end=window_end)
+            except Exception:
+                raw = pd.DataFrame()
 
         if raw.empty or len(raw) < 50:
             return {"error": f"Could not fetch price data for {symbol}"}
@@ -1552,7 +1661,13 @@ class MomentumBacktester:
                               t_target1=0.06, t_target2=0.10,
                               underwater_exit_days=None,
                               t_tight_sl=None,
-                              rank_by_sector_momentum=False):
+                              rank_by_sector_momentum=False,
+                              mw_adx_threshold=25,
+                              rs_entry_filters=None,
+                              rs_regime_mode="asymmetric",
+                              rs_hard_sl=0.90,
+                              rs_uw_days=0,
+                              rs_dist_high_pct=0.03):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -1572,8 +1687,10 @@ class MomentumBacktester:
             tickers = NIFTY_50_TICKERS
         elif universe <= 100:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
-        else:
+        elif universe <= 200:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+        else:
+            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS + NIFTY_500_BEYOND200_TICKERS
 
         end_date = end_date or datetime.now()
         daily_start = end_date - timedelta(days=period_days + 500)
@@ -1588,6 +1705,22 @@ class MomentumBacktester:
             nifty_raw = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
         except Exception:
             nifty_raw = pd.DataFrame()
+
+        # Fetch benchmark index for RS filter (WT strategy)
+        # Nifty 50 for universe<=100, Nifty 200 for universe<=200/500
+        bench_symbol = "^NSEI" if universe <= 100 else "^CNX200"
+        try:
+            if bench_symbol == "^NSEI" and not nifty_raw.empty:
+                bench_raw = nifty_raw  # Reuse already-fetched data
+            else:
+                bench_raw = yf.Ticker(bench_symbol).history(start=daily_start, end=end_date)
+        except Exception:
+            bench_raw = nifty_raw  # Fallback to Nifty 50
+        bench_ret123 = pd.Series(dtype=float)
+        bench_ret21 = pd.Series(dtype=float)
+        if not bench_raw.empty:
+            bench_ret123 = (bench_raw["Close"] / bench_raw["Close"].shift(123) - 1) * 100
+            bench_ret21 = (bench_raw["Close"] / bench_raw["Close"].shift(21) - 1) * 100
 
         # Fetch sector index data for sector momentum ranking
         sector_index_data = {}  # sector_name -> closes Series
@@ -1611,6 +1744,14 @@ class MomentumBacktester:
                 daily = yf.Ticker(nse_symbol).history(start=daily_start, end=end_date)
             except Exception:
                 daily = pd.DataFrame()
+
+            # Fallback to old ticker name if renamed
+            if (daily.empty or len(daily) < 210) and ticker in TICKER_ALIASES:
+                old_symbol = f"{TICKER_ALIASES[ticker]}.NS"
+                try:
+                    daily = yf.Ticker(old_symbol).history(start=daily_start, end=end_date)
+                except Exception:
+                    daily = pd.DataFrame()
 
             if daily.empty or len(daily) < 210:
                 continue
@@ -1692,6 +1833,18 @@ class MomentumBacktester:
             weekly_lows_vals = weekly["Low"].values
             weekly_rsi14_vals = weekly_rsi14_series.values
 
+            # Weekly indicators for Strategy WT (Weekly Trend)
+            wt_w_closes = weekly["Close"]
+            wt_w_ema20 = wt_w_closes.ewm(span=20, adjust=False).mean()
+            wt_w_ema50 = wt_w_closes.ewm(span=50, adjust=False).mean()
+            wt_w_high20 = wt_w_closes.rolling(20).max()
+            wt_w_slope = (wt_w_ema50 / wt_w_ema50.shift(4) - 1) * 100 / 4
+            wt_w_gap = wt_w_ema20 - wt_w_ema50
+            wt_w_gap_pct = (wt_w_ema20 - wt_w_ema50) / wt_w_ema50 * 100
+            wt_w_vol = weekly["Volume"]
+            wt_w_vol_avg20 = wt_w_vol.rolling(20).mean()
+            wt_w_return = (wt_w_closes / wt_w_closes.shift(1) - 1) * 100
+
             # CCI(20) for Strategy J entry confirmation
             cci20_series = self._calculate_cci_series(highs, lows, closes, 20)
 
@@ -1743,6 +1896,30 @@ class MomentumBacktester:
                 "weekly_swing_lows": weekly_swing_lows,
                 "weekly_lows_vals": weekly_lows_vals,
                 "weekly_rsi14_vals": weekly_rsi14_vals,
+                # WT (Weekly Trend) indicators — all shifted by 1 week for confirmed candle
+                "wt_w_ema50": wt_w_ema50,  # unshifted for exit
+                "wt_w_close_prev": wt_w_closes.shift(1),
+                "wt_w_ema20_prev": wt_w_ema20.shift(1),
+                "wt_w_ema50_prev": wt_w_ema50.shift(1),
+                "wt_w_high20_prev": wt_w_high20.shift(1),
+                "wt_w_slope_prev": wt_w_slope.shift(1),
+                "wt_w_gap_prev": wt_w_gap.shift(1),
+                "wt_w_gap_prev2": wt_w_gap.shift(2),
+                "wt_w_gap_pct_prev": wt_w_gap_pct.shift(1),
+                "wt_w_vol_prev": wt_w_vol.shift(1),
+                "wt_w_vol_avg_prev": wt_w_vol_avg20.shift(1),
+                "wt_w_return_prev": wt_w_return.shift(1),
+                # Stock 123-day (6-month) return for RS filter
+                "stock_ret123": (closes / closes.shift(123) - 1) * 100,
+                # Benchmark 123-day return aligned to stock's dates
+                "bench_ret123": bench_ret123.reindex(daily.index, method="ffill") if not bench_ret123.empty else pd.Series(0.0, index=daily.index),
+                # RS Rotation strategy indicators
+                "rs_21d": (closes / closes.shift(21) - 1) * 100 - (bench_ret21.reindex(daily.index, method="ffill") if not bench_ret21.empty else pd.Series(0.0, index=daily.index)),
+                "rs_123d": (closes / closes.shift(123) - 1) * 100 - (bench_ret123.reindex(daily.index, method="ffill") if not bench_ret123.empty else pd.Series(0.0, index=daily.index)),
+                # 20-week EMA reindexed to daily for RS exit
+                "rs_ema20w_daily": weekly["Close"].ewm(span=20, adjust=False).mean().reindex(daily.index, method="ffill"),
+                # 30-week EMA reindexed to daily for RS entry/exit
+                "rs_ema30w_daily": weekly["Close"].ewm(span=30, adjust=False).mean().reindex(daily.index, method="ffill"),
             }
 
         # Pre-compute rolling sector RS momentum (20-day RS, 5-day delta)
@@ -1790,6 +1967,33 @@ class MomentumBacktester:
             for ts, row in nifty_raw.iterrows():
                 nifty_close_by_date[ts.date()] = float(row["Close"])
 
+        # Pre-compute Nifty regime filter for RS strategy
+        nifty_rs_regime_ok = {}  # date -> bool
+        if not nifty_raw.empty:
+            nifty_weekly = nifty_raw["Close"].resample("W-FRI").last().dropna()
+            nifty_20w_ema = nifty_weekly.ewm(span=20, adjust=False).mean()
+            nifty_10w_ema = nifty_weekly.ewm(span=10, adjust=False).mean()
+            # Forward-fill weekly EMAs to daily
+            nifty_20w_ema_daily = nifty_20w_ema.reindex(nifty_raw.index, method="ffill")
+            nifty_10w_ema_daily = nifty_10w_ema.reindex(nifty_raw.index, method="ffill")
+            regime_on = True  # start optimistic
+            for ts in nifty_raw.index:
+                d = ts.date()
+                close_val = nifty_raw["Close"].get(ts)
+                ema20 = nifty_20w_ema_daily.get(ts)
+                ema10 = nifty_10w_ema_daily.get(ts)
+                if pd.notna(close_val) and pd.notna(ema20) and pd.notna(ema10):
+                    if rs_regime_mode == "simple":
+                        # Simple: ON when close > 20w EMA, OFF otherwise
+                        regime_on = float(close_val) >= float(ema20)
+                    else:
+                        # Asymmetric: instant OFF when < 20w, resume only on 10w > 20w
+                        if regime_on and float(close_val) < float(ema20):
+                            regime_on = False
+                        elif not regime_on and float(ema10) > float(ema20):
+                            regime_on = True
+                nifty_rs_regime_ok[d] = regime_on
+
         # Build per-stock date->index mapping
         date_to_idx = {}  # ticker -> {date: iloc_index}
         for ticker, ind in indicators.items():
@@ -1807,6 +2011,7 @@ class MomentumBacktester:
         max_positions_used = 0
         positions_over_time = []
         running_pnl = 0  # cumulative realized PnL
+        rs_cooldown = {}  # ticker -> day_idx when cooldown expires (RS rotation)
 
         for day_idx, day in enumerate(all_dates):
             if progress_callback and day_idx % 20 == 0:
@@ -1945,30 +2150,39 @@ class MomentumBacktester:
                     structural_stop = pos.get("r_swing_low_stop", 0)
                     stage = pos.get("partial_stage", 0)
 
+                    # Nifty crash shield: skip SL if Nifty fell same or more
+                    r_nifty_shields = False
+                    r_nifty_entry = pos.get("nifty_at_entry", 0.0)
+                    if r_nifty_entry > 0 and nifty_today_close > 0:
+                        nifty_pct = (nifty_today_close - r_nifty_entry) / r_nifty_entry
+                        stock_pct = (price - pos["entry_price"]) / pos["entry_price"]
+                        if nifty_pct <= stock_pct and nifty_pct < 0:
+                            r_nifty_shields = True
+
                     # Structural SL: 1% below divergence swing low — exit all
-                    if structural_stop > 0 and price <= structural_stop:
+                    if not r_nifty_shields and structural_stop > 0 and price <= structural_stop:
                         sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
                         trades.append(self._make_portfolio_trade(
                             pos, sz, day, price, "STRUCTURAL_SL"))
                         exited = True
 
-                    # Tight SL after first partial (3%)
-                    if not exited and stage >= 1 and price <= pos["entry_price"] * 0.97:
+                    # Tight SL after first partial (3%) — also shielded by Nifty
+                    if not exited and not r_nifty_shields and stage >= 1 and price <= pos["entry_price"] * 0.97:
                         trades.append(self._make_portfolio_trade(
                             pos, pos["remaining_shares"], day, price, "HARD_SL_3PCT"))
                         exited = True
 
-                    # 2-stage partial exits (+6% sell 1/3, +10% sell 1/3)
+                    # 2-stage partial exits (+8% sell 1/3, +15% sell 1/3)
                     if not exited:
                         third = pos["shares"] // 3
                         if stage == 0 and price >= pos["entry_price"] * 1.08 and third > 0:
                             trades.append(self._make_portfolio_trade(
-                                pos, third, day, price, "PARTIAL_6PCT_1of3"))
+                                pos, third, day, price, "PARTIAL_8PCT_1of3"))
                             pos["remaining_shares"] = pos["shares"] - third
                             pos["partial_stage"] = 1
                         elif stage == 1 and price >= pos["entry_price"] * 1.15 and third > 0:
                             trades.append(self._make_portfolio_trade(
-                                pos, third, day, price, "PARTIAL_10PCT_2of3"))
+                                pos, third, day, price, "PARTIAL_15PCT_2of3"))
                             pos["remaining_shares"] = pos["shares"] - 2 * third
                             pos["partial_exit_done"] = True
                             pos["partial_stage"] = 2
@@ -1988,13 +2202,22 @@ class MomentumBacktester:
                     structural_stop = pos.get("r_swing_low_stop", 0)
                     stage = pos.get("partial_stage", 0)
 
-                    if structural_stop > 0 and price <= structural_stop:
+                    # Nifty crash shield for RW
+                    rw_nifty_shields = False
+                    rw_nifty_entry = pos.get("nifty_at_entry", 0.0)
+                    if rw_nifty_entry > 0 and nifty_today_close > 0:
+                        nifty_pct = (nifty_today_close - rw_nifty_entry) / rw_nifty_entry
+                        stock_pct = (price - pos["entry_price"]) / pos["entry_price"]
+                        if nifty_pct <= stock_pct and nifty_pct < 0:
+                            rw_nifty_shields = True
+
+                    if not rw_nifty_shields and structural_stop > 0 and price <= structural_stop:
                         sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
                         trades.append(self._make_portfolio_trade(
                             pos, sz, day, price, "STRUCTURAL_SL"))
                         exited = True
 
-                    if not exited and stage >= 1 and price <= pos["entry_price"] * 0.97:
+                    if not exited and not rw_nifty_shields and stage >= 1 and price <= pos["entry_price"] * 0.97:
                         trades.append(self._make_portfolio_trade(
                             pos, pos["remaining_shares"], day, price, "HARD_SL_3PCT"))
                         exited = True
@@ -2003,12 +2226,12 @@ class MomentumBacktester:
                         third = pos["shares"] // 3
                         if stage == 0 and price >= pos["entry_price"] * 1.08 and third > 0:
                             trades.append(self._make_portfolio_trade(
-                                pos, third, day, price, "PARTIAL_6PCT_1of3"))
+                                pos, third, day, price, "PARTIAL_8PCT_1of3"))
                             pos["remaining_shares"] = pos["shares"] - third
                             pos["partial_stage"] = 1
                         elif stage == 1 and price >= pos["entry_price"] * 1.15 and third > 0:
                             trades.append(self._make_portfolio_trade(
-                                pos, third, day, price, "PARTIAL_10PCT_2of3"))
+                                pos, third, day, price, "PARTIAL_15PCT_2of3"))
                             pos["remaining_shares"] = pos["shares"] - 2 * third
                             pos["partial_exit_done"] = True
                             pos["partial_stage"] = 2
@@ -2034,6 +2257,15 @@ class MomentumBacktester:
                             upper_keltner = float(wk_val)
                     stage = pos.get("partial_stage", 0)
 
+                    # Nifty crash shield for MW
+                    mw_nifty_shields = False
+                    mw_nifty_entry = pos.get("nifty_at_entry", 0.0)
+                    if mw_nifty_entry > 0 and nifty_today_close > 0:
+                        nifty_pct = (nifty_today_close - mw_nifty_entry) / mw_nifty_entry
+                        stock_pct = (price - pos["entry_price"]) / pos["entry_price"]
+                        if nifty_pct <= stock_pct and nifty_pct < 0:
+                            mw_nifty_shields = True
+
                     # Hard SL: 8% initial, 3% after partial 1, breakeven after partial 2
                     if stage >= 2:
                         mw_sl_price = pos["entry_price"]
@@ -2044,23 +2276,23 @@ class MomentumBacktester:
                     else:
                         mw_sl_price = pos["entry_price"] * 0.94
                         sl_label = "HARD_SL_6PCT"
-                    if price <= mw_sl_price:
+                    if not mw_nifty_shields and price <= mw_sl_price:
                         sz = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
                         trades.append(self._make_portfolio_trade(
                             pos, sz, day, price, sl_label))
                         exited = True
 
-                    # 2-stage partial exits (+6% sell 1/3, +10% sell 1/3)
+                    # 2-stage partial exits (+8% sell 1/3, +15% sell 1/3)
                     if not exited:
                         third = pos["shares"] // 3
                         if stage == 0 and price >= pos["entry_price"] * 1.08 and third > 0:
                             trades.append(self._make_portfolio_trade(
-                                pos, third, day, price, "PARTIAL_6PCT_1of3"))
+                                pos, third, day, price, "PARTIAL_8PCT_1of3"))
                             pos["remaining_shares"] = pos["shares"] - third
                             pos["partial_stage"] = 1
                         elif stage == 1 and price >= pos["entry_price"] * 1.15 and third > 0:
                             trades.append(self._make_portfolio_trade(
-                                pos, third, day, price, "PARTIAL_10PCT_2of3"))
+                                pos, third, day, price, "PARTIAL_15PCT_2of3"))
                             pos["remaining_shares"] = pos["shares"] - 2 * third
                             pos["partial_exit_done"] = True
                             pos["partial_stage"] = 2
@@ -2072,9 +2304,97 @@ class MomentumBacktester:
                             pos, sz, day, price, "KELTNER_UPPER_EXIT"))
                         exited = True
 
+                elif pos["strategy"] == "WT":
+                    # WT exits: S1 +15% sell 50%, daily close < weekly EMA50, 12% trail
+                    stage = pos.get("partial_stage", 0)
+                    remaining = pos["remaining_shares"] if pos["partial_exit_done"] else pos["shares"]
+
+                    # Nifty crash shield for WT
+                    wt_nifty_shields = False
+                    wt_nifty_entry = pos.get("nifty_at_entry", 0.0)
+                    if wt_nifty_entry > 0 and nifty_today_close > 0:
+                        nifty_pct = (nifty_today_close - wt_nifty_entry) / wt_nifty_entry
+                        stock_pct = (price - pos["entry_price"]) / pos["entry_price"]
+                        if nifty_pct <= stock_pct and nifty_pct < 0:
+                            wt_nifty_shields = True
+
+                    # S1: +15% partial — sell 50%
+                    if not exited and stage == 0 and price >= pos["entry_price"] * 1.15:
+                        half = remaining // 2
+                        if half > 0:
+                            trades.append(self._make_portfolio_trade(
+                                pos, half, day, price, "WT_PARTIAL_15PCT"))
+                            pos["remaining_shares"] = remaining - half
+                            pos["partial_exit_done"] = True
+                            pos["partial_stage"] = 1
+                            remaining = pos["remaining_shares"]
+
+                    # Weekly EMA50 exit: daily close < weekly EMA50 (with Nifty shield)
+                    if not exited and remaining > 0:
+                        weekly_raw = ind["weekly_raw"]
+                        w_dates = weekly_raw.index
+                        day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
+                        w_before = w_dates[w_dates < day_ts]
+                        if len(w_before) >= 1:
+                            w_idx = len(w_before) - 1
+                            wt_ema50_val = ind["wt_w_ema50"].iloc[w_idx]
+                            if not pd.isna(wt_ema50_val) and price < float(wt_ema50_val):
+                                if not wt_nifty_shields:
+                                    trades.append(self._make_portfolio_trade(
+                                        pos, remaining, day, price, "WT_BELOW_EMA50"))
+                                    exited = True
+
+                    # 12% trailing stop (with Nifty shield)
+                    if not exited and remaining > 0:
+                        highest = pos.get("wt_highest", pos["entry_price"])
+                        highest = max(highest, float(highs.iloc[day_idx]) if day_idx < len(highs) else highest)
+                        pos["wt_highest"] = highest
+                        if price <= highest * 0.88:
+                            if not wt_nifty_shields:
+                                trades.append(self._make_portfolio_trade(
+                                    pos, remaining, day, price, "WT_TRAIL_STOP"))
+                                exited = True
+
+                elif pos["strategy"] == "RS":
+                    # RS Rotation exits — no partials, full position out
+                    rs_shares = pos["shares"]
+
+                    # 1. Hard SL from entry (default 10%, configurable)
+                    if not exited and price <= pos["entry_price"] * rs_hard_sl:
+                        sl_pct = int(round((1 - rs_hard_sl) * 100))
+                        trades.append(self._make_portfolio_trade(
+                            pos, rs_shares, day, price, f"RS_HARD_SL_{sl_pct}PCT"))
+                        rs_cooldown[pos["symbol"]] = day_idx + 20
+                        exited = True
+
+                    # 2. Price < 30-week EMA (trend break)
+                    if not exited:
+                        rs_ema30w = ind.get("rs_ema30w_daily")
+                        if rs_ema30w is not None and i < len(rs_ema30w) and not pd.isna(rs_ema30w.iloc[i]):
+                            if price < float(rs_ema30w.iloc[i]):
+                                trades.append(self._make_portfolio_trade(
+                                    pos, rs_shares, day, price, "RS_TREND_BREAK"))
+                                rs_cooldown[pos["symbol"]] = day_idx + 20
+                                exited = True
+
+                    # 3. 21d RS < 0 for 10 consecutive trading days (2 weeks)
+                    if not exited:
+                        rs_21d_series = ind.get("rs_21d")
+                        if rs_21d_series is not None and i < len(rs_21d_series) and not pd.isna(rs_21d_series.iloc[i]):
+                            rs_21d_val = float(rs_21d_series.iloc[i])
+                            if rs_21d_val < 0:
+                                pos["rs_neg_streak_days"] = pos.get("rs_neg_streak_days", 0) + 1
+                            else:
+                                pos["rs_neg_streak_days"] = 0
+                            if pos.get("rs_neg_streak_days", 0) >= 10:
+                                trades.append(self._make_portfolio_trade(
+                                    pos, rs_shares, day, price, "RS_UNDERPERFORM"))
+                                rs_cooldown[pos["symbol"]] = day_idx + 20
+                                exited = True
+
                 # Underwater exit — if held >= N trading days and still underwater, cut it
-                # Strategy-dependent: MW 25d, RW 50d, others use configured value (default 10d)
-                uw_days_map = {"RW": 50, "MW": 25}
+                # Strategy-dependent: MW 25d, RW 50d, WT 30d, others use configured value (default 10d)
+                uw_days_map = {"RW": 50, "MW": 25, "WT": 30, "RS": rs_uw_days}
                 uw_days = uw_days_map.get(pos["strategy"], underwater_exit_days)
                 if not exited and uw_days:
                     trading_days_held = day_idx - pos.get("entry_day_idx", day_idx)
@@ -2173,14 +2493,15 @@ class MomentumBacktester:
                                     "atr_norm": sig_atr14 / price if price > 0 else 99.0,
                                 })
 
-                # Strategy R entry: Bullish RSI divergence + green + no gap-down
+                # Strategy R entry: Bullish RSI divergence + green + no gap-down + IBS > 0.5
                 if "R" in strategies:
                     already_jt = any(s["symbol"] == ticker for s in signals)
-                    if not already_jt and is_green:
+                    if not already_jt and is_green and ibs > 0.5:
                         rsi14_vals = ind["rsi14"].values
                         lows_vals = ind["lows"].values
                         divergence, swing_low_val = self._detect_bullish_divergence(
-                            lows_vals, rsi14_vals, i, ind["swing_lows"])
+                            lows_vals, rsi14_vals, i, ind["swing_lows"],
+                            rsi_threshold=35)
                         r_div_type = "regular"
                         if not divergence:
                             # Try hidden bullish divergence if price > EMA50 (uptrend)
@@ -2209,7 +2530,7 @@ class MomentumBacktester:
                 # Strategy MW entry: Weekly ADX crosses above 25 with DI+ > DI-
                 if "MW" in strategies:
                     already_any = any(s["symbol"] == ticker for s in signals)
-                    if not already_any and is_green:
+                    if not already_any and is_green and ibs > 0.5:
                         weekly_raw = ind["weekly_raw"]
                         w_dates = weekly_raw.index
                         day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
@@ -2221,7 +2542,7 @@ class MomentumBacktester:
                             plus_di = ind["mw_weekly_plus_di_vals"][w_idx]
                             minus_di = ind["mw_weekly_minus_di_vals"][w_idx]
                             if (not np.isnan(curr_adx) and not np.isnan(prev_adx)
-                                    and curr_adx >= 20 and curr_adx > prev_adx
+                                    and curr_adx >= mw_adx_threshold and curr_adx > prev_adx
                                     and plus_di > minus_di):
                                     signals.append({
                                         "symbol": ticker,
@@ -2232,7 +2553,48 @@ class MomentumBacktester:
                                         "atr_norm": sig_atr14 / price if price > 0 else 99.0,
                                     })
 
-                # Strategy RW: collect weekly divergence signals separately
+                # Strategy WT entry: Weekly trend breakout (confirmed prev week candle)
+                if "WT" in strategies:
+                    already_any = any(s["symbol"] == ticker for s in signals)
+                    if not already_any and is_green and ibs > 0.5:
+                        weekly_raw = ind["weekly_raw"]
+                        w_dates = weekly_raw.index
+                        day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
+                        w_before = w_dates[w_dates < day_ts]
+                        if len(w_before) >= 2:
+                            w_idx = len(w_before) - 1
+                            def _wt_val(series, idx):
+                                v = series.iloc[idx] if idx < len(series) else np.nan
+                                return float(v) if not pd.isna(v) else 0.0
+                            wt_cl = _wt_val(ind["wt_w_close_prev"], w_idx)
+                            wt_hn = _wt_val(ind["wt_w_high20_prev"], w_idx)
+                            wt_e20 = _wt_val(ind["wt_w_ema20_prev"], w_idx)
+                            wt_e50 = _wt_val(ind["wt_w_ema50_prev"], w_idx)
+                            wt_slope = _wt_val(ind["wt_w_slope_prev"], w_idx)
+                            wt_gap = _wt_val(ind["wt_w_gap_prev"], w_idx)
+                            wt_gap2 = _wt_val(ind["wt_w_gap_prev2"], w_idx)
+                            wt_gpct = _wt_val(ind["wt_w_gap_pct_prev"], w_idx)
+                            wt_vol = _wt_val(ind["wt_w_vol_prev"], w_idx)
+                            wt_vavg = _wt_val(ind["wt_w_vol_avg_prev"], w_idx)
+                            wt_ret = _wt_val(ind["wt_w_return_prev"], w_idx)
+
+                            if (wt_e20 > 0 and wt_e50 > 0 and wt_hn > 0
+                                    and wt_cl >= wt_hn  # 20-week breakout
+                                    and wt_e20 > wt_e50  # EMA trend
+                                    and wt_gap > wt_gap2 > 0  # gap widening
+                                    and wt_slope >= 0.4  # slope steep
+                                    and wt_gpct >= 2.0  # gap >= 2%
+                                    and wt_vavg > 0 and wt_vol >= wt_vavg * 1.3  # volume
+                                    and wt_ret <= 15.0):  # no parabolic spike
+                                signals.append({
+                                    "symbol": ticker,
+                                    "strategy": "WT",
+                                    "price": price,
+                                    "atr14": sig_atr14,
+                                    "stop_pct": 12.0,
+                                    "atr_norm": sig_atr14 / price if price > 0 else 99.0,
+                                })
+
                 # Strategy RW: collect weekly divergence signals separately (>=3pt RSI div)
                 if "RW" in strategies:
                     rw_open = sum(1 for p in positions if p["strategy"] == "RW")
@@ -2281,25 +2643,133 @@ class MomentumBacktester:
             if not signals and rw_signals:
                 signals = rw_signals
 
+            # RS Rotation: rank all stocks by 123d RS, fill open slots with top candidates
+            if "RS" in strategies:
+                # Regime filter: off when Nifty < 20w EMA, resume when 10w > 20w
+                nifty_regime_ok = nifty_rs_regime_ok.get(day, True)
+                rs_open = sum(1 for p in positions if p["strategy"] == "RS")
+                rs_slots = MAX_POSITIONS - rs_open - sum(1 for s in signals if s["strategy"] != "RS")
+                if rs_slots > 0 and nifty_regime_ok:
+                    rs_candidates = []
+                    for ticker, ind in indicators.items():
+                        if ticker in held_symbols:
+                            continue
+                        if rs_cooldown.get(ticker, 0) > day_idx:
+                            continue
+                        if day not in date_to_idx.get(ticker, {}):
+                            continue
+                        ci = date_to_idx[ticker][day]
+                        rs_123d_s = ind.get("rs_123d")
+                        rs_ema30w = ind.get("rs_ema30w_daily")
+                        if rs_123d_s is None or ci >= len(rs_123d_s) or pd.isna(rs_123d_s.iloc[ci]):
+                            continue
+                        rs_val = float(rs_123d_s.iloc[ci])
+                        if rs_val <= 5.0:
+                            continue
+                        # RS must be rising vs 28 trading days ago
+                        if ci >= 28 and not pd.isna(rs_123d_s.iloc[ci - 28]):
+                            rs_28ago = float(rs_123d_s.iloc[ci - 28])
+                            if rs_val <= rs_28ago:
+                                continue
+                        else:
+                            continue
+                        # Price > 30-week EMA
+                        if rs_ema30w is None or ci >= len(rs_ema30w) or pd.isna(rs_ema30w.iloc[ci]):
+                            continue
+                        cp = float(ind["closes"].iloc[ci])
+                        co = float(ind["opens"].iloc[ci])
+                        if cp <= float(rs_ema30w.iloc[ci]):
+                            continue
+                        # Green candle + no gap-down + IBS > 0.5
+                        if cp <= co:
+                            continue
+                        rs_high = float(ind["highs"].iloc[ci])
+                        rs_low = float(ind["lows"].iloc[ci])
+                        rs_hl = rs_high - rs_low
+                        rs_ibs = (cp - rs_low) / rs_hl if rs_hl > 0 else 0.5
+                        if rs_ibs <= 0.5:
+                            continue
+                        if ci > 0:
+                            prev_cl = float(ind["closes"].iloc[ci - 1])
+                            if co < prev_cl:
+                                continue
+                        sig_atr = float(ind["atr14"].iloc[ci]) if not pd.isna(ind["atr14"].iloc[ci]) else 0.0
+                        # --- Optional entry filters (controlled by rs_entry_filters) ---
+                        rs_filters = rs_entry_filters or []
+                        skip = False
+                        # Filter 1: Distance from 20d high (not at blow-off top)
+                        if "dist_high" in rs_filters and ci >= 20:
+                            high_20d = max(float(ind["highs"].iloc[j]) for j in range(ci - 20, ci))
+                            if high_20d > 0 and (high_20d - cp) / high_20d < rs_dist_high_pct:
+                                skip = True  # within 3% of 20d high — too extended
+                        # Filter 2: RSI(14) < 70 (not overbought)
+                        if "rsi70" in rs_filters:
+                            rsi_val = ind["rsi14"].iloc[ci]
+                            if not pd.isna(rsi_val) and float(rsi_val) >= 70:
+                                skip = True
+                        # Filter 3: Volume climax (high vol + red candle in last 5 bars)
+                        if "vol_climax" in rs_filters and ci >= 5:
+                            for vj in range(ci - 5, ci):
+                                v = float(ind["volume"].iloc[vj]) if not pd.isna(ind["volume"].iloc[vj]) else 0
+                                va = float(ind["vol_avg20"].iloc[vj]) if not pd.isna(ind["vol_avg20"].iloc[vj]) else 1
+                                c_vj = float(ind["closes"].iloc[vj])
+                                o_vj = float(ind["opens"].iloc[vj])
+                                if va > 0 and v > 2 * va and c_vj < o_vj:
+                                    skip = True
+                                    break
+                        # Filter 4: ATR expansion (ATR > 1.5x its 20-period avg)
+                        if "atr_expand" in rs_filters and ci >= 20 and sig_atr > 0:
+                            atr_vals = [float(ind["atr14"].iloc[j]) for j in range(ci - 20, ci)
+                                        if not pd.isna(ind["atr14"].iloc[j])]
+                            if atr_vals:
+                                atr_avg20 = sum(atr_vals) / len(atr_vals)
+                                if atr_avg20 > 0 and sig_atr > 1.5 * atr_avg20:
+                                    skip = True
+                        if skip:
+                            continue
+                        rs_candidates.append({
+                            "symbol": ticker,
+                            "strategy": "RS",
+                            "price": cp,
+                            "atr14": sig_atr,
+                            "stop_pct": round((1 - rs_hard_sl) * 100, 1),
+                            "atr_norm": sig_atr / cp if cp > 0 else 99.0,
+                            "rs_123d": rs_val,
+                        })
+                    # Rank by sector momentum (primary) then RS (secondary) when enabled
+                    if rank_by_sector_momentum:
+                        _day_sec_mom_rs = sector_momentum_by_date.get(day, {})
+                        from sector_mapping import STOCK_SECTOR_MAP as _SM_RS
+                        for _rc in rs_candidates:
+                            _sec = _SM_RS.get(_rc["symbol"], "OTHER")
+                            _rc["sector_mom"] = _day_sec_mom_rs.get(_sec, 0.0)
+                        rs_candidates.sort(key=lambda c: (-c["sector_mom"], -c["rs_123d"]))
+                    else:
+                        rs_candidates.sort(key=lambda c: -c["rs_123d"])
+                    rs_take = min(len(rs_candidates), rs_slots)
+                    signals.extend(rs_candidates[:rs_take])
+
             total_signals += len(signals)
 
-            # Filter out signals in sectors with negative momentum
+            # Filter out signals in sectors with negative momentum (skip RS — it uses its own ranking)
             if rank_by_sector_momentum:
                 day_sec_mom_filt = sector_momentum_by_date.get(day, {})
                 from sector_mapping import STOCK_SECTOR_MAP as _SM_FILT
                 before_filt = len(signals)
                 signals = [s for s in signals
-                           if day_sec_mom_filt.get(_SM_FILT.get(s["symbol"], "OTHER"), 0.0) >= 0]
+                           if s.get("strategy") == "RS" or day_sec_mom_filt.get(_SM_FILT.get(s["symbol"], "OTHER"), 0.0) >= 0]
                 filtered_out = before_filt - len(signals)
                 missed_signals += filtered_out
 
             # === 3. Allocate capital (max entries_per_day) ===
             available_slots = MAX_POSITIONS - len(positions)
-            max_today = min(entries_per_day, available_slots)
+            # RS fills all available slots (event-driven rotation), others respect entries_per_day
+            rs_only = all(s.get("strategy") == "RS" for s in signals) if signals else False
+            max_today = available_slots if rs_only else min(entries_per_day, available_slots)
             if signals and max_today > 0:
                 if rank_by_risk:
                     rng = random.Random(seed)
-                    strat_priority = {"R": 0, "MW": 0, "T": 0, "J": 0, "RW": 0}
+                    strat_priority = {"R": 0, "MW": 0, "RS": 0, "WT": 1, "T": 2, "J": 3, "RW": 1}
                     if rank_by_sector_momentum:
                         # Sector momentum (descending), then lowest ATR — equal strategy priority
                         day_sec_mom = sector_momentum_by_date.get(day, {})
@@ -2353,6 +2823,11 @@ class MomentumBacktester:
                         elif sig["strategy"] in ("R", "RW"):
                             pos["r_swing_low_stop"] = sig["r_swing_low_stop"]
                             pos["div_type"] = sig.get("div_type", "regular")
+                        elif sig["strategy"] == "WT":
+                            pos["wt_highest"] = sig["price"]
+                        elif sig["strategy"] == "RS":
+                            pos["rs_neg_streak_days"] = 0
+                            pos["rs_123d_at_entry"] = sig.get("rs_123d", 0)
                         # MW uses same hard SL as T — no extra pos fields needed
                         positions.append(pos)
             elif signals and available_slots <= 0:
@@ -2437,8 +2912,10 @@ class MomentumBacktester:
             tickers = NIFTY_50_TICKERS
         elif universe <= 100:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
-        else:
+        elif universe <= 200:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+        else:
+            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS + NIFTY_500_BEYOND200_TICKERS
 
         results = []
         total = len(tickers)
