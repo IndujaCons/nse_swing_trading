@@ -1675,7 +1675,9 @@ class MomentumBacktester:
                               rs_ibd_min_rating=80,
                               rs_ibd_max_rating=99,
                               rs_ibd_skip_top=0,
-                              rs_ibd_consec_days=0):
+                              rs_ibd_consec_days=0,
+                              rs_ibd_rank_by_rating=True,
+                              rs_underperform_thresh=0):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -1714,16 +1716,15 @@ class MomentumBacktester:
         except Exception:
             nifty_raw = pd.DataFrame()
 
-        # Fetch benchmark index for RS filter (WT strategy)
-        # Nifty 50 for universe<=100, Nifty 200 for universe<=200/500
+        # Fetch benchmark index for RS calculation — Nifty 200 for universe > 100
         bench_symbol = "^NSEI" if universe <= 100 else "^CNX200"
         try:
             if bench_symbol == "^NSEI" and not nifty_raw.empty:
-                bench_raw = nifty_raw  # Reuse already-fetched data
+                bench_raw = nifty_raw
             else:
                 bench_raw = yf.Ticker(bench_symbol).history(start=daily_start, end=end_date)
         except Exception:
-            bench_raw = nifty_raw  # Fallback to Nifty 50
+            bench_raw = nifty_raw
         bench_ret123 = pd.Series(dtype=float)
         bench_ret21 = pd.Series(dtype=float)
         if not bench_raw.empty:
@@ -1924,6 +1925,8 @@ class MomentumBacktester:
                 # RS Rotation strategy indicators
                 "rs_21d": (closes / closes.shift(21) - 1) * 100 - (bench_ret21.reindex(daily.index, method="ffill") if not bench_ret21.empty else pd.Series(0.0, index=daily.index)),
                 "rs_123d": (closes / closes.shift(123) - 1) * 100 - (bench_ret123.reindex(daily.index, method="ffill") if not bench_ret123.empty else pd.Series(0.0, index=daily.index)),
+                "rs_123d_smooth": (lambda sc5, bc5: (sc5 / sc5.shift(123) - 1) * 100 - ((bc5 / bc5.shift(123) - 1) * 100 if not bench_ret123.empty else pd.Series(0.0, index=daily.index)))(closes.rolling(5, center=True, min_periods=3).mean(), bench_raw["Close"].reindex(daily.index, method="ffill").rolling(5, center=True, min_periods=3).mean() if not bench_raw.empty else pd.Series(0.0, index=daily.index)),
+                "rs_123d_ma100": ((closes / closes.shift(123) - 1) * 100 - (bench_ret123.reindex(daily.index, method="ffill") if not bench_ret123.empty else pd.Series(0.0, index=daily.index))).rolling(100).mean(),
                 # IBD-style weighted RS: 40% Q4 (0-63d) + 20% Q3 (63-126d) + 20% Q2 (126-189d) + 20% Q1 (189-252d)
                 "rs_weighted": (
                     0.4 * (closes / closes.shift(63) - 1) * 100 +
@@ -2054,6 +2057,8 @@ class MomentumBacktester:
         positions_over_time = []
         running_pnl = 0  # cumulative realized PnL
         rs_cooldown = {}  # ticker -> day_idx when cooldown expires (RS rotation)
+        liquid_fund_income = 0.0  # cumulative income from idle capital in liquid fund
+        LIQUID_FUND_DAILY_RATE = 0.04 / 252  # ~4% annualized, per trading day
 
         for day_idx, day in enumerate(all_dates):
             if progress_callback and day_idx % 20 == 0:
@@ -2428,12 +2433,12 @@ class MomentumBacktester:
                                 rs_cooldown[pos["symbol"]] = day_idx + 20
                                 exited = True
 
-                    # 3. 21d RS < 0 for 10 consecutive trading days (2 weeks)
+                    # 3. 21d RS < threshold for 10 consecutive trading days (2 weeks)
                     if not exited:
                         rs_21d_series = ind.get("rs_21d")
                         if rs_21d_series is not None and i < len(rs_21d_series) and not pd.isna(rs_21d_series.iloc[i]):
                             rs_21d_val = float(rs_21d_series.iloc[i])
-                            if rs_21d_val < 0:
+                            if rs_21d_val < rs_underperform_thresh:
                                 pos["rs_neg_streak_days"] = pos.get("rs_neg_streak_days", 0) + 1
                             else:
                                 pos["rs_neg_streak_days"] = 0
@@ -2758,6 +2763,16 @@ class MomentumBacktester:
                                 prev_cl = float(ind["closes"].iloc[ci - 1])
                                 if co < prev_cl:
                                     continue
+                            # Check RS-123d > 0 (stock must outperform benchmark over 6 months)
+                            actual_rs_123d = float(rs_123d_s.iloc[ci])
+                            if "rs_positive" in ibd_filters and actual_rs_123d <= 0:
+                                continue
+                            # Smoothed RS-123d > 0 (5-day avg both ends, removes spike entries)
+                            if "rs_smooth_positive" in ibd_filters:
+                                rs_123d_smooth_s = ind.get("rs_123d_smooth")
+                                if rs_123d_smooth_s is not None and ci < len(rs_123d_smooth_s) and not pd.isna(rs_123d_smooth_s.iloc[ci]):
+                                    if float(rs_123d_smooth_s.iloc[ci]) <= 0:
+                                        continue
                             rs_val = rating  # use rating for ranking
                         else:
                             # Default frozen: RS > 5% and rising
@@ -2820,6 +2835,12 @@ class MomentumBacktester:
                                 atr_avg20 = sum(atr_vals) / len(atr_vals)
                                 if atr_avg20 > 0 and sig_atr > 1.5 * atr_avg20:
                                     skip = True
+                        # Filter 5: RS must be above its 100-day MA
+                        if "rs_above_ma100" in rs_filters:
+                            rs_ma100_s = ind.get("rs_123d_ma100")
+                            if rs_ma100_s is not None and ci < len(rs_ma100_s) and not pd.isna(rs_ma100_s.iloc[ci]):
+                                if rs_val < float(rs_ma100_s.iloc[ci]):
+                                    skip = True
                         if skip:
                             continue
                         rs_candidates.append({
@@ -2830,17 +2851,20 @@ class MomentumBacktester:
                             "stop_pct": round((1 - rs_hard_sl) * 100, 1),
                             "atr_norm": sig_atr / cp if cp > 0 else 99.0,
                             "rs_123d": rs_val,
+                            "ibd_rating": day_ratings.get(ticker, 0) if rs_entry_mode == "rs_rating" else 0,
+                            "actual_rs": float(rs_123d_s.iloc[ci]),
                         })
                     # Rank by sector momentum (primary) then RS (secondary) when enabled
+                    rank_key = "ibd_rating" if rs_ibd_rank_by_rating else "actual_rs"
                     if rank_by_sector_momentum:
                         _day_sec_mom_rs = sector_momentum_by_date.get(day, {})
                         from sector_mapping import STOCK_SECTOR_MAP as _SM_RS
                         for _rc in rs_candidates:
                             _sec = _SM_RS.get(_rc["symbol"], "OTHER")
                             _rc["sector_mom"] = _day_sec_mom_rs.get(_sec, 0.0)
-                        rs_candidates.sort(key=lambda c: (-c["sector_mom"], -c["rs_123d"]))
+                        rs_candidates.sort(key=lambda c: (-c["sector_mom"], -c[rank_key]))
                     else:
-                        rs_candidates.sort(key=lambda c: -c["rs_123d"])
+                        rs_candidates.sort(key=lambda c: -c[rank_key])
                     # Skip top N candidates if rs_ibd_skip_top > 0
                     rs_pool = rs_candidates[rs_ibd_skip_top:] if rs_ibd_skip_top > 0 else rs_candidates
                     rs_take = min(len(rs_pool), rs_slots)
@@ -2936,6 +2960,10 @@ class MomentumBacktester:
                 "date": day.isoformat(),
                 "positions": len(positions)
             })
+            # Liquid fund income on idle capital (empty slots)
+            empty_slots = MAX_POSITIONS - len(positions)
+            if empty_slots > 0:
+                liquid_fund_income += empty_slots * PER_STOCK * LIQUID_FUND_DAILY_RATE
 
         # --- Close remaining positions at end ---
         last_day = all_dates[-1]
@@ -2986,6 +3014,7 @@ class MomentumBacktester:
             "missed_signals": missed_signals,
             "max_positions_used": max_positions_used,
             "universe": universe,
+            "liquid_fund_income": round(liquid_fund_income, 2),
         }
 
     def _make_portfolio_trade(self, pos, shares, exit_date, exit_price, reason):

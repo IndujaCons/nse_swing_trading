@@ -369,7 +369,7 @@ class LiveSignalsEngine:
         except Exception:
             nifty_raw = pd.DataFrame()
 
-        # Fetch Nifty 200 benchmark for RS calculation
+        # Benchmark for RS calculation — Nifty 200
         try:
             bench_raw = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
         except Exception:
@@ -699,120 +699,8 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
-        # Strategy WT: Weekly Trend Breakout — scans full Nifty 500
+        # Strategy WT: disabled (was scanning full Nifty 500, too slow)
         wt_signals = []
-        wt_tickers = NIFTY_500_TICKERS  # Full Nifty 500
-        # Exclude tickers already scanned that have other signals
-        already_signaled = set(s["ticker"] for s in j_signals + t_signals + r_signals + mw_signals)
-        wt_total = len(wt_tickers)
-        for wt_idx, ticker in enumerate(wt_tickers):
-            if progress_callback:
-                progress_callback(total + wt_idx + 1, total + wt_total, f"WT: {ticker}")
-            try:
-                daily_wt = yf.Ticker(f"{ticker}.NS").history(
-                    start=daily_start, end=end_date)
-            except Exception:
-                continue
-            if daily_wt.empty or len(daily_wt) < 210:
-                continue
-
-            wt_closes = daily_wt["Close"]
-            wt_opens = daily_wt["Open"]
-            wt_highs = daily_wt["High"]
-            wt_lows = daily_wt["Low"]
-            wt_volumes = daily_wt["Volume"].astype(float)
-            wi = len(daily_wt) - 1
-            wt_price = float(wt_closes.iloc[wi])
-            wt_open = float(wt_opens.iloc[wi])
-            wt_is_green = wt_price > wt_open
-            wt_low = float(wt_lows.iloc[wi])
-            wt_high = float(wt_highs.iloc[wi])
-            wt_hl = wt_high - wt_low
-            wt_ibs = (wt_price - wt_low) / wt_hl if wt_hl > 0 else 0.5
-
-            # Gap-down filter
-            if wi > 0:
-                wt_prev_close = float(wt_closes.iloc[wi - 1])
-                if wt_open < wt_prev_close:
-                    continue
-
-            if not wt_is_green or wt_ibs <= 0.5:
-                continue
-
-            try:
-                weekly_wt = daily_wt.resample("W-FRI").agg({
-                    "Open": "first", "High": "max", "Low": "min",
-                    "Close": "last", "Volume": "sum"
-                }).dropna()
-                if len(weekly_wt) < 25:
-                    continue
-
-                w_closes_wt = weekly_wt["Close"]
-                w_ema20 = w_closes_wt.ewm(span=20, adjust=False).mean()
-                w_ema50 = w_closes_wt.ewm(span=50, adjust=False).mean()
-                w_high20 = w_closes_wt.rolling(20).max()
-                w_slope = (w_ema50 / w_ema50.shift(4) - 1) * 100 / 4
-                w_gap = w_ema20 - w_ema50
-                w_gap_pct = (w_ema20 - w_ema50) / w_ema50 * 100
-                w_vol = weekly_wt["Volume"]
-                w_vol_avg20 = w_vol.rolling(20).mean()
-                w_return = (w_closes_wt / w_closes_wt.shift(1) - 1) * 100
-
-                # Use previous completed week (shift by 1)
-                w_dates = weekly_wt.index
-                day_ts = pd.Timestamp(actual_date or datetime.now().date())
-                if w_dates.tz:
-                    day_ts = day_ts.tz_localize(w_dates.tz)
-                w_before = w_dates[w_dates < day_ts]
-                if len(w_before) < 2:
-                    continue
-                w_idx = len(w_before) - 1
-
-                def _wt_v(series, idx):
-                    v = series.iloc[idx] if idx < len(series) else np.nan
-                    return float(v) if not pd.isna(v) else 0.0
-
-                # All shifted by 1 for confirmed candle
-                cl = _wt_v(w_closes_wt.shift(1), w_idx)
-                hn = _wt_v(w_high20.shift(1), w_idx)
-                e20 = _wt_v(w_ema20.shift(1), w_idx)
-                e50 = _wt_v(w_ema50.shift(1), w_idx)
-                sl = _wt_v(w_slope.shift(1), w_idx)
-                gp = _wt_v(w_gap.shift(1), w_idx)
-                gp2 = _wt_v(w_gap.shift(2), w_idx)
-                gpct = _wt_v(w_gap_pct.shift(1), w_idx)
-                vol = _wt_v(w_vol.shift(1), w_idx)
-                vavg = _wt_v(w_vol_avg20.shift(1), w_idx)
-                ret = _wt_v(w_return.shift(1), w_idx)
-
-                if (e20 > 0 and e50 > 0 and hn > 0
-                        and cl >= hn          # 20-week breakout
-                        and e20 > e50         # EMA trend
-                        and gp > gp2 > 0      # gap widening
-                        and sl >= 0.4          # slope steep enough
-                        and gpct >= 2.0        # gap >= 2%
-                        and vavg > 0 and vol >= vavg * 1.3  # volume
-                        and ret <= 15.0):      # no parabolic spike
-                    # ATR14
-                    pc_wt = wt_closes.shift(1)
-                    tr1_wt = wt_highs - wt_lows
-                    tr2_wt = (wt_highs - pc_wt).abs()
-                    tr3_wt = (wt_lows - pc_wt).abs()
-                    tr_wt = pd.concat([tr1_wt, tr2_wt, tr3_wt], axis=1).max(axis=1)
-                    atr14_wt = float(tr_wt.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[wi])
-                    atr_pct_wt = round(atr14_wt / wt_price * 100, 2) if wt_price > 0 else 99.0
-                    wt_signals.append({
-                        "ticker": ticker,
-                        "price": round(wt_price, 2),
-                        "slope": round(sl, 2),
-                        "gap_pct": round(gpct, 1),
-                        "vol_ratio": round(vol / vavg, 1) if vavg > 0 else 0,
-                        "week_return": round(ret, 1),
-                        "stop_pct": 12.0,
-                        "atr_pct": atr_pct_wt,
-                    })
-            except Exception:
-                pass
 
         # IBD RS Rating: rank all candidates by weighted score → percentile
         # Apply 5-day consecutive filter, skip top 2, filter >= 80
@@ -845,16 +733,18 @@ class LiveSignalsEngine:
             for c in rs_ibd_candidates:
                 if c["ibd_rating"] < 80 or not c["above_ema"] or not c["dist_high_ok"]:
                     continue
+                # RS-123d must be positive (stock outperforming benchmark)
+                if c["rs_pct"] <= 0:
+                    continue
                 # 5-day consecutive: check past 4 days all >= 80
                 hist_ratings = past_ratings.get(c["ticker"], [])
                 if len(hist_ratings) >= 4 and all(r >= 80 for r in hist_ratings):
                     qualified.append(c)
 
-            # Sort by rating descending, skip top 2, take rest
+            # Sort by IBD Rating descending (matches backtest ranking)
             qualified.sort(key=lambda c: -c["ibd_rating"])
-            qualified = qualified[2:]  # skip top 2
 
-            for c in qualified:
+            for rank_i, c in enumerate(qualified):
                 rs_signals.append({
                     "ticker": c["ticker"],
                     "price": c["price"],
@@ -865,6 +755,7 @@ class LiveSignalsEngine:
                     "stop_pct": c["stop_pct"],
                     "sector": c["sector"],
                     "regime_off": c["regime_off"],
+                    "rs_rank": rank_i + 1,  # 1-based rank (pick #3)
                 })
 
         # Compute sector momentum
@@ -1354,8 +1245,74 @@ class LiveSignalsEngine:
                     except Exception:
                         pass
 
+            elif pos["strategy"] == "RS":
+                # RS exits: 8% hard SL, 30w EMA trend break, 10d underperformance
+                rs_shares = pos["shares"]
+
+                # Nifty crash shield for RS
+                rs_nifty_entry = pos.get("metadata", {}).get("nifty_at_entry", 0)
+                rs_nifty_shields = False
+                if rs_nifty_entry > 0 and nifty_close_today > 0:
+                    nifty_pct = (nifty_close_today - rs_nifty_entry) / rs_nifty_entry
+                    stock_pct = (current_price - entry_price) / entry_price
+                    if nifty_pct <= stock_pct and nifty_pct < 0:
+                        rs_nifty_shields = True
+
+                # 1. Hard SL: 8% from entry (with Nifty shield)
+                if not rs_nifty_shields and current_price <= entry_price * 0.92:
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "RS_HARD_SL_8PCT", rs_shares))
+                    continue
+
+                # 2. Price < 30-week EMA (trend break)
+                try:
+                    rs_daily = yf.Ticker(f"{ticker}.NS").history(
+                        start=end_date - timedelta(days=300), end=end_date)
+                    if not rs_daily.empty and len(rs_daily) >= 150:
+                        rs_weekly = rs_daily["Close"].resample("W-FRI").last().dropna()
+                        if len(rs_weekly) >= 30:
+                            rs_ema30w = rs_weekly.ewm(span=30, adjust=False).mean()
+                            rs_ema30w_daily = rs_ema30w.reindex(rs_daily.index, method="ffill")
+                            rs_ema30w_val = float(rs_ema30w_daily.iloc[-1])
+                            if current_price < rs_ema30w_val:
+                                exit_signals.append(self._make_exit_signal(
+                                    pos, current_price, pnl_pct, "RS_TREND_BREAK", rs_shares))
+                                continue
+                except Exception:
+                    pass
+
+                # 3. RS-21d < 0 for 10 consecutive days (underperformance vs Nifty)
+                try:
+                    rs_daily2 = yf.Ticker(f"{ticker}.NS").history(
+                        start=end_date - timedelta(days=60), end=end_date)
+                    if not rs_daily2.empty and len(rs_daily2) >= 22 and len(nifty_closes) >= 22:
+                        # Compute 21d return for stock and Nifty
+                        stock_closes = rs_daily2["Close"]
+                        stock_ret21 = (stock_closes / stock_closes.shift(21) - 1) * 100
+                        # Get matching Nifty data
+                        nifty_full = yf.Ticker("^NSEI").history(
+                            start=end_date - timedelta(days=60), end=end_date)
+                        if not nifty_full.empty:
+                            nifty_ret21 = (nifty_full["Close"] / nifty_full["Close"].shift(21) - 1) * 100
+                            nifty_ret21_daily = nifty_ret21.reindex(stock_closes.index, method="ffill")
+                            rs_21d = stock_ret21 - nifty_ret21_daily
+                            rs_21d = rs_21d.dropna()
+                            if len(rs_21d) >= 10:
+                                last_10 = rs_21d.iloc[-10:]
+                                if all(v < 0 for v in last_10):
+                                    exit_signals.append(self._make_exit_signal(
+                                        pos, current_price, pnl_pct, "RS_UNDERPERFORM", rs_shares))
+                                    continue
+                except Exception:
+                    pass
+
         # Underwater exit: if held >= 10 trading days and still below entry, cut it
+        # RS strategy uses rs_uw_days=0 (disabled), so skip RS positions
         for pos in positions:
+            # Skip RS — underwater exit disabled (rs_uw_days=0 in frozen config)
+            if pos["strategy"] == "RS":
+                continue
+
             # Skip if already flagged for exit above
             already_flagged = any(e["position_id"] == pos["id"] for e in exit_signals)
             if already_flagged:

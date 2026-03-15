@@ -18,6 +18,7 @@ LIVE_SIGNALS_HISTORY_FILE = os.path.join(DATA_STORE_PATH, "live_signals_history.
 MOMENTUM_CACHE_FILE = os.path.join(DATA_STORE_PATH, "momentum_cache.json")
 MOMENTUM_STATE_FILE = os.path.join(DATA_STORE_PATH, "momentum_state.json")
 NSE_INSTRUMENTS_FILE = os.path.join(DATA_STORE_PATH, "nse_instruments.json")
+WATCHLIST_FILE = os.path.join(DATA_STORE_PATH, "watchlist.json")
 
 # Default settings
 DEFAULTS = {

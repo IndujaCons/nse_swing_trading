@@ -4,6 +4,7 @@ Flask Application for RS Dashboard
 
 import os
 import sys
+import json
 from datetime import datetime
 from functools import wraps
 import threading
@@ -21,6 +22,7 @@ from config.settings import (
     FLASK_HOST, FLASK_PORT, DEBUG_MODE,
     PAPER_TRADING_ONLY, load_config, save_config, get_cache_ttl,
     get_kite_users, DATA_STORE_PATH, LIVE_POSITIONS_FILE,
+    WATCHLIST_FILE,
 )
 from data.screener_engine import ScreenerEngine
 from data.live_signals_engine import LiveSignalsEngine
@@ -439,8 +441,8 @@ def buy_live_signal():
     if not ticker or not strategy or not price:
         return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
 
-    if strategy not in ("J", "T", "R", "MW", "WT"):
-        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, or WT"}), 400
+    if strategy not in ("J", "T", "R", "MW", "RS"):
+        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, or RS"}), 400
 
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Valid user_id required"}), 400
@@ -708,8 +710,8 @@ def explain_trade():
     if not symbol or not strategy or not entry_date:
         return jsonify({"success": False, "error": "symbol, strategy, entry_date required"}), 400
 
-    if strategy not in ("J", "T", "R", "MW", "WT"):
-        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, or WT"}), 400
+    if strategy not in ("J", "T", "R", "MW", "RS"):
+        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, or RS"}), 400
 
     try:
         backtester = MomentumBacktester()
@@ -804,7 +806,7 @@ def run_portfolio_backtest():
     if per_stock not in (50000, 100000, 200000, 500000):
         per_stock = 50000
     strategies = data.get("strategies", ["R", "MW"])
-    valid_strats = {"J", "T", "R", "MW", "WT", "RS"}
+    valid_strats = {"J", "T", "R", "MW", "RS"}
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
         strategies = ["R", "MW"]
@@ -824,7 +826,7 @@ def run_portfolio_backtest():
                 "rs_hard_sl": 0.92,
                 "rs_uw_days": 0,
                 "rs_entry_mode": "rs_rating",
-                "rs_ibd_filters": ["regime"],
+                "rs_ibd_filters": ["regime", "rs_positive"],
                 "rs_sl_cooldown": 40,
                 "rs_ibd_skip_top": 2,
                 "rs_ibd_consec_days": 5,
@@ -863,6 +865,374 @@ def get_portfolio_backtest_progress():
     progress = portfolio_backtest_progress.copy()
     progress["in_progress"] = portfolio_backtest_in_progress
     return jsonify(progress)
+
+
+# ============ Watchlist Routes ============
+
+_watchlist_price_cache = {"data": {}, "timestamp": 0}
+_watchlist_news_cache = {"data": {}, "timestamp": 0}
+
+
+def _load_watchlist_data():
+    """Load full watchlist data (groups) from file."""
+    if os.path.exists(WATCHLIST_FILE):
+        try:
+            with open(WATCHLIST_FILE, "r") as f:
+                data = json.load(f)
+            # Migrate old format (plain list) to new format (groups)
+            if isinstance(data, list):
+                data = {"groups": [{"name": "General", "tickers": data}], "active": "General"}
+                _save_watchlist_data(data)
+            return data
+        except (json.JSONDecodeError, IOError):
+            pass
+    return {"groups": [{"name": "General", "tickers": []}], "active": "General"}
+
+
+def _save_watchlist_data(data):
+    """Save full watchlist data to file."""
+    os.makedirs(os.path.dirname(WATCHLIST_FILE), exist_ok=True)
+    with open(WATCHLIST_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def _get_active_group(data):
+    """Get the active group's ticker list."""
+    for g in data["groups"]:
+        if g["name"] == data.get("active"):
+            return g
+    return data["groups"][0] if data["groups"] else {"name": "General", "tickers": []}
+
+
+ETF_TICKERS = [
+    "MONIFTY500", "HDFCSML250", "ALPHA", "NEXT50IETF",
+    "MODEFENCE", "MOM100", "MOCAPITAL", "NIFTYBEES",
+    "GOLDBEES", "MON100", "SILVERBEES", "HEALTHIETF", "ITBEES",
+    "BANKBEES", "PSUBNKBEES", "CPSEETF", "PHARMABEES",
+    "MOENERGY", "OILIETF", "INFRABEES", "AUTOBEES",
+    "METALIETF", "CONSUMBEES", "FMCGIETF",
+]
+
+# International ETFs (US-listed, no .NS suffix)
+INTL_ETF_TICKERS = ["FRDM", "EMXC", "AVDV", "ILF", "GARP"]
+
+def _yf_symbol(ticker):
+    """Return yfinance symbol — skip .NS for international ETFs."""
+    if ticker in INTL_ETF_TICKERS:
+        return ticker
+    return f"{ticker}.NS"
+
+@app.route("/api/watchlist/tickers", methods=["GET"])
+def watchlist_tickers():
+    """Return full Nifty 500 + ETF list for autocomplete."""
+    from nifty500_tickers import NIFTY_500_TICKERS
+    combined = sorted(set(NIFTY_500_TICKERS + ETF_TICKERS + INTL_ETF_TICKERS))
+    return jsonify({"tickers": combined})
+
+
+@app.route("/api/watchlist", methods=["GET"])
+def get_watchlist():
+    """Return active group's watchlist with price data + group metadata."""
+    import time
+    data = _load_watchlist_data()
+    group = _get_active_group(data)
+    watchlist = group["tickers"]
+    groups_meta = [{"name": g["name"], "count": len(g["tickers"])} for g in data["groups"]]
+
+    if not watchlist:
+        return jsonify({"success": True, "stocks": [], "groups": groups_meta,
+                        "active_group": data["active"]})
+
+    now = time.time()
+    cache = _watchlist_price_cache
+    cached_tickers = set(cache["data"].keys())
+    if cache["data"] and now - cache["timestamp"] < 300 and set(watchlist).issubset(cached_tickers):
+        stocks = [cache["data"][t] for t in watchlist if t in cache["data"]]
+        return jsonify({"success": True, "stocks": stocks, "groups": groups_meta,
+                        "active_group": data["active"]})
+
+    try:
+        import yfinance as yf
+        symbols = [_yf_symbol(t) for t in watchlist]
+        df = yf.download(symbols, period="5d", progress=False, group_by="ticker", threads=True)
+
+        stocks = []
+        for ticker in watchlist:
+            sym = _yf_symbol(ticker)
+            try:
+                if len(watchlist) == 1:
+                    closes = df["Close"].dropna()
+                else:
+                    closes = df[sym]["Close"].dropna()
+                if len(closes) >= 2:
+                    ltp = round(float(closes.iloc[-1]), 2)
+                    prev = round(float(closes.iloc[-2]), 2)
+                    change = round(ltp - prev, 2)
+                    change_pct = round(change / prev * 100, 2) if prev else 0
+                else:
+                    ltp = round(float(closes.iloc[-1]), 2) if len(closes) else 0
+                    prev = ltp
+                    change = 0
+                    change_pct = 0
+                entry = {"ticker": ticker, "ltp": ltp, "prev_close": prev,
+                         "change": change, "change_pct": change_pct}
+                stocks.append(entry)
+                cache["data"][ticker] = entry
+            except Exception:
+                stocks.append({"ticker": ticker, "ltp": 0, "prev_close": 0,
+                               "change": 0, "change_pct": 0})
+        cache["timestamp"] = now
+        return jsonify({"success": True, "stocks": stocks, "groups": groups_meta,
+                        "active_group": data["active"]})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/watchlist/add", methods=["POST"])
+def watchlist_add():
+    """Add a stock to active group."""
+    from nifty500_tickers import NIFTY_500_TICKERS
+    ticker = (request.json or {}).get("ticker", "").upper().strip()
+    if not ticker:
+        return jsonify({"success": False, "error": "Ticker required"}), 400
+    if ticker not in NIFTY_500_TICKERS and ticker not in ETF_TICKERS and ticker not in INTL_ETF_TICKERS:
+        return jsonify({"success": False, "error": f"{ticker} not in Nifty 500 / ETF list"}), 400
+
+    data = _load_watchlist_data()
+    group = _get_active_group(data)
+    if ticker in group["tickers"]:
+        return jsonify({"success": True})
+    if len(group["tickers"]) >= 20:
+        return jsonify({"success": False, "error": "Max 20 stocks per group"}), 400
+
+    group["tickers"].append(ticker)
+    _save_watchlist_data(data)
+    return jsonify({"success": True})
+
+
+@app.route("/api/watchlist/remove", methods=["POST"])
+def watchlist_remove():
+    """Remove a stock from active group."""
+    ticker = (request.json or {}).get("ticker", "").upper().strip()
+    data = _load_watchlist_data()
+    group = _get_active_group(data)
+    if ticker in group["tickers"]:
+        group["tickers"].remove(ticker)
+        _save_watchlist_data(data)
+        _watchlist_price_cache["data"].pop(ticker, None)
+    return jsonify({"success": True})
+
+
+@app.route("/api/watchlist/groups", methods=["POST"])
+def watchlist_groups():
+    """Manage watchlist groups: switch, add, rename, delete."""
+    body = request.json or {}
+    action = body.get("action", "")
+    data = _load_watchlist_data()
+
+    if action == "switch":
+        group_name = body.get("name", "")
+        if any(g["name"] == group_name for g in data["groups"]):
+            data["active"] = group_name
+            _save_watchlist_data(data)
+            return jsonify({"success": True})
+        return jsonify({"success": False, "error": "Group not found"}), 404
+
+    elif action == "add":
+        group_name = body.get("name", "").strip()
+        if not group_name:
+            return jsonify({"success": False, "error": "Name required"}), 400
+        if len(data["groups"]) >= 10:
+            return jsonify({"success": False, "error": "Max 10 groups"}), 400
+        if any(g["name"] == group_name for g in data["groups"]):
+            return jsonify({"success": False, "error": "Group already exists"}), 400
+        data["groups"].append({"name": group_name, "tickers": []})
+        data["active"] = group_name
+        _save_watchlist_data(data)
+        return jsonify({"success": True})
+
+    elif action == "rename":
+        old_name = body.get("old_name", "")
+        new_name = body.get("new_name", "").strip()
+        if not new_name:
+            return jsonify({"success": False, "error": "Name required"}), 400
+        if any(g["name"] == new_name for g in data["groups"]):
+            return jsonify({"success": False, "error": "Name already exists"}), 400
+        for g in data["groups"]:
+            if g["name"] == old_name:
+                g["name"] = new_name
+                if data["active"] == old_name:
+                    data["active"] = new_name
+                _save_watchlist_data(data)
+                return jsonify({"success": True})
+        return jsonify({"success": False, "error": "Group not found"}), 404
+
+    elif action == "delete":
+        group_name = body.get("name", "")
+        if len(data["groups"]) <= 1:
+            return jsonify({"success": False, "error": "Cannot delete last group"}), 400
+        data["groups"] = [g for g in data["groups"] if g["name"] != group_name]
+        if data["active"] == group_name:
+            data["active"] = data["groups"][0]["name"]
+        _save_watchlist_data(data)
+        return jsonify({"success": True})
+
+    return jsonify({"success": False, "error": "Unknown action"}), 400
+
+
+@app.route("/api/watchlist/news", methods=["GET"])
+def watchlist_news():
+    """Fetch news for watchlist stocks from Google News RSS (last 1 month)."""
+    import time
+    import urllib.request
+    import xml.etree.ElementTree as ET
+    from email.utils import parsedate_to_datetime
+
+    data = _load_watchlist_data()
+    group = _get_active_group(data)
+    watchlist = group["tickers"]
+    if not watchlist:
+        return jsonify({"success": True, "news": {}})
+
+    now = time.time()
+    cache = _watchlist_news_cache
+    # Check if all watchlist tickers are already cached
+    missing = [t for t in watchlist if t not in cache.get("data", {})]
+    if not missing and cache["data"] and now - cache["timestamp"] < 1800:
+        news = {t: cache["data"].get(t, []) for t in watchlist}
+        return jsonify({"success": True, "news": news})
+
+    # Fetch only missing tickers (or all if cache expired)
+    tickers_to_fetch = missing if (now - cache.get("timestamp", 0) < 1800) else watchlist[:15]
+    news = dict(cache.get("data", {}))
+    for ticker in tickers_to_fetch[:15]:
+        try:
+            url = f"https://news.google.com/rss/search?q={ticker}+NSE+stock&hl=en-IN&gl=IN&ceid=IN:en"
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                xml_data = resp.read()
+            root = ET.fromstring(xml_data)
+            cutoff = datetime.now() - __import__('datetime').timedelta(days=90)
+            items = []
+            for item in root.findall(".//item"):
+                title = item.findtext("title", "")
+                link = item.findtext("link", "")
+                pub_date_raw = item.findtext("pubDate", "")
+                display_date = ""
+                if pub_date_raw:
+                    try:
+                        dt = parsedate_to_datetime(pub_date_raw)
+                        if dt.replace(tzinfo=None) < cutoff:
+                            continue
+                        display_date = dt.strftime("%d %b %Y")
+                    except Exception:
+                        # If date parsing fails, still include the item
+                        parts = pub_date_raw.split(",")
+                        display_date = parts[1].strip()[:11].strip() if len(parts) > 1 else ""
+                items.append({"title": title, "link": link, "date": display_date})
+                if len(items) >= 10:
+                    break
+            news[ticker] = items
+        except Exception:
+            news[ticker] = []
+
+    cache["data"] = news
+    cache["timestamp"] = now
+    # Only return news for current watchlist
+    filtered = {t: news.get(t, []) for t in watchlist}
+    return jsonify({"success": True, "news": filtered})
+
+
+@app.route("/api/watchlist/chart", methods=["GET"])
+def watchlist_chart():
+    """Return daily close prices + RS for a ticker."""
+    import pandas as pd
+    ticker = request.args.get("ticker", "").upper().strip()
+    period = request.args.get("period", "1y").strip()
+    if not ticker:
+        return jsonify({"success": False, "error": "Ticker required"}), 400
+    if period not in ("1mo", "3mo", "6mo", "1y"):
+        period = "1y"
+
+    # RS lookback: 1M→21d, 3M→63d, 6M→123d, 1Y→123d
+    rs_lookback_map = {"1mo": 21, "3mo": 63, "6mo": 123, "1y": 123}
+    rs_lookback = rs_lookback_map[period]
+    # Need extra history for RS calculation
+    extra_map = {"1mo": "4mo", "3mo": "1y", "6mo": "2y", "1y": "2y"}
+    fetch_period = extra_map[period]
+
+    try:
+        import yfinance as yf
+        # Fetch stock and benchmark
+        stock_df = yf.download(_yf_symbol(ticker), period=fetch_period, progress=False)
+        bench_df = yf.download("^CNX200", period=fetch_period, progress=False)
+        if stock_df.empty:
+            return jsonify({"success": False, "error": "No data found"}), 404
+
+        stock_closes = stock_df["Close"].squeeze().dropna()
+        stock_closes.index = stock_closes.index.tz_localize(None)
+
+        # Compute RS (raw) and RS smoothed (5-day avg on both ends)
+        if not bench_df.empty:
+            bench_closes = bench_df["Close"].squeeze().dropna()
+            bench_closes.index = bench_closes.index.tz_localize(None)
+            # Raw RS
+            bench_ret = (bench_closes / bench_closes.shift(rs_lookback) - 1) * 100
+            stock_ret = (stock_closes / stock_closes.shift(rs_lookback) - 1) * 100
+            rs_series = stock_ret - bench_ret.reindex(stock_closes.index, method="ffill")
+            # Smoothed RS: 5-day avg on both ends
+            sc5 = stock_closes.rolling(5, center=True, min_periods=3).mean()
+            bc_aligned = bench_closes.reindex(stock_closes.index, method="ffill")
+            bc5 = bc_aligned.rolling(5, center=True, min_periods=3).mean()
+            s_ret_smooth = (sc5 / sc5.shift(rs_lookback) - 1) * 100
+            b_ret_smooth = (bc5 / bc5.shift(rs_lookback) - 1) * 100
+            rs_smooth_series = s_ret_smooth - b_ret_smooth
+        else:
+            rs_series = pd.Series(dtype=float)
+            rs_smooth_series = pd.Series(dtype=float)
+
+        # Trim to requested period
+        period_days_map = {"1mo": 30, "3mo": 90, "6mo": 180, "1y": 365}
+        cutoff_date = stock_closes.index[-1] - pd.Timedelta(days=period_days_map[period])
+        mask = stock_closes.index >= cutoff_date
+        stock_closes = stock_closes[mask]
+
+        dates = [d.strftime("%Y-%m-%d") for d in stock_closes.index]
+        prices = [round(float(p), 2) for p in stock_closes.values]
+
+        rs_data = []
+        rs_smooth_data = []
+        for d in stock_closes.index:
+            val = rs_series.get(d)
+            rs_data.append(round(float(val), 2) if val is not None and not pd.isna(val) else None)
+            sval = rs_smooth_series.get(d)
+            rs_smooth_data.append(round(float(sval), 2) if sval is not None and not pd.isna(sval) else None)
+
+        # Nifty 200 normalized to same scale as stock price for overlay
+        bench_prices = []
+        if not bench_df.empty:
+            bc = bench_closes.reindex(stock_closes.index, method="ffill").dropna()
+            if len(bc) >= 2:
+                # Normalize: scale bench to start at same price as stock
+                scale = float(stock_closes.iloc[0]) / float(bc.iloc[0]) if float(bc.iloc[0]) != 0 else 1
+                for d in stock_closes.index:
+                    bv = bc.get(d)
+                    if bv is not None and not pd.isna(bv):
+                        bench_prices.append(round(float(bv) * scale, 2))
+                    else:
+                        bench_prices.append(None)
+
+        rs_label_map = {"1mo": "RS-21d", "3mo": "RS-63d", "6mo": "RS-123d", "1y": "RS-123d"}
+        is_intl = ticker in INTL_ETF_TICKERS
+        return jsonify({
+            "success": True, "ticker": ticker, "dates": dates,
+            "prices": prices, "rs": rs_data, "rs_smooth": rs_smooth_data,
+            "rs_label": rs_label_map[period],
+            "bench": bench_prices, "bench_label": "Nifty 200",
+            "currency": "$" if is_intl else "₹"
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # ============ Zerodha Login Routes ============

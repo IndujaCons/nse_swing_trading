@@ -1105,7 +1105,8 @@
         <h1>Nifty 500 Screener</h1>
         <div class="header-right">
             <div class="strategy-tabs">
-                <button class="strategy-tab active" onclick="switchStrategy('rs')">Watchlist</button>
+                <button class="strategy-tab" onclick="switchStrategy('watchlist')">Watchlist</button>
+                <button class="strategy-tab active" onclick="switchStrategy('rs')">Screener</button>
                 <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
                 <button class="strategy-tab" onclick="switchStrategy('momentum')">Backtest</button>
                 <button class="strategy-tab" onclick="switchStrategy('trade_explain')">Trade Explain</button>
@@ -1142,8 +1143,13 @@
 
             <div class="divider"></div>
 
+            <div class="section hidden" id="watchlist-settings">
+                <div class="section-title">Watchlist</div>
+                <div style="color:var(--text-muted); font-size:11px;">Use the search box in the main panel to add stocks.</div>
+            </div>
+
             <div class="section" id="rs-settings">
-                <div class="section-title">Watchlist Settings</div>
+                <div class="section-title">Screener Settings</div>
                 <div class="setting-row">
                     <span class="setting-label">RS Period</span>
                     <select class="setting-select" id="rs-period">
@@ -1337,8 +1343,8 @@
                         <option value="T3">T Only (3-Stage)</option>
                         <option value="R3">R Only (3-Stage)</option>
                         <option value="MW3">MW Only (3-Stage)</option>
-                        <option value="WT3">WT Only (3-Stage)</option>
                         <option value="RS3">RS Rotation</option>
+                        <option value="IBD">IBD RS (Frozen)</option>
                     </select>
                     <select class="backtest-select" id="portfolio-entries-per-day">
                         <option value="1">1 trade / day</option>
@@ -1489,7 +1495,65 @@
 
         <!-- Main Content -->
         <main class="main">
-            <!-- Watchlist Panels -->
+            <!-- Personal Watchlist Panels -->
+            <div class="panels hidden" id="watchlist-panels" style="display:none; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="panel">
+                        <div class="panel-header" style="flex-direction:column; align-items:stretch; gap:6px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div id="wl-group-tabs" style="display:flex; gap:0; flex-wrap:wrap;"></div>
+                                <div style="display:flex; align-items:center; gap:4px;">
+                                    <button onclick="addWatchlistGroup()" style="background:none; border:1px solid var(--border-color); border-radius:4px; cursor:pointer; font-size:13px; padding:1px 6px; color:var(--text-secondary);" title="Add group">+</button>
+                                    <button onclick="renameWatchlistGroup()" style="background:none; border:1px solid var(--border-color); border-radius:4px; cursor:pointer; font-size:10px; padding:2px 5px; color:var(--text-secondary);" title="Rename group">&#9998;</button>
+                                    <button onclick="deleteWatchlistGroup()" style="background:none; border:1px solid var(--border-color); border-radius:4px; cursor:pointer; font-size:11px; padding:1px 5px; color:var(--red);" title="Delete group">&times;</button>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <input type="text" id="wl-search" list="wl-tickers"
+                                       placeholder="Search stock..."
+                                       style="padding:3px 8px; font-size:11px; border:1px solid var(--border-color); border-radius:4px; background:var(--bg-primary); color:var(--text-primary); flex:1;"
+                                       onkeydown="if(event.key==='Enter')addToWatchlist()">
+                                <datalist id="wl-tickers"></datalist>
+                                <button class="btn btn-primary" onclick="addToWatchlist()" style="padding:3px 10px; font-size:11px;">Add</button>
+                                <span class="panel-count" id="wl-count">0</span>
+                            </div>
+                        </div>
+                        <div class="panel-body" id="wl-prices-body">
+                            <div style="padding:20px; text-align:center; color:var(--text-muted);">
+                                Search and add Nifty 500 stocks above to get started.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" id="wl-chart-title">Price Chart</span>
+                            <div id="wl-chart-periods" style="display:flex; gap:0;">
+                                <button onclick="switchChartPeriod('1mo')" class="wl-period-btn" style="padding:2px 8px; font-size:10px; border:1px solid var(--border-color); background:transparent; color:var(--text-secondary); cursor:pointer; border-radius:4px 0 0 4px;">1M</button>
+                                <button onclick="switchChartPeriod('3mo')" class="wl-period-btn" style="padding:2px 8px; font-size:10px; border:1px solid var(--border-color); border-left:0; background:transparent; color:var(--text-secondary); cursor:pointer;">3M</button>
+                                <button onclick="switchChartPeriod('6mo')" class="wl-period-btn" style="padding:2px 8px; font-size:10px; border:1px solid var(--border-color); border-left:0; background:transparent; color:var(--text-secondary); cursor:pointer;">6M</button>
+                                <button onclick="switchChartPeriod('1y')" class="wl-period-btn wl-period-active" style="padding:2px 8px; font-size:10px; border:1px solid var(--green); border-left:0; background:var(--green); color:white; cursor:pointer; border-radius:0 4px 4px 0; font-weight:700;">1Y</button>
+                            </div>
+                        </div>
+                        <div class="panel-body" id="wl-chart-body" style="padding:8px;">
+                            <div style="padding:20px; text-align:center; color:var(--text-muted);">
+                                Click a stock above to view its price chart.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title" id="wl-news-title">Latest News</span>
+                    </div>
+                    <div class="panel-body" id="wl-news-body" style="max-height:700px; overflow-y:auto;">
+                        <div style="padding:20px; text-align:center; color:var(--text-muted);">
+                            Click a stock on the left to see its news.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screener Panels -->
             <div class="panels" id="rs-panels">
                 <div class="panel sectoral">
                     <div class="panel-header">
@@ -1593,16 +1657,6 @@
                         <span class="panel-count" id="ls-rs-count">0</span>
                     </div>
                     <div class="panel-body" id="ls-rs-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
-
-                <div class="panel ls-wt-signals">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color:#00bcd4;">WT — Weekly Trend (Nifty 500)</span>
-                        <span class="panel-count" id="ls-wt-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-wt-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
@@ -1789,6 +1843,651 @@
             });
         });
 
+        // ============ Watchlist ============
+
+        let watchlistLoaded = false;
+        let wlActiveGroup = 'General';
+
+        async function loadWatchlistTickers() {
+            try {
+                const res = await fetch('/api/watchlist/tickers');
+                const data = await res.json();
+                const dl = document.getElementById('wl-tickers');
+                dl.innerHTML = data.tickers.map(t => `<option value="${t}">`).join('');
+            } catch (e) { console.error('Failed to load tickers:', e); }
+        }
+
+        let wlNewsCache = {};
+
+        async function loadWatchlistData() {
+            try {
+                const priceRes = await fetch('/api/watchlist');
+                const priceData = await priceRes.json();
+                renderWatchlistPrices(priceData.stocks || []);
+                renderWatchlistSidebar(priceData.stocks || []);
+                renderWatchlistGroupTabs(priceData.groups || [], priceData.active_group || 'General');
+                wlActiveGroup = priceData.active_group || 'General';
+                // Pre-fetch news in background
+                fetch('/api/watchlist/news').then(r => r.json()).then(d => {
+                    wlNewsCache = d.news || {};
+                    if (wlSelectedTicker && wlNewsCache[wlSelectedTicker]) {
+                        renderWatchlistNews({[wlSelectedTicker]: wlNewsCache[wlSelectedTicker]});
+                    }
+                });
+                watchlistLoaded = true;
+            } catch (e) { console.error('Failed to load watchlist:', e); }
+        }
+
+        function renderWatchlistGroupTabs(groups, activeGroup) {
+            const container = document.getElementById('wl-group-tabs');
+            container.innerHTML = groups.map(g => {
+                const active = g.name === activeGroup;
+                return `<button onclick="switchWatchlistGroup('${g.name.replace(/'/g, "\\'")}')"
+                    style="padding:3px 10px; font-size:11px; border:1px solid ${active ? 'var(--green)' : 'var(--border-color)'};
+                    background:${active ? 'var(--green)' : 'transparent'}; color:${active ? 'white' : 'var(--text-secondary)'};
+                    cursor:pointer; border-radius:4px 4px 0 0; font-weight:${active ? '700' : '400'};"
+                    title="${g.count} stocks">${g.name} <span style="font-size:9px; opacity:0.7;">(${g.count})</span></button>`;
+            }).join('');
+        }
+
+        async function switchWatchlistGroup(name) {
+            try {
+                await fetch('/api/watchlist/groups', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'switch', name})
+                });
+                wlSelectedTicker = null;
+                wlNewsCache = {};
+                loadWatchlistData();
+                // Reset chart and news panels
+                document.getElementById('wl-chart-title').textContent = 'Price Chart';
+                document.getElementById('wl-chart-body').innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Click a stock above to view its price chart.</div>';
+                document.getElementById('wl-news-title').textContent = 'Latest News';
+                document.getElementById('wl-news-body').innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Click a stock on the left to see its news.</div>';
+            } catch (e) { showToast('Failed to switch group', 'error'); }
+        }
+
+        async function addWatchlistGroup() {
+            const name = prompt('Enter new group name:');
+            if (!name || !name.trim()) return;
+            try {
+                const res = await fetch('/api/watchlist/groups', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'add', name: name.trim()})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    wlSelectedTicker = null;
+                    loadWatchlistData();
+                } else {
+                    showToast(data.error || 'Failed', 'error');
+                }
+            } catch (e) { showToast('Failed to add group', 'error'); }
+        }
+
+        async function renameWatchlistGroup() {
+            const newName = prompt(`Rename "${wlActiveGroup}" to:`, wlActiveGroup);
+            if (!newName || !newName.trim() || newName.trim() === wlActiveGroup) return;
+            try {
+                const res = await fetch('/api/watchlist/groups', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'rename', old_name: wlActiveGroup, new_name: newName.trim()})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadWatchlistData();
+                } else {
+                    showToast(data.error || 'Failed', 'error');
+                }
+            } catch (e) { showToast('Failed to rename group', 'error'); }
+        }
+
+        async function deleteWatchlistGroup() {
+            if (!confirm(`Delete group "${wlActiveGroup}" and all its stocks?`)) return;
+            try {
+                const res = await fetch('/api/watchlist/groups', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'delete', name: wlActiveGroup})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    wlSelectedTicker = null;
+                    loadWatchlistData();
+                } else {
+                    showToast(data.error || 'Failed', 'error');
+                }
+            } catch (e) { showToast('Failed to delete group', 'error'); }
+        }
+
+        function renderWatchlistPrices(stocks) {
+            const body = document.getElementById('wl-prices-body');
+            document.getElementById('wl-count').textContent = stocks.length;
+            if (!stocks.length) {
+                body.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Add stocks from the sidebar to get started.</div>';
+                return;
+            }
+            let html = `<table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead><tr style="border-bottom:1px solid var(--border-color); color:var(--text-secondary);">
+                    <th style="text-align:left; padding:6px 8px;">Ticker</th>
+                    <th style="text-align:right; padding:6px 8px;">LTP</th>
+                    <th style="text-align:right; padding:6px 8px;">Change</th>
+                    <th style="text-align:right; padding:6px 8px;">Change %</th>
+                    <th style="text-align:center; padding:6px 8px;"></th>
+                </tr></thead><tbody>`;
+            for (const s of stocks) {
+                const color = s.change >= 0 ? 'var(--green)' : 'var(--red)';
+                const arrow = s.change >= 0 ? '&#9650;' : '&#9660;';
+                html += `<tr style="border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="loadWatchlistChart('${s.ticker}')" title="Click to view chart">
+                    <td style="padding:6px 8px; font-weight:600;">${s.ticker}</td>
+                    <td style="padding:6px 8px; text-align:right;">${s.ltp.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+                    <td style="padding:6px 8px; text-align:right; color:${color};">${arrow} ${Math.abs(s.change).toFixed(2)}</td>
+                    <td style="padding:6px 8px; text-align:right; color:${color}; font-weight:600;">${s.change_pct >= 0 ? '+' : ''}${s.change_pct.toFixed(2)}%</td>
+                    <td style="padding:6px 8px; text-align:center;">
+                        <button onclick="event.stopPropagation(); removeFromWatchlist('${s.ticker}')" style="background:none; border:none; color:var(--red); cursor:pointer; font-size:14px;" title="Remove">&times;</button>
+                    </td>
+                </tr>`;
+            }
+            html += '</tbody></table>';
+            body.innerHTML = html;
+        }
+
+        function renderWatchlistNews(news) {
+            const body = document.getElementById('wl-news-body');
+            const titleEl = document.getElementById('wl-news-title');
+            const tickers = Object.keys(news);
+            if (!tickers.length) {
+                titleEl.textContent = 'Latest News';
+                body.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Click a stock on the left to see its news.</div>';
+                return;
+            }
+            titleEl.textContent = `News — ${tickers[0]}`;
+            let html = '';
+            for (const ticker of tickers) {
+                const items = news[ticker] || [];
+                if (!items.length) continue;
+                html += `<div style="margin-bottom:16px; padding:0 8px;">
+                    <div style="font-weight:700; font-size:12px; color:var(--text-primary); margin-bottom:6px; padding:4px 0; border-bottom:2px solid var(--border-color);">${ticker}</div>`;
+                for (const item of items) {
+                    // Extract source from title (Google News format: "headline - Source")
+                    let title = item.title;
+                    let source = '';
+                    const dashIdx = title.lastIndexOf(' - ');
+                    if (dashIdx > 0) {
+                        source = title.substring(dashIdx + 3).trim();
+                        title = title.substring(0, dashIdx).trim();
+                    }
+                    html += `<div style="margin-bottom:10px; padding:6px 0; border-bottom:1px solid var(--border-color);">
+                        <a href="${item.link}" target="_blank" rel="noopener" style="color:var(--blue); text-decoration:none; font-size:12px; line-height:1.4; display:block;">${title}</a>
+                        <div style="margin-top:3px; font-size:10px; color:var(--text-muted);">
+                            ${source ? `<span style="font-weight:600; color:var(--text-secondary);">${source}</span> &middot; ` : ''}${item.date}
+                        </div>
+                    </div>`;
+                }
+                html += '</div>';
+            }
+            body.innerHTML = html || '<div style="padding:20px; text-align:center; color:var(--text-muted);">No news found.</div>';
+        }
+
+        function renderWatchlistSidebar(stocks) {
+            // No-op: sidebar only shows hint text now
+        }
+
+        async function addToWatchlist() {
+            const input = document.getElementById('wl-search');
+            const ticker = input.value.trim().toUpperCase();
+            if (!ticker) return;
+            try {
+                const res = await fetch('/api/watchlist/add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ticker})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    input.value = '';
+                    loadWatchlistData();
+                } else {
+                    showToast(data.error || 'Failed to add', 'error');
+                }
+            } catch (e) { showToast('Failed to add stock', 'error'); }
+        }
+
+        async function removeFromWatchlist(ticker) {
+            try {
+                const res = await fetch('/api/watchlist/remove', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ticker})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadWatchlistData();
+                }
+            } catch (e) { showToast('Failed to remove stock', 'error'); }
+        }
+
+        let wlSelectedTicker = null;
+        let wlChartPeriod = '1y';
+
+        const periodLabels = {'1mo': '1M', '3mo': '3M', '6mo': '6M', '1y': '1Y'};
+
+        async function loadWatchlistChart(ticker, period) {
+            if (ticker) wlSelectedTicker = ticker;
+            if (period) wlChartPeriod = period;
+            if (!wlSelectedTicker) return;
+
+            const chartBody = document.getElementById('wl-chart-body');
+            const chartTitle = document.getElementById('wl-chart-title');
+            chartTitle.textContent = `${wlSelectedTicker} — ${periodLabels[wlChartPeriod] || '1Y'} Price`;
+            chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Loading chart...</div>';
+
+            // Update period button styles
+            document.querySelectorAll('.wl-period-btn').forEach(btn => {
+                const isActive = btn.textContent.trim() === periodLabels[wlChartPeriod];
+                btn.style.background = isActive ? 'var(--green)' : 'transparent';
+                btn.style.color = isActive ? 'white' : 'var(--text-secondary)';
+                btn.style.borderColor = isActive ? 'var(--green)' : 'var(--border-color)';
+                btn.style.fontWeight = isActive ? '700' : '400';
+            });
+
+            // Highlight selected row
+            document.querySelectorAll('#wl-prices-body tr').forEach(tr => {
+                tr.style.background = tr.onclick && tr.onclick.toString().includes(wlSelectedTicker) ? 'var(--bg-secondary)' : '';
+            });
+
+            // Show news for selected stock (only on ticker change)
+            if (ticker) {
+                if (wlNewsCache[wlSelectedTicker]) {
+                    renderWatchlistNews({[wlSelectedTicker]: wlNewsCache[wlSelectedTicker]});
+                } else {
+                    const newsBody = document.getElementById('wl-news-body');
+                    newsBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Loading news...</div>';
+                    fetch('/api/watchlist/news').then(r => r.json()).then(d => {
+                        wlNewsCache = d.news || {};
+                        renderWatchlistNews({[wlSelectedTicker]: wlNewsCache[wlSelectedTicker] || []});
+                    });
+                }
+            }
+
+            try {
+                const res = await fetch(`/api/watchlist/chart?ticker=${wlSelectedTicker}&period=${wlChartPeriod}`);
+                const data = await res.json();
+                if (!data.success || !data.prices || data.prices.length < 2) {
+                    chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">No chart data available.</div>';
+                    return;
+                }
+                drawWatchlistChart(data.dates, data.prices, wlSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth);
+            } catch (e) {
+                chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--red);">Failed to load chart.</div>';
+            }
+        }
+
+        function switchChartPeriod(period) {
+            loadWatchlistChart(null, period);
+        }
+
+        let _wlChartState = null;
+
+        function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth) {
+            currency = currency || '₹';
+            const body = document.getElementById('wl-chart-body');
+            body.innerHTML = '<canvas id="wl-chart-canvas" style="width:100%; height:280px;"></canvas>';
+            const canvas = document.getElementById('wl-chart-canvas');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = 280 * dpr;
+            canvas.style.height = '280px';
+
+            _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 280, currency, rsSmooth };
+            _renderWatchlistChart(canvas);
+
+            canvas.onmousemove = function(e) {
+                if (!_wlChartState) return;
+                const s = _wlChartState;
+                const r = canvas.getBoundingClientRect();
+                const mx = e.clientX - r.left;
+                const pad = {top: 15, right: 55, bottom: 25, left: 45};
+                const cw = s.W - pad.left - pad.right;
+                const idx = Math.round(((mx - pad.left) / cw) * (s.prices.length - 1));
+                if (idx < 0 || idx >= s.prices.length || mx < pad.left || mx > s.W - pad.right) {
+                    canvas.style.cursor = 'default';
+                    _renderWatchlistChart(canvas);
+                    return;
+                }
+                canvas.style.cursor = 'crosshair';
+                _renderWatchlistChart(canvas, idx);
+            };
+            canvas.onmouseleave = function() {
+                canvas.style.cursor = 'default';
+                _renderWatchlistChart(canvas);
+            };
+        }
+
+        function _renderWatchlistChart(canvas, hoverIdx) {
+            const s = _wlChartState;
+            const { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W, H, currency, rsSmooth } = s;
+            const cur = currency || '₹';
+            const ctx = canvas.getContext('2d');
+            ctx.resetTransform();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(dpr, dpr);
+            const hasRS = rsData && rsData.some(v => v !== null);
+            // Split: top 60% for price, bottom 35% for RS, 5% gap
+            const priceH = hasRS ? Math.floor(H * 0.55) : H - 50;
+            const rsTop = hasRS ? Math.floor(H * 0.62) : 0;
+            const rsH = hasRS ? Math.floor(H * 0.30) : 0;
+            const pad = {top: 15, right: 55, bottom: 25, left: 45};
+            const cw = W - pad.left - pad.right;
+
+            const validBench = (benchData || []).filter(v => v !== null);
+            const minP = validBench.length ? Math.min(...prices, ...validBench) : Math.min(...prices);
+            const maxP = validBench.length ? Math.max(...prices, ...validBench) : Math.max(...prices);
+            const pRange = maxP - minP || 1;
+            const startP = prices[0];
+            const endP = prices[prices.length - 1];
+            const bullish = endP >= startP;
+
+            const cs = getComputedStyle(document.body);
+            const bgColor = cs.getPropertyValue('--bg-primary').trim() || '#fff';
+            const borderColor = cs.getPropertyValue('--border-color').trim() || '#e0e0e0';
+            const mutedColor = cs.getPropertyValue('--text-muted').trim() || '#999';
+            const greenColor = cs.getPropertyValue('--green').trim() || '#22c55e';
+            const redColor = cs.getPropertyValue('--red').trim() || '#ef4444';
+            const blueColor = '#3b82f6';
+
+            // Background
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, W, H);
+
+            // --- PRICE CHART (top) ---
+            const pch = priceH - pad.top;
+
+            // Price grid lines + labels (left axis)
+            ctx.strokeStyle = borderColor;
+            ctx.lineWidth = 0.5;
+            const gridLines = 4;
+            for (let i = 0; i <= gridLines; i++) {
+                const y = pad.top + (pch / gridLines) * i;
+                ctx.beginPath();
+                ctx.moveTo(pad.left, y);
+                ctx.lineTo(W - pad.right, y);
+                ctx.stroke();
+                const pVal = maxP - (pRange / gridLines) * i;
+                ctx.fillStyle = mutedColor;
+                ctx.font = '9px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(cur + pVal.toLocaleString('en-IN', {maximumFractionDigits: 0}), pad.left - 4, y + 3);
+            }
+
+            // Price line
+            const lineColor = bullish ? greenColor : redColor;
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = 1.5;
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            for (let i = 0; i < prices.length; i++) {
+                const x = pad.left + (i / (prices.length - 1)) * cw;
+                const y = pad.top + pch - ((prices[i] - minP) / pRange) * pch;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Fill under price line
+            const lastX = pad.left + cw;
+            ctx.lineTo(lastX, pad.top + pch);
+            ctx.lineTo(pad.left, pad.top + pch);
+            ctx.closePath();
+            const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + pch);
+            grad.addColorStop(0, bullish ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)');
+            grad.addColorStop(1, bullish ? 'rgba(34,197,94,0.01)' : 'rgba(239,68,68,0.01)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Nifty 200 overlay line (normalized)
+            const hasBench = benchData && benchData.some(v => v !== null);
+            if (hasBench) {
+                ctx.strokeStyle = 'rgba(150,150,150,0.5)';
+                ctx.lineWidth = 1;
+                ctx.lineJoin = 'round';
+                ctx.setLineDash([4, 3]);
+                ctx.beginPath();
+                let bStarted = false;
+                for (let i = 0; i < benchData.length; i++) {
+                    if (benchData[i] === null) continue;
+                    const x = pad.left + (i / (benchData.length - 1)) * cw;
+                    const y = pad.top + pch - ((benchData[i] - minP) / pRange) * pch;
+                    const yc = Math.max(pad.top, Math.min(pad.top + pch, y));
+                    if (!bStarted) { ctx.moveTo(x, yc); bStarted = true; }
+                    else ctx.lineTo(x, yc);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+                // Bench label
+                ctx.fillStyle = 'rgba(150,150,150,0.7)';
+                ctx.font = '8px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(benchLabel || 'Nifty 200', pad.left + 2, pad.top + pch - 4);
+            }
+
+            // Current price label
+            const lastPY = pad.top + pch - ((endP - minP) / pRange) * pch;
+            ctx.fillStyle = lineColor;
+            ctx.font = 'bold 10px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${cur}${endP.toLocaleString('en-IN')}`, W - pad.right + 4, lastPY + 3);
+
+            // --- RS CHART (bottom) ---
+            if (hasRS) {
+                const validRS = rsData.filter(v => v !== null);
+                const validRSSmooth = (rsSmooth || []).filter(v => v !== null);
+                const allRSVals = [...validRS, ...validRSSmooth];
+                const minRS = Math.min(...allRSVals);
+                const maxRS = Math.max(...allRSVals);
+                const rsRange = maxRS - minRS || 1;
+                const rch = rsH - 5;
+
+                // RS separator line
+                ctx.strokeStyle = borderColor;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(pad.left, rsTop - 5);
+                ctx.lineTo(W - pad.right, rsTop - 5);
+                ctx.stroke();
+
+                // RS zero line
+                if (minRS < 0 && maxRS > 0) {
+                    const zeroY = rsTop + rch - ((0 - minRS) / rsRange) * rch;
+                    ctx.strokeStyle = mutedColor;
+                    ctx.lineWidth = 0.5;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath();
+                    ctx.moveTo(pad.left, zeroY);
+                    ctx.lineTo(W - pad.right, zeroY);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = mutedColor;
+                    ctx.font = '8px monospace';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('0', pad.left - 4, zeroY + 3);
+                }
+
+                // RS axis labels
+                ctx.fillStyle = mutedColor;
+                ctx.font = '8px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(`${maxRS.toFixed(0)}%`, pad.left - 4, rsTop + 6);
+                ctx.fillText(`${minRS.toFixed(0)}%`, pad.left - 4, rsTop + rch + 3);
+
+                // RS label
+                ctx.fillStyle = blueColor;
+                ctx.font = 'bold 9px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(rsLabel || 'RS', pad.left + 2, rsTop + 10);
+
+                // RS raw line — thin, semi-transparent
+                const zeroY = rsTop + rch - ((0 - minRS) / rsRange) * rch;
+                ctx.lineWidth = 0.8;
+                ctx.lineJoin = 'round';
+                ctx.globalAlpha = 0.35;
+                let prevX = null, prevY = null, prevVal = null;
+                for (let i = 0; i < rsData.length; i++) {
+                    if (rsData[i] === null) continue;
+                    const x = pad.left + (i / (rsData.length - 1)) * cw;
+                    const y = rsTop + rch - ((rsData[i] - minRS) / rsRange) * rch;
+                    const val = rsData[i];
+                    if (prevX !== null) {
+                        // If sign crosses zero, split segment at zero crossing
+                        if ((prevVal >= 0 && val < 0) || (prevVal < 0 && val >= 0)) {
+                            const t = prevVal / (prevVal - val);
+                            const midX = prevX + t * (x - prevX);
+                            // Draw first half
+                            ctx.strokeStyle = prevVal >= 0 ? greenColor : redColor;
+                            ctx.beginPath(); ctx.moveTo(prevX, prevY); ctx.lineTo(midX, zeroY); ctx.stroke();
+                            // Draw second half
+                            ctx.strokeStyle = val >= 0 ? greenColor : redColor;
+                            ctx.beginPath(); ctx.moveTo(midX, zeroY); ctx.lineTo(x, y); ctx.stroke();
+                        } else {
+                            ctx.strokeStyle = val >= 0 ? greenColor : redColor;
+                            ctx.beginPath(); ctx.moveTo(prevX, prevY); ctx.lineTo(x, y); ctx.stroke();
+                        }
+                    }
+                    prevX = x; prevY = y; prevVal = val;
+                }
+                ctx.globalAlpha = 1.0;
+
+                // RS smoothed line — bold, green/red
+                if (rsSmooth && rsSmooth.length) {
+                    ctx.lineWidth = 1.5;
+                    ctx.lineJoin = 'round';
+                    let spX = null, spY = null, spVal = null;
+                    for (let i = 0; i < rsSmooth.length; i++) {
+                        if (rsSmooth[i] === null) continue;
+                        const x = pad.left + (i / (rsSmooth.length - 1)) * cw;
+                        const y = rsTop + rch - ((rsSmooth[i] - minRS) / rsRange) * rch;
+                        const val = rsSmooth[i];
+                        if (spX !== null) {
+                            if ((spVal >= 0 && val < 0) || (spVal < 0 && val >= 0)) {
+                                const t = spVal / (spVal - val);
+                                const midX = spX + t * (x - spX);
+                                ctx.strokeStyle = spVal >= 0 ? greenColor : redColor;
+                                ctx.beginPath(); ctx.moveTo(spX, spY); ctx.lineTo(midX, zeroY); ctx.stroke();
+                                ctx.strokeStyle = val >= 0 ? greenColor : redColor;
+                                ctx.beginPath(); ctx.moveTo(midX, zeroY); ctx.lineTo(x, y); ctx.stroke();
+                            } else {
+                                ctx.strokeStyle = val >= 0 ? greenColor : redColor;
+                                ctx.beginPath(); ctx.moveTo(spX, spY); ctx.lineTo(x, y); ctx.stroke();
+                            }
+                        }
+                        spX = x; spY = y; spVal = val;
+                    }
+                }
+
+                // RS fill: green above zero, red below zero
+                if (minRS < 0 && maxRS > 0) {
+                    // Fill above zero (green)
+                    ctx.beginPath();
+                    let started = false;
+                    for (let i = 0; i < rsData.length; i++) {
+                        if (rsData[i] === null) continue;
+                        const x = pad.left + (i / (rsData.length - 1)) * cw;
+                        const y = Math.min(rsTop + rch - ((rsData[i] - minRS) / rsRange) * rch, zeroY);
+                        if (!started) { ctx.moveTo(x, zeroY); ctx.lineTo(x, y); started = true; }
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.lineTo(pad.left + ((rsData.length - 1 - rsData.slice().reverse().findIndex(v => v !== null)) / (rsData.length - 1)) * cw, zeroY);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(34,197,94,0.08)';
+                    ctx.fill();
+                }
+
+                // Current RS value label
+                const lastRS = validRS[validRS.length - 1];
+                const lastRSY = rsTop + rch - ((lastRS - minRS) / rsRange) * rch;
+                ctx.fillStyle = lastRS >= 0 ? greenColor : redColor;
+                ctx.font = 'bold 9px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${lastRS >= 0 ? '+' : ''}${lastRS.toFixed(1)}%`, W - pad.right + 4, lastRSY + 3);
+            }
+
+            // --- DATE LABELS (bottom) ---
+            ctx.fillStyle = mutedColor;
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'center';
+            const step = Math.floor(dates.length / 5);
+            for (let i = 0; i < dates.length; i += step) {
+                const x = pad.left + (i / (dates.length - 1)) * cw;
+                ctx.fillText(dates[i].substring(5), x, H - 5);
+            }
+
+            // --- HOVER CROSSHAIR + TOOLTIP ---
+            if (hoverIdx !== undefined && hoverIdx >= 0 && hoverIdx < prices.length) {
+                const idx = hoverIdx;
+                const x = pad.left + (idx / (prices.length - 1)) * cw;
+
+                // Vertical crosshair line
+                ctx.strokeStyle = 'rgba(150,150,150,0.5)';
+                ctx.lineWidth = 0.5;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H - pad.bottom); ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Build tooltip text
+                const date = dates[idx];
+                const price = prices[idx];
+                let lines = [`${date}`, `Price: ${cur}${price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`];
+                if (hasRS && rsData[idx] !== null) {
+                    const rv = rsData[idx];
+                    lines.push(`RS: ${rv >= 0 ? '+' : ''}${rv.toFixed(1)}%`);
+                }
+                if (rsSmooth && rsSmooth[idx] !== null && rsSmooth[idx] !== undefined) {
+                    const sv = rsSmooth[idx];
+                    lines.push(`RS(s): ${sv >= 0 ? '+' : ''}${sv.toFixed(1)}%`);
+                }
+                if (benchData && benchData[idx] !== null) {
+                    lines.push(`Nifty200: ₹${benchData[idx].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+                }
+
+                // Draw tooltip box
+                ctx.font = '10px monospace';
+                const lineH = 14;
+                const tw = Math.max(...lines.map(l => ctx.measureText(l).width)) + 12;
+                const th = lines.length * lineH + 8;
+                let tx = x + 10;
+                if (tx + tw > W - 5) tx = x - tw - 10;
+                let ty = 20;
+
+                ctx.fillStyle = 'rgba(30,30,30,0.88)';
+                ctx.strokeStyle = 'rgba(100,100,100,0.5)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.roundRect(tx, ty, tw, th, 4);
+                ctx.fill(); ctx.stroke();
+
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'left';
+                lines.forEach((line, i) => {
+                    if (i === 0) ctx.fillStyle = '#ccc';
+                    else if (line.startsWith('Price')) ctx.fillStyle = bullish ? greenColor : redColor;
+                    else if (line.startsWith('RS:')) ctx.fillStyle = (rsData[idx] >= 0) ? greenColor : redColor;
+                    else if (line.startsWith('RS(s)')) ctx.fillStyle = (rsSmooth && rsSmooth[idx] >= 0) ? greenColor : redColor;
+                    else ctx.fillStyle = '#aaa';
+                    ctx.fillText(line, tx + 6, ty + 13 + i * lineH);
+                });
+
+                // Dot on price line
+                const pch2 = priceH - pad.top;
+                const py = pad.top + pch2 - ((price - minP) / pRange) * pch2;
+                ctx.fillStyle = bullish ? greenColor : redColor;
+                ctx.beginPath(); ctx.arc(x, py, 3, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
         // ============ Strategy Switching ============
 
         function switchStrategy(strategy) {
@@ -1797,12 +2496,16 @@
             // Update tabs
             const tabs = document.querySelectorAll('.strategy-tab');
             tabs.forEach(tab => tab.classList.remove('active'));
-            if (strategy === 'rs') tabs[0].classList.add('active');
-            else if (strategy === 'live_signals') tabs[1].classList.add('active');
-            else if (strategy === 'momentum') tabs[2].classList.add('active');
-            else if (strategy === 'trade_explain') tabs[3].classList.add('active');
+            if (strategy === 'watchlist') tabs[0].classList.add('active');
+            else if (strategy === 'rs') tabs[1].classList.add('active');
+            else if (strategy === 'live_signals') tabs[2].classList.add('active');
+            else if (strategy === 'momentum') tabs[3].classList.add('active');
+            else if (strategy === 'trade_explain') tabs[4].classList.add('active');
 
             // Toggle panels
+            const wlPanels = document.getElementById('watchlist-panels');
+            wlPanels.classList.toggle('hidden', strategy !== 'watchlist');
+            wlPanels.style.display = strategy === 'watchlist' ? 'grid' : 'none';
             document.getElementById('rs-panels').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-panels').classList.toggle('hidden', strategy !== 'live_signals');
             // Preserve backtest/batch results visibility when switching tabs
@@ -1820,12 +2523,17 @@
             document.getElementById('trade-explain-results').classList.toggle('hidden', strategy !== 'trade_explain');
 
             // Toggle sidebar settings
+            document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
             document.getElementById('rs-settings').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-settings').classList.toggle('hidden', strategy !== 'live_signals');
             document.getElementById('momentum-settings').classList.toggle('hidden', strategy !== 'momentum');
             document.getElementById('trade-explain-settings').classList.toggle('hidden', strategy !== 'trade_explain');
 
             // Lazy-load data on first switch
+            if (strategy === 'watchlist' && !watchlistLoaded) {
+                loadWatchlistTickers();
+                loadWatchlistData();
+            }
             if (strategy === 'live_signals' && !liveSignalsDataLoaded) {
                 loadLiveSignalsData();
                 loadLivePositions();
@@ -2480,7 +3188,6 @@
             window._lsRSignals = data.r_signals || [];
             window._lsMWSignals = data.mw_signals || [];
             window._lsRSSignals = data.rs_signals || [];
-            window._lsWTSignals = data.wt_signals || [];
             document.getElementById('ls-j-count').textContent = jSignals.length;
 
             if (jSignals.length === 0) {
@@ -2588,7 +3295,7 @@
             // RS signals panel (watchlist)
             const rsPanel = document.getElementById('ls-rs-panel');
             const rsSignals = data.rs_signals || [];
-            document.getElementById('ls-rs-count').textContent = rsSignals.length;
+            document.getElementById('ls-rs-count').textContent = rsSignals.length > 0 ? `${rsSignals.length} (pick #3)` : '0';
             const regimeEl = document.getElementById('ls-rs-regime');
             const regime = data.nifty_regime || 'OFF';
             regimeEl.textContent = `Regime: ${regime}`;
@@ -2604,12 +3311,17 @@
                     const secRs = s.sector_rs || 0;
                     const secColor = secMom > 1 ? 'var(--green)' : secMom > -1 ? 'var(--text-muted)' : 'var(--red)';
                     const secArrow = secMom > 1 ? '&#9650;' : secMom > -1 ? '&#9644;' : '&#9660;';
-                    const dimStyle = s.regime_off ? 'opacity:0.45;' : '';
+                    const rank = s.rs_rank || (idx + 1);
+                    const isPick = rank === 3;
+                    const isSkipped = rank <= 2;
+                    const dimStyle = s.regime_off ? 'opacity:0.45;' : isSkipped ? 'opacity:0.5;' : '';
+                    const pickStyle = isPick ? 'background:rgba(76,175,80,0.15);font-weight:600;' : '';
                     const stopPrice = Math.round(s.price * (1 - (s.stop_pct || 8) / 100));
                     const atrColor = (s.atr_pct||0) < 2 ? 'var(--green)' : (s.atr_pct||0) < 3.5 ? 'var(--text-muted)' : 'var(--red)';
+                    const rankLabel = isPick ? `<span style="color:var(--green);">#${rank} PICK</span>` : isSkipped ? `<span style="color:var(--red);text-decoration:line-through;">#${rank}</span>` : `#${rank}`;
                     return `
-                    <tr style="${dimStyle}">
-                        <td style="color:var(--text-muted);font-size:10px;">${idx + 1}</td>
+                    <tr style="${dimStyle}${pickStyle}">
+                        <td style="font-size:10px;">${rankLabel}</td>
                         <td class="ticker">${s.ticker}</td>
                         <td class="price">${s.price.toLocaleString()}</td>
                         <td style="color:var(--green);font-weight:600;">${s.ibd_rating||'-'}</td>
@@ -2637,48 +3349,16 @@
 
             // WT signals panel
             const wtPanel = document.getElementById('ls-wt-panel');
-            const wtSignals = data.wt_signals || [];
-            document.getElementById('ls-wt-count').textContent = wtSignals.length;
-
-            if (wtSignals.length === 0) {
-                wtPanel.innerHTML = '<div class="empty-state">No WT signals</div>';
-            } else {
-                const rows = wtSignals.map(s => {
-                    const secShort = (s.sector || 'OTHER').replace('NIFTY ', '');
-                    const secMom = s.sector_momentum || 0;
-                    const secColor = secMom > 1 ? 'var(--green)' : secMom > -1 ? 'var(--text-muted)' : 'var(--red)';
-                    const secArrow = secMom > 1 ? '&#9650;' : secMom > -1 ? '&#9644;' : '&#9660;';
-                    return `
-                    <tr>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td>${(s.slope||0).toFixed(1)}</td>
-                        <td>${(s.gap_pct||0).toFixed(1)}%</td>
-                        <td>${(s.vol_ratio||0).toFixed(1)}x</td>
-                        <td>${(s.week_return||0).toFixed(1)}%</td>
-                        <td style="color:${secColor};font-size:10px;" title="Mom: ${secMom.toFixed(1)}">${secArrow} ${secShort}</td>
-                        <td style="color:var(--text-muted)">${(s.atr_pct||0).toFixed(1)}%</td>
-                    </tr>`;
-                }).join('');
-                wtPanel.innerHTML = `
-                    <table class="stock-table">
-                        <thead><tr><th>Stock</th><th>Close</th><th>Slope</th><th>Gap%</th><th>Vol</th><th>Wk%</th><th>Sector</th><th>ATR%</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
-            }
-
             // ===== Top Picks — Ranked by Strategy Priority + Sector Momentum + ATR% =====
             // With sector diversity cap (max 4 per sector including active positions)
             const picksPanel = document.getElementById('ls-picks-panel');
-            const stratPriority = {'R': 0, 'MW': 0, 'RS': 0, 'T': 2, 'J': 3, 'WT': 4};
+            const stratPriority = {'R': 0, 'MW': 0, 'RS': 0, 'T': 2, 'J': 3};
             const allSignals = [
                 ...jSignals.map(s => ({...s, strategy: 'J', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
                 ...tSignals.map(s => ({...s, strategy: 'T', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
                 ...rSignals.map(s => ({...s, strategy: 'R', stop_pct: s.stop_pct || 99, atr_pct: s.atr_pct || 99})),
                 ...mwSignals.map(s => ({...s, strategy: 'MW', stop_pct: s.stop_pct || 5.0, atr_pct: s.atr_pct || 99})),
                 ...rsSignals.map(s => ({...s, strategy: 'RS', stop_pct: s.stop_pct || 8.0, atr_pct: s.atr_pct || 99})),
-                ...wtSignals.map(s => ({...s, strategy: 'WT', stop_pct: s.stop_pct || 12.0, atr_pct: s.atr_pct || 99})),
             ];
 
             // Sort: both-green first (sector RS > 0 AND sector momentum > 0),
@@ -2727,7 +3407,6 @@
                         'T': '<span style="color:var(--blue);font-weight:700;">T</span>',
                         'R': '<span style="color:#ab47bc;font-weight:700;">R</span>',
                         'MW': '<span style="color:#e67e22;font-weight:700;">MW</span>',
-                        'WT': '<span style="color:#00bcd4;font-weight:700;">WT</span>',
                     };
                     const badge = badgeMap[s.strategy] || s.strategy;
                     const stopColor = s.stop_pct < 5 ? 'var(--green)' : s.stop_pct === 5 ? 'var(--text-muted)' : 'var(--red)';
@@ -2738,8 +3417,6 @@
                         ? `RSI14 ${(s.rsi14||0).toFixed(1)} (${(s.rsi_at_low||0).toFixed(1)}) | SwLow ${(s.swing_low||0).toLocaleString()}${rDivLabel}`
                         : s.strategy === 'MW'
                         ? `ADX ${(s.adx||0).toFixed(1)} | +DI ${(s.plus_di||0).toFixed(1)} | -DI ${(s.minus_di||0).toFixed(1)}`
-                        : s.strategy === 'WT'
-                        ? `Slope ${(s.slope||0).toFixed(1)} | Gap ${(s.gap_pct||0).toFixed(1)}% | Vol ${(s.vol_ratio||0).toFixed(1)}x`
                         : `EMA20 ${(s.ema20||0).toLocaleString()}`;
                     const stopVal = s.strategy === 'J' ? s.stop : s.strategy === 'R' ? s.stop : Math.round(s.price * 0.95);
                     const ibsVal = s.strategy === 'J' ? s.ibs : 0;
@@ -3643,7 +4320,7 @@
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'RMW3': ['R','MW'], 'TR3': ['T','R'], 'JTR3': ['J','T','R'], 'TRMW3': ['T','R','MW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R'], 'MW3': ['MW'], 'WT3': ['WT'], 'RS3': ['RS']};
+            const stratMap = {'RMW3': ['R','MW'], 'TR3': ['T','R'], 'JTR3': ['J','T','R'], 'TRMW3': ['T','R','MW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R'], 'MW3': ['MW'], 'RS3': ['RS'], 'IBD': ['RS']};
             const strategies = stratMap[stratVal] || [stratVal];
             const threeStageExit = true;
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);
