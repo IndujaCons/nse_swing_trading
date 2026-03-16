@@ -235,6 +235,33 @@ def get_live_signals_data():
         }), 500
 
 
+def _fetch_zerodha_ltp(tickers):
+    """Fetch real-time LTP from first connected Zerodha broker for given tickers."""
+    for uid, broker in brokers.items():
+        if broker.access_token:
+            instruments = [f"NSE:{t}" for t in tickers]
+            # Add index instruments
+            instruments.append("NSE:NIFTY 50")
+            instruments.append("NSE:NIFTY 200")
+            # Kite API supports up to 1000 instruments per call
+            ltp_data = broker.get_ltp(instruments)
+            if ltp_data:
+                ltp_map = {}
+                for key, val in ltp_data.items():
+                    # key is like "NSE:RELIANCE", val has {"last_price": ...}
+                    symbol = key.split(":")[-1] if ":" in key else key
+                    ltp = val.get("last_price", 0)
+                    if ltp > 0:
+                        if symbol == "NIFTY 50":
+                            ltp_map["^NSEI"] = ltp
+                        elif symbol == "NIFTY 200":
+                            ltp_map["^CNX200"] = ltp
+                        else:
+                            ltp_map[symbol] = ltp
+                return ltp_map
+    return None
+
+
 @app.route("/api/live-signals/refresh", methods=["POST"])
 def refresh_live_signals():
     """Force re-scan J+T entry signals."""
@@ -250,15 +277,31 @@ def refresh_live_signals():
         live_signals_refresh_in_progress = True
 
     try:
+        # Fetch real-time LTP from Zerodha if connected
+        from data.live_signals_engine import (NIFTY_50_TICKERS, NIFTY_NEXT50_TICKERS,
+                                              NIFTY_200_NEXT100_TICKERS)
+        from config.settings import load_config
+        config = load_config()
+        universe = config.get("live_signals_universe", 50)
+        if universe <= 50:
+            scan_tickers = NIFTY_50_TICKERS
+        elif universe <= 100:
+            scan_tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
+        else:
+            scan_tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+
+        ltp_map = _fetch_zerodha_ltp(scan_tickers)
+
         data = live_signals_scanner.scan_entry_signals(
             force_refresh=True,
-            progress_callback=update_live_signals_progress
+            progress_callback=update_live_signals_progress,
+            ltp_map=ltp_map
         )
 
         return jsonify({
             "success": True,
             "data": data,
-            "message": "Live signals refreshed successfully"
+            "message": f"Live signals refreshed {'with Zerodha real-time prices' if ltp_map else 'with yfinance data'}"
         })
     except Exception as e:
         return jsonify({

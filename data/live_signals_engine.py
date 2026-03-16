@@ -329,10 +329,12 @@ class LiveSignalsEngine:
 
     # ==================== Entry Signal Scanning ====================
 
-    def scan_entry_signals(self, force_refresh=False, progress_callback=None, scan_date=None):
+    def scan_entry_signals(self, force_refresh=False, progress_callback=None, scan_date=None, ltp_map=None):
         """Scan for J, T, and R entry signals across Nifty 50/100.
 
         scan_date: optional "YYYY-MM-DD" string to scan a historical date.
+        ltp_map: optional dict of {ticker: price} from Zerodha for real-time prices.
+                 When provided, overlays today's close with live LTP.
         """
         is_historical = scan_date is not None
 
@@ -374,6 +376,18 @@ class LiveSignalsEngine:
             bench_raw = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
         except Exception:
             bench_raw = nifty_raw  # fallback to Nifty 50
+
+        # Overlay Zerodha LTP on benchmark indices
+        if ltp_map:
+            for df, ltp_key in [(nifty_raw, "^NSEI"), (bench_raw, "^CNX200")]:
+                if not df.empty and ltp_key in ltp_map:
+                    li = len(df) - 1
+                    lp = ltp_map[ltp_key]
+                    df.iloc[li, df.columns.get_loc("Close")] = lp
+                    if lp > df.iloc[li]["High"]:
+                        df.iloc[li, df.columns.get_loc("High")] = lp
+                    if lp < df.iloc[li]["Low"]:
+                        df.iloc[li, df.columns.get_loc("Low")] = lp
 
         # Compute benchmark 123-day return for RS
         bench_ret123_val = 0.0
@@ -444,6 +458,20 @@ class LiveSignalsEngine:
                 bar_date = bar_date.tz_localize(None)
             if actual_date is None or bar_date > actual_date:
                 actual_date = bar_date
+
+            # Overlay Zerodha LTP on today's close if available
+            if ltp_map and ticker in ltp_map:
+                live_price = ltp_map[ticker]
+                daily.iloc[i, daily.columns.get_loc("Close")] = live_price
+                # Update high/low if LTP extends the range
+                if live_price > daily.iloc[i]["High"]:
+                    daily.iloc[i, daily.columns.get_loc("High")] = live_price
+                if live_price < daily.iloc[i]["Low"]:
+                    daily.iloc[i, daily.columns.get_loc("Low")] = live_price
+                closes = daily["Close"]
+                highs = daily["High"]
+                lows = daily["Low"]
+
             price = float(closes.iloc[i])
             open_price = float(opens.iloc[i])
             low = float(lows.iloc[i])

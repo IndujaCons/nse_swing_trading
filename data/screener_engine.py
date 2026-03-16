@@ -4,6 +4,7 @@ Calculates relative strength and EMA positions for Nifty 50 / Next 50 / Midcap 1
 """
 
 import json
+import math
 import os
 import time
 from datetime import datetime, timedelta
@@ -197,6 +198,12 @@ class ScreenerEngine:
 
                 rs = stock_return - nifty50_return
 
+                # Skip stocks with NaN values (invalid JSON)
+                vals = [ema_data["current_price"], ema_data["pct_change"], rs, ema_data["price_vs_ema_percent"]]
+                if any(math.isnan(v) for v in vals):
+                    failed += 1
+                    continue
+
                 results.append({
                     "ticker": ticker,
                     "price": round(ema_data["current_price"], 2),
@@ -244,6 +251,9 @@ class ScreenerEngine:
 
                 if index_return is not None and index_ema is not None:
                     rs = index_return - nifty50_return
+                    vals = [index_ema["current_price"], index_ema["pct_change"], rs, index_ema["price_vs_ema_percent"]]
+                    if any(math.isnan(v) for v in vals):
+                        continue
                     sectoral_indices.append({
                         "ticker": name,
                         "price": round(index_ema["current_price"], 2),

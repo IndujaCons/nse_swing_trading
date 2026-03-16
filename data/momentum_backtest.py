@@ -2618,8 +2618,7 @@ class MomentumBacktester:
 
                 # Strategy R entry: Bullish RSI divergence + green + no gap-down + IBS > 0.5
                 if "R" in strategies:
-                    already_jt = any(s["symbol"] == ticker for s in signals)
-                    if not already_jt and is_green and ibs > 0.5:
+                    if is_green and ibs > 0.5:
                         rsi14_vals = ind["rsi14"].values
                         lows_vals = ind["lows"].values
                         divergence, swing_low_val = self._detect_bullish_divergence(
@@ -2950,9 +2949,8 @@ class MomentumBacktester:
 
             # === 3. Allocate capital (max entries_per_day) ===
             available_slots = MAX_POSITIONS - len(positions)
-            # RS fills all available slots (event-driven rotation), others respect entries_per_day
-            rs_only = all(s.get("strategy") == "RS" for s in signals) if signals else False
-            max_today = available_slots if rs_only else min(entries_per_day, available_slots)
+            # All strategies respect entries_per_day (frozen: 3/day)
+            max_today = min(entries_per_day, available_slots)
             if signals and max_today > 0:
                 if rank_by_risk:
                     rng = random.Random(seed)
