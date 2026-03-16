@@ -1677,7 +1677,8 @@ class MomentumBacktester:
                               rs_ibd_skip_top=0,
                               rs_ibd_consec_days=0,
                               rs_ibd_rank_by_rating=True,
-                              rs_underperform_thresh=0):
+                              rs_underperform_thresh=0,
+                              r_regime_gate=None):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -2000,6 +2001,11 @@ class MomentumBacktester:
             # Forward-fill weekly EMAs to daily
             nifty_20w_ema_daily = nifty_20w_ema.reindex(nifty_raw.index, method="ffill")
             nifty_10w_ema_daily = nifty_10w_ema.reindex(nifty_raw.index, method="ffill")
+            # Weekly data for regime detection
+            nifty_weekly_closes = nifty_weekly  # already computed above
+            nifty_weekly_lows = nifty_raw["Low"].resample("W-FRI").min().dropna() if "Low" in nifty_raw.columns else pd.Series(dtype=float)
+            nifty_10w_ema_weekly = nifty_10w_ema  # weekly 10w EMA
+
             regime_on = True  # start optimistic
             for ts in nifty_raw.index:
                 d = ts.date()
@@ -2007,14 +2013,75 @@ class MomentumBacktester:
                 ema20 = nifty_20w_ema_daily.get(ts)
                 ema10 = nifty_10w_ema_daily.get(ts)
                 if pd.notna(close_val) and pd.notna(ema20) and pd.notna(ema10):
+                    cv = float(close_val)
+                    e20 = float(ema20)
+                    e10 = float(ema10)
                     if rs_regime_mode == "simple":
                         # Simple: ON when close > 20w EMA, OFF otherwise
-                        regime_on = float(close_val) >= float(ema20)
+                        regime_on = cv >= e20
+                    elif rs_regime_mode == "early_10w_2":
+                        # OFF below 20w EMA, early ON: above 10w + 10w rising 2 weeks
+                        if cv >= e20:
+                            regime_on = True
+                        elif regime_on and cv < e20:
+                            regime_on = False
+                        elif not regime_on and cv > e10:
+                            # Check 10w EMA rising for 2 consecutive weeks
+                            wi = nifty_10w_ema_weekly.index.get_indexer([ts], method="ffill")[0]
+                            if wi >= 2:
+                                e10_now = float(nifty_10w_ema_weekly.iloc[wi])
+                                e10_1w = float(nifty_10w_ema_weekly.iloc[wi-1])
+                                e10_2w = float(nifty_10w_ema_weekly.iloc[wi-2])
+                                if e10_now > e10_1w > e10_2w:
+                                    regime_on = True
+                    elif rs_regime_mode == "early_10w_3":
+                        # Same but 10w rising 3 consecutive weeks
+                        if cv >= e20:
+                            regime_on = True
+                        elif regime_on and cv < e20:
+                            regime_on = False
+                        elif not regime_on and cv > e10:
+                            wi = nifty_10w_ema_weekly.index.get_indexer([ts], method="ffill")[0]
+                            if wi >= 3:
+                                e10_now = float(nifty_10w_ema_weekly.iloc[wi])
+                                e10_1w = float(nifty_10w_ema_weekly.iloc[wi-1])
+                                e10_2w = float(nifty_10w_ema_weekly.iloc[wi-2])
+                                e10_3w = float(nifty_10w_ema_weekly.iloc[wi-3])
+                                if e10_now > e10_1w > e10_2w > e10_3w:
+                                    regime_on = True
+                    elif rs_regime_mode == "gap_3pct":
+                        # OFF below 20w, early ON: within 3% of 20w + 10w rising
+                        if cv >= e20:
+                            regime_on = True
+                        elif regime_on and cv < e20:
+                            regime_on = False
+                        elif not regime_on:
+                            gap_pct = (e20 - cv) / e20 * 100
+                            wi = nifty_10w_ema_weekly.index.get_indexer([ts], method="ffill")[0]
+                            if wi >= 1 and gap_pct <= 3.0:
+                                e10_now = float(nifty_10w_ema_weekly.iloc[wi])
+                                e10_1w = float(nifty_10w_ema_weekly.iloc[wi-1])
+                                if e10_now > e10_1w:
+                                    regime_on = True
+                    elif rs_regime_mode == "higher_lows":
+                        # OFF below 20w, early ON: 2 consecutive weekly higher lows + above 10w
+                        if cv >= e20:
+                            regime_on = True
+                        elif regime_on and cv < e20:
+                            regime_on = False
+                        elif not regime_on and cv > e10:
+                            wi = nifty_weekly_lows.index.get_indexer([ts], method="ffill")[0]
+                            if wi >= 2:
+                                lo0 = float(nifty_weekly_lows.iloc[wi])
+                                lo1 = float(nifty_weekly_lows.iloc[wi-1])
+                                lo2 = float(nifty_weekly_lows.iloc[wi-2])
+                                if lo0 > lo1 > lo2:
+                                    regime_on = True
                     else:
                         # Asymmetric: instant OFF when < 20w, resume only on 10w > 20w
-                        if regime_on and float(close_val) < float(ema20):
+                        if regime_on and cv < e20:
                             regime_on = False
-                        elif not regime_on and float(ema10) > float(ema20):
+                        elif not regime_on and e10 > e20:
                             regime_on = True
                 nifty_rs_regime_ok[d] = regime_on
 
@@ -2551,7 +2618,10 @@ class MomentumBacktester:
                                 })
 
                 # Strategy R entry: Bullish RSI divergence + green + no gap-down + IBS > 0.5
-                if "R" in strategies:
+                r_regime_allowed = True
+                if r_regime_gate == "regime_off":
+                    r_regime_allowed = not nifty_rs_regime_ok.get(day, True)
+                if "R" in strategies and r_regime_allowed:
                     already_jt = any(s["symbol"] == ticker for s in signals)
                     if not already_jt and is_green and ibs > 0.5:
                         rsi14_vals = ind["rsi14"].values
