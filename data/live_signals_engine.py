@@ -386,16 +386,28 @@ class LiveSignalsEngine:
             if bi >= 123 + 28 and float(bc.iloc[bi - 28 - 123]) > 0:
                 bench_ret123_28ago = (float(bc.iloc[bi - 28]) / float(bc.iloc[bi - 28 - 123]) - 1) * 100
 
-        # Nifty regime: close > 20-week EMA (simple mode)
+        # Nifty regime: early_10w_2 mode (OFF below 20w, early ON: above 10w + 10w rising 2wk)
         nifty_regime_on = False
         if not nifty_raw.empty:
             nifty_weekly = nifty_raw["Close"].resample("W-FRI").last().dropna()
             if len(nifty_weekly) >= 20:
                 nifty_20w_ema = nifty_weekly.ewm(span=20, adjust=False).mean()
-                nifty_20w_daily = nifty_20w_ema.reindex(nifty_raw.index, method="ffill")
+                nifty_10w_ema = nifty_weekly.ewm(span=10, adjust=False).mean()
                 last_nifty_close = float(nifty_raw["Close"].iloc[-1])
+                nifty_20w_daily = nifty_20w_ema.reindex(nifty_raw.index, method="ffill")
                 last_nifty_20w = float(nifty_20w_daily.iloc[-1])
-                nifty_regime_on = last_nifty_close >= last_nifty_20w
+                if last_nifty_close >= last_nifty_20w:
+                    nifty_regime_on = True
+                else:
+                    # Early ON: price > 10w EMA and 10w EMA rising for 2 consecutive weeks
+                    nifty_10w_daily = nifty_10w_ema.reindex(nifty_raw.index, method="ffill")
+                    last_nifty_10w = float(nifty_10w_daily.iloc[-1])
+                    if last_nifty_close > last_nifty_10w and len(nifty_10w_ema) >= 3:
+                        e10_now = float(nifty_10w_ema.iloc[-1])
+                        e10_1w = float(nifty_10w_ema.iloc[-2])
+                        e10_2w = float(nifty_10w_ema.iloc[-3])
+                        if e10_now > e10_1w > e10_2w:
+                            nifty_regime_on = True
 
         j_signals = []
         t_signals = []

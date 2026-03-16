@@ -822,7 +822,7 @@ def run_portfolio_backtest():
         if "RS" in strategies:
             rs_kwargs = {
                 "rs_entry_filters": ["dist_high"],
-                "rs_regime_mode": "simple",
+                "rs_regime_mode": "early_10w_2",
                 "rs_hard_sl": 0.92,
                 "rs_uw_days": 0,
                 "rs_entry_mode": "rs_rating",

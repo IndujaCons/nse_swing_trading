@@ -1677,8 +1677,7 @@ class MomentumBacktester:
                               rs_ibd_skip_top=0,
                               rs_ibd_consec_days=0,
                               rs_ibd_rank_by_rating=True,
-                              rs_underperform_thresh=0,
-                              r_regime_gate=None):
+                              rs_underperform_thresh=0):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -2618,10 +2617,7 @@ class MomentumBacktester:
                                 })
 
                 # Strategy R entry: Bullish RSI divergence + green + no gap-down + IBS > 0.5
-                r_regime_allowed = True
-                if r_regime_gate == "regime_off":
-                    r_regime_allowed = not nifty_rs_regime_ok.get(day, True)
-                if "R" in strategies and r_regime_allowed:
+                if "R" in strategies:
                     already_jt = any(s["symbol"] == ticker for s in signals)
                     if not already_jt and is_green and ibs > 0.5:
                         rsi14_vals = ind["rsi14"].values
