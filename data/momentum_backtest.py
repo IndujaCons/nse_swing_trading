@@ -87,11 +87,140 @@ NIFTY_200_NEXT100_TICKERS = [
     "YESBANK", "ZYDUSLIFE",
 ]
 
-# Ticker renames: new_name -> old_name (for yfinance historical data fallback)
+def _fetch_yahoo_direct(symbol, start, end):
+    """Fetch historical data directly from Yahoo Finance API.
+    Bypasses yfinance pandas dtype bugs with BSE numeric codes like 500008.BO.
+    Returns a DataFrame compatible with yfinance output.
+    """
+    import requests
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+    p1 = int(start.timestamp()) if hasattr(start, 'timestamp') else int(pd.Timestamp(start).timestamp())
+    p2 = int(end.timestamp()) if hasattr(end, 'timestamp') else int(pd.Timestamp(end).timestamp())
+    params = {"period1": p1, "period2": p2, "interval": "1d"}
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        r = requests.get(url, params=params, headers=headers, timeout=15)
+        data = r.json()
+        result = data.get("chart", {}).get("result", [])
+        if not result:
+            return pd.DataFrame()
+        ts = result[0].get("timestamp", [])
+        quote = result[0].get("indicators", {}).get("quote", [{}])[0]
+        if not ts:
+            return pd.DataFrame()
+        # Use Asia/Kolkata timezone to match yfinance .NS output
+        import pytz
+        ist = pytz.timezone("Asia/Kolkata")
+        idx = pd.DatetimeIndex([pd.Timestamp.fromtimestamp(t, tz=ist) for t in ts])
+        df = pd.DataFrame({
+            "Open": quote.get("open", []),
+            "High": quote.get("high", []),
+            "Low": quote.get("low", []),
+            "Close": quote.get("close", []),
+            "Volume": quote.get("volume", []),
+        }, index=idx)
+        df = df.dropna(subset=["Close"])
+        return df
+    except Exception:
+        return pd.DataFrame()
+
+# Symbols that need direct Yahoo API fetch (yfinance crashes on BSE numeric codes)
+_YAHOO_DIRECT_SYMBOLS = {"500008.BO", "511072.BO", "500302.BO", "535789.BO",
+                         "500676.BO", "532309.BO", "DALMIABHA.NS"}
+
+def _fetch_alias(ticker, start, end):
+    """Fetch data for a ticker's alias, using direct Yahoo API if needed."""
+    if ticker not in TICKER_ALIASES:
+        return pd.DataFrame()
+    old_symbol = TICKER_ALIASES[ticker] if "." in TICKER_ALIASES[ticker] else f"{TICKER_ALIASES[ticker]}.NS"
+    if old_symbol in _YAHOO_DIRECT_SYMBOLS:
+        return _fetch_yahoo_direct(old_symbol, start, end)
+    try:
+        return yf.Ticker(old_symbol).history(start=start, end=end)
+    except Exception:
+        return pd.DataFrame()
+
+# Ticker renames: pit_symbol -> yfinance_symbol (full symbol with .NS or .BO suffix)
+# Used for historical data fallback when primary .NS lookup fails
 TICKER_ALIASES = {
-    "ETERNAL": "ZOMATO",      # Zomato -> Eternal (renamed 2025)
-    "TMPV": "TATAMOTORS",     # Tata Motors -> TMPV (demerged Oct 2025)
+    # Current renames (new name → old yfinance symbol)
+    "ETERNAL": "ZOMATO.NS",          # Zomato → Eternal (renamed 2025)
+    # PIT historical → working yfinance symbol (.NS)
+    "ZOMATO": "ETERNAL.NS",          # Zomato delisted, now ETERNAL
+    "ALBK": "INDIANB.NS",            # Allahabad Bank → merged Indian Bank Apr 2020
+    "ANDHRABANK": "UNIONBANK.NS",    # Andhra Bank → merged Union Bank Apr 2020
+    "CROMPGREAV": "CGPOWER.NS",      # Crompton Greaves → CG Power
+    "GMRINFRA": "GMRAIRPORT.NS",     # GMR Infra → GMR Airports
+    "HDFC": "HDFCBANK.NS",           # HDFC Ltd → merged HDFC Bank Jul 2023
+    "IDFC": "IDFCFIRSTB.NS",         # IDFC → merged IDFC First Bank
+    "IDFCBANK": "IDFCFIRSTB.NS",     # IDFC Bank → renamed IDFC First Bank
+    "JUBILANT": "JUBLPHARMA.NS",     # Jubilant Life → Jubilant Pharmova
+    "KPIT": "BSOFT.NS",              # KPIT Tech → merged Birlasoft 2019
+    "LTI": "LTIM.NS",                # L&T Infotech → merged LTIMindtree
+    "LTM": "LTIM.NS",                # LTM ticker → use LTIM
+    "MINDTREE": "LTIM.NS",           # Mindtree → merged LTIMindtree (gap: pre-2016-07)
+    "MAX": "MFSL.NS",                # Max India → demerged, MFSL has history
+    "NIITTECH": "COFORGE.NS",        # NIIT Tech → renamed Coforge
+    "ORIENTBANK": "PNB.NS",          # Oriental Bank → merged PNB Apr 2020
+    "RNAM": "NAM-INDIA.NS",          # Reliance Nippon AMC → NAM-India
+    "STRTECH": "STLTECH.NS",         # Sterlite Tech → ticker change
+    "SYNDIBANK": "CANBK.NS",         # Syndicate Bank → merged Canara Bank Apr 2020
+    "WELSPUNIND": "WELSPUNLIV.NS",   # Welspun India → Welspun Living
+    # PIT historical → BSE (.BO) fallback (NSE ticker removed from Yahoo)
+    "ALSTOMT&D": "532309.BO",        # Alstom T&D → GE Power India (BSE)
+    "AMARAJABAT": "500008.BO",       # Amara Raja Batteries (BSE)
+    "DHFL": "511072.BO",             # Dewan Housing Finance (BSE, bankrupt)
+    "GSKCONS": "500676.BO",          # GSK Consumer → merged HUL (BSE)
+    "IBULHSGFIN": "535789.BO",       # Indiabulls Housing Finance (BSE)
+    "MCDOWELL-N": "UNITDSPR.BO",     # United Spirits (BSE)
+    "PEL": "500302.BO",              # Piramal Enterprises (BSE)
+    "TMPV": "TMPV.BO",               # Tata Motors (BSE, .NS returns 404)
+    "DALMIABHA": "DALMIABHA.NS",     # yfinance pandas bug, use direct fetch
+    # No data available (bankrupt/delisted/no yfinance coverage):
+    # ABIRLANUVO (→Grasim, different price series), AMTEKAUTO (bankrupt),
+    # COX&KINGS (fraud), DHANI (delisted), GDL (privatized), GRUH (partial),
+    # GUJFLUORO (no 2016 data), HEXAWARE (Carlyle delisting), IBVENTURES (→DHANI),
+    # ISEC (delisted), PIPAVAVDOC (acquired), SINTEX (bankrupt),
+    # TATAMTRDVR (DVR delisted), TV18BRDCST (merged Network18)
 }
+
+def load_pit_nifty200():
+    """Load point-in-time Nifty 200 constituent database.
+    Returns dict: effective_date_str -> set of symbols.
+    Dates are sorted ascending.
+    """
+    import json, os
+    pit_path = os.path.join(os.path.dirname(__file__), '..', 'nse_const', 'nifty200_pit.json')
+    if not os.path.exists(pit_path):
+        return None
+    with open(pit_path) as f:
+        raw = json.load(f)
+    # Convert to sorted list of (date_str, symbol_set) for efficient lookup
+    return [(k, set(v)) for k, v in sorted(raw.items())]
+
+def get_pit_universe(pit_data, day):
+    """Get the Nifty 200 constituent set valid on a given date.
+    Returns the most recent constituent list with effective_date <= day.
+    """
+    if pit_data is None:
+        return None
+    day_str = day.isoformat() if hasattr(day, 'isoformat') else str(day)
+    result = None
+    for eff_date, symbols in pit_data:
+        if eff_date <= day_str:
+            result = symbols
+        else:
+            break
+    return result
+
+def get_all_pit_tickers(pit_data):
+    """Get the superset of all tickers across all PIT periods."""
+    if pit_data is None:
+        return set()
+    all_tickers = set()
+    for _, symbols in pit_data:
+        all_tickers |= symbols
+    return all_tickers
 
 # Nifty 500 constituents beyond Nifty 200 (next 300 by market cap)
 NIFTY_500_BEYOND200_TICKERS = [
@@ -458,11 +587,7 @@ class MomentumBacktester:
 
             # Fallback to old ticker name if renamed
             if (daily.empty or len(daily) < 210) and symbol in TICKER_ALIASES:
-                old_symbol = f"{TICKER_ALIASES[symbol]}.NS"
-                try:
-                    daily = yf.Ticker(old_symbol).history(start=daily_start, end=end_date)
-                except Exception:
-                    daily = pd.DataFrame()
+                daily = _fetch_alias(symbol, daily_start, end_date)
 
         if daily.empty or len(daily) < 210:
             return {"error": f"Insufficient daily data for {symbol}",
@@ -521,10 +646,10 @@ class MomentumBacktester:
                 "Open": "first", "High": "max", "Low": "min",
                 "Close": "last", "Volume": "sum"
             }).dropna()
-            # 26-week rolling min of weekly CLOSE, skip last 2 weeks (use proven support, not recent noise)
+            # 26-week rolling min of weekly CLOSE, skip last 4 weeks (use proven support, not recent noise)
             w_support = weekly["Close"].rolling(window=26, min_periods=26).min().shift(2)
             weekly_support_series = w_support.reindex(daily.index, method="ffill")
-            # 26-week rolling min of weekly LOW (for stop-loss), also skip last 2 weeks
+            # 26-week rolling min of weekly LOW (for stop-loss), also skip last 4 weeks
             w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min().shift(2)
             weekly_low_stop_series = w_low_stop.reindex(daily.index, method="ffill")
 
@@ -668,13 +793,12 @@ class MomentumBacktester:
                 entry_signal = False
                 if w_support is not None and not in_position:
                     close_near = ((price - w_support) / w_support) * 100 if w_support > 0 else 999
-                    cci_val = float(cci20_series.iloc[i]) if not pd.isna(cci20_series.iloc[i]) else 0.0
                     no_gap_down_j = (prev_close is None or open_price >= prev_close)
                     entry_signal = (close_near >= 0        # close above support
                                     and close_near <= 3.0  # close within +3% of support
                                     and ibs > 0.5          # bounce
                                     and price > open_price # green candle
-                                    and cci_val > -100     # CCI(20) not deeply oversold
+                                    and price > ema5       # price above 5 EMA
                                     and no_gap_down_j)     # no gap-down
 
                 # Exits (scale-out: 50% at +5%, remaining at +8%)
@@ -711,52 +835,18 @@ class MomentumBacktester:
                         return True
                     return False
 
-                # Track highest high for chandelier exit
                 if in_position:
-                    j_highest_high = max(j_highest_high, high)
-
-                if in_position and not partial_exit_done:
+                    # SL: support break
                     if _j_stop(shares):
                         in_position = False
-                        partial_exit_done = False
                         continue
-                    if price >= t1_price:
-                        half = shares // 2
-                        _j_trade(entry_price, half, day, price, "5PCT_PARTIAL")
-                        remaining_shares = shares - half
-                        partial_exit_done = True
-                        if price >= t2_price:
-                            _j_trade(entry_price, remaining_shares, day, price, "10PCT")
-                            in_position = False
-                            partial_exit_done = False
-                        continue
-
-                if in_position and partial_exit_done:
-                    if _j_stop(remaining_shares):
+                    # Target: 1.5R (1.5 × distance from entry to stop)
+                    risk = entry_price - entry_stop_j
+                    j_target = entry_price + 1.5 * risk if risk > 0 else entry_price * 1.05
+                    if price >= j_target:
+                        _j_trade(entry_price, shares, day, price, "TARGET_1.5R")
                         in_position = False
-                        partial_exit_done = False
                         continue
-                    # Chandelier exit: highest high since entry - 3x ATR(14)
-                    atr14_val = float(atr14_series.iloc[i]) if not pd.isna(atr14_series.iloc[i]) else 0.0
-                    chandelier_stop = j_highest_high - 3.0 * atr14_val
-                    if atr14_val > 0 and price < chandelier_stop:
-                        _j_trade(entry_price, remaining_shares, day, price, "CHANDELIER_EXIT")
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-                    if price >= t2_price:
-                        _j_trade(entry_price, remaining_shares, day, price, "10PCT")
-                        in_position = False
-                        partial_exit_done = False
-                        continue
-
-                # Underwater exit: 10 trading days below entry
-                if in_position and (i - entry_bar) >= 10 and price < entry_price:
-                    sz = remaining_shares if partial_exit_done else shares
-                    _j_trade(entry_price, sz, day, price, "UNDERWATER_EXIT")
-                    in_position = False
-                    partial_exit_done = False
-                    continue
 
                 # Entry (only when fully out)
                 if entry_signal and not in_position:
@@ -767,6 +857,7 @@ class MomentumBacktester:
                         entry_bar = i
                         entry_support_j = w_support  # Weekly close support (for display)
                         entry_stop_j = w_low_stop if w_low_stop is not None else w_support
+                        pos_original_stop_j = entry_stop_j  # save for 1.5R calc after breakeven move
                         nifty_at_entry = float(nifty_close.iloc[i]) if nifty_close is not None else 0.0
                         j_highest_high = high
                         in_position = True
@@ -1364,11 +1455,7 @@ class MomentumBacktester:
 
         # Fallback to old ticker name if renamed
         if (raw.empty or len(raw) < 50) and symbol in TICKER_ALIASES:
-            old_symbol = f"{TICKER_ALIASES[symbol]}.NS"
-            try:
-                raw = yf.Ticker(old_symbol).history(start=fetch_start, end=window_end)
-            except Exception:
-                raw = pd.DataFrame()
+            raw = _fetch_alias(symbol, fetch_start, window_end)
 
         if raw.empty or len(raw) < 50:
             return {"error": f"Could not fetch price data for {symbol}"}
@@ -1677,7 +1764,9 @@ class MomentumBacktester:
                               rs_ibd_skip_top=0,
                               rs_ibd_consec_days=0,
                               rs_ibd_rank_by_rating=True,
-                              rs_underperform_thresh=0):
+                              rs_underperform_thresh=0,
+                              pit_universe=True,
+                              beta_cap=None):
         """
         Portfolio-level backtest with configurable capital and strategies.
         capital_lakhs: 10 or 20 (total capital in lakhs)
@@ -1693,7 +1782,18 @@ class MomentumBacktester:
         PER_STOCK = per_stock
         MAX_POSITIONS = TOTAL_CAPITAL // PER_STOCK
 
-        if universe <= 50:
+        # PIT universe support (only for universe=200)
+        pit_data = None
+        if pit_universe and universe == 200:
+            pit_data = load_pit_nifty200()
+            if pit_data is None:
+                print("  WARNING: pit_universe=True but nifty200_pit.json not found, falling back to static list")
+
+        if pit_data is not None:
+            all_pit_tickers = get_all_pit_tickers(pit_data)
+            tickers = sorted(all_pit_tickers)
+            print(f"  PIT universe: {len(tickers)} unique tickers across all periods")
+        elif universe <= 50:
             tickers = NIFTY_50_TICKERS
         elif universe <= 100:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
@@ -1715,6 +1815,12 @@ class MomentumBacktester:
             nifty_raw = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
         except Exception:
             nifty_raw = pd.DataFrame()
+
+        # Build Nifty date-to-iloc map (for beta calculation)
+        nifty_date_map = {}
+        if not nifty_raw.empty:
+            for iloc_idx in range(len(nifty_raw)):
+                nifty_date_map[nifty_raw.index[iloc_idx].date()] = iloc_idx
 
         # Fetch benchmark index for RS calculation — Nifty 200 for universe > 100
         bench_symbol = "^NSEI" if universe <= 100 else "^CNX200"
@@ -1756,11 +1862,7 @@ class MomentumBacktester:
 
             # Fallback to old ticker name if renamed
             if (daily.empty or len(daily) < 210) and ticker in TICKER_ALIASES:
-                old_symbol = f"{TICKER_ALIASES[ticker]}.NS"
-                try:
-                    daily = yf.Ticker(old_symbol).history(start=daily_start, end=end_date)
-                except Exception:
-                    daily = pd.DataFrame()
+                daily = _fetch_alias(ticker, daily_start, end_date)
 
             if daily.empty or len(daily) < 210:
                 continue
@@ -1791,7 +1893,7 @@ class MomentumBacktester:
                 "Open": "first", "High": "max", "Low": "min",
                 "Close": "last", "Volume": "sum"
             }).dropna()
-            # Skip last 2 weeks of support (use proven support, not recent noise)
+            # Skip last 4 weeks of support (use proven support, not recent noise)
             w_support = weekly["Close"].rolling(window=26, min_periods=26).min().shift(2)
             w_low_stop = weekly["Low"].rolling(window=26, min_periods=26).min().shift(2)
             weekly_support_series = w_support.reindex(daily.index, method="ffill")
@@ -2084,6 +2186,56 @@ class MomentumBacktester:
                             regime_on = True
                 nifty_rs_regime_ok[d] = regime_on
 
+        # Track ARS pivot dates: significant Nifty swing lows
+        # A pivot is when Nifty drops >=8% from a local high, then recovers above 20w EMA
+        ars_pivot_dates = []  # list of (date, nifty_close_at_pivot)
+        nifty_close_by_date = {}
+        if not nifty_raw.empty:
+            for ts in nifty_raw.index:
+                d = ts.date()
+                nifty_close_by_date[d] = float(nifty_raw["Close"].get(ts, 0))
+            # Method: find dates where regime goes OFF→ON after a >=8% drawdown
+            sorted_regime_dates = sorted(nifty_rs_regime_ok.keys())
+            prev_regime = True
+            regime_off_date = None
+            nifty_high_before_off = 0
+            nifty_low_during_off = float('inf')
+            for d in sorted_regime_dates:
+                nc = nifty_close_by_date.get(d, 0)
+                curr = nifty_rs_regime_ok[d]
+                if prev_regime and not curr:
+                    # Regime just turned OFF — record the high before
+                    regime_off_date = d
+                    # Look back 60 days for local high
+                    lookback_dates = [dd for dd in sorted_regime_dates if dd < d][-60:]
+                    nifty_high_before_off = max((nifty_close_by_date.get(dd, 0) for dd in lookback_dates), default=nc)
+                    nifty_low_during_off = nc
+                elif not prev_regime and not curr:
+                    # Still OFF — track the low
+                    if nc > 0 and nc < nifty_low_during_off:
+                        nifty_low_during_off = nc
+                elif not prev_regime and curr:
+                    # Regime just turned ON — check if drawdown was significant
+                    if regime_off_date is not None and nifty_high_before_off > 0:
+                        drawdown_pct = (nifty_high_before_off - nifty_low_during_off) / nifty_high_before_off * 100
+                        if drawdown_pct >= 8:
+                            # Significant correction → this is a real ARS pivot
+                            # Use the low as pivot reference
+                            ars_pivot_dates.append((d, nifty_low_during_off))
+                    regime_off_date = None
+                prev_regime = curr
+            # If no significant drawdowns found, fall back to first regime ON
+            if not ars_pivot_dates and sorted_regime_dates:
+                first_on = next((d for d in sorted_regime_dates if nifty_rs_regime_ok[d]), None)
+                if first_on:
+                    nc = nifty_close_by_date.get(first_on, 0)
+                    if nc > 0:
+                        ars_pivot_dates.append((first_on, nc))
+            if ars_pivot_dates:
+                print(f"  ARS pivot dates: {len(ars_pivot_dates)} significant pivots (>=8% drawdown recovery)")
+                for pd_date, pd_nifty in ars_pivot_dates:
+                    print(f"    {pd_date} (Nifty low: {pd_nifty:.0f})")
+
         # Build per-stock date->index mapping
         date_to_idx = {}  # ticker -> {date: iloc_index}
         for ticker, ind in indicators.items():
@@ -2097,8 +2249,11 @@ class MomentumBacktester:
         rs_rating_by_date = {}  # date -> {ticker: percentile_1_99}
         if "RS" in strategies:
             for day in all_dates:
+                pit_set_day = get_pit_universe(pit_data, day) if pit_data is not None else None
                 day_scores = {}
                 for ticker, ind in indicators.items():
+                    if pit_set_day is not None and ticker not in pit_set_day:
+                        continue
                     if day not in date_to_idx.get(ticker, {}):
                         continue
                     ci = date_to_idx[ticker][day]
@@ -2172,47 +2327,19 @@ class MomentumBacktester:
                         if nifty_pct <= stock_pct and nifty_pct < 0:
                             j_nifty_shields = True
 
-                    # J exits: support break, +5% partial, chandelier trailing / +10% full
-                    t1 = pos["entry_price"] * 1.05
-                    t2 = pos["entry_price"] * 1.10
-                    # Track highest high since entry for Chandelier exit
-                    if high > pos.get("j_highest_high", high):
-                        pos["j_highest_high"] = high
-                    elif "j_highest_high" not in pos:
-                        pos["j_highest_high"] = high
-
-                    if not pos["partial_exit_done"]:
-                        if not j_nifty_shields and price < entry_stop:
+                    # SL: support break
+                    if not j_nifty_shields and price < entry_stop:
+                        trades.append(self._make_portfolio_trade(
+                            pos, pos["shares"], day, price, "SUPPORT_BREAK"))
+                        exited = True
+                    # Target: 1.5R (1.5 × distance from entry to stop)
+                    if not exited:
+                        risk = pos["entry_price"] - entry_stop
+                        j_target = pos["entry_price"] + 1.5 * risk if risk > 0 else pos["entry_price"] * 1.05
+                        if price >= j_target:
                             trades.append(self._make_portfolio_trade(
-                                pos, pos["shares"], day, price, "SUPPORT_BREAK"))
+                                pos, pos["shares"], day, price, "TARGET_1.5R"))
                             exited = True
-                        elif price >= t1:
-                            half = pos["shares"] // 2
-                            trades.append(self._make_portfolio_trade(
-                                pos, half, day, price, "5PCT_PARTIAL"))
-                            pos["remaining_shares"] = pos["shares"] - half
-                            pos["partial_exit_done"] = True
-                            if price >= t2:
-                                trades.append(self._make_portfolio_trade(
-                                    pos, pos["remaining_shares"], day, price, "10PCT"))
-                                exited = True
-                    else:
-                        if not j_nifty_shields and price < entry_stop:
-                            trades.append(self._make_portfolio_trade(
-                                pos, pos["remaining_shares"], day, price, "SUPPORT_BREAK"))
-                            exited = True
-                        else:
-                            # Chandelier exit: highest high since entry - 3x ATR(14)
-                            atr14_val = float(ind["atr14"].iloc[i]) if not pd.isna(ind["atr14"].iloc[i]) else 0.0
-                            chandelier_stop = pos["j_highest_high"] - 3.0 * atr14_val
-                            if price < chandelier_stop:
-                                trades.append(self._make_portfolio_trade(
-                                    pos, pos["remaining_shares"], day, price, "CHANDELIER_EXIT"))
-                                exited = True
-                            if not exited and price >= t2:
-                                trades.append(self._make_portfolio_trade(
-                                    pos, pos["remaining_shares"], day, price, "10PCT"))
-                                exited = True
 
                 elif pos["strategy"] == "T":
                     # T exits: 5% SL, +6% sell 1/3, upper Keltner sell remaining
@@ -2573,11 +2700,10 @@ class MomentumBacktester:
                         wls = float(w_low_stop.iloc[i]) if w_low_stop is not None and not pd.isna(w_low_stop.iloc[i]) else ws
                         if ws > 0:
                             close_near = ((price - ws) / ws) * 100
-                            cci_val = float(ind["cci20"].iloc[i]) if not pd.isna(ind["cci20"].iloc[i]) else 0.0
+                            ema5_val = float(ind["ema5"].iloc[i]) if not pd.isna(ind["ema5"].iloc[i]) else 0.0
                             if (close_near >= 0 and close_near <= 3.0
                                     and ibs > 0.5 and is_green
-                                    and cci_val > -100):
-                                j_stop_pct = (price - wls) / price * 100 if price > 0 else 99.0
+                                    and price > ema5_val):
                                 signals.append({
                                     "symbol": ticker,
                                     "strategy": "J",
@@ -2586,7 +2712,7 @@ class MomentumBacktester:
                                     "entry_support_j": ws,
                                     "entry_stop_j": wls,
                                     "atr14": sig_atr14,
-                                    "stop_pct": j_stop_pct,
+                                    "stop_pct": (price - wls) / price * 100 if price > 0 else 99.0,
                                     "atr_norm": sig_atr14 / price if price > 0 else 99.0,
                                 })
 
@@ -2766,6 +2892,7 @@ class MomentumBacktester:
                 signals = rw_signals
 
             # RS Rotation: rank all stocks by 123d RS, fill open slots with top candidates
+            pit_set = get_pit_universe(pit_data, day) if pit_data is not None else None
             if "RS" in strategies:
                 # Regime filter: off when Nifty < 20w EMA, resume when 10w > 20w
                 nifty_regime_ok = nifty_rs_regime_ok.get(day, True)
@@ -2777,6 +2904,8 @@ class MomentumBacktester:
                 if rs_slots > 0 and regime_gate:
                     rs_candidates = []
                     for ticker, ind in indicators.items():
+                        if pit_set is not None and ticker not in pit_set:
+                            continue
                         if ticker in held_symbols:
                             continue
                         if rs_cooldown.get(ticker, 0) > day_idx:
@@ -2784,6 +2913,31 @@ class MomentumBacktester:
                         if day not in date_to_idx.get(ticker, {}):
                             continue
                         ci = date_to_idx[ticker][day]
+
+                        # Beta cap filter
+                        if beta_cap is not None and not nifty_raw.empty:
+                            stk_closes = ind["closes"].iloc[max(0, ci-252):ci+1].values.astype(float)
+                            if len(stk_closes) >= 253:
+                                # Find matching Nifty window
+                                stk_date = ind["daily"].index[ci].date()
+                                n_idx = None
+                                for d_off in range(6):
+                                    from datetime import timedelta as td3
+                                    chk = stk_date - td3(days=d_off)
+                                    if chk in nifty_date_map:
+                                        n_idx = nifty_date_map[chk]
+                                        break
+                                if n_idx is not None and n_idx >= 252:
+                                    n_closes = nifty_raw["Close"].iloc[n_idx-252:n_idx+1].values.astype(float)
+                                    stk_rets = np.diff(stk_closes[-253:]) / np.maximum(stk_closes[-253:-1], 0.01)
+                                    n_rets = np.diff(n_closes) / np.maximum(n_closes[:-1], 0.01)
+                                    if len(stk_rets) == len(n_rets):
+                                        cov_val = np.cov(stk_rets, n_rets)
+                                        if cov_val.shape == (2, 2) and cov_val[1, 1] > 1e-10:
+                                            beta = cov_val[0, 1] / cov_val[1, 1]
+                                            if beta > beta_cap:
+                                                continue
+
                         rs_123d_s = ind.get("rs_123d")
                         rs_ema30w = ind.get("rs_ema30w_daily")
                         if rs_123d_s is None or ci >= len(rs_123d_s) or pd.isna(rs_123d_s.iloc[ci]):
@@ -2792,7 +2946,61 @@ class MomentumBacktester:
                         cp = float(ind["closes"].iloc[ci])
                         co = float(ind["opens"].iloc[ci])
 
-                        if rs_entry_mode == "rs_rating":
+                        if rs_entry_mode == "ars":
+                            # Adaptive RS: stock return from pivot > nifty return from pivot
+                            # Plus SRS (rs_123d) > 0 for dual confirmation
+                            if not ars_pivot_dates:
+                                continue
+                            # Find the most recent pivot date <= today
+                            ars_pivot_date = None
+                            ars_nifty_at_pivot = None
+                            for pd_date, pd_nifty in ars_pivot_dates:
+                                if pd_date <= day:
+                                    ars_pivot_date = pd_date
+                                    ars_nifty_at_pivot = pd_nifty
+                                else:
+                                    break
+                            if ars_pivot_date is None or ars_nifty_at_pivot is None:
+                                continue
+                            # Need regime to be ON (ARS only valid during bullish regime)
+                            if not nifty_rs_regime_ok.get(day, False):
+                                continue
+                            # Get stock price at pivot date
+                            pivot_idx = date_to_idx.get(ticker, {}).get(ars_pivot_date)
+                            if pivot_idx is None:
+                                # Find nearest day after pivot
+                                for offset in range(1, 10):
+                                    from datetime import timedelta as td_ars
+                                    try_d = ars_pivot_date + td_ars(days=offset)
+                                    if try_d in date_to_idx.get(ticker, {}):
+                                        pivot_idx = date_to_idx[ticker][try_d]
+                                        break
+                            if pivot_idx is None:
+                                continue
+                            stock_at_pivot = float(ind["closes"].iloc[pivot_idx])
+                            if stock_at_pivot <= 0:
+                                continue
+                            # Current Nifty close
+                            nifty_now = nifty_close_by_date.get(day, 0)
+                            if nifty_now <= 0:
+                                continue
+                            # ARS = stock return from pivot - Nifty return from pivot
+                            stock_ret_from_pivot = (cp / stock_at_pivot - 1) * 100
+                            nifty_ret_from_pivot = (nifty_now / ars_nifty_at_pivot - 1) * 100
+                            ars_val = stock_ret_from_pivot - nifty_ret_from_pivot
+                            # Require ARS > 0 (outperforming since pivot)
+                            if ars_val <= 0:
+                                continue
+                            # Require SRS (rs_123d) > 0 (outperforming over rolling 123d)
+                            if rs_val <= 0:
+                                continue
+                            # Price > 30-week EMA
+                            if rs_ema30w is None or ci >= len(rs_ema30w) or pd.isna(rs_ema30w.iloc[ci]):
+                                continue
+                            if cp <= float(rs_ema30w.iloc[ci]):
+                                continue
+                            rs_val = ars_val  # use ARS for ranking
+                        elif rs_entry_mode == "rs_rating":
                             # IBD-style: RS Rating >= 80 (top 20%), use weighted percentile
                             day_ratings = rs_rating_by_date.get(day, {})
                             rating = day_ratings.get(ticker, 0)
@@ -3005,6 +3213,7 @@ class MomentumBacktester:
                         if sig["strategy"] == "J":
                             pos["entry_support_j"] = sig["entry_support_j"]
                             pos["entry_stop_j"] = sig["entry_stop_j"]
+                            pos["original_stop_j"] = sig["entry_stop_j"]
                         elif sig["strategy"] in ("R", "RW"):
                             pos["r_swing_low_stop"] = sig["r_swing_low_stop"]
                             pos["div_type"] = sig.get("div_type", "regular")
@@ -3144,4 +3353,1090 @@ class MomentumBacktester:
 
         columns = [v[2] for v in BATCH_VARIANTS]
         return {"columns": columns, "rows": results}
+
+    def run_momentum30_backtest(self, period_days=365*11, capital_lakhs=20,
+                                 rebalance_months=3, top_n=20, buffer_in=15,
+                                 buffer_out=45, end_date=None, regime_200dma=False,
+                                 pit_universe=True, beta_cap=None, fixed_sl=None,
+                                 w12=0.5, w6=0.5, min_score=None,
+                                 trailing_sl=None):
+        """
+        Nifty200 Momentum 30 strategy — rebalancing portfolio.
+
+        Implements the NSE Nifty200 Momentum 30 methodology:
+        - Momentum Ratio = Price Return / annualized daily volatility
+        - Z-score 12m and 6m momentum ratios across universe
+        - Weighted Average Z = 50% * Z_12 + 50% * Z_6
+        - Normalized Momentum Score for ranking
+        - Buffer: existing stocks stay if rank <= buffer_out (45),
+                  new stocks enter if rank <= buffer_in (15)
+        - Rebalance every rebalance_months (default 3 = quarterly)
+        - Equal weight across top_n (20) stocks
+
+        Returns dict with trades list and summary.
+        """
+        from data.momentum_engine import NIFTY_50_TICKERS
+
+        # PIT universe support
+        pit_data = None
+        if pit_universe:
+            pit_data = load_pit_nifty200()
+            if pit_data is None:
+                print("  WARNING: pit_universe=True but nifty200_pit.json not found, falling back to static list")
+
+        if pit_data is not None:
+            # Use superset of all historical constituents for data fetching
+            all_pit_tickers = get_all_pit_tickers(pit_data)
+            tickers = sorted(all_pit_tickers)
+            print(f"  PIT universe: {len(tickers)} unique tickers across all periods")
+        else:
+            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+
+        TOTAL_CAPITAL = capital_lakhs * 100000
+
+        end_date = end_date or datetime.now()
+        # Need extra history for 12m returns + 1yr vol = ~18 months warmup
+        daily_start = end_date - timedelta(days=period_days + 600)
+        bt_start_date = (end_date - timedelta(days=period_days)).date()
+
+        # --- Phase 1: Fetch all data ---
+        stock_data = {}
+        total = len(tickers)
+        for idx, ticker in enumerate(tickers):
+            nse_symbol = f"{ticker}.NS"
+            try:
+                daily = yf.Ticker(nse_symbol).history(start=daily_start, end=end_date)
+            except Exception:
+                daily = pd.DataFrame()
+            if (daily.empty or len(daily) < 300) and ticker in TICKER_ALIASES:
+                daily = _fetch_alias(ticker, daily_start, end_date)
+            if not daily.empty and len(daily) >= 300:
+                stock_data[ticker] = daily
+            if (idx + 1) % 50 == 0:
+                print(f"  Loaded {idx + 1}/{total} stocks...")
+
+        print(f"  Data loaded: {len(stock_data)} stocks with sufficient history")
+
+        # Fetch Nifty 50 for beta calculation (if beta_cap is set)
+        nifty50_data = None
+        n50_map = {}
+        if beta_cap is not None:
+            try:
+                nifty50_data = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
+                if not nifty50_data.empty:
+                    for iloc_idx in range(len(nifty50_data)):
+                        dt = nifty50_data.index[iloc_idx].date()
+                        n50_map[dt] = iloc_idx
+                    print(f"  Nifty 50 loaded: {len(nifty50_data)} bars (for beta_cap={beta_cap})")
+            except Exception:
+                print("  WARNING: Could not fetch Nifty 50 data for beta filter")
+
+        # Fetch Nifty 200 for 200 DMA regime filter
+        nifty200_data = None
+        if regime_200dma:
+            try:
+                nifty200_data = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
+                if not nifty200_data.empty:
+                    nifty200_data["SMA200"] = nifty200_data["Close"].rolling(200).mean()
+                    print(f"  Nifty 200 data loaded: {len(nifty200_data)} bars (200 DMA regime)")
+            except Exception:
+                print("  WARNING: Could not fetch Nifty 200 data for regime filter")
+
+        # --- Phase 2: Build common date index ---
+        # Use dates where at least 100 stocks have data
+        all_dates_count = {}
+        for ticker, df in stock_data.items():
+            for d in df.index:
+                dt = d.date()
+                all_dates_count[dt] = all_dates_count.get(dt, 0) + 1
+        trading_days = sorted(d for d, c in all_dates_count.items() if c >= 100)
+
+        # Filter to backtest period
+        trading_days = [d for d in trading_days if d >= bt_start_date]
+        if not trading_days:
+            return {"error": "No trading days in backtest period", "trades": []}
+
+        print(f"  Trading days: {len(trading_days)} ({trading_days[0]} to {trading_days[-1]})")
+
+        # Build date-to-iloc mapping for each stock
+        date_to_iloc = {}
+        for ticker, df in stock_data.items():
+            mapping = {}
+            for iloc_idx in range(len(df)):
+                dt = df.index[iloc_idx].date()
+                mapping[dt] = iloc_idx
+            date_to_iloc[ticker] = mapping
+
+        # --- Phase 3: Determine rebalance dates ---
+        # First trading day, then every rebalance_months months
+        rebal_dates = [trading_days[0]]
+        next_rebal = trading_days[0]
+        for d in trading_days[1:]:
+            months_diff = (d.year - next_rebal.year) * 12 + (d.month - next_rebal.month)
+            if months_diff >= rebalance_months:
+                rebal_dates.append(d)
+                next_rebal = d
+        print(f"  Rebalance dates: {len(rebal_dates)}")
+
+        # Build monthly check dates for 200 DMA regime (1st trading day of each month)
+        monthly_check_dates = []
+        if regime_200dma and nifty200_data is not None:
+            seen_months = set()
+            for d in trading_days:
+                ym = (d.year, d.month)
+                if ym not in seen_months:
+                    seen_months.add(ym)
+                    monthly_check_dates.append(d)
+
+        def check_nifty200_regime(day):
+            """Check if Nifty 200 is above its 200 DMA."""
+            if nifty200_data is None or nifty200_data.empty:
+                return True
+            n200_before = nifty200_data[nifty200_data.index.date <= day]
+            if len(n200_before) < 200:
+                return True
+            close = float(n200_before["Close"].iloc[-1])
+            sma200 = float(n200_before["SMA200"].iloc[-1])
+            if pd.isna(sma200):
+                return True
+            return close > sma200
+
+        # --- Phase 4: Run rebalancing backtest ---
+        portfolio = {}  # ticker -> {shares, entry_price, entry_date}
+        trades = []
+        cash = float(TOTAL_CAPITAL)
+        regime_was_on = True  # Track regime state for re-entry
+
+        def compute_scores(day):
+            """Compute Normalized Momentum Score for all stocks on a given day."""
+            pit_set = get_pit_universe(pit_data, day) if pit_data is not None else None
+            scores = {}
+            for ticker, df in stock_data.items():
+                if pit_set is not None and ticker not in pit_set:
+                    continue
+                idx_map = date_to_iloc.get(ticker, {})
+                ci = idx_map.get(day)
+                if ci is None:
+                    # Find nearest prior day
+                    for offset in range(1, 6):
+                        from datetime import timedelta as td
+                        prev = day - td(days=offset)
+                        if prev in idx_map:
+                            ci = idx_map[prev]
+                            break
+                if ci is None or ci < 270:  # Need 252 bars for vol + buffer
+                    continue
+
+                closes = df["Close"]
+                # 12-month return: price(now) / price(252 bars ago) - 1
+                if ci - 252 < 0:
+                    continue
+                p_now = float(closes.iloc[ci])
+                p_12m = float(closes.iloc[ci - 252])
+                p_6m = float(closes.iloc[ci - 126])
+
+                if p_12m <= 0 or p_6m <= 0 or p_now <= 0:
+                    continue
+
+                ret_12m = p_now / p_12m - 1
+                ret_6m = p_now / p_6m - 1
+
+                # Annualized std dev of daily log returns (1 year)
+                log_rets = np.diff(np.log(
+                    np.maximum(closes.iloc[ci - 252:ci + 1].values.astype(float), 0.01)
+                ))
+                sigma = float(np.std(log_rets)) * np.sqrt(252)
+
+                if sigma < 0.01:
+                    continue
+
+                # Momentum Ratios
+                mr_12 = ret_12m / sigma
+                mr_6 = ret_6m / sigma
+
+                # Compute beta if beta_cap is set
+                beta = None
+                if beta_cap is not None and nifty50_data is not None:
+                    n50_ci = n50_map.get(day)
+                    if n50_ci is None:
+                        for offset in range(1, 6):
+                            from datetime import timedelta as td2
+                            prev2 = day - td2(days=offset)
+                            if prev2 in n50_map:
+                                n50_ci = n50_map[prev2]
+                                break
+                    if n50_ci is not None and n50_ci >= 252:
+                        n50_closes = nifty50_data["Close"].iloc[n50_ci - 252:n50_ci + 1].values.astype(float)
+                        stock_closes = closes.iloc[ci - 252:ci + 1].values.astype(float)
+                        n50_rets = np.diff(n50_closes) / np.maximum(n50_closes[:-1], 0.01)
+                        stk_rets = np.diff(stock_closes) / np.maximum(stock_closes[:-1], 0.01)
+                        if len(stk_rets) == len(n50_rets):
+                            cov_val = np.cov(stk_rets, n50_rets)
+                            if cov_val.shape == (2, 2) and cov_val[1, 1] > 1e-10:
+                                beta = cov_val[0, 1] / cov_val[1, 1]
+
+                scores[ticker] = {
+                    "mr_12": mr_12,
+                    "mr_6": mr_6,
+                    "price": p_now,
+                    "ret_12m": ret_12m,
+                    "ret_6m": ret_6m,
+                    "sigma": sigma,
+                    "beta": beta,
+                }
+
+            # Apply beta_cap filter before Z-scoring
+            if beta_cap is not None:
+                before = len(scores)
+                scores = {t: s for t, s in scores.items() if s.get("beta") is not None and s["beta"] <= beta_cap}
+                print(f"    Beta cap {beta_cap}: {before} → {len(scores)} stocks on {day}")
+
+            if len(scores) < 20:
+                return {}
+
+            # Z-score across universe
+            mr12_vals = np.array([s["mr_12"] for s in scores.values()])
+            mr6_vals = np.array([s["mr_6"] for s in scores.values()])
+
+            mu_12, std_12 = np.mean(mr12_vals), np.std(mr12_vals)
+            mu_6, std_6 = np.mean(mr6_vals), np.std(mr6_vals)
+
+            if std_12 < 0.001 or std_6 < 0.001:
+                return {}
+
+            for ticker, s in scores.items():
+                z_12 = (s["mr_12"] - mu_12) / std_12
+                z_6 = (s["mr_6"] - mu_6) / std_6
+                wt_z = w12 * z_12 + w6 * z_6
+
+                # Normalized Momentum Score
+                if wt_z >= 0:
+                    norm_score = 1 + wt_z
+                else:
+                    norm_score = 1.0 / (1 - wt_z)  # (1 - Z)^-1
+
+                s["z_12"] = z_12
+                s["z_6"] = z_6
+                s["wt_z"] = wt_z
+                s["norm_score"] = norm_score
+
+            return scores
+
+        per_stock_capital = TOTAL_CAPITAL / top_n
+
+        def _sell_all_positions(portfolio, trades, cash, day, exit_reason):
+            """Sell all positions in portfolio."""
+            for t in list(portfolio.keys()):
+                pos = portfolio[t]
+                exit_price = None
+                idx_map = date_to_iloc.get(t, {})
+                ci = idx_map.get(day)
+                if ci is not None:
+                    exit_price = float(stock_data[t]["Close"].iloc[ci])
+                else:
+                    for offset in range(1, 10):
+                        from datetime import timedelta as td
+                        prev = day - td(days=offset)
+                        if prev in idx_map:
+                            exit_price = float(stock_data[t]["Close"].iloc[idx_map[prev]])
+                            break
+                if exit_price is None:
+                    exit_price = pos["entry_price"]
+                pnl = (exit_price - pos["entry_price"]) * pos["shares"]
+                trades.append({
+                    "symbol": t,
+                    "strategy": "Mom30",
+                    "entry_date": pos["entry_date"],
+                    "exit_date": day,
+                    "entry_price": pos["entry_price"],
+                    "exit_price": exit_price,
+                    "shares": pos["shares"],
+                    "pnl": pnl,
+                    "exit_reason": exit_reason,
+                    "hold_days": (day - pos["entry_date"]).days,
+                })
+                cash += pos["shares"] * exit_price
+            portfolio.clear()
+            return cash
+
+        # --- Build combined action dates ---
+        # Merge rebalance dates + monthly regime check dates
+        rebal_set = set(rebal_dates)
+        monthly_set = set(monthly_check_dates) if regime_200dma else set()
+
+        # If fixed_sl or trailing_sl is set, check every trading day for SL breaches
+        has_sl = fixed_sl is not None or trailing_sl is not None
+        if has_sl:
+            all_action_dates = sorted(set(trading_days) | rebal_set | monthly_set)
+            if fixed_sl is not None:
+                print(f"  Fixed SL: {fixed_sl*100:.0f}%")
+            if trailing_sl is not None:
+                print(f"  Trailing SL: {trailing_sl*100:.0f}% from highest high")
+        else:
+            all_action_dates = sorted(rebal_set | monthly_set)
+
+        for rebal_idx, rebal_day in enumerate(all_action_dates):
+            is_rebal = rebal_day in rebal_set
+
+            # --- Daily SL check (fixed and/or trailing) ---
+            if has_sl and portfolio:
+                sl_exits = []
+                for t in list(portfolio.keys()):
+                    pos = portfolio[t]
+                    idx_map = date_to_iloc.get(t, {})
+                    ci = idx_map.get(rebal_day)
+                    if ci is None:
+                        continue
+                    low_price = float(stock_data[t]["Low"].iloc[ci])
+                    high_price = float(stock_data[t]["High"].iloc[ci])
+
+                    # Update highest high for trailing SL
+                    if "highest_high" not in pos:
+                        pos["highest_high"] = pos["entry_price"]
+                    if high_price > pos["highest_high"]:
+                        pos["highest_high"] = high_price
+
+                    sl_hit = False
+                    exit_price = None
+
+                    # Fixed SL: from entry price
+                    if fixed_sl is not None:
+                        sl_level = pos["entry_price"] * (1.0 - fixed_sl)
+                        if low_price <= sl_level:
+                            sl_hit = True
+                            exit_price = sl_level
+
+                    # Trailing SL: from highest high
+                    if trailing_sl is not None:
+                        trail_level = pos["highest_high"] * (1.0 - trailing_sl)
+                        if low_price <= trail_level:
+                            if not sl_hit or trail_level > exit_price:
+                                sl_hit = True
+                                exit_price = trail_level
+
+                    if sl_hit:
+                        pnl = (exit_price - pos["entry_price"]) * pos["shares"]
+                        trades.append({
+                            "symbol": t,
+                            "strategy": "Mom30",
+                            "entry_date": pos["entry_date"],
+                            "exit_date": rebal_day,
+                            "entry_price": pos["entry_price"],
+                            "exit_price": exit_price,
+                            "shares": pos["shares"],
+                            "pnl": pnl,
+                            "exit_reason": "STOP_LOSS",
+                            "hold_days": (rebal_day - pos["entry_date"]).days,
+                        })
+                        cash += pos["shares"] * exit_price
+                        sl_exits.append(t)
+                for t in sl_exits:
+                    del portfolio[t]
+
+            # --- 200 DMA regime check (monthly) ---
+            if regime_200dma and nifty200_data is not None and rebal_day in (rebal_set | monthly_set):
+                regime_on_200 = check_nifty200_regime(rebal_day)
+
+                if not regime_on_200 and regime_was_on and portfolio:
+                    # Regime just turned OFF → sell everything
+                    cash = _sell_all_positions(portfolio, trades, cash, rebal_day, "REGIME_200DMA_OFF")
+                    regime_was_on = False
+                    if not is_rebal:
+                        continue
+                elif not regime_on_200:
+                    # Still off — skip everything (no rebalance, no buying)
+                    regime_was_on = False
+                    if not is_rebal:
+                        continue
+                elif regime_on_200 and not regime_was_on:
+                    # Regime just turned ON → force a rebalance to re-enter
+                    regime_was_on = True
+                    is_rebal = True  # Treat this as a rebalance date
+                else:
+                    regime_was_on = True
+
+            # Skip non-rebalance dates
+            if not is_rebal:
+                continue
+
+            scores = compute_scores(rebal_day)
+            if not scores:
+                continue
+
+            # Filter by min_score if set
+            if min_score is not None:
+                scores = {t: s for t, s in scores.items() if s["norm_score"] >= min_score}
+
+            # Rank by Normalized Momentum Score
+            ranked = sorted(scores.items(), key=lambda x: -x[1]["norm_score"])
+
+            # Current portfolio tickers and their ranks
+            current_tickers = set(portfolio.keys())
+            ticker_rank = {t: rank + 1 for rank, (t, _) in enumerate(ranked)}
+
+            # Apply buffer rule
+            new_portfolio_tickers = set()
+
+            # Existing stocks: keep if rank <= buffer_out (45)
+            for t in current_tickers:
+                rank = ticker_rank.get(t, 999)
+                if rank <= buffer_out:
+                    new_portfolio_tickers.add(t)
+
+            # New stocks: add if rank <= buffer_in (15) and not already held
+            for rank, (t, _) in enumerate(ranked):
+                if rank + 1 <= buffer_in and t not in current_tickers:
+                    new_portfolio_tickers.add(t)
+
+            # Fill remaining slots from top-ranked not yet included
+            for rank, (t, _) in enumerate(ranked):
+                if len(new_portfolio_tickers) >= top_n:
+                    break
+                new_portfolio_tickers.add(t)
+
+            # Cap at top_n
+            if len(new_portfolio_tickers) > top_n:
+                # Keep the highest-ranked ones
+                ranked_new = sorted(new_portfolio_tickers,
+                                     key=lambda t: ticker_rank.get(t, 999))
+                new_portfolio_tickers = set(ranked_new[:top_n])
+
+            # --- Execute rebalance ---
+            # 1. Sell stocks no longer in portfolio
+            to_sell = current_tickers - new_portfolio_tickers
+            for t in to_sell:
+                pos = portfolio[t]
+                exit_price = scores.get(t, {}).get("price")
+                if exit_price is None:
+                    # Stock might not have data on this day, use last known
+                    idx_map = date_to_iloc.get(t, {})
+                    ci = idx_map.get(rebal_day)
+                    if ci is not None:
+                        exit_price = float(stock_data[t]["Close"].iloc[ci])
+                    else:
+                        exit_price = pos["entry_price"]  # fallback
+                pnl = (exit_price - pos["entry_price"]) * pos["shares"]
+                trades.append({
+                    "symbol": t,
+                    "strategy": "Mom30",
+                    "entry_date": pos["entry_date"],
+                    "exit_date": rebal_day,
+                    "entry_price": pos["entry_price"],
+                    "exit_price": exit_price,
+                    "shares": pos["shares"],
+                    "pnl": pnl,
+                    "exit_reason": "REBALANCE_OUT",
+                    "hold_days": (rebal_day - pos["entry_date"]).days,
+                    "exit_rank": ticker_rank.get(t, 999),
+                })
+                cash += pos["shares"] * exit_price
+                del portfolio[t]
+
+            # 2. Buy new stocks
+            to_buy = new_portfolio_tickers - set(portfolio.keys())
+            for t in to_buy:
+                s = scores.get(t)
+                if s is None:
+                    continue
+                price = s["price"]
+                if price <= 0:
+                    continue
+                shares = int(per_stock_capital // price)
+                if shares <= 0:
+                    continue
+                cost = shares * price
+                if cost > cash:
+                    continue
+                portfolio[t] = {
+                    "entry_date": rebal_day,
+                    "entry_price": price,
+                    "shares": shares,
+                    "rank": ticker_rank.get(t, 999),
+                    "norm_score": s["norm_score"],
+                }
+                cash -= cost
+
+        # --- Close remaining positions at end ---
+        last_day = trading_days[-1]
+        for t in list(portfolio.keys()):
+            pos = portfolio[t]
+            idx_map = date_to_iloc.get(t, {})
+            ci = idx_map.get(last_day)
+            if ci is not None:
+                exit_price = float(stock_data[t]["Close"].iloc[ci])
+            else:
+                # Find nearest prior day
+                exit_price = pos["entry_price"]
+                for offset in range(1, 10):
+                    from datetime import timedelta as td
+                    prev = last_day - td(days=offset)
+                    if prev in idx_map:
+                        exit_price = float(stock_data[t]["Close"].iloc[idx_map[prev]])
+                        break
+            pnl = (exit_price - pos["entry_price"]) * pos["shares"]
+            trades.append({
+                "symbol": t,
+                "strategy": "Mom30",
+                "entry_date": pos["entry_date"],
+                "exit_date": last_day,
+                "entry_price": pos["entry_price"],
+                "exit_price": exit_price,
+                "shares": pos["shares"],
+                "pnl": pnl,
+                "exit_reason": "BACKTEST_END",
+                "hold_days": (last_day - pos["entry_date"]).days,
+            })
+        portfolio.clear()
+
+        return {"trades": trades, "rebalance_dates": rebal_dates}
+
+    def run_lowvol_backtest(self, period_days=365*11, capital_lakhs=20,
+                             rebalance_months=1, top_n=20, buffer_in=20,
+                             buffer_out=40, end_date=None):
+        """
+        Nifty200 Low Volatility strategy — rebalancing portfolio.
+
+        Selects the least volatile stocks from Nifty 200 universe.
+        - Volatility = annualized std dev of daily log returns over 1 year
+        - Rank by lowest volatility (rank 1 = least volatile)
+        - Buffer: existing stocks stay if rank <= buffer_out,
+                  new stocks enter if rank <= buffer_in
+        - Equal weight across top_n stocks
+        - Rebalance every rebalance_months (default 1 = monthly)
+
+        Returns dict with trades list and summary.
+        """
+        from data.momentum_engine import NIFTY_50_TICKERS
+
+        tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+        TOTAL_CAPITAL = capital_lakhs * 100000
+
+        end_date = end_date or datetime.now()
+        # Need extra history for 1yr volatility = ~400 days warmup
+        daily_start = end_date - timedelta(days=period_days + 600)
+        bt_start_date = (end_date - timedelta(days=period_days)).date()
+
+        # --- Phase 1: Fetch all data ---
+        stock_data = {}
+        total = len(tickers)
+        for idx, ticker in enumerate(tickers):
+            nse_symbol = f"{ticker}.NS"
+            try:
+                daily = yf.Ticker(nse_symbol).history(start=daily_start, end=end_date)
+            except Exception:
+                daily = pd.DataFrame()
+            if (daily.empty or len(daily) < 300) and ticker in TICKER_ALIASES:
+                daily = _fetch_alias(ticker, daily_start, end_date)
+            if not daily.empty and len(daily) >= 300:
+                stock_data[ticker] = daily
+            if (idx + 1) % 50 == 0:
+                print(f"  Loaded {idx + 1}/{total} stocks...")
+
+        print(f"  Data loaded: {len(stock_data)} stocks with sufficient history")
+
+        # --- Phase 2: Build common date index ---
+        all_dates_count = {}
+        for ticker, df in stock_data.items():
+            for d in df.index:
+                dt = d.date()
+                all_dates_count[dt] = all_dates_count.get(dt, 0) + 1
+        trading_days = sorted(d for d, c in all_dates_count.items() if c >= 100)
+
+        trading_days = [d for d in trading_days if d >= bt_start_date]
+        if not trading_days:
+            return {"error": "No trading days in backtest period", "trades": []}
+
+        print(f"  Trading days: {len(trading_days)} ({trading_days[0]} to {trading_days[-1]})")
+
+        # Build date-to-iloc mapping for each stock
+        date_to_iloc = {}
+        for ticker, df in stock_data.items():
+            mapping = {}
+            for iloc_idx in range(len(df)):
+                dt = df.index[iloc_idx].date()
+                mapping[dt] = iloc_idx
+            date_to_iloc[ticker] = mapping
+
+        # --- Phase 3: Determine rebalance dates ---
+        rebal_dates = [trading_days[0]]
+        next_rebal = trading_days[0]
+        for d in trading_days[1:]:
+            months_diff = (d.year - next_rebal.year) * 12 + (d.month - next_rebal.month)
+            if months_diff >= rebalance_months:
+                rebal_dates.append(d)
+                next_rebal = d
+        print(f"  Rebalance dates: {len(rebal_dates)}")
+
+        # --- Phase 4: Run rebalancing backtest ---
+        portfolio = {}  # ticker -> {shares, entry_price, entry_date}
+        trades = []
+        cash = float(TOTAL_CAPITAL)
+
+        def compute_volatility(day):
+            """Compute annualized volatility for all stocks on a given day."""
+            vol_scores = {}
+            for ticker, df in stock_data.items():
+                idx_map = date_to_iloc.get(ticker, {})
+                ci = idx_map.get(day)
+                if ci is None:
+                    for offset in range(1, 6):
+                        from datetime import timedelta as td
+                        prev = day - td(days=offset)
+                        if prev in idx_map:
+                            ci = idx_map[prev]
+                            break
+                if ci is None or ci < 252:
+                    continue
+
+                closes = df["Close"]
+                p_now = float(closes.iloc[ci])
+                if p_now <= 0:
+                    continue
+
+                # Annualized std dev of daily log returns (1 year = 252 bars)
+                price_slice = closes.iloc[ci - 252:ci + 1].values.astype(float)
+                price_slice = np.maximum(price_slice, 0.01)
+                log_rets = np.diff(np.log(price_slice))
+                sigma = float(np.std(log_rets)) * np.sqrt(252)
+
+                if sigma < 0.01:
+                    continue
+
+                vol_scores[ticker] = {
+                    "sigma": sigma,
+                    "price": p_now,
+                }
+
+            return vol_scores
+
+        per_stock_capital = TOTAL_CAPITAL / top_n
+
+        for rebal_day in rebal_dates:
+            vol_data = compute_volatility(rebal_day)
+            if not vol_data:
+                continue
+
+            # Rank by LOWEST volatility (rank 1 = least volatile)
+            ranked = sorted(vol_data.items(), key=lambda x: x[1]["sigma"])
+
+            current_tickers = set(portfolio.keys())
+            ticker_rank = {t: rank + 1 for rank, (t, _) in enumerate(ranked)}
+
+            # Apply buffer rule
+            new_portfolio_tickers = set()
+
+            # Existing stocks: keep if rank <= buffer_out
+            for t in current_tickers:
+                rank = ticker_rank.get(t, 999)
+                if rank <= buffer_out:
+                    new_portfolio_tickers.add(t)
+
+            # New stocks: add if rank <= buffer_in and not already held
+            for rank, (t, _) in enumerate(ranked):
+                if rank + 1 <= buffer_in and t not in current_tickers:
+                    new_portfolio_tickers.add(t)
+
+            # Fill remaining slots from top-ranked
+            for rank, (t, _) in enumerate(ranked):
+                if len(new_portfolio_tickers) >= top_n:
+                    break
+                new_portfolio_tickers.add(t)
+
+            # Cap at top_n
+            if len(new_portfolio_tickers) > top_n:
+                ranked_new = sorted(new_portfolio_tickers,
+                                     key=lambda t: ticker_rank.get(t, 999))
+                new_portfolio_tickers = set(ranked_new[:top_n])
+
+            # --- Execute rebalance ---
+            # 1. Sell stocks no longer in portfolio
+            to_sell = current_tickers - new_portfolio_tickers
+            for t in to_sell:
+                pos = portfolio[t]
+                exit_price = vol_data.get(t, {}).get("price")
+                if exit_price is None:
+                    idx_map = date_to_iloc.get(t, {})
+                    ci = idx_map.get(rebal_day)
+                    if ci is not None:
+                        exit_price = float(stock_data[t]["Close"].iloc[ci])
+                    else:
+                        exit_price = pos["entry_price"]
+                pnl = (exit_price - pos["entry_price"]) * pos["shares"]
+                trades.append({
+                    "symbol": t,
+                    "strategy": "LowVol",
+                    "entry_date": pos["entry_date"],
+                    "exit_date": rebal_day,
+                    "entry_price": pos["entry_price"],
+                    "exit_price": exit_price,
+                    "shares": pos["shares"],
+                    "pnl": pnl,
+                    "exit_reason": "REBALANCE_OUT",
+                    "hold_days": (rebal_day - pos["entry_date"]).days,
+                    "exit_rank": ticker_rank.get(t, 999),
+                })
+                cash += pos["shares"] * exit_price
+                del portfolio[t]
+
+            # 2. Buy new stocks
+            to_buy = new_portfolio_tickers - set(portfolio.keys())
+            for t in to_buy:
+                s = vol_data.get(t)
+                if s is None:
+                    continue
+                price = s["price"]
+                if price <= 0:
+                    continue
+                shares = int(per_stock_capital // price)
+                if shares <= 0:
+                    continue
+                cost = shares * price
+                if cost > cash:
+                    continue
+                portfolio[t] = {
+                    "entry_date": rebal_day,
+                    "entry_price": price,
+                    "shares": shares,
+                    "rank": ticker_rank.get(t, 999),
+                    "sigma": s["sigma"],
+                }
+                cash -= cost
+
+        # --- Close remaining positions at end ---
+        last_day = trading_days[-1]
+        for t in list(portfolio.keys()):
+            pos = portfolio[t]
+            idx_map = date_to_iloc.get(t, {})
+            ci = idx_map.get(last_day)
+            if ci is not None:
+                exit_price = float(stock_data[t]["Close"].iloc[ci])
+            else:
+                exit_price = pos["entry_price"]
+                for offset in range(1, 10):
+                    from datetime import timedelta as td
+                    prev = last_day - td(days=offset)
+                    if prev in idx_map:
+                        exit_price = float(stock_data[t]["Close"].iloc[idx_map[prev]])
+                        break
+            pnl = (exit_price - pos["entry_price"]) * pos["shares"]
+            trades.append({
+                "symbol": t,
+                "strategy": "LowVol",
+                "entry_date": pos["entry_date"],
+                "exit_date": last_day,
+                "entry_price": pos["entry_price"],
+                "exit_price": exit_price,
+                "shares": pos["shares"],
+                "pnl": pnl,
+                "exit_reason": "BACKTEST_END",
+                "hold_days": (last_day - pos["entry_date"]).days,
+            })
+        portfolio.clear()
+
+        return {"trades": trades, "rebalance_dates": rebal_dates}
+
+    def run_alpha20_backtest(self, period_days=365*11, capital_lakhs=20,
+                              rebalance_months=3, top_n=20, buffer_in=20,
+                              buffer_out=40, end_date=None, beta_cap=None,
+                              pit_universe=True):
+        """
+        Nifty200 Alpha20 strategy — rebalancing portfolio using Jensen's Alpha.
+
+        Selects stocks with highest Jensen's Alpha (CAPM) from Nifty 200:
+        - Alpha = stock_return - [risk_free + beta * (market_return - risk_free)]
+        - Market proxy: Nifty 50 (^NSEI)
+        - Risk-free rate: 6.5% annualized
+        - 252 daily returns for beta and alpha calculation
+        - Rank by highest annualized alpha, pick top_n
+        - Buffer: existing stocks stay if rank <= buffer_out,
+                  new stocks enter if rank <= buffer_in
+        - Equal weight, rebalance every rebalance_months (default 3 = quarterly)
+        """
+        from data.momentum_engine import NIFTY_50_TICKERS
+
+        # PIT universe support
+        pit_data = None
+        if pit_universe:
+            pit_data = load_pit_nifty200()
+            if pit_data is None:
+                print("  WARNING: pit_universe=True but nifty200_pit.json not found, falling back to static list")
+
+        if pit_data is not None:
+            all_pit_tickers = get_all_pit_tickers(pit_data)
+            tickers = sorted(all_pit_tickers)
+            print(f"  PIT universe: {len(tickers)} unique tickers across all periods")
+        else:
+            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+
+        TOTAL_CAPITAL = capital_lakhs * 100000
+        RF_DAILY = 0.065 / 252  # ~6.5% annualized risk-free rate
+
+        end_date = end_date or datetime.now()
+        daily_start = end_date - timedelta(days=period_days + 600)
+        bt_start_date = (end_date - timedelta(days=period_days)).date()
+
+        # --- Phase 1: Fetch all stock data ---
+        stock_data = {}
+        total = len(tickers)
+        for idx, ticker in enumerate(tickers):
+            nse_symbol = f"{ticker}.NS"
+            try:
+                daily = yf.Ticker(nse_symbol).history(start=daily_start, end=end_date)
+            except Exception:
+                daily = pd.DataFrame()
+            if (daily.empty or len(daily) < 300) and ticker in TICKER_ALIASES:
+                daily = _fetch_alias(ticker, daily_start, end_date)
+            if not daily.empty and len(daily) >= 300:
+                stock_data[ticker] = daily
+            if (idx + 1) % 50 == 0:
+                print(f"  Loaded {idx + 1}/{total} stocks...")
+
+        print(f"  Data loaded: {len(stock_data)} stocks with sufficient history")
+
+        # Fetch Nifty 50 as market proxy
+        try:
+            nifty50 = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
+        except Exception:
+            return {"error": "Could not fetch Nifty 50 data", "trades": []}
+        if nifty50.empty or len(nifty50) < 300:
+            return {"error": "Insufficient Nifty 50 data", "trades": []}
+        print(f"  Nifty 50: {len(nifty50)} bars")
+
+        # --- Phase 2: Build common date index ---
+        all_dates_count = {}
+        for ticker, df in stock_data.items():
+            for d in df.index:
+                dt = d.date()
+                all_dates_count[dt] = all_dates_count.get(dt, 0) + 1
+        trading_days = sorted(d for d, c in all_dates_count.items() if c >= 100)
+
+        trading_days = [d for d in trading_days if d >= bt_start_date]
+        if not trading_days:
+            return {"error": "No trading days in backtest period", "trades": []}
+
+        print(f"  Trading days: {len(trading_days)} ({trading_days[0]} to {trading_days[-1]})")
+
+        # Build date-to-iloc mappings
+        date_to_iloc = {}
+        for ticker, df in stock_data.items():
+            mapping = {}
+            for iloc_idx in range(len(df)):
+                dt = df.index[iloc_idx].date()
+                mapping[dt] = iloc_idx
+            date_to_iloc[ticker] = mapping
+
+        n50_map = {}
+        for iloc_idx in range(len(nifty50)):
+            dt = nifty50.index[iloc_idx].date()
+            n50_map[dt] = iloc_idx
+
+        # --- Phase 3: Determine rebalance dates ---
+        rebal_dates = [trading_days[0]]
+        next_rebal = trading_days[0]
+        for d in trading_days[1:]:
+            months_diff = (d.year - next_rebal.year) * 12 + (d.month - next_rebal.month)
+            if months_diff >= rebalance_months:
+                rebal_dates.append(d)
+                next_rebal = d
+        print(f"  Rebalance dates: {len(rebal_dates)}")
+
+        # --- Phase 4: Run rebalancing backtest ---
+        portfolio = {}
+        trades = []
+        cash = float(TOTAL_CAPITAL)
+
+        def compute_alpha(day):
+            """Compute annualized Jensen's Alpha for all stocks on a given day."""
+            pit_set = get_pit_universe(pit_data, day) if pit_data is not None else None
+            n50_ci = n50_map.get(day)
+            if n50_ci is None:
+                for offset in range(1, 6):
+                    from datetime import timedelta as td
+                    prev = day - td(days=offset)
+                    if prev in n50_map:
+                        n50_ci = n50_map[prev]
+                        break
+            if n50_ci is None or n50_ci < 252:
+                return {}
+
+            n50_closes = nifty50["Close"].iloc[n50_ci - 252:n50_ci + 1].values.astype(float)
+            n50_rets = np.diff(n50_closes) / np.maximum(n50_closes[:-1], 0.01)
+            rm = np.mean(n50_rets)
+            var_market = np.var(n50_rets)
+            if var_market < 1e-10:
+                return {}
+
+            scores = {}
+            for ticker, df in stock_data.items():
+                if pit_set is not None and ticker not in pit_set:
+                    continue
+                idx_map = date_to_iloc.get(ticker, {})
+                ci = idx_map.get(day)
+                if ci is None:
+                    for offset in range(1, 6):
+                        from datetime import timedelta as td
+                        prev = day - td(days=offset)
+                        if prev in idx_map:
+                            ci = idx_map[prev]
+                            break
+                if ci is None or ci < 252:
+                    continue
+
+                closes = df["Close"].iloc[ci - 252:ci + 1].values.astype(float)
+                if len(closes) < 253:
+                    continue
+
+                stock_rets = np.diff(closes) / np.maximum(closes[:-1], 0.01)
+                if len(stock_rets) != len(n50_rets):
+                    continue
+
+                rs = np.mean(stock_rets)
+                cov_val = np.cov(stock_rets, n50_rets)
+                if cov_val.shape != (2, 2):
+                    continue
+                beta = cov_val[0, 1] / var_market
+
+                alpha_daily = rs - (RF_DAILY + beta * (rm - RF_DAILY))
+                alpha_annual = alpha_daily * 252
+
+                price = float(df["Close"].iloc[ci])
+                if price <= 0:
+                    continue
+
+                scores[ticker] = {
+                    "alpha": alpha_annual,
+                    "beta": beta,
+                    "price": price,
+                }
+
+            return scores
+
+        per_stock_capital = TOTAL_CAPITAL / top_n
+
+        for rebal_day in rebal_dates:
+            alpha_data = compute_alpha(rebal_day)
+            if not alpha_data:
+                continue
+
+            # Apply beta cap filter
+            if beta_cap is not None:
+                alpha_data = {t: s for t, s in alpha_data.items() if s["beta"] <= beta_cap}
+
+            # Prefer positive alpha stocks for ranking
+            pos_alpha = {t: s for t, s in alpha_data.items() if s["alpha"] > 0}
+            rank_pool = pos_alpha if len(pos_alpha) >= top_n else alpha_data
+
+            # Rank by HIGHEST alpha
+            ranked = sorted(rank_pool.items(), key=lambda x: -x[1]["alpha"])
+
+            current_tickers = set(portfolio.keys())
+            ticker_rank = {t: rank + 1 for rank, (t, _) in enumerate(ranked)}
+
+            new_portfolio_tickers = set()
+
+            for t in current_tickers:
+                rank = ticker_rank.get(t, 999)
+                if rank <= buffer_out:
+                    new_portfolio_tickers.add(t)
+
+            for rank, (t, _) in enumerate(ranked):
+                if rank + 1 <= buffer_in and t not in current_tickers:
+                    new_portfolio_tickers.add(t)
+
+            for rank, (t, _) in enumerate(ranked):
+                if len(new_portfolio_tickers) >= top_n:
+                    break
+                new_portfolio_tickers.add(t)
+
+            if len(new_portfolio_tickers) > top_n:
+                ranked_new = sorted(new_portfolio_tickers,
+                                     key=lambda t: ticker_rank.get(t, 999))
+                new_portfolio_tickers = set(ranked_new[:top_n])
+
+            # Sell
+            to_sell = current_tickers - new_portfolio_tickers
+            for t in to_sell:
+                pos = portfolio[t]
+                exit_price = alpha_data.get(t, {}).get("price")
+                if exit_price is None:
+                    idx_map = date_to_iloc.get(t, {})
+                    ci = idx_map.get(rebal_day)
+                    if ci is not None:
+                        exit_price = float(stock_data[t]["Close"].iloc[ci])
+                    else:
+                        exit_price = pos["entry_price"]
+                pnl = (exit_price - pos["entry_price"]) * pos["shares"]
+                trades.append({
+                    "symbol": t,
+                    "strategy": "Alpha20",
+                    "entry_date": pos["entry_date"],
+                    "exit_date": rebal_day,
+                    "entry_price": pos["entry_price"],
+                    "exit_price": exit_price,
+                    "shares": pos["shares"],
+                    "pnl": pnl,
+                    "exit_reason": "REBALANCE_OUT",
+                    "hold_days": (rebal_day - pos["entry_date"]).days,
+                    "exit_rank": ticker_rank.get(t, 999),
+                })
+                cash += pos["shares"] * exit_price
+                del portfolio[t]
+
+            # Buy
+            to_buy = new_portfolio_tickers - set(portfolio.keys())
+            for t in to_buy:
+                s = rank_pool.get(t) or alpha_data.get(t)
+                if s is None:
+                    continue
+                price = s["price"]
+                if price <= 0:
+                    continue
+                shares = int(per_stock_capital // price)
+                if shares <= 0:
+                    continue
+                cost = shares * price
+                if cost > cash:
+                    continue
+                portfolio[t] = {
+                    "entry_date": rebal_day,
+                    "entry_price": price,
+                    "shares": shares,
+                    "rank": ticker_rank.get(t, 999),
+                    "alpha": s["alpha"],
+                    "beta": s["beta"],
+                }
+                cash -= cost
+
+        # Close remaining positions at end
+        last_day = trading_days[-1]
+        for t in list(portfolio.keys()):
+            pos = portfolio[t]
+            idx_map = date_to_iloc.get(t, {})
+            ci = idx_map.get(last_day)
+            if ci is not None:
+                exit_price = float(stock_data[t]["Close"].iloc[ci])
+            else:
+                exit_price = pos["entry_price"]
+                for offset in range(1, 10):
+                    from datetime import timedelta as td
+                    prev = last_day - td(days=offset)
+                    if prev in idx_map:
+                        exit_price = float(stock_data[t]["Close"].iloc[idx_map[prev]])
+                        break
+            pnl = (exit_price - pos["entry_price"]) * pos["shares"]
+            trades.append({
+                "symbol": t,
+                "strategy": "Alpha20",
+                "entry_date": pos["entry_date"],
+                "exit_date": last_day,
+                "entry_price": pos["entry_price"],
+                "exit_price": exit_price,
+                "shares": pos["shares"],
+                "pnl": pnl,
+                "exit_reason": "BACKTEST_END",
+                "hold_days": (last_day - pos["entry_date"]).days,
+            })
+        portfolio.clear()
+
+        return {"trades": trades, "rebalance_dates": rebal_dates}
 

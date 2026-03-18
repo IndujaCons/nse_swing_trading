@@ -423,6 +423,17 @@ class LiveSignalsEngine:
                         if e10_now > e10_1w > e10_2w:
                             nifty_regime_on = True
 
+        # Precompute Nifty 50 market returns for Alpha20 CAPM calculation
+        n50_market_rets = None
+        n50_rm = 0.0
+        n50_var = 0.0
+        if not nifty_raw.empty and len(nifty_raw) >= 253:
+            n50_closes = nifty_raw["Close"].values.astype(float)
+            n50_daily_rets = np.diff(n50_closes[-253:]) / np.maximum(n50_closes[-253:-1], 0.01)
+            n50_market_rets = n50_daily_rets  # last 252 daily returns
+            n50_rm = float(np.mean(n50_market_rets))
+            n50_var = float(np.var(n50_market_rets))
+
         j_signals = []
         t_signals = []
         r_signals = []
@@ -431,6 +442,8 @@ class LiveSignalsEngine:
         rs_signals = []
         rs_ibd_candidates = []  # collect IBD weighted scores for ranking
         rs_ibd_history = {}  # ticker -> list of weighted scores for last 5 days
+        mom20_raw = []  # collect momentum data for Mom20 scoring after loop
+        alpha20_raw = []  # collect data for Alpha20 CAPM scoring after loop
         actual_date = None  # Track actual last trading date from data
 
         for idx, ticker in enumerate(tickers):
@@ -541,6 +554,47 @@ class LiveSignalsEngine:
                         "sector": STOCK_SECTOR_MAP.get(ticker, "OTHER"),
                         "regime_off": not nifty_regime_on,
                     })
+            except Exception:
+                pass
+
+            # Mom20: collect raw momentum ratios for Z-scoring after loop
+            try:
+                if i >= 252:
+                    ret_12m = price / float(closes.iloc[i - 252]) - 1
+                    ret_6m = price / float(closes.iloc[i - 126]) - 1
+                    log_rets = np.log(closes.iloc[i - 251:i + 1] / closes.iloc[i - 252:i].values)
+                    sigma = float(log_rets.std()) * np.sqrt(252)
+                    if sigma > 0.001:  # avoid div-by-zero
+                        mom20_raw.append({
+                            "ticker": ticker,
+                            "price": round(price, 2),
+                            "ret_12m": ret_12m,
+                            "ret_6m": ret_6m,
+                            "sigma": sigma,
+                            "mr_12": ret_12m / sigma,
+                            "mr_6": ret_6m / sigma,
+                        })
+            except Exception:
+                pass
+
+            # Alpha20: collect stock returns for CAPM alpha calculation
+            try:
+                if i >= 252 and n50_market_rets is not None and n50_var > 1e-10:
+                    stock_prices = closes.iloc[i - 252:i + 1].values.astype(float)
+                    stock_rets = np.diff(stock_prices) / np.maximum(stock_prices[:-1], 0.01)
+                    if len(stock_rets) == len(n50_market_rets):
+                        rf_daily = 0.065 / 252
+                        cov_val = np.cov(stock_rets, n50_market_rets)
+                        if cov_val.shape == (2, 2):
+                            beta = cov_val[0, 1] / n50_var
+                            alpha_daily = np.mean(stock_rets) - (rf_daily + beta * (n50_rm - rf_daily))
+                            alpha_annual = alpha_daily * 252
+                            alpha20_raw.append({
+                                "ticker": ticker,
+                                "price": round(price, 2),
+                                "alpha": round(alpha_annual * 100, 2),  # as percentage
+                                "beta": round(beta, 2),
+                            })
             except Exception:
                 pass
 
@@ -798,6 +852,51 @@ class LiveSignalsEngine:
                     "rs_rank": rank_i + 1,  # 1-based rank (pick #3)
                 })
 
+        # Mom20: Z-score momentum ratios and pick top 20
+        mom20_signals = []
+        if len(mom20_raw) >= 5:
+            mr_12_arr = np.array([d["mr_12"] for d in mom20_raw])
+            mr_6_arr = np.array([d["mr_6"] for d in mom20_raw])
+            z_12 = (mr_12_arr - mr_12_arr.mean()) / mr_12_arr.std() if mr_12_arr.std() > 0 else np.zeros_like(mr_12_arr)
+            z_6 = (mr_6_arr - mr_6_arr.mean()) / mr_6_arr.std() if mr_6_arr.std() > 0 else np.zeros_like(mr_6_arr)
+            weighted_z = 0.5 * z_12 + 0.5 * z_6
+            for idx_m, d in enumerate(mom20_raw):
+                z = weighted_z[idx_m]
+                norm_score = (1 + z) if z >= 0 else 1 / (1 - z)
+                d["norm_score"] = norm_score
+            mom20_raw.sort(key=lambda d: -d["norm_score"])
+            for rank_i, d in enumerate(mom20_raw[:20]):
+                mom20_signals.append({
+                    "ticker": d["ticker"],
+                    "price": d["price"],
+                    "ret_12m": round(d["ret_12m"] * 100, 1),
+                    "ret_6m": round(d["ret_6m"] * 100, 1),
+                    "volatility": round(d["sigma"] * 100, 1),
+                    "momentum_score": round(d["norm_score"], 3),
+                    "rank": rank_i + 1,
+                    "stop_pct": 0,
+                    "atr_pct": 0,
+                })
+
+        # Alpha20: rank by highest alpha and pick top 20
+        alpha20_signals = []
+        if alpha20_raw:
+            # Beta cap filter (frozen: beta <= 1.2)
+            alpha20_raw = [d for d in alpha20_raw if d["beta"] <= 1.2]
+            # Sort by highest alpha
+            alpha20_raw.sort(key=lambda d: -d["alpha"])
+            for rank_i, d in enumerate(alpha20_raw[:20]):
+                if d["alpha"] > 0:  # Only positive alpha
+                    alpha20_signals.append({
+                        "ticker": d["ticker"],
+                        "price": d["price"],
+                        "alpha": d["alpha"],
+                        "beta": d["beta"],
+                        "rank": rank_i + 1,
+                        "stop_pct": 0,
+                        "atr_pct": 0,
+                    })
+
         # Compute sector momentum
         sector_momentum = self._compute_sector_momentum(end_date)
 
@@ -827,6 +926,8 @@ class LiveSignalsEngine:
             "mw_signals": mw_signals,
             "wt_signals": wt_signals,
             "rs_signals": rs_signals,
+            "mom20_signals": mom20_signals,
+            "alpha20_signals": alpha20_signals,
             "nifty_regime": "ON" if nifty_regime_on else "OFF",
             "sector_momentum": sector_momentum,
             "last_updated": datetime.now().isoformat(),

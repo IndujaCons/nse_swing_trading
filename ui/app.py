@@ -824,6 +824,75 @@ def update_portfolio_backtest_progress(current, total, ticker):
     portfolio_backtest_progress = {"current": current, "total": total, "ticker": ticker}
 
 
+def _wrap_rebalance_result(result, capital_lakhs, label):
+    """Wrap rebalance backtest result into portfolio backtest format for UI."""
+    trades = result.get("trades", [])
+    capital = capital_lakhs * 100000
+    # Normalize trade fields
+    for t in trades:
+        if hasattr(t.get("entry_date"), "strftime"):
+            t["entry_date"] = t["entry_date"].strftime("%Y-%m-%d")
+        if hasattr(t.get("exit_date"), "strftime"):
+            t["exit_date"] = t["exit_date"].strftime("%Y-%m-%d")
+        if "holding_days" not in t and "hold_days" in t:
+            t["holding_days"] = t["hold_days"]
+        if "holding_days" not in t:
+            t["holding_days"] = 0
+        if "symbol" not in t and "ticker" in t:
+            t["symbol"] = t["ticker"]
+        if "symbol" not in t:
+            t["symbol"] = t.get("ticker", "???")
+        if "pnl_pct" not in t:
+            cost = t.get("entry_price", 0) * t.get("shares", 0)
+            t["pnl_pct"] = round(t.get("pnl", 0) / cost * 100, 1) if cost > 0 else 0
+
+    # Build summary
+    wins = [t for t in trades if t.get("pnl", 0) > 0]
+    losses = [t for t in trades if t.get("pnl", 0) <= 0]
+    total_pnl = sum(t.get("pnl", 0) for t in trades)
+    gross_wins = sum(t["pnl"] for t in wins)
+    gross_losses = abs(sum(t["pnl"] for t in losses))
+    pf = round(min(gross_wins / gross_losses if gross_losses > 0 else 999.99, 999.99), 2)
+    avg_hold = round(sum(t.get("holding_days", 0) for t in trades) / len(trades), 1) if trades else 0
+
+    dates = sorted(set(
+        [t["entry_date"] for t in trades] + [t["exit_date"] for t in trades]
+    ))
+
+    return {
+        "strategy": "Portfolio",
+        "strategies": [label.split()[0].upper()],
+        "strategies_label": label,
+        "start_date": dates[0] if dates else "",
+        "end_date": dates[-1] if dates else "",
+        "trading_days": len(dates),
+        "capital": capital,
+        "capital_lakhs": capital_lakhs,
+        "effective_capital_lakhs": capital_lakhs,
+        "max_positions": 20,
+        "trades": trades,
+        "summary": {
+            "total_trades": len(trades),
+            "winning_trades": len(wins),
+            "losing_trades": len(losses),
+            "win_rate": round(len(wins) / len(trades) * 100, 1) if trades else 0,
+            "total_pnl": round(total_pnl, 2),
+            "total_return_pct": round(total_pnl / capital * 100, 2) if capital else 0,
+            "avg_win": round(gross_wins / len(wins), 2) if wins else 0,
+            "avg_loss": round(-gross_losses / len(losses), 2) if losses else 0,
+            "largest_win": round(max((t["pnl"] for t in trades), default=0), 2),
+            "largest_loss": round(min((t["pnl"] for t in trades), default=0), 2),
+            "profit_factor": pf,
+            "avg_holding_days": avg_hold,
+        },
+        "total_signals": len(trades),
+        "missed_signals": 0,
+        "max_positions_used": 20,
+        "universe": 200,
+        "liquid_fund_income": 0,
+    }
+
+
 @app.route("/api/momentum/backtest-portfolio", methods=["POST"])
 def run_portfolio_backtest():
     """Run portfolio-level backtest (10L capital, J+T strategies)."""
@@ -849,7 +918,7 @@ def run_portfolio_backtest():
     if per_stock not in (50000, 100000, 200000, 500000):
         per_stock = 50000
     strategies = data.get("strategies", ["R", "MW"])
-    valid_strats = {"J", "T", "R", "MW", "RS"}
+    valid_strats = {"J", "T", "R", "MW", "RS", "MOM20", "ALPHA20"}
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
         strategies = ["R", "MW"]
@@ -860,6 +929,40 @@ def run_portfolio_backtest():
 
     try:
         backtester = MomentumBacktester()
+
+        # Mom20 uses a separate rebalancing backtest
+        if "MOM20" in strategies:
+            result = backtester.run_momentum30_backtest(
+                period_days=period_days,
+                capital_lakhs=capital_lakhs,
+                rebalance_months=3,
+                top_n=20,
+                buffer_in=15,
+                buffer_out=45,
+                end_date=end_date,
+            )
+            if "error" in result:
+                return jsonify({"success": False, "error": result["error"]})
+            data = _wrap_rebalance_result(result, capital_lakhs, "Mom20 (Quarterly Rebal)")
+            return jsonify({"success": True, "data": data})
+
+        # Alpha20 uses a separate rebalancing backtest
+        if "ALPHA20" in strategies:
+            result = backtester.run_alpha20_backtest(
+                period_days=period_days,
+                capital_lakhs=capital_lakhs,
+                rebalance_months=3,
+                top_n=20,
+                buffer_in=20,
+                buffer_out=40,
+                beta_cap=1.2,
+                end_date=end_date,
+            )
+            if "error" in result:
+                return jsonify({"success": False, "error": result["error"]})
+            data = _wrap_rebalance_result(result, capital_lakhs, "Alpha20 (CAPM Alpha)")
+            return jsonify({"success": True, "data": data})
+
         # Frozen IBD RS params when RS strategy is selected
         rs_kwargs = {}
         if "RS" in strategies:
