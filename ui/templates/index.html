@@ -1345,6 +1345,7 @@
                         <option value="MW3">MW Only (3-Stage)</option>
                         <option value="RS3">RS Rotation</option>
                         <option value="IBD">IBD RS (Frozen)</option>
+                        <option value="MOM15">Mom15 (4-Monthly Rebal)</option>
                         <option value="MOM20">Mom20 (Quarterly Rebal)</option>
                         <option value="ALPHA20">Alpha20 (CAPM Alpha)</option>
                     </select>
@@ -1659,6 +1660,16 @@
                         <span class="panel-count" id="ls-rs-count">0</span>
                     </div>
                     <div class="panel-body" id="ls-rs-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel ls-mom15-signals" style="grid-column: 1 / -1;">
+                    <div class="panel-header">
+                        <span class="panel-title" style="color:#00bcd4;">Mom15 — Nifty200 Momentum (4-Monthly, Beta≤1.0)</span>
+                        <span class="panel-count" id="ls-mom15-count">0</span>
+                    </div>
+                    <div class="panel-body" id="ls-mom15-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
@@ -3028,7 +3039,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -3114,7 +3125,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -3210,6 +3221,7 @@
             window._lsRSignals = data.r_signals || [];
             window._lsMWSignals = data.mw_signals || [];
             window._lsRSSignals = data.rs_signals || [];
+            window._lsMom15Signals = data.mom15_signals || [];
             window._lsMom20Signals = data.mom20_signals || [];
             window._lsAlpha20Signals = data.alpha20_signals || [];
             document.getElementById('ls-j-count').textContent = jSignals.length;
@@ -3367,6 +3379,42 @@
                             <th>IBD</th><th>Dist High</th><th>ATR%</th><th>SL%</th><th>SL</th><th>Sector</th>${isHistorical ? '' : '<th></th>'}
                         </tr></thead>
                         <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+
+            // Mom15 signals panel
+            const mom15Panel = document.getElementById('ls-mom15-panel');
+            const mom15Signals = data.mom15_signals || [];
+            document.getElementById('ls-mom15-count').textContent = mom15Signals.length > 0 ? `Top ${mom15Signals.length}` : '0';
+            if (mom15Signals.length === 0) {
+                mom15Panel.innerHTML = '<div class="empty-state">No Mom15 signals</div>';
+            } else {
+                const mom15Rows = mom15Signals.map((s, idx) => {
+                    const rank = s.rank || (idx + 1);
+                    const retColor12 = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
+                    const retColor6 = s.ret_6m > 0 ? 'var(--green)' : 'var(--red)';
+                    const scoreColor = s.momentum_score > 1.5 ? 'var(--green)' : s.momentum_score > 1.0 ? 'var(--text)' : 'var(--text-muted)';
+                    const betaColor = s.beta <= 0.8 ? 'var(--green)' : 'var(--text)';
+                    return `
+                    <tr>
+                        <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td style="color:${retColor12};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
+                        <td style="color:${retColor6};">${s.ret_6m > 0 ? '+' : ''}${s.ret_6m}%</td>
+                        <td>${s.volatility}%</td>
+                        <td style="color:${betaColor};">${s.beta}</td>
+                        <td style="color:${scoreColor};font-weight:600;">${s.momentum_score.toFixed(2)}</td>
+                    </tr>`;
+                }).join('');
+                mom15Panel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr>
+                            <th>#</th><th>Stock</th><th>Close</th>
+                            <th>12m Ret</th><th>6m Ret</th><th>Vol</th><th>Beta</th><th>Mom Score</th>
+                        </tr></thead>
+                        <tbody>${mom15Rows}</tbody>
                     </table>
                 `;
             }
@@ -3907,7 +3955,7 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -4408,7 +4456,7 @@
             const capitalLakhs = parseInt(document.getElementById('portfolio-capital').value);
             const perStock = parseInt(document.getElementById('portfolio-per-stock').value);
             const stratVal = document.getElementById('portfolio-strategy').value;
-            const stratMap = {'RMW3': ['R','MW'], 'TR3': ['T','R'], 'JTR3': ['J','T','R'], 'TRMW3': ['T','R','MW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R'], 'MW3': ['MW'], 'RS3': ['RS'], 'IBD': ['RS'], 'MOM20': ['MOM20'], 'ALPHA20': ['ALPHA20']};
+            const stratMap = {'RMW3': ['R','MW'], 'TR3': ['T','R'], 'JTR3': ['J','T','R'], 'TRMW3': ['T','R','MW'], 'JT3': ['J','T'], 'J3': ['J'], 'T3': ['T'], 'R3': ['R'], 'MW3': ['MW'], 'RS3': ['RS'], 'IBD': ['RS'], 'MOM15': ['MOM15'], 'MOM20': ['MOM20'], 'ALPHA20': ['ALPHA20']};
             const strategies = stratMap[stratVal] || [stratVal];
             const threeStageExit = true;
             const entriesPerDay = parseInt(document.getElementById('portfolio-entries-per-day').value);

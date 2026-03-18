@@ -918,7 +918,7 @@ def run_portfolio_backtest():
     if per_stock not in (50000, 100000, 200000, 500000):
         per_stock = 50000
     strategies = data.get("strategies", ["R", "MW"])
-    valid_strats = {"J", "T", "R", "MW", "RS", "MOM20", "ALPHA20"}
+    valid_strats = {"J", "T", "R", "MW", "RS", "MOM15", "MOM20", "ALPHA20"}
     strategies = [s for s in strategies if s in valid_strats]
     if not strategies:
         strategies = ["R", "MW"]
@@ -929,6 +929,24 @@ def run_portfolio_backtest():
 
     try:
         backtester = MomentumBacktester()
+
+        # Mom15 uses a separate rebalancing backtest (frozen: 4m, top15, buffer 10/30, beta 1.0)
+        if "MOM15" in strategies:
+            result = backtester.run_momentum30_backtest(
+                period_days=period_days,
+                capital_lakhs=capital_lakhs,
+                rebalance_months=4,
+                top_n=15,
+                buffer_in=10,
+                buffer_out=30,
+                beta_cap=1.0,
+                pit_universe=True,
+                end_date=end_date,
+            )
+            if "error" in result:
+                return jsonify({"success": False, "error": result["error"]})
+            data = _wrap_rebalance_result(result, capital_lakhs, "Mom15 (4-Monthly Rebal)")
+            return jsonify({"success": True, "data": data})
 
         # Mom20 uses a separate rebalancing backtest
         if "MOM20" in strategies:

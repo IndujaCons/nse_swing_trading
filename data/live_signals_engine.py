@@ -442,7 +442,7 @@ class LiveSignalsEngine:
         rs_signals = []
         rs_ibd_candidates = []  # collect IBD weighted scores for ranking
         rs_ibd_history = {}  # ticker -> list of weighted scores for last 5 days
-        mom20_raw = []  # collect momentum data for Mom20 scoring after loop
+        mom20_raw = []  # collect momentum data for Mom20/Mom15 scoring after loop
         alpha20_raw = []  # collect data for Alpha20 CAPM scoring after loop
         actual_date = None  # Track actual last trading date from data
 
@@ -557,7 +557,7 @@ class LiveSignalsEngine:
             except Exception:
                 pass
 
-            # Mom20: collect raw momentum ratios for Z-scoring after loop
+            # Mom20/Mom15: collect raw momentum ratios for Z-scoring after loop
             try:
                 if i >= 252:
                     ret_12m = price / float(closes.iloc[i - 252]) - 1
@@ -565,6 +565,15 @@ class LiveSignalsEngine:
                     log_rets = np.log(closes.iloc[i - 251:i + 1] / closes.iloc[i - 252:i].values)
                     sigma = float(log_rets.std()) * np.sqrt(252)
                     if sigma > 0.001:  # avoid div-by-zero
+                        # Compute beta vs Nifty 50 for Mom15 beta cap
+                        mom_beta = None
+                        if n50_market_rets is not None and n50_var > 1e-10:
+                            stock_prices = closes.iloc[i - 252:i + 1].values.astype(float)
+                            stock_rets = np.diff(stock_prices) / np.maximum(stock_prices[:-1], 0.01)
+                            if len(stock_rets) == len(n50_market_rets):
+                                cov_val = np.cov(stock_rets, n50_market_rets)
+                                if cov_val.shape == (2, 2):
+                                    mom_beta = cov_val[0, 1] / n50_var
                         mom20_raw.append({
                             "ticker": ticker,
                             "price": round(price, 2),
@@ -573,6 +582,7 @@ class LiveSignalsEngine:
                             "sigma": sigma,
                             "mr_12": ret_12m / sigma,
                             "mr_6": ret_6m / sigma,
+                            "beta": round(mom_beta, 2) if mom_beta is not None else None,
                         })
             except Exception:
                 pass
@@ -878,6 +888,35 @@ class LiveSignalsEngine:
                     "atr_pct": 0,
                 })
 
+        # Mom15: same scoring as Mom20 but beta cap 1.0, top 15
+        mom15_signals = []
+        if len(mom20_raw) >= 5:
+            # Filter beta <= 1.0
+            mom15_pool = [d for d in mom20_raw if d.get("beta") is not None and d["beta"] <= 1.0]
+            if len(mom15_pool) >= 5:
+                mr_12_arr = np.array([d["mr_12"] for d in mom15_pool])
+                mr_6_arr = np.array([d["mr_6"] for d in mom15_pool])
+                z_12 = (mr_12_arr - mr_12_arr.mean()) / mr_12_arr.std() if mr_12_arr.std() > 0 else np.zeros_like(mr_12_arr)
+                z_6 = (mr_6_arr - mr_6_arr.mean()) / mr_6_arr.std() if mr_6_arr.std() > 0 else np.zeros_like(mr_6_arr)
+                weighted_z = 0.5 * z_12 + 0.5 * z_6
+                for idx_m, d in enumerate(mom15_pool):
+                    z = weighted_z[idx_m]
+                    d["norm_score_15"] = (1 + z) if z >= 0 else 1 / (1 - z)
+                mom15_pool.sort(key=lambda d: -d["norm_score_15"])
+                for rank_i, d in enumerate(mom15_pool[:15]):
+                    mom15_signals.append({
+                        "ticker": d["ticker"],
+                        "price": d["price"],
+                        "ret_12m": round(d["ret_12m"] * 100, 1),
+                        "ret_6m": round(d["ret_6m"] * 100, 1),
+                        "volatility": round(d["sigma"] * 100, 1),
+                        "beta": d["beta"],
+                        "momentum_score": round(d["norm_score_15"], 3),
+                        "rank": rank_i + 1,
+                        "stop_pct": 0,
+                        "atr_pct": 0,
+                    })
+
         # Alpha20: rank by highest alpha and pick top 20
         alpha20_signals = []
         if alpha20_raw:
@@ -926,6 +965,7 @@ class LiveSignalsEngine:
             "mw_signals": mw_signals,
             "wt_signals": wt_signals,
             "rs_signals": rs_signals,
+            "mom15_signals": mom15_signals,
             "mom20_signals": mom20_signals,
             "alpha20_signals": alpha20_signals,
             "nifty_regime": "ON" if nifty_regime_on else "OFF",
