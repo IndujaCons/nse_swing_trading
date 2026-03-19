@@ -1220,7 +1220,7 @@ class MomentumBacktester:
                 # Entry check: weekly ADX crosses above 20 with DI+ > DI-
                 no_gap_down_mw = (prev_close is None or open_price >= prev_close)
                 is_green_mw = price > open_price
-                if is_green_mw and no_gap_down_mw and ibs > 0.5 and mw_weekly is not None:
+                if is_green_mw and no_gap_down_mw and ibs > 0.5 and vol_today > 1.5 * vol_avg20 and mw_weekly is not None:
                     w_dates = mw_weekly.index
                     day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
                     w_before = w_dates[w_dates < day_ts]
@@ -2775,10 +2775,12 @@ class MomentumBacktester:
                                     "div_type": r_div_type,
                                 })
 
-                # Strategy MW entry: Weekly ADX crosses above 25 with DI+ > DI-
+                # Strategy MW entry: Weekly ADX crosses above 25 with DI+ > DI-, volume > 1.5x
                 if "MW" in strategies:
                     already_any = any(s["symbol"] == ticker for s in signals)
-                    if not already_any and is_green and ibs > 0.5:
+                    mw_vol = float(ind["volume"].iloc[i]) if not pd.isna(ind["volume"].iloc[i]) else 0.0
+                    mw_vol20 = float(ind["vol_avg20"].iloc[i]) if not pd.isna(ind["vol_avg20"].iloc[i]) else 1.0
+                    if not already_any and is_green and ibs > 0.5 and mw_vol > 1.5 * mw_vol20:
                         weekly_raw = ind["weekly_raw"]
                         w_dates = weekly_raw.index
                         day_ts = pd.Timestamp(day).tz_localize(w_dates.tz) if w_dates.tz else pd.Timestamp(day)
