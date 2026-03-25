@@ -3361,7 +3361,8 @@ class MomentumBacktester:
                                  buffer_out=45, end_date=None, regime_200dma=False,
                                  pit_universe=True, beta_cap=None, fixed_sl=None,
                                  w12=0.5, w6=0.5, min_score=None,
-                                 trailing_sl=None):
+                                 trailing_sl=None, eps_filter=None,
+                                 long_period=252, short_period=126, w3=0.0):
         """
         Nifty200 Momentum 30 strategy — rebalancing portfolio.
 
@@ -3443,6 +3444,43 @@ class MomentumBacktester:
                     print(f"  Nifty 200 data loaded: {len(nifty200_data)} bars (200 DMA regime)")
             except Exception:
                 print("  WARNING: Could not fetch Nifty 200 data for regime filter")
+
+        # Load EPS data for eps_filter
+        eps_db = None
+        if eps_filter is not None:
+            eps_path = os.path.join(os.path.dirname(__file__), "quarterly_eps.json")
+            if os.path.exists(eps_path):
+                import json as _json
+                with open(eps_path) as _f:
+                    eps_db = _json.load(_f)
+                print(f"  EPS filter: TTM growth > {eps_filter*100:.0f}% ({len(eps_db)} stocks loaded)")
+            else:
+                print(f"  WARNING: eps_filter set but {eps_path} not found, skipping filter")
+
+        # Pre-compute RS63 for daily exit check
+        rs63_data = {}  # ticker -> {date -> rs63_5d_avg}
+        if rs63_exit:
+            try:
+                bench_rs = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
+                print(f"  RS63 exit: loading Nifty 200 benchmark ({len(bench_rs)} bars)")
+                bench_close_rs = bench_rs["Close"].astype(float)
+                for ticker, df in stock_data.items():
+                    closes_rs = df["Close"].astype(float)
+                    bench_aligned_rs = bench_close_rs.reindex(df.index, method="ffill")
+                    rs_ratio = closes_rs / bench_aligned_rs
+                    rs63_raw = (rs_ratio / rs_ratio.shift(63) - 1) * 100
+                    rs63_smooth = rs63_raw.rolling(5, min_periods=1).mean()
+                    date_vals = {}
+                    for idx in rs63_smooth.index:
+                        dt = idx.date() if hasattr(idx, 'date') else idx
+                        v = rs63_smooth[idx]
+                        if not pd.isna(v):
+                            date_vals[dt] = float(v)
+                    rs63_data[ticker] = date_vals
+                print(f"  RS63 exit: computed for {len(rs63_data)} stocks")
+            except Exception as e:
+                print(f"  WARNING: RS63 exit failed: {e}")
+                rs63_exit = False
 
         # --- Phase 2: Build common date index ---
         # Use dates where at least 100 stocks have data
@@ -3526,26 +3564,31 @@ class MomentumBacktester:
                         if prev in idx_map:
                             ci = idx_map[prev]
                             break
-                if ci is None or ci < 270:  # Need 252 bars for vol + buffer
+                vol_lookback = max(long_period, 252)  # vol always on 1yr for stability
+                if ci is None or ci < vol_lookback + 18:
                     continue
 
                 closes = df["Close"]
-                # 12-month return: price(now) / price(252 bars ago) - 1
-                if ci - 252 < 0:
+                if ci - long_period < 0 or ci - short_period < 0:
                     continue
                 p_now = float(closes.iloc[ci])
-                p_12m = float(closes.iloc[ci - 252])
-                p_6m = float(closes.iloc[ci - 126])
+                p_long = float(closes.iloc[ci - long_period])
+                p_short = float(closes.iloc[ci - short_period])
 
-                if p_12m <= 0 or p_6m <= 0 or p_now <= 0:
+                # 3-month return (63 days)
+                p_3m = float(closes.iloc[ci - 63]) if ci >= 63 else None
+
+                if p_long <= 0 or p_short <= 0 or p_now <= 0:
                     continue
 
-                ret_12m = p_now / p_12m - 1
-                ret_6m = p_now / p_6m - 1
+                ret_long = p_now / p_long - 1
+                ret_short = p_now / p_short - 1
+                ret_3m = (p_now / p_3m - 1) if p_3m and p_3m > 0 else None
 
-                # Annualized std dev of daily log returns (1 year)
+                # Annualized std dev of daily log returns
+                vol_bars = min(vol_lookback, ci)
                 log_rets = np.diff(np.log(
-                    np.maximum(closes.iloc[ci - 252:ci + 1].values.astype(float), 0.01)
+                    np.maximum(closes.iloc[ci - vol_bars:ci + 1].values.astype(float), 0.01)
                 ))
                 sigma = float(np.std(log_rets)) * np.sqrt(252)
 
@@ -3553,8 +3596,9 @@ class MomentumBacktester:
                     continue
 
                 # Momentum Ratios
-                mr_12 = ret_12m / sigma
-                mr_6 = ret_6m / sigma
+                mr_12 = ret_long / sigma
+                mr_6 = ret_short / sigma
+                mr_3 = (ret_3m / sigma) if ret_3m is not None else None
 
                 # Compute beta if beta_cap is set
                 beta = None
@@ -3580,9 +3624,10 @@ class MomentumBacktester:
                 scores[ticker] = {
                     "mr_12": mr_12,
                     "mr_6": mr_6,
+                    "mr_3": mr_3,
                     "price": p_now,
-                    "ret_12m": ret_12m,
-                    "ret_6m": ret_6m,
+                    "ret_12m": ret_long,
+                    "ret_6m": ret_short,
                     "sigma": sigma,
                     "beta": beta,
                 }
@@ -3592,6 +3637,51 @@ class MomentumBacktester:
                 before = len(scores)
                 scores = {t: s for t, s in scores.items() if s.get("beta") is not None and s["beta"] <= beta_cap}
                 print(f"    Beta cap {beta_cap}: {before} → {len(scores)} stocks on {day}")
+
+            # Apply EPS filter: exclude stocks with TTM EPS growth below threshold
+            if eps_db is not None and eps_filter is not None:
+                before_eps = len(scores)
+                filtered_scores = {}
+                for t, s in scores.items():
+                    if t not in eps_db:
+                        filtered_scores[t] = s  # no EPS data = pass through
+                        continue
+                    stock_eps = eps_db[t]
+                    # Use annual EPS for PIT lookup
+                    annual = stock_eps.get("annual", stock_eps) if isinstance(stock_eps, dict) else stock_eps
+                    if isinstance(stock_eps, dict) and "annual" in stock_eps:
+                        annual = stock_eps["annual"]
+                    # Find the two most recent annual EPS values as of rebalance date
+                    # Annual dates are like "Mar 2014", "Mar 2015", etc.
+                    from datetime import date as _date
+                    valid_years = {}
+                    for period_str, eps_val in annual.items():
+                        # Parse "Mar 2014" → date(2014, 3, 31)
+                        try:
+                            parts = period_str.split()
+                            mon_map = {"Jan":1,"Feb":2,"Mar":3,"Apr":4,"May":5,"Jun":6,
+                                       "Jul":7,"Aug":8,"Sep":9,"Oct":10,"Nov":11,"Dec":12}
+                            m = mon_map.get(parts[0], 0)
+                            y = int(parts[1])
+                            if m > 0:
+                                # Results available ~2 months after fiscal year end
+                                avail_date = _date(y, min(m + 2, 12), 28) if m <= 10 else _date(y + 1, m - 10, 28)
+                                if avail_date <= day:
+                                    valid_years[period_str] = eps_val
+                        except (ValueError, IndexError):
+                            continue
+                    if len(valid_years) >= 2:
+                        sorted_periods = sorted(valid_years.keys(), key=lambda p: p.split()[1] + p.split()[0])
+                        latest_eps = valid_years[sorted_periods[-1]]
+                        prev_eps = valid_years[sorted_periods[-2]]
+                        if abs(prev_eps) >= 0.01:
+                            ttm_growth = (latest_eps / prev_eps) - 1
+                            if ttm_growth <= eps_filter:
+                                continue  # filtered out
+                    filtered_scores[t] = s
+                scores = filtered_scores
+                if before_eps != len(scores):
+                    print(f"    EPS filter: {before_eps} → {len(scores)} stocks on {day}")
 
             if len(scores) < 20:
                 return {}
@@ -3606,10 +3696,18 @@ class MomentumBacktester:
             if std_12 < 0.001 or std_6 < 0.001:
                 return {}
 
+            # Optional 3-month Z-score
+            mu_3, std_3 = 0, 1
+            if w3 > 0:
+                mr3_vals = np.array([s["mr_3"] for s in scores.values() if s.get("mr_3") is not None])
+                if len(mr3_vals) > 10 and np.std(mr3_vals) > 0.001:
+                    mu_3, std_3 = np.mean(mr3_vals), np.std(mr3_vals)
+
             for ticker, s in scores.items():
                 z_12 = (s["mr_12"] - mu_12) / std_12
                 z_6 = (s["mr_6"] - mu_6) / std_6
-                wt_z = w12 * z_12 + w6 * z_6
+                z_3 = ((s["mr_3"] - mu_3) / std_3) if w3 > 0 and s.get("mr_3") is not None else 0
+                wt_z = w12 * z_12 + w6 * z_6 + w3 * z_3
 
                 # Normalized Momentum Score
                 if wt_z >= 0:
@@ -3666,14 +3764,17 @@ class MomentumBacktester:
         rebal_set = set(rebal_dates)
         monthly_set = set(monthly_check_dates) if regime_200dma else set()
 
-        # If fixed_sl or trailing_sl is set, check every trading day for SL breaches
+        # If fixed_sl, trailing_sl, or rs63_exit is set, check every trading day
         has_sl = fixed_sl is not None or trailing_sl is not None
-        if has_sl:
+        has_daily_check = has_sl or rs63_exit
+        if has_daily_check:
             all_action_dates = sorted(set(trading_days) | rebal_set | monthly_set)
             if fixed_sl is not None:
                 print(f"  Fixed SL: {fixed_sl*100:.0f}%")
             if trailing_sl is not None:
                 print(f"  Trailing SL: {trailing_sl*100:.0f}% from highest high")
+            if rs63_exit:
+                print(f"  RS63 exit: force sell if RS63(5d avg) < 0")
         else:
             all_action_dates = sorted(rebal_set | monthly_set)
 
@@ -3733,6 +3834,38 @@ class MomentumBacktester:
                         cash += pos["shares"] * exit_price
                         sl_exits.append(t)
                 for t in sl_exits:
+                    del portfolio[t]
+
+            # --- Daily RS63 exit check ---
+            if rs63_exit and portfolio:
+                rs63_exits = []
+                for t in list(portfolio.keys()):
+                    if t in rs63_data:
+                        rs63_val = rs63_data[t].get(rebal_day)
+                        if rs63_val is not None and rs63_val < 0:
+                            pos = portfolio[t]
+                            idx_map = date_to_iloc.get(t, {})
+                            ci = idx_map.get(rebal_day)
+                            if ci is not None:
+                                exit_price = float(stock_data[t]["Close"].iloc[ci])
+                            else:
+                                exit_price = pos["entry_price"]
+                            pnl = (exit_price - pos["entry_price"]) * pos["shares"]
+                            trades.append({
+                                "symbol": t,
+                                "strategy": "Mom30",
+                                "entry_date": pos["entry_date"],
+                                "exit_date": rebal_day,
+                                "entry_price": pos["entry_price"],
+                                "exit_price": exit_price,
+                                "shares": pos["shares"],
+                                "pnl": pnl,
+                                "exit_reason": "RS63_NEG_EXIT",
+                                "hold_days": (rebal_day - pos["entry_date"]).days,
+                            })
+                            cash += pos["shares"] * exit_price
+                            rs63_exits.append(t)
+                for t in rs63_exits:
                     del portfolio[t]
 
             # --- 200 DMA regime check (monthly) ---
@@ -3891,6 +4024,452 @@ class MomentumBacktester:
         portfolio.clear()
 
         return {"trades": trades, "rebalance_dates": rebal_dates}
+
+    def run_rs55_backtest(self, period_days=365*11, capital_lakhs=10,
+                           max_positions=7, end_date=None, pit_universe=True):
+        """
+        RS55 Satellite Strategy — Vivek Bajaj RS Framework.
+
+        Event-driven daily swing strategy:
+        Entry: RS55>0 + RSI(14)>50 + Price>200EMA + Price>21EMA + Supertrend(10,3) green
+               + breakout above 20d high on above-average volume
+        Exit staged:
+          Stage 1 (50%): RS21<0 OR RSI<50 OR Supertrend red → move remaining stop to breakeven
+          Stage 2 (remaining): RS55<0
+          Hard stop: close below 20d low preceding entry
+          Time stop: 8 weeks + <3% gain
+
+        Returns dict with trades list.
+        """
+
+        # PIT universe support
+        pit_data = None
+        if pit_universe:
+            pit_data = load_pit_nifty200()
+            if pit_data is None:
+                print("  WARNING: pit_universe=True but nifty200_pit.json not found")
+
+        if pit_data is not None:
+            all_pit_tickers = get_all_pit_tickers(pit_data)
+            tickers = sorted(all_pit_tickers)
+            print(f"  PIT universe: {len(tickers)} unique tickers")
+        else:
+            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+
+        TOTAL_CAPITAL = capital_lakhs * 100000
+        PER_STOCK = TOTAL_CAPITAL // max_positions
+
+        end_date = end_date or datetime.now()
+        daily_start = end_date - timedelta(days=period_days + 600)
+        bt_start_date = (end_date - timedelta(days=period_days)).date()
+
+        # --- Phase 1: Fetch data ---
+        stock_data = {}
+        total = len(tickers)
+        for idx, ticker in enumerate(tickers):
+            nse_symbol = f"{ticker}.NS"
+            try:
+                daily = yf.Ticker(nse_symbol).history(start=daily_start, end=end_date)
+            except Exception:
+                daily = pd.DataFrame()
+            if (daily.empty or len(daily) < 300) and ticker in TICKER_ALIASES:
+                daily = _fetch_alias(ticker, daily_start, end_date)
+            if not daily.empty and len(daily) >= 300:
+                stock_data[ticker] = daily
+            if (idx + 1) % 50 == 0:
+                print(f"  Loaded {idx + 1}/{total} stocks...")
+
+        print(f"  Data loaded: {len(stock_data)} stocks with sufficient history")
+
+        # Fetch Nifty 200 benchmark for RS calculation
+        try:
+            bench_data = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
+            print(f"  Nifty 200 benchmark: {len(bench_data)} bars")
+        except Exception:
+            print("  ERROR: Could not fetch Nifty 200 benchmark")
+            return {"trades": []}
+
+        # Fetch Nifty 50 for beta calculation
+        nifty50_data = None
+        try:
+            nifty50_data = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
+            print(f"  Nifty 50 loaded: {len(nifty50_data)} bars (for beta filter)")
+        except Exception:
+            print("  WARNING: Could not fetch Nifty 50 for beta")
+
+        # Fetch sectoral indices and compute sector RS63
+        from data.live_signals_engine import SECTORAL_INDICES
+        from sector_mapping import STOCK_SECTOR_MAP
+        sector_rs63 = {}  # sector_name -> {date -> rs63_value}
+        print("  Fetching sectoral indices for sector RS filter...")
+        for sector_name, sector_symbol in SECTORAL_INDICES.items():
+            if sector_name == "NIFTY HEALTHCARE":  # duplicate of PHARMA
+                continue
+            try:
+                sec_df = yf.Ticker(sector_symbol).history(start=daily_start, end=end_date)
+                if len(sec_df) < 100:
+                    continue
+                sec_close = sec_df["Close"]
+                bench_aligned_sec = bench_data["Close"].reindex(sec_df.index, method="ffill")
+                sec_ratio = sec_close / bench_aligned_sec
+                sec_rs63_raw = (sec_ratio / sec_ratio.shift(63) - 1) * 100
+                sec_rs63 = sec_rs63_raw.rolling(5, min_periods=1).mean()
+                # Build date lookup
+                date_vals = {}
+                for idx in sec_rs63.index:
+                    dt = idx.date() if hasattr(idx, 'date') else idx
+                    if not pd.isna(sec_rs63[idx]):
+                        date_vals[dt] = float(sec_rs63[idx])
+                sector_rs63[sector_name] = date_vals
+            except Exception:
+                pass
+        print(f"  Sector RS63 loaded for {len(sector_rs63)} sectors")
+
+        # --- Phase 2: Pre-compute indicators ---
+        print("  Pre-computing indicators...")
+
+        # Build benchmark close aligned to each stock's dates
+        bench_close = bench_data["Close"]
+
+        def compute_supertrend(highs, lows, closes, period=10, multiplier=3):
+            """Supertrend indicator. Returns +1 (bullish) or -1 (bearish) series."""
+            n = len(closes)
+            atr = pd.Series(index=closes.index, dtype=float)
+            tr = pd.concat([
+                highs - lows,
+                (highs - closes.shift(1)).abs(),
+                (lows - closes.shift(1)).abs()
+            ], axis=1).max(axis=1)
+            atr = tr.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+
+            basic_ub = (highs + lows) / 2 + multiplier * atr
+            basic_lb = (highs + lows) / 2 - multiplier * atr
+
+            final_ub = np.empty(n)
+            final_lb = np.empty(n)
+            direction = np.ones(n)  # +1 = bullish
+
+            final_ub[0] = basic_ub.iloc[0]
+            final_lb[0] = basic_lb.iloc[0]
+
+            c = closes.values
+            bub = basic_ub.values
+            blb = basic_lb.values
+
+            for i in range(1, n):
+                # Upper band
+                if bub[i] < final_ub[i-1] or c[i-1] > final_ub[i-1]:
+                    final_ub[i] = bub[i]
+                else:
+                    final_ub[i] = final_ub[i-1]
+                # Lower band
+                if blb[i] > final_lb[i-1] or c[i-1] < final_lb[i-1]:
+                    final_lb[i] = blb[i]
+                else:
+                    final_lb[i] = final_lb[i-1]
+                # Direction
+                if direction[i-1] == 1:  # was bullish
+                    direction[i] = -1 if c[i] < final_lb[i] else 1
+                else:  # was bearish
+                    direction[i] = 1 if c[i] > final_ub[i] else -1
+
+            return pd.Series(direction, index=closes.index)
+
+        def compute_rsi(closes, period=14):
+            """RSI indicator."""
+            delta = closes.diff()
+            gain = delta.clip(lower=0)
+            loss = (-delta).clip(lower=0)
+            avg_gain = gain.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+            avg_loss = loss.ewm(alpha=1/period, min_periods=period, adjust=False).mean()
+            rs = avg_gain / avg_loss.replace(0, 1e-10)
+            return 100 - (100 / (1 + rs))
+
+        indicators = {}
+        for ticker, df in stock_data.items():
+            closes = df["Close"]
+            highs = df["High"]
+            lows = df["Low"]
+            volumes = df["Volume"]
+
+            # Align benchmark to stock dates
+            bench_aligned = bench_close.reindex(df.index, method="ffill")
+
+            # RS ratio: RS123 for entry, RS63 for exit (both smoothed)
+            rs_ratio = closes / bench_aligned
+            rs123_raw = (rs_ratio / rs_ratio.shift(123) - 1) * 100
+            rs123 = rs123_raw.rolling(5, min_periods=1).mean()  # entry
+            rs55_raw = (rs_ratio / rs_ratio.shift(63) - 1) * 100
+            rs55 = rs55_raw.rolling(5, min_periods=1).mean()  # exit
+            rs21 = (rs_ratio / rs_ratio.shift(21) - 1) * 100
+
+            # Count consecutive days RS63 > 0
+            rs63_positive = (rs55 > 0).astype(int)
+            rs63_streak = rs63_positive.copy()
+            for k in range(1, len(rs63_streak)):
+                if rs63_streak.iloc[k] == 1:
+                    rs63_streak.iloc[k] = rs63_streak.iloc[k-1] + 1
+                else:
+                    rs63_streak.iloc[k] = 0
+
+            # RSI(14): 3-day avg for entry, 2-day avg for exit
+            rsi14_raw = compute_rsi(closes, 14)
+            rsi14 = rsi14_raw.rolling(3, min_periods=1).mean()  # 3-day avg (entry)
+            rsi14_exit = rsi14_raw.rolling(2, min_periods=1).mean()  # 2-day avg (exit)
+
+            # EMAs
+            ema200 = closes.ewm(span=200, adjust=False).mean()
+            ema21 = closes.ewm(span=21, adjust=False).mean()
+
+            # Supertrend (10, 3)
+            st_dir = compute_supertrend(highs, lows, closes, 10, 3)
+
+            # 20-day high (prior day's rolling max — breakout reference)
+            high_20d = highs.rolling(20).max().shift(1)
+
+            # 20-day low (prior day's rolling min — swing low stop)
+            low_20d = lows.rolling(20).min().shift(1)
+
+            # Volume average
+            vol_avg20 = volumes.rolling(20).mean()
+
+            # Rolling 1-year beta vs Nifty 50
+            beta_series = pd.Series(index=closes.index, dtype=float)
+            if nifty50_data is not None:
+                n50_aligned = nifty50_data["Close"].reindex(df.index, method="ffill")
+                stk_rets = closes.pct_change()
+                n50_rets = n50_aligned.pct_change()
+                for k in range(252, len(closes)):
+                    sr = stk_rets.iloc[k-252:k].values
+                    nr = n50_rets.iloc[k-252:k].values
+                    mask = ~(np.isnan(sr) | np.isnan(nr))
+                    if mask.sum() > 100:
+                        cov = np.cov(sr[mask], nr[mask])
+                        if cov.shape == (2, 2) and cov[1, 1] > 1e-10:
+                            beta_series.iloc[k] = cov[0, 1] / cov[1, 1]
+
+            indicators[ticker] = {
+                "rs55": rs55, "rs123": rs123, "rs21": rs21, "rsi14": rsi14,
+                "ema200": ema200, "ema21": ema21, "beta": beta_series,
+                "supertrend": st_dir,
+                "high_20d": high_20d, "low_20d": low_20d,
+                "vol_avg20": vol_avg20,
+                "rsi14_exit": rsi14_exit,
+                "rs63_streak": rs63_streak,
+            }
+
+        # --- Phase 3: Build date mapping ---
+        date_to_iloc = {}
+        for ticker, df in stock_data.items():
+            mapping = {}
+            for iloc_idx in range(len(df)):
+                dt = df.index[iloc_idx].date()
+                mapping[dt] = iloc_idx
+            date_to_iloc[ticker] = mapping
+
+        all_dates_count = {}
+        for ticker, df in stock_data.items():
+            for d in df.index:
+                dt = d.date()
+                all_dates_count[dt] = all_dates_count.get(dt, 0) + 1
+        trading_days = sorted(d for d, c in all_dates_count.items()
+                              if c >= 100 and d >= bt_start_date)
+
+        print(f"  Trading days: {len(trading_days)} ({trading_days[0]} to {trading_days[-1]})")
+
+        # --- Phase 4: Daily backtest loop ---
+        portfolio = {}  # ticker -> position dict
+        trades = []
+        cash = float(TOTAL_CAPITAL)
+
+        for day_idx, day in enumerate(trading_days):
+            pit_set = get_pit_universe(pit_data, day) if pit_data is not None else None
+
+            # === EXIT PROCESSING ===
+            for ticker in list(portfolio.keys()):
+                pos = portfolio[ticker]
+                idx_map = date_to_iloc.get(ticker, {})
+                ci = idx_map.get(day)
+                if ci is None:
+                    continue
+
+                df = stock_data[ticker]
+                price = float(df["Close"].iloc[ci])
+                ind = indicators[ticker]
+                shares = pos["shares"]
+
+                # Exit 1: 8% hard stop
+                if price <= pos["entry_price"] * 0.92:
+                    pnl = (price - pos["entry_price"]) * shares
+                    trades.append({
+                        "symbol": ticker, "strategy": "RS55",
+                        "entry_date": pos["entry_date"], "exit_date": day,
+                        "entry_price": pos["entry_price"], "exit_price": price,
+                        "shares": shares, "pnl": pnl,
+                        "exit_reason": "HARD_SL_8PCT",
+                        "hold_days": (day - pos["entry_date"]).days,
+                    })
+                    cash += shares * price
+                    del portfolio[ticker]
+                    continue
+
+                # Exit 2: RSI(14, 3d avg) < 40 for 3 consecutive days
+                rsi_v = float(ind["rsi14"].iloc[ci]) if ci < len(ind["rsi14"]) and not pd.isna(ind["rsi14"].iloc[ci]) else 50
+                if rsi_v < 40:
+                    pos["rsi_low_count"] = pos.get("rsi_low_count", 0) + 1
+                else:
+                    pos["rsi_low_count"] = 0
+                if pos.get("rsi_low_count", 0) >= 3:
+                    pnl = (price - pos["entry_price"]) * shares
+                    trades.append({
+                        "symbol": ticker, "strategy": "RS55",
+                        "entry_date": pos["entry_date"], "exit_date": day,
+                        "entry_price": pos["entry_price"], "exit_price": price,
+                        "shares": shares, "pnl": pnl,
+                        "exit_reason": "RSI_BELOW40_3D",
+                        "hold_days": (day - pos["entry_date"]).days,
+                    })
+                    cash += shares * price
+                    del portfolio[ticker]
+                    continue
+
+                # Exit 3: RS55 (5d avg) < 0 — stock lost relative strength
+                rs55_v = float(ind["rs55"].iloc[ci]) if ci < len(ind["rs55"]) and not pd.isna(ind["rs55"].iloc[ci]) else 0
+                if rs55_v < 0:
+                    pnl = (price - pos["entry_price"]) * shares
+                    trades.append({
+                        "symbol": ticker, "strategy": "RS55",
+                        "entry_date": pos["entry_date"], "exit_date": day,
+                        "entry_price": pos["entry_price"], "exit_price": price,
+                        "shares": shares, "pnl": pnl,
+                        "exit_reason": "RS63_NEG",
+                        "hold_days": (day - pos["entry_date"]).days,
+                    })
+                    cash += shares * price
+                    del portfolio[ticker]
+                    continue
+
+                # Exit 4: Time stop — 8 weeks + <3% gain
+                days_held = (day - pos["entry_date"]).days
+                gain_pct = (price - pos["entry_price"]) / pos["entry_price"] * 100
+                if days_held >= 56 and gain_pct < 3.0:
+                    pnl = (price - pos["entry_price"]) * shares
+                    trades.append({
+                        "symbol": ticker, "strategy": "RS55",
+                        "entry_date": pos["entry_date"], "exit_date": day,
+                        "entry_price": pos["entry_price"], "exit_price": price,
+                        "shares": shares, "pnl": pnl,
+                        "exit_reason": "TIME_STOP",
+                        "hold_days": days_held,
+                    })
+                    cash += shares * price
+                    del portfolio[ticker]
+
+            # === ENTRY SIGNALS ===
+            if len(portfolio) >= max_positions:
+                continue  # full
+
+            signals = []
+            for ticker, df in stock_data.items():
+                if ticker in portfolio:
+                    continue
+                if pit_set is not None and ticker not in pit_set:
+                    continue
+
+                idx_map = date_to_iloc.get(ticker, {})
+                ci = idx_map.get(day)
+                if ci is None or ci < 210:
+                    continue
+
+                ind = indicators[ticker]
+                price = float(df["Close"].iloc[ci])
+                open_price = float(df["Open"].iloc[ci])
+                volume = float(df["Volume"].iloc[ci])
+
+                # Get all indicator values
+                rs55_v = float(ind["rs55"].iloc[ci]) if not pd.isna(ind["rs55"].iloc[ci]) else -1
+                rsi_v = float(ind["rsi14"].iloc[ci]) if not pd.isna(ind["rsi14"].iloc[ci]) else 0
+                ema200_v = float(ind["ema200"].iloc[ci]) if not pd.isna(ind["ema200"].iloc[ci]) else float("inf")
+                ema21_v = float(ind["ema21"].iloc[ci]) if not pd.isna(ind["ema21"].iloc[ci]) else float("inf")
+                st_v = float(ind["supertrend"].iloc[ci]) if not pd.isna(ind["supertrend"].iloc[ci]) else -1
+                h20d = float(ind["high_20d"].iloc[ci]) if not pd.isna(ind["high_20d"].iloc[ci]) else float("inf")
+                l20d = float(ind["low_20d"].iloc[ci]) if not pd.isna(ind["low_20d"].iloc[ci]) else 0
+                vol_avg = float(ind["vol_avg20"].iloc[ci]) if not pd.isna(ind["vol_avg20"].iloc[ci]) else float("inf")
+
+                # 2 scan filters (RS63 > 0, RSI > 50)
+                if rs55_v <= 0 or rsi_v <= 50:
+                    continue
+
+                # IBS > 0.5 (close in upper half of day's range) + green candle
+                high_today = float(df["High"].iloc[ci])
+                low_today = float(df["Low"].iloc[ci])
+                day_range = high_today - low_today
+                ibs = (price - low_today) / day_range if day_range > 0 else 0.5
+                if ibs <= 0.5:
+                    continue
+                if price <= open_price:  # not a green candle
+                    continue
+
+                stop_pct = (price - l20d) / price * 100 if price > 0 and l20d > 0 else 8
+
+                signals.append({
+                    "ticker": ticker,
+                    "price": price,
+                    "swing_low": l20d,
+                    "stop_pct": stop_pct,
+                    "rs55": rs55_v,
+                })
+
+            # Rank by tightest stop (lowest risk), allocate
+            signals.sort(key=lambda s: s["stop_pct"])
+            for sig in signals:
+                if len(portfolio) >= max_positions:
+                    break
+                ticker = sig["ticker"]
+                price = sig["price"]
+                shares = int(PER_STOCK // price)
+                if shares <= 0:
+                    continue
+                cost = shares * price
+                if cost > cash:
+                    continue
+
+                portfolio[ticker] = {
+                    "entry_date": day,
+                    "entry_price": price,
+                    "shares": shares,
+                    "rs21_neg_count": 0,
+                    "rsi_low_count": 0,
+                }
+                cash -= cost
+
+            if (day_idx + 1) % 500 == 0:
+                print(f"    Day {day_idx + 1}/{len(trading_days)}, "
+                      f"positions: {len(portfolio)}, trades: {len(trades)}")
+
+        # --- Close remaining at end ---
+        last_day = trading_days[-1]
+        for ticker in list(portfolio.keys()):
+            pos = portfolio[ticker]
+            idx_map = date_to_iloc.get(ticker, {})
+            ci = idx_map.get(last_day)
+            if ci is not None:
+                exit_price = float(stock_data[ticker]["Close"].iloc[ci])
+            else:
+                exit_price = pos["entry_price"]
+            shares = pos["shares"]
+            pnl = (exit_price - pos["entry_price"]) * shares
+            trades.append({
+                "symbol": ticker, "strategy": "RS55",
+                "entry_date": pos["entry_date"], "exit_date": last_day,
+                "entry_price": pos["entry_price"], "exit_price": exit_price,
+                "shares": shares, "pnl": pnl,
+                "exit_reason": "BACKTEST_END",
+                "hold_days": (last_day - pos["entry_date"]).days,
+            })
+
+        print(f"  RS55 backtest complete: {len(trades)} trades")
+        return {"trades": trades}
 
     def run_lowvol_backtest(self, period_days=365*11, capital_lakhs=20,
                              rebalance_months=1, top_n=20, buffer_in=20,

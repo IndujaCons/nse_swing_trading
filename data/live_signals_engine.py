@@ -423,14 +423,15 @@ class LiveSignalsEngine:
                         if e10_now > e10_1w > e10_2w:
                             nifty_regime_on = True
 
-        # Precompute Nifty 50 market returns for Alpha20 CAPM calculation
+        # Precompute Nifty 50 daily returns (date-indexed for alignment)
+        n50_ret_series = None
         n50_market_rets = None
         n50_rm = 0.0
         n50_var = 0.0
         if not nifty_raw.empty and len(nifty_raw) >= 253:
-            n50_closes = nifty_raw["Close"].values.astype(float)
-            n50_daily_rets = np.diff(n50_closes[-253:]) / np.maximum(n50_closes[-253:-1], 0.01)
-            n50_market_rets = n50_daily_rets  # last 252 daily returns
+            n50_close_series = nifty_raw["Close"].astype(float)
+            n50_ret_series = n50_close_series.pct_change().iloc[-252:]  # date-indexed returns
+            n50_market_rets = n50_ret_series.values
             n50_rm = float(np.mean(n50_market_rets))
             n50_var = float(np.var(n50_market_rets))
 
@@ -444,6 +445,7 @@ class LiveSignalsEngine:
         rs_ibd_history = {}  # ticker -> list of weighted scores for last 5 days
         mom20_raw = []  # collect momentum data for Mom20/Mom15 scoring after loop
         alpha20_raw = []  # collect data for Alpha20 CAPM scoring after loop
+        rs63_signals = []  # RS63 satellite signals
         actual_date = None  # Track actual last trading date from data
 
         for idx, ticker in enumerate(tickers):
@@ -562,42 +564,54 @@ class LiveSignalsEngine:
                 if i >= 252:
                     ret_12m = price / float(closes.iloc[i - 252]) - 1
                     ret_6m = price / float(closes.iloc[i - 126]) - 1
+                    ret_3m = price / float(closes.iloc[i - 63]) - 1 if i >= 63 else None
                     log_rets = np.log(closes.iloc[i - 251:i + 1] / closes.iloc[i - 252:i].values)
                     sigma = float(log_rets.std()) * np.sqrt(252)
                     if sigma > 0.001:  # avoid div-by-zero
-                        # Compute beta vs Nifty 50 for Mom15 beta cap
+                        # Compute beta vs Nifty 50 for Mom15 beta cap (date-aligned)
                         mom_beta = None
-                        if n50_market_rets is not None and n50_var > 1e-10:
-                            stock_prices = closes.iloc[i - 252:i + 1].values.astype(float)
-                            stock_rets = np.diff(stock_prices) / np.maximum(stock_prices[:-1], 0.01)
-                            if len(stock_rets) == len(n50_market_rets):
-                                cov_val = np.cov(stock_rets, n50_market_rets)
-                                if cov_val.shape == (2, 2):
-                                    mom_beta = cov_val[0, 1] / n50_var
+                        if n50_ret_series is not None and n50_var > 1e-10:
+                            stock_ret_series = closes.astype(float).pct_change().iloc[i-251:i+1]
+                            # Align on common dates
+                            common_dates = stock_ret_series.index.intersection(n50_ret_series.index)
+                            if len(common_dates) >= 100:
+                                sr = stock_ret_series.loc[common_dates].values
+                                nr = n50_ret_series.loc[common_dates].values
+                                mask = ~(np.isnan(sr) | np.isnan(nr))
+                                if mask.sum() >= 100:
+                                    cov_val = np.cov(sr[mask], nr[mask])
+                                    if cov_val.shape == (2, 2) and cov_val[1, 1] > 1e-10:
+                                        mom_beta = cov_val[0, 1] / cov_val[1, 1]
                         mom20_raw.append({
                             "ticker": ticker,
                             "price": round(price, 2),
                             "ret_12m": ret_12m,
                             "ret_6m": ret_6m,
+                            "ret_3m": ret_3m,
                             "sigma": sigma,
                             "mr_12": ret_12m / sigma,
                             "mr_6": ret_6m / sigma,
+                            "mr_3": (ret_3m / sigma) if ret_3m is not None else None,
                             "beta": round(mom_beta, 2) if mom_beta is not None else None,
                         })
             except Exception:
                 pass
 
-            # Alpha20: collect stock returns for CAPM alpha calculation
+            # Alpha20: collect stock returns for CAPM alpha calculation (date-aligned)
             try:
-                if i >= 252 and n50_market_rets is not None and n50_var > 1e-10:
-                    stock_prices = closes.iloc[i - 252:i + 1].values.astype(float)
-                    stock_rets = np.diff(stock_prices) / np.maximum(stock_prices[:-1], 0.01)
-                    if len(stock_rets) == len(n50_market_rets):
-                        rf_daily = 0.065 / 252
-                        cov_val = np.cov(stock_rets, n50_market_rets)
-                        if cov_val.shape == (2, 2):
-                            beta = cov_val[0, 1] / n50_var
-                            alpha_daily = np.mean(stock_rets) - (rf_daily + beta * (n50_rm - rf_daily))
+                if i >= 252 and n50_ret_series is not None and n50_var > 1e-10:
+                    stock_ret_series_a = closes.astype(float).pct_change().iloc[i-251:i+1]
+                    common_dates_a = stock_ret_series_a.index.intersection(n50_ret_series.index)
+                    if len(common_dates_a) >= 100:
+                        sr_a = stock_ret_series_a.loc[common_dates_a].values
+                        nr_a = n50_ret_series.loc[common_dates_a].values
+                        mask_a = ~(np.isnan(sr_a) | np.isnan(nr_a))
+                        if mask_a.sum() >= 100:
+                            rf_daily = 0.065 / 252
+                            cov_val = np.cov(sr_a[mask_a], nr_a[mask_a])
+                            if cov_val.shape == (2, 2) and cov_val[1, 1] > 1e-10:
+                                beta = cov_val[0, 1] / cov_val[1, 1]
+                                alpha_daily = np.mean(sr_a[mask_a]) - (rf_daily + beta * (float(np.mean(nr_a[mask_a])) - rf_daily))
                             alpha_annual = alpha_daily * 252
                             alpha20_raw.append({
                                 "ticker": ticker,
@@ -605,6 +619,47 @@ class LiveSignalsEngine:
                                 "alpha": round(alpha_annual * 100, 2),  # as percentage
                                 "beta": round(beta, 2),
                             })
+            except Exception:
+                pass
+
+            # RS63 Satellite: RS63(5d avg) > 0 + RSI(3d avg) > 50 + IBS > 0.5 + green
+            try:
+                if i >= 70 and not bench_raw.empty:
+                    bench_aligned = bench_raw["Close"].reindex(daily.index, method="ffill")
+                    rs_ratio = closes / bench_aligned
+                    rs63_raw = (rs_ratio / rs_ratio.shift(63) - 1) * 100
+                    rs63_smooth = rs63_raw.rolling(5, min_periods=1).mean()
+
+                    # RSI(14) smoothed 3-day avg
+                    delta_r = closes.diff()
+                    gain_r = delta_r.clip(lower=0)
+                    loss_r = (-delta_r).clip(lower=0)
+                    avg_gain_r = gain_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+                    avg_loss_r = loss_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+                    rsi_raw = 100 - (100 / (1 + avg_gain_r / avg_loss_r.replace(0, 1e-10)))
+                    rsi_smooth = rsi_raw.rolling(3, min_periods=1).mean()
+
+                    rs63_v = float(rs63_smooth.iloc[i]) if not pd.isna(rs63_smooth.iloc[i]) else -1
+                    rsi_v = float(rsi_smooth.iloc[i]) if not pd.isna(rsi_smooth.iloc[i]) else 0
+
+                    if rs63_v > 0 and rsi_v > 50 and ibs > 0.5 and is_green:
+                        # Stop distance (for ranking)
+                        low_20d = float(lows.rolling(20).min().iloc[i]) if i >= 20 else low
+                        stop_pct = round((price - low_20d) / price * 100, 1) if price > 0 else 99
+
+                        # 8% SL level
+                        sl_price = round(price * 0.92, 1)
+
+                        rs63_signals.append({
+                            "ticker": ticker,
+                            "price": round(price, 2),
+                            "rs63": round(rs63_v, 1),
+                            "rsi": round(rsi_v, 1),
+                            "ibs": round(ibs, 2),
+                            "stop_pct": stop_pct,
+                            "sl_price": sl_price,
+                            "rank": 0,  # set after sorting
+                        })
             except Exception:
                 pass
 
@@ -889,6 +944,37 @@ class LiveSignalsEngine:
                 })
 
         # Mom15: same scoring as Mom20 but beta cap 1.0, top 15
+        # Load EPS data for TTM growth column + filtered view
+        eps_db = {}
+        eps_path = os.path.join(os.path.dirname(__file__), "quarterly_eps.json")
+        if os.path.exists(eps_path):
+            try:
+                with open(eps_path) as _ef:
+                    eps_db = json.load(_ef)
+            except Exception:
+                pass
+
+        def _get_ttm_eps_growth(ticker):
+            """Get TTM EPS YoY growth % for a ticker. Returns float or None."""
+            if ticker not in eps_db:
+                return None
+            stock_eps = eps_db[ticker]
+            # Use annual EPS (more depth) — format: {"annual": {"Mar 2014": 16.31, ...}}
+            annual = stock_eps.get("annual", {}) if isinstance(stock_eps, dict) else {}
+            if not annual:
+                # Old format: flat dict of quarterly
+                annual = stock_eps if isinstance(stock_eps, dict) and "quarterly" not in stock_eps else {}
+            if len(annual) < 2:
+                return None
+            # Sort by year, get latest two
+            sorted_periods = sorted(annual.keys(),
+                                     key=lambda p: (p.split()[-1], p.split()[0]))
+            latest = annual[sorted_periods[-1]]
+            prev = annual[sorted_periods[-2]]
+            if abs(prev) < 0.01:
+                return None
+            return (latest / prev - 1) * 100
+
         mom15_signals = []
         if len(mom20_raw) >= 5:
             # Filter beta <= 1.0
@@ -896,14 +982,19 @@ class LiveSignalsEngine:
             if len(mom15_pool) >= 5:
                 mr_12_arr = np.array([d["mr_12"] for d in mom15_pool])
                 mr_6_arr = np.array([d["mr_6"] for d in mom15_pool])
+                mr_3_arr = np.array([d.get("mr_3", 0) or 0 for d in mom15_pool])
                 z_12 = (mr_12_arr - mr_12_arr.mean()) / mr_12_arr.std() if mr_12_arr.std() > 0 else np.zeros_like(mr_12_arr)
                 z_6 = (mr_6_arr - mr_6_arr.mean()) / mr_6_arr.std() if mr_6_arr.std() > 0 else np.zeros_like(mr_6_arr)
-                weighted_z = 0.5 * z_12 + 0.5 * z_6
+                z_3 = (mr_3_arr - mr_3_arr.mean()) / mr_3_arr.std() if mr_3_arr.std() > 0 else np.zeros_like(mr_3_arr)
+                # 30/30/40 weighting (frozen: heavier on recent 3m)
+                weighted_z = 0.30 * z_12 + 0.30 * z_6 + 0.40 * z_3
                 for idx_m, d in enumerate(mom15_pool):
                     z = weighted_z[idx_m]
                     d["norm_score_15"] = (1 + z) if z >= 0 else 1 / (1 - z)
                 mom15_pool.sort(key=lambda d: -d["norm_score_15"])
-                for rank_i, d in enumerate(mom15_pool[:15]):
+                # Build full ranked list (top 30 for display, selection on top 15)
+                for rank_i, d in enumerate(mom15_pool[:30]):
+                    ttm_growth = _get_ttm_eps_growth(d["ticker"])
                     mom15_signals.append({
                         "ticker": d["ticker"],
                         "price": d["price"],
@@ -912,10 +1003,17 @@ class LiveSignalsEngine:
                         "volatility": round(d["sigma"] * 100, 1),
                         "beta": d["beta"],
                         "momentum_score": round(d["norm_score_15"], 3),
+                        "ttm_eps_growth": round(ttm_growth, 1) if ttm_growth is not None else None,
+                        "eps_pass": ttm_growth is None or ttm_growth > 0,
                         "rank": rank_i + 1,
                         "stop_pct": 0,
                         "atr_pct": 0,
                     })
+
+        # RS63 Satellite: rank by tightest stop, top 15 for display
+        rs63_signals.sort(key=lambda s: s["stop_pct"])
+        for rank_i, s in enumerate(rs63_signals):
+            s["rank"] = rank_i + 1
 
         # Alpha20: rank by highest alpha and pick top 20
         alpha20_signals = []
@@ -968,6 +1066,7 @@ class LiveSignalsEngine:
             "mom15_signals": mom15_signals,
             "mom20_signals": mom20_signals,
             "alpha20_signals": alpha20_signals,
+            "rs63_signals": rs63_signals[:15],
             "nifty_regime": "ON" if nifty_regime_on else "OFF",
             "sector_momentum": sector_momentum,
             "last_updated": datetime.now().isoformat(),
@@ -1487,11 +1586,77 @@ class LiveSignalsEngine:
                 except Exception:
                     pass
 
+            elif pos["strategy"] == "RS63":
+                # RS63 exits: 8% SL, RSI(14,3d avg) < 40 for 3d, RS63(5d avg) < 0, 8wk time stop
+                rs63_shares = pos["remaining_shares"]
+
+                # 1. Hard SL: 8% from entry
+                if current_price <= entry_price * 0.92:
+                    exit_signals.append(self._make_exit_signal(
+                        pos, current_price, pnl_pct, "RS63_HARD_SL_8PCT", rs63_shares))
+                    continue
+
+                try:
+                    # Fetch enough data for RS63 and RSI
+                    rs63_daily = yf.Ticker(f"{ticker}.NS").history(
+                        start=end_date - timedelta(days=200), end=end_date)
+                    if rs63_daily.empty or len(rs63_daily) < 70:
+                        continue
+
+                    rs63_closes = rs63_daily["Close"].astype(float)
+
+                    # Fetch benchmark for RS63
+                    bench_rs63 = yf.Ticker("^CNX200").history(
+                        start=end_date - timedelta(days=200), end=end_date)
+                    if not bench_rs63.empty:
+                        bench_aligned = bench_rs63["Close"].astype(float).reindex(
+                            rs63_daily.index, method="ffill")
+                        rs_ratio = rs63_closes / bench_aligned
+                        rs63_raw = (rs_ratio / rs_ratio.shift(63) - 1) * 100
+                        rs63_smooth = rs63_raw.rolling(5, min_periods=1).mean()
+
+                        # 2. RS63(5d avg) < 0
+                        rs63_val = float(rs63_smooth.iloc[-1]) if not pd.isna(rs63_smooth.iloc[-1]) else 0
+                        if rs63_val < 0:
+                            exit_signals.append(self._make_exit_signal(
+                                pos, current_price, pnl_pct, "RS63_NEG", rs63_shares))
+                            continue
+
+                    # 3. RSI(14, 3d avg) < 40 for 3 consecutive days
+                    delta_r = rs63_closes.diff()
+                    gain_r = delta_r.clip(lower=0)
+                    loss_r = (-delta_r).clip(lower=0)
+                    avg_gain = gain_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+                    avg_loss = loss_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+                    rsi_raw = 100 - (100 / (1 + avg_gain / avg_loss.replace(0, 1e-10)))
+                    rsi_smooth = rsi_raw.rolling(3, min_periods=1).mean()
+
+                    if len(rsi_smooth) >= 3:
+                        last3 = rsi_smooth.iloc[-3:]
+                        if all(float(v) < 40 for v in last3 if not pd.isna(v)):
+                            exit_signals.append(self._make_exit_signal(
+                                pos, current_price, pnl_pct, "RS63_RSI_BELOW40_3D", rs63_shares))
+                            continue
+
+                    # 4. Time stop: 8 weeks (56 days) + < 3% gain
+                    entry_date_str = pos.get("entry_date", "")
+                    if entry_date_str:
+                        entry_dt = pd.Timestamp(entry_date_str)
+                        days_held = (pd.Timestamp.now() - entry_dt).days
+                        gain_pct = (current_price - entry_price) / entry_price * 100
+                        if days_held >= 56 and gain_pct < 3.0:
+                            exit_signals.append(self._make_exit_signal(
+                                pos, current_price, pnl_pct, "RS63_TIME_STOP", rs63_shares))
+                            continue
+
+                except Exception:
+                    pass
+
         # Underwater exit: if held >= 10 trading days and still below entry, cut it
         # RS strategy uses rs_uw_days=0 (disabled), so skip RS positions
         for pos in positions:
-            # Skip RS — underwater exit disabled (rs_uw_days=0 in frozen config)
-            if pos["strategy"] == "RS":
+            # Skip RS/RS63 — underwater exit disabled
+            if pos["strategy"] in ("RS", "RS63"):
                 continue
 
             # Skip if already flagged for exit above

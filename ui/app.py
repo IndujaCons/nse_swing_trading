@@ -484,8 +484,8 @@ def buy_live_signal():
     if not ticker or not strategy or not price:
         return jsonify({"success": False, "error": "ticker, strategy, price required"}), 400
 
-    if strategy not in ("J", "T", "R", "MW", "RS"):
-        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, or RS"}), 400
+    if strategy not in ("J", "T", "R", "MW", "RS", "RS63", "MOM15"):
+        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, RS, RS63, or MOM15"}), 400
 
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Valid user_id required"}), 400
@@ -753,8 +753,8 @@ def explain_trade():
     if not symbol or not strategy or not entry_date:
         return jsonify({"success": False, "error": "symbol, strategy, entry_date required"}), 400
 
-    if strategy not in ("J", "T", "R", "MW", "RS"):
-        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, or RS"}), 400
+    if strategy not in ("J", "T", "R", "MW", "RS", "RS63", "MOM15"):
+        return jsonify({"success": False, "error": "strategy must be J, T, R, MW, RS, RS63, or MOM15"}), 400
 
     try:
         backtester = MomentumBacktester()
@@ -1386,6 +1386,20 @@ def watchlist_chart():
                     else:
                         bench_prices.append(None)
 
+        # DMA 50 and DMA 200
+        # Compute on full history, then trim to display period
+        full_closes = stock_df["Close"].squeeze().dropna()
+        full_closes.index = full_closes.index.tz_localize(None)
+        dma50_full = full_closes.rolling(50, min_periods=50).mean()
+        dma200_full = full_closes.rolling(200, min_periods=200).mean()
+        dma50_data = []
+        dma200_data = []
+        for d in stock_closes.index:
+            v50 = dma50_full.get(d)
+            dma50_data.append(round(float(v50), 2) if v50 is not None and not pd.isna(v50) else None)
+            v200 = dma200_full.get(d)
+            dma200_data.append(round(float(v200), 2) if v200 is not None and not pd.isna(v200) else None)
+
         rs_label_map = {"1mo": "RS-21d", "3mo": "RS-63d", "6mo": "RS-123d", "1y": "RS-123d"}
         is_intl = ticker in INTL_ETF_TICKERS
         return jsonify({
@@ -1393,7 +1407,8 @@ def watchlist_chart():
             "prices": prices, "rs": rs_data, "rs_smooth": rs_smooth_data,
             "rs_label": rs_label_map[period],
             "bench": bench_prices, "bench_label": "Nifty 200",
-            "currency": "$" if is_intl else "₹"
+            "currency": "$" if is_intl else "₹",
+            "dma50": dma50_data, "dma200": dma200_data,
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

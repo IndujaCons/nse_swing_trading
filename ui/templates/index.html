@@ -486,6 +486,13 @@
             font-weight: 600;
             color: var(--text-primary);
         }
+        #live-signals-panels .ticker {
+            cursor: pointer;
+        }
+        #live-signals-panels .ticker:hover {
+            color: var(--green);
+            text-decoration: underline;
+        }
 
         .price {
             color: var(--text-secondary);
@@ -1345,7 +1352,7 @@
                         <option value="MW3">MW Only (3-Stage)</option>
                         <option value="RS3">RS Rotation</option>
                         <option value="IBD">IBD RS (Frozen)</option>
-                        <option value="MOM15">Mom15 (4-Monthly Rebal)</option>
+                        <option value="MOM15">Mom15 (2-Monthly Rebal)</option>
                         <option value="MOM20">Mom20 (Quarterly Rebal)</option>
                         <option value="ALPHA20">Alpha20 (CAPM Alpha)</option>
                     </select>
@@ -1611,70 +1618,49 @@
                 </div>
             </div>
 
-            <!-- Live Signals Panels -->
-            <div class="ls-grid hidden" id="live-signals-panels">
-                <div class="panel ls-j-signals">
-                    <div class="panel-header">
-                        <span class="panel-title">J — Weekly Support</span>
-                        <span class="panel-count" id="ls-j-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-j-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
+            <!-- Live Signals Panels — 65/35 split with chart -->
+            <div class="hidden" id="live-signals-panels">
+                <!-- Hidden placeholder divs for J/T/R/MW/RS/WT panels (keep IDs for JS compatibility) -->
+                <div class="hidden"><div id="ls-j-panel"></div><div id="ls-j-count"></div></div>
+                <div class="hidden"><div id="ls-t-panel"></div><div id="ls-t-count"></div></div>
+                <div class="hidden"><div id="ls-r-panel"></div><div id="ls-r-count"></div></div>
+                <div class="hidden"><div id="ls-mw-panel"></div><div id="ls-mw-count"></div></div>
+                <div class="hidden"><div id="ls-rs-panel"></div><div id="ls-rs-count"></div><div id="ls-rs-regime"></div></div>
+                <div class="hidden"><div id="ls-wt-panel"></div><div id="ls-wt-count"></div></div>
 
-                <div class="panel ls-t-signals">
-                    <div class="panel-header">
-                        <span class="panel-title">T — Keltner Pullback</span>
-                        <span class="panel-count" id="ls-t-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-t-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
+                <div style="display:flex; gap:12px; width:100%;">
+                <!-- Left: Signal panels (65%) -->
+                <div id="ls-signals-left" style="flex:0 0 65%; min-width:0; display:flex; flex-direction:column; gap:10px;">
 
-                <div class="panel ls-r-signals">
+                <div class="panel ls-mom15-signals">
                     <div class="panel-header">
-                        <span class="panel-title" style="color:#ab47bc;">R — RSI Divergence</span>
-                        <span class="panel-count" id="ls-r-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-r-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
-
-                <div class="panel ls-mw-signals">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color:#e67e22;">MW — Weekly ADX</span>
-                        <span class="panel-count" id="ls-mw-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-mw-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
-
-                <div class="panel ls-rs-signals" style="grid-column: 1 / -1;">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color:#2196f3;">RS — IBD Rating Watchlist</span>
-                        <span id="ls-rs-regime" style="margin-left:8px;font-size:11px;padding:2px 6px;border-radius:3px;"></span>
-                        <span class="panel-count" id="ls-rs-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-rs-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
-
-                <div class="panel ls-mom15-signals" style="grid-column: 1 / -1;">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color:#00bcd4;">Mom15 — Nifty200 Momentum (4-Monthly, Beta≤1.0)</span>
+                        <span class="panel-title" style="color:#00bcd4;">Mom15 — Nifty200 Momentum (2-Monthly, 30/30/40, Beta≤1.0)</span>
+                        <label style="margin-left:12px;font-size:11px;cursor:pointer;color:var(--text-muted);">
+                            <input type="checkbox" id="mom15-eps-filter" onchange="renderMom15()" checked>
+                            EPS Filter (TTM&gt;0%)
+                        </label>
                         <span class="panel-count" id="ls-mom15-count">0</span>
+                        <span style="margin-left:auto;font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">
+                            Rebalance: <b style="color:var(--green);">1 Apr</b> · <b>1 Jun</b> · <b>1 Aug</b> · <b>1 Oct</b> · <b>1 Dec</b> · <b>1 Feb</b>
+                        </span>
                     </div>
                     <div class="panel-body" id="ls-mom15-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
 
-                <div class="panel ls-mom20-signals" style="grid-column: 1 / -1;">
+                <div class="panel ls-rs63-signals">
+                    <div class="panel-header">
+                        <span class="panel-title" style="color:#e91e63;">RS63 — Vivek Bajaj Satellite (Daily Swing)</span>
+                        <input type="hidden" id="rs63-buy-amount" value="200000">
+                        <span class="panel-count" id="ls-rs63-count">0</span>
+                    </div>
+                    <div class="panel-body" id="ls-rs63-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
+                <div class="panel ls-mom20-signals">
                     <div class="panel-header">
                         <span class="panel-title" style="color:#ff6b35;">Mom20 — Nifty200 Momentum (Quarterly Rebalance)</span>
                         <span class="panel-count" id="ls-mom20-count">0</span>
@@ -1684,7 +1670,7 @@
                     </div>
                 </div>
 
-                <div class="panel ls-alpha20-signals" style="grid-column: 1 / -1;">
+                <div class="panel ls-alpha20-signals">
                     <div class="panel-header">
                         <span class="panel-title" style="color:#9c27b0;">Alpha20 — CAPM Jensen's Alpha (Quarterly Rebalance)</span>
                         <span class="panel-count" id="ls-alpha20-count">0</span>
@@ -1693,6 +1679,29 @@
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
                 </div>
+
+                </div><!-- end ls-signals-left -->
+
+                <!-- Right: Chart panel (35%) -->
+                <div id="ls-chart-right" style="flex:0 0 35%; min-width:0; position:sticky; top:10px; align-self:flex-start;">
+                    <div class="panel" style="height:100%;">
+                        <div class="panel-header">
+                            <span class="panel-title" id="ls-chart-title" style="color:var(--green);">Price Chart</span>
+                            <div style="display:flex; gap:0;">
+                                <button onclick="switchLsChartPeriod('1mo')" class="ls-chart-period-btn" style="padding:2px 8px; font-size:10px; border:1px solid var(--border-color); background:transparent; color:var(--text-secondary); cursor:pointer; border-radius:4px 0 0 4px;">1M</button>
+                                <button onclick="switchLsChartPeriod('3mo')" class="ls-chart-period-btn" style="padding:2px 8px; font-size:10px; border:1px solid var(--border-color); border-left:0; background:transparent; color:var(--text-secondary); cursor:pointer;">3M</button>
+                                <button onclick="switchLsChartPeriod('6mo')" class="ls-chart-period-btn" style="padding:2px 8px; font-size:10px; border:1px solid var(--border-color); border-left:0; background:transparent; color:var(--text-secondary); cursor:pointer;">6M</button>
+                                <button onclick="switchLsChartPeriod('1y')" class="ls-chart-period-btn" style="padding:2px 8px; font-size:10px; border:1px solid var(--green); border-left:0; background:var(--green); color:white; cursor:pointer; border-radius:0 4px 4px 0; font-weight:700;">1Y</button>
+                            </div>
+                        </div>
+                        <div class="panel-body" id="ls-chart-body" style="padding:8px;">
+                            <div style="padding:40px 20px; text-align:center; color:var(--text-muted);">
+                                Click any stock to view chart
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- end ls-chart-right -->
+                </div><!-- end flex container -->
 
                 <div class="panel ls-sector-heatmap" style="grid-column: 1 / -1;">
                     <div class="panel-header">
@@ -1713,15 +1722,8 @@
                     </div>
                 </div>
 
-                <div class="panel ls-top-picks" style="grid-column: 1 / -1;">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color: var(--yellow, #f0c040);">Top Picks — Ranked by Sector Momentum + ATR%</span>
-                        <span class="panel-count" id="ls-picks-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-picks-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
+                <!-- Top Picks removed -->
+                <div class="hidden"><div id="ls-picks-panel"></div><div id="ls-picks-count"></div></div>
 
                 <div class="ls-bottom-row">
                     <div class="panel ls-positions">
@@ -2153,7 +2155,7 @@
                     chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">No chart data available.</div>';
                     return;
                 }
-                drawWatchlistChart(data.dates, data.prices, wlSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth);
+                drawWatchlistChart(data.dates, data.prices, wlSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, null, data.dma50, data.dma200);
             } catch (e) {
                 chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--red);">Failed to load chart.</div>';
             }
@@ -2165,18 +2167,20 @@
 
         let _wlChartState = null;
 
-        function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth) {
+        function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma200) {
             currency = currency || '₹';
-            const body = document.getElementById('wl-chart-body');
-            body.innerHTML = '<canvas id="wl-chart-canvas" style="width:100%; height:280px;"></canvas>';
-            const canvas = document.getElementById('wl-chart-canvas');
+            const bodyId = targetBodyId || 'wl-chart-body';
+            const canvasId = bodyId === 'ls-chart-body' ? 'ls-chart-canvas' : 'wl-chart-canvas';
+            const body = document.getElementById(bodyId);
+            body.innerHTML = `<canvas id="${canvasId}" style="width:100%; height:280px;"></canvas>`;
+            const canvas = document.getElementById(canvasId);
             const dpr = window.devicePixelRatio || 1;
             const rect = canvas.getBoundingClientRect();
             canvas.width = rect.width * dpr;
             canvas.height = 280 * dpr;
             canvas.style.height = '280px';
 
-            _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 280, currency, rsSmooth };
+            _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 280, currency, rsSmooth, dma50: dma50 || [], dma200: dma200 || [] };
             _renderWatchlistChart(canvas);
 
             canvas.onmousemove = function(e) {
@@ -2218,8 +2222,11 @@
             const cw = W - pad.left - pad.right;
 
             const validBench = (benchData || []).filter(v => v !== null);
-            const minP = validBench.length ? Math.min(...prices, ...validBench) : Math.min(...prices);
-            const maxP = validBench.length ? Math.max(...prices, ...validBench) : Math.max(...prices);
+            const validDma50 = (s.dma50 || []).filter(v => v !== null);
+            const validDma200 = (s.dma200 || []).filter(v => v !== null);
+            const allPriceVals = [...prices, ...validBench, ...validDma50, ...validDma200];
+            const minP = Math.min(...allPriceVals);
+            const maxP = Math.max(...allPriceVals);
             const pRange = maxP - minP || 1;
             const startP = prices[0];
             const endP = prices[prices.length - 1];
@@ -2281,6 +2288,63 @@
             grad.addColorStop(1, bullish ? 'rgba(34,197,94,0.01)' : 'rgba(239,68,68,0.01)');
             ctx.fillStyle = grad;
             ctx.fill();
+
+            // DMA 50 line (blue, dashed)
+            const dma50 = s.dma50 || [];
+            const hasDma50 = dma50.length === prices.length && dma50.some(v => v !== null);
+            if (hasDma50) {
+                ctx.strokeStyle = 'rgba(33,150,243,0.7)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 3]);
+                ctx.beginPath();
+                let started = false;
+                for (let i = 0; i < dma50.length; i++) {
+                    if (dma50[i] === null) continue;
+                    const x = pad.left + (i / (prices.length - 1)) * cw;
+                    const y = pad.top + pch - ((dma50[i] - minP) / pRange) * pch;
+                    if (!started) { ctx.moveTo(x, y); started = true; }
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // DMA 200 line (orange, dashed)
+            const dma200 = s.dma200 || [];
+            const hasDma200 = dma200.length === prices.length && dma200.some(v => v !== null);
+            if (hasDma200) {
+                ctx.strokeStyle = 'rgba(255,152,0,0.7)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([6, 4]);
+                ctx.beginPath();
+                let started = false;
+                for (let i = 0; i < dma200.length; i++) {
+                    if (dma200[i] === null) continue;
+                    const x = pad.left + (i / (prices.length - 1)) * cw;
+                    const y = pad.top + pch - ((dma200[i] - minP) / pRange) * pch;
+                    if (!started) { ctx.moveTo(x, y); started = true; }
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // DMA legend (small, top-left, same size as RS-123d label)
+            if (hasDma50 || hasDma200) {
+                ctx.font = 'bold 9px monospace';
+                ctx.textAlign = 'left';
+                let lx = pad.left + 2;
+                const ly = pad.top + 10;
+                if (hasDma50) {
+                    ctx.fillStyle = 'rgba(33,150,243,0.7)';
+                    ctx.fillText('50DMA', lx, ly);
+                    lx += ctx.measureText('50DMA').width + 6;
+                }
+                if (hasDma200) {
+                    ctx.fillStyle = 'rgba(255,152,0,0.7)';
+                    ctx.fillText('200DMA', lx, ly);
+                }
+            }
 
             // Nifty 200 overlay line (normalized)
             const hasBench = benchData && benchData.some(v => v !== null);
@@ -2474,16 +2538,16 @@
                 const date = dates[idx];
                 const price = prices[idx];
                 let lines = [`${date}`, `Price: ${cur}${price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`];
-                if (hasRS && rsData[idx] !== null) {
-                    const rv = rsData[idx];
-                    lines.push(`RS: ${rv >= 0 ? '+' : ''}${rv.toFixed(1)}%`);
-                }
-                if (rsSmooth && rsSmooth[idx] !== null && rsSmooth[idx] !== undefined) {
-                    const sv = rsSmooth[idx];
-                    lines.push(`RS(s): ${sv >= 0 ? '+' : ''}${sv.toFixed(1)}%`);
-                }
                 if (benchData && benchData[idx] !== null) {
-                    lines.push(`Nifty200: ₹${benchData[idx].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+                    lines.push(`Nifty200: ${cur}${benchData[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+                }
+                const d50 = s.dma50 || [];
+                const d200 = s.dma200 || [];
+                if (d50[idx] !== null && d50[idx] !== undefined) {
+                    lines.push(`D50: ${cur}${d50[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+                }
+                if (d200[idx] !== null && d200[idx] !== undefined) {
+                    lines.push(`D200: ${cur}${d200[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
                 }
 
                 // Draw tooltip box
@@ -2495,21 +2559,21 @@
                 if (tx + tw > W - 5) tx = x - tw - 10;
                 let ty = 20;
 
-                ctx.fillStyle = 'rgba(30,30,30,0.88)';
+                ctx.fillStyle = 'rgba(255,255,255,0.95)';
                 ctx.strokeStyle = 'rgba(100,100,100,0.5)';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.roundRect(tx, ty, tw, th, 4);
                 ctx.fill(); ctx.stroke();
 
-                ctx.fillStyle = '#fff';
+                ctx.fillStyle = '#333';
                 ctx.textAlign = 'left';
                 lines.forEach((line, i) => {
-                    if (i === 0) ctx.fillStyle = '#ccc';
-                    else if (line.startsWith('Price')) ctx.fillStyle = bullish ? greenColor : redColor;
-                    else if (line.startsWith('RS:')) ctx.fillStyle = (rsData[idx] >= 0) ? greenColor : redColor;
-                    else if (line.startsWith('RS(s)')) ctx.fillStyle = (rsSmooth && rsSmooth[idx] >= 0) ? greenColor : redColor;
-                    else ctx.fillStyle = '#aaa';
+                    if (i === 0) ctx.fillStyle = '#666';
+                    else if (line.startsWith('Price')) ctx.fillStyle = bullish ? '#16a34a' : '#dc2626';
+                    else if (line.startsWith('D50')) ctx.fillStyle = '#1976d2';
+                    else if (line.startsWith('D200')) ctx.fillStyle = '#e65100';
+                    else ctx.fillStyle = '#555';
                     ctx.fillText(line, tx + 6, ty + 13 + i * lineH);
                 });
 
@@ -2739,7 +2803,7 @@
                 selectedTradeUser = null;
             }
 
-            sel.onchange = () => { selectedTradeUser = sel.value; };
+            sel.onchange = () => { selectedTradeUser = sel.value; loadLivePositions(); loadClosedTrades(); };
         }
 
         async function handleLogin(userId) {
@@ -3012,6 +3076,233 @@
 
         // ============ Live Signals Data ============
 
+        // ===== Live Signals Chart (reuses watchlist chart API) =====
+        let lsSelectedTicker = null;
+        let lsChartPeriod = '1y';
+        // _lsChartState not needed — reuses _wlChartState via drawWatchlistChart
+        const lsPeriodLabels = {'1mo':'1M','3mo':'3M','6mo':'6M','1y':'1Y'};
+
+        function loadLsChart(ticker, period) {
+            if (ticker) lsSelectedTicker = ticker;
+            if (period) lsChartPeriod = period;
+            if (!lsSelectedTicker) return;
+
+            const chartBody = document.getElementById('ls-chart-body');
+            const chartTitle = document.getElementById('ls-chart-title');
+            chartTitle.textContent = `${lsSelectedTicker} — ${lsPeriodLabels[lsChartPeriod] || '1Y'} Price`;
+            chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Loading...</div>';
+
+            // Update period buttons
+            document.querySelectorAll('.ls-chart-period-btn').forEach(btn => {
+                const isActive = btn.textContent.trim() === lsPeriodLabels[lsChartPeriod];
+                btn.style.background = isActive ? 'var(--green)' : 'transparent';
+                btn.style.color = isActive ? 'white' : 'var(--text-secondary)';
+                btn.style.borderColor = isActive ? 'var(--green)' : 'var(--border-color)';
+                btn.style.fontWeight = isActive ? '700' : '400';
+            });
+
+            // Highlight clicked row in all signal tables
+            document.querySelectorAll('#live-signals-panels .stock-table tr').forEach(tr => {
+                const tickerCell = tr.querySelector('.ticker');
+                if (tickerCell && tickerCell.textContent.trim().split(' ')[0] === lsSelectedTicker) {
+                    tr.style.background = 'rgba(0,188,212,0.1)';
+                } else {
+                    tr.style.background = '';
+                }
+            });
+
+            fetch(`/api/watchlist/chart?ticker=${lsSelectedTicker}&period=${lsChartPeriod}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success || !data.prices || data.prices.length < 2) {
+                        chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">No chart data.</div>';
+                        return;
+                    }
+                    // Reuse the exact same watchlist chart renderer, targeting ls-chart-body
+                    drawWatchlistChart(data.dates, data.prices, lsSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, 'ls-chart-body', data.dma50, data.dma200);
+                })
+                .catch(() => {
+                    chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--red);">Chart failed.</div>';
+                });
+        }
+
+        function switchLsChartPeriod(period) {
+            loadLsChart(null, period);
+        }
+
+        // Delegated click: any .ticker cell inside live-signals-panels opens chart
+        document.addEventListener('click', function(e) {
+            const tickerEl = e.target.closest('#live-signals-panels .ticker');
+            if (tickerEl) {
+                const ticker = tickerEl.textContent.trim().split(' ')[0];
+                if (ticker && ticker.length >= 2) loadLsChart(ticker);
+            }
+        });
+
+        function renderMom15() {
+            const mom15Panel = document.getElementById('ls-mom15-panel');
+            const allSignals = window._mom15AllSignals || [];
+            const epsFilterOn = document.getElementById('mom15-eps-filter').checked;
+
+            // Build display list: top 30 (or all available), mark which are in top 15 selection
+            let displaySignals;
+            if (epsFilterOn) {
+                displaySignals = allSignals.filter(s => s.eps_pass !== false).slice(0, 30);
+            } else {
+                displaySignals = allSignals.slice(0, 30);
+            }
+
+            const selectedCount = Math.min(displaySignals.length, 15);
+            document.getElementById('ls-mom15-count').textContent = displaySignals.length > 0 ? `Top ${selectedCount} (showing ${displaySignals.length})` : '0';
+            if (displaySignals.length === 0) {
+                mom15Panel.innerHTML = '<div class="empty-state">No Mom15 signals</div>';
+            } else {
+                const mom15Rows = displaySignals.map((s, idx) => {
+                    const rank = epsFilterOn ? (idx + 1) : (s.rank || (idx + 1));
+                    const isSelected = idx < 15;
+                    const rowStyle = isSelected ? '' : 'opacity:0.45;';
+                    const rankStyle = isSelected
+                        ? 'font-size:10px;color:var(--text-muted);'
+                        : 'font-size:10px;color:var(--text-muted);font-style:italic;';
+                    const retColor12 = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
+                    const retColor6 = s.ret_6m > 0 ? 'var(--green)' : 'var(--red)';
+                    const scoreColor = s.momentum_score > 1.5 ? 'var(--green)' : s.momentum_score > 1.0 ? 'var(--text)' : 'var(--text-muted)';
+                    const betaColor = s.beta <= 0.8 ? 'var(--green)' : 'var(--text)';
+                    const epsVal = s.ttm_eps_growth;
+                    const epsStr = epsVal !== null && epsVal !== undefined ? `${epsVal > 0 ? '+' : ''}${epsVal}%` : 'N/A';
+                    const epsColor = epsVal === null || epsVal === undefined ? 'var(--text-muted)' : epsVal > 0 ? 'var(--green)' : 'var(--red)';
+                    const separator = idx === 14 ? 'border-bottom:2px solid var(--green);' : '';
+                    return `
+                    <tr style="${rowStyle}${separator}">
+                        <td style="${rankStyle}">#${rank}</td>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td style="color:${retColor12};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
+                        <td style="color:${retColor6};">${s.ret_6m > 0 ? '+' : ''}${s.ret_6m}%</td>
+                        <td>${s.volatility}%</td>
+                        <td style="color:${betaColor};">${s.beta}</td>
+                        <td style="color:${scoreColor};font-weight:600;">${s.momentum_score.toFixed(2)}</td>
+                        <td style="color:${epsColor};font-weight:600;">${epsStr}</td>
+                    </tr>`;
+                }).join('');
+                mom15Panel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr>
+                            <th>#</th><th>Stock</th><th>Close</th>
+                            <th>12m Ret</th><th>6m Ret</th><th>Vol</th><th>Beta</th><th>Mom Score</th><th>TTM EPS</th>
+                        </tr></thead>
+                        <tbody>${mom15Rows}</tbody>
+                    </table>
+                `;
+            }
+        }
+
+        async function rs63PlaceBuy(btn) {
+            const ticker = btn.dataset.ticker;
+            const price = parseFloat(btn.dataset.price);
+            const sl = parseFloat(btn.dataset.sl);
+            const inp = btn.closest('tr').querySelector('input');
+            const amount = parseIndian(inp.value);
+
+            if (!selectedTradeUser) {
+                showToast('No Zerodha user selected. Connect first.', 'error');
+                return;
+            }
+
+            const qty = Math.floor(amount / price);
+            if (qty <= 0) {
+                showToast('Amount too small for 1 share', 'error');
+                return;
+            }
+
+            const ok = confirm(`BUY ${ticker}\n${qty} shares @ ₹${price.toLocaleString('en-IN')}\nAmount: ₹${amount.toLocaleString('en-IN')}\n8% SL: ₹${sl.toLocaleString('en-IN')}`);
+            if (!ok) return;
+
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                const res = await fetch('/api/live-signals/buy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ticker, strategy: 'RS63', price, amount,
+                        user_id: selectedTradeUser,
+                        metadata: { sl_price: sl }
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const userName = (kiteUsers.find(u => u.config_user_id === selectedTradeUser) || {}).config_name || selectedTradeUser;
+                    showToast(`Bought ${data.position.shares} shares of ${ticker} [${userName}]`, 'success');
+                    btn.textContent = '✓';
+                    btn.style.background = 'var(--text-muted)';
+                    loadLivePositions();
+                } else {
+                    showToast(data.error || 'Buy failed', 'error');
+                    btn.textContent = 'BUY';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                showToast('Network error: ' + e.message, 'error');
+                btn.textContent = 'BUY';
+                btn.disabled = false;
+            }
+        }
+
+        function renderRS63(data) {
+            window._rs63LastData = data;
+            const rs63Panel = document.getElementById('ls-rs63-panel');
+            const rs63Signals = data.rs63_signals || [];
+            const buyAmt = parseInt(document.getElementById('rs63-buy-amount').value.replace(/,/g, '')) || 200000;
+            document.getElementById('ls-rs63-count').textContent = rs63Signals.length > 0 ? `Top ${rs63Signals.length}` : '0';
+            if (rs63Signals.length === 0) {
+                rs63Panel.innerHTML = '<div class="empty-state">No RS63 signals</div>';
+            } else {
+                const rows = rs63Signals.map((s, idx) => {
+                    const rank = s.rank || (idx + 1);
+                    const rs63Color = s.rs63 > 10 ? 'var(--green)' : 'var(--text)';
+                    const rsiColor = s.rsi > 60 ? 'var(--green)' : 'var(--text)';
+                    const qty = Math.floor(buyAmt / s.price);
+                    return `
+                    <tr>
+                        <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
+                        <td class="ticker">${s.ticker}</td>
+                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td style="color:${rs63Color};font-weight:600;">+${s.rs63}%</td>
+                        <td style="color:${rsiColor};">${s.rsi}</td>
+                        <td>${s.ibs}</td>
+                        <td>${s.stop_pct}%</td>
+                        <td style="color:var(--red);">₹${s.sl_price.toLocaleString()}</td>
+                        <td style="white-space:nowrap;">
+                            ₹<input type="text" value="${buyAmt.toLocaleString('en-IN')}"
+                                style="width:75px;font-size:10px;padding:1px 3px;border:1px solid var(--border-color);border-radius:3px;background:var(--bg-secondary);color:var(--text-primary);text-align:right;"
+                                onfocus="this.value=this.value.replace(/,/g,'')"
+                                onblur="const v=parseInt(this.value)||0;this.value=v.toLocaleString('en-IN');this.nextElementSibling.textContent='('+Math.floor(v/${s.price})+')'"
+                                onchange="const v=parseInt(this.value.replace(/,/g,''))||0;this.nextElementSibling.textContent='('+Math.floor(v/${s.price})+')'"
+                            ><span style="font-size:10px;color:var(--text-muted);margin-left:3px;">(${qty})</span>
+                        </td>
+                        <td style="text-align:center;">
+                            <span class="rs63-buy-btn" style="background:var(--green);color:white;padding:2px 10px;border-radius:3px;font-size:10px;font-weight:700;cursor:pointer;"
+                                  data-ticker="${s.ticker}" data-price="${s.price}" data-sl="${s.sl_price}"
+                                  onclick="rs63PlaceBuy(this)">
+                                BUY
+                            </span>
+                        </td>
+                    </tr>`;
+                }).join('');
+                rs63Panel.innerHTML = `
+                    <table class="stock-table">
+                        <thead><tr>
+                            <th>#</th><th>Stock</th><th>Close</th>
+                            <th>RS63</th><th>RSI</th><th>IBS</th><th>StopDist</th><th>8% SL</th><th>Amount (Qty)</th><th></th>
+                        </tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+        }
+
         async function loadLiveSignalsData() {
             try {
                 const res = await fetch('/api/live-signals/data');
@@ -3039,7 +3330,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -3125,7 +3416,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -3383,41 +3674,12 @@
                 `;
             }
 
-            // Mom15 signals panel
-            const mom15Panel = document.getElementById('ls-mom15-panel');
-            const mom15Signals = data.mom15_signals || [];
-            document.getElementById('ls-mom15-count').textContent = mom15Signals.length > 0 ? `Top ${mom15Signals.length}` : '0';
-            if (mom15Signals.length === 0) {
-                mom15Panel.innerHTML = '<div class="empty-state">No Mom15 signals</div>';
-            } else {
-                const mom15Rows = mom15Signals.map((s, idx) => {
-                    const rank = s.rank || (idx + 1);
-                    const retColor12 = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
-                    const retColor6 = s.ret_6m > 0 ? 'var(--green)' : 'var(--red)';
-                    const scoreColor = s.momentum_score > 1.5 ? 'var(--green)' : s.momentum_score > 1.0 ? 'var(--text)' : 'var(--text-muted)';
-                    const betaColor = s.beta <= 0.8 ? 'var(--green)' : 'var(--text)';
-                    return `
-                    <tr>
-                        <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td style="color:${retColor12};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
-                        <td style="color:${retColor6};">${s.ret_6m > 0 ? '+' : ''}${s.ret_6m}%</td>
-                        <td>${s.volatility}%</td>
-                        <td style="color:${betaColor};">${s.beta}</td>
-                        <td style="color:${scoreColor};font-weight:600;">${s.momentum_score.toFixed(2)}</td>
-                    </tr>`;
-                }).join('');
-                mom15Panel.innerHTML = `
-                    <table class="stock-table">
-                        <thead><tr>
-                            <th>#</th><th>Stock</th><th>Close</th>
-                            <th>12m Ret</th><th>6m Ret</th><th>Vol</th><th>Beta</th><th>Mom Score</th>
-                        </tr></thead>
-                        <tbody>${mom15Rows}</tbody>
-                    </table>
-                `;
-            }
+            // Mom15 signals panel — stored globally for toggle
+            window._mom15AllSignals = data.mom15_signals || [];
+            renderMom15();
+
+            // RS63 signals panel
+            renderRS63(data);
 
             // Mom20 signals panel
             const mom20Panel = document.getElementById('ls-mom20-panel');
@@ -3667,16 +3929,20 @@
                 const res = await fetch('/api/live-signals/closed');
                 const data = await res.json();
                 const panel = document.getElementById('ls-closed-panel');
-                const closed = data.closed || [];
-                document.getElementById('ls-closed-count').textContent = closed.length;
-                if (closed.length === 0) {
+                const allClosed = data.closed || [];
+
+                // Filter by selected trade user
+                const closed = selectedTradeUser
+                    ? allClosed.filter(c => c.user_id === selectedTradeUser)
+                    : allClosed;
+                const totalCount = closed.length;
+                document.getElementById('ls-closed-count').textContent = totalCount;
+
+                if (totalCount === 0) {
                     panel.innerHTML = '<div class="empty-state">No closed trades</div>';
                 } else {
                     const fmt = (n) => Number(n).toLocaleString('en-IN', {maximumFractionDigits: 0});
-                    // Summary
-                    let totalPnl = 0;
-                    let wins = 0;
-                    let losses = 0;
+                    let totalPnl = 0, wins = 0, losses = 0;
                     closed.forEach(c => {
                         const amt = c.pnl_amount || 0;
                         totalPnl += amt;
@@ -3703,6 +3969,7 @@
                             <td style="text-align:right">${c.holding_days != null ? c.holding_days + 'd' : ''}</td>
                         </tr>`;
                     }).join('');
+
                     panel.innerHTML = `
                         <div style="display:flex;gap:12px;padding:6px 10px;font-size:11px;border-bottom:1px solid var(--border-color);align-items:center;">
                             <span style="color:var(--text-muted);">Total P&L:</span>
@@ -3735,18 +4002,24 @@
 
         function renderPositions(positions, ltps) {
             const panel = document.getElementById('ls-positions-panel');
-            document.getElementById('ls-positions-count').textContent = positions.length;
             ltps = ltps || {};
 
-            // Store for sector diversity cap in Top Picks
-            window._lsActivePositions = positions || [];
+            // Filter by selected trade user
+            const filtered = selectedTradeUser
+                ? (positions || []).filter(p => p.user_id === selectedTradeUser)
+                : (positions || []);
 
-            if (!positions || positions.length === 0) {
+            document.getElementById('ls-positions-count').textContent = filtered.length;
+
+            // Store for sector diversity cap
+            window._lsActivePositions = filtered;
+
+            if (!filtered || filtered.length === 0) {
                 panel.innerHTML = '<div class="empty-state">No active positions</div>';
                 return;
             }
 
-            const rows = positions.map(p => {
+            const rows = filtered.map(p => {
                 const userName = p.user_id
                     ? ((kiteUsers.find(u => u.config_user_id === p.user_id) || {}).config_name || p.user_id)
                     : '';
@@ -3955,7 +4228,7 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
