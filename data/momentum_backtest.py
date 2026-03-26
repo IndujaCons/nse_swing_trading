@@ -3457,31 +3457,6 @@ class MomentumBacktester:
             else:
                 print(f"  WARNING: eps_filter set but {eps_path} not found, skipping filter")
 
-        # Pre-compute RS63 for daily exit check
-        rs63_data = {}  # ticker -> {date -> rs63_5d_avg}
-        if rs63_exit:
-            try:
-                bench_rs = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
-                print(f"  RS63 exit: loading Nifty 200 benchmark ({len(bench_rs)} bars)")
-                bench_close_rs = bench_rs["Close"].astype(float)
-                for ticker, df in stock_data.items():
-                    closes_rs = df["Close"].astype(float)
-                    bench_aligned_rs = bench_close_rs.reindex(df.index, method="ffill")
-                    rs_ratio = closes_rs / bench_aligned_rs
-                    rs63_raw = (rs_ratio / rs_ratio.shift(63) - 1) * 100
-                    rs63_smooth = rs63_raw.rolling(5, min_periods=1).mean()
-                    date_vals = {}
-                    for idx in rs63_smooth.index:
-                        dt = idx.date() if hasattr(idx, 'date') else idx
-                        v = rs63_smooth[idx]
-                        if not pd.isna(v):
-                            date_vals[dt] = float(v)
-                    rs63_data[ticker] = date_vals
-                print(f"  RS63 exit: computed for {len(rs63_data)} stocks")
-            except Exception as e:
-                print(f"  WARNING: RS63 exit failed: {e}")
-                rs63_exit = False
-
         # --- Phase 2: Build common date index ---
         # Use dates where at least 100 stocks have data
         all_dates_count = {}
@@ -3764,17 +3739,14 @@ class MomentumBacktester:
         rebal_set = set(rebal_dates)
         monthly_set = set(monthly_check_dates) if regime_200dma else set()
 
-        # If fixed_sl, trailing_sl, or rs63_exit is set, check every trading day
+        # If fixed_sl or trailing_sl is set, check every trading day for SL breaches
         has_sl = fixed_sl is not None or trailing_sl is not None
-        has_daily_check = has_sl or rs63_exit
-        if has_daily_check:
+        if has_sl:
             all_action_dates = sorted(set(trading_days) | rebal_set | monthly_set)
             if fixed_sl is not None:
                 print(f"  Fixed SL: {fixed_sl*100:.0f}%")
             if trailing_sl is not None:
                 print(f"  Trailing SL: {trailing_sl*100:.0f}% from highest high")
-            if rs63_exit:
-                print(f"  RS63 exit: force sell if RS63(5d avg) < 0")
         else:
             all_action_dates = sorted(rebal_set | monthly_set)
 
@@ -3836,37 +3808,6 @@ class MomentumBacktester:
                 for t in sl_exits:
                     del portfolio[t]
 
-            # --- Daily RS63 exit check ---
-            if rs63_exit and portfolio:
-                rs63_exits = []
-                for t in list(portfolio.keys()):
-                    if t in rs63_data:
-                        rs63_val = rs63_data[t].get(rebal_day)
-                        if rs63_val is not None and rs63_val < 0:
-                            pos = portfolio[t]
-                            idx_map = date_to_iloc.get(t, {})
-                            ci = idx_map.get(rebal_day)
-                            if ci is not None:
-                                exit_price = float(stock_data[t]["Close"].iloc[ci])
-                            else:
-                                exit_price = pos["entry_price"]
-                            pnl = (exit_price - pos["entry_price"]) * pos["shares"]
-                            trades.append({
-                                "symbol": t,
-                                "strategy": "Mom30",
-                                "entry_date": pos["entry_date"],
-                                "exit_date": rebal_day,
-                                "entry_price": pos["entry_price"],
-                                "exit_price": exit_price,
-                                "shares": pos["shares"],
-                                "pnl": pnl,
-                                "exit_reason": "RS63_NEG_EXIT",
-                                "hold_days": (rebal_day - pos["entry_date"]).days,
-                            })
-                            cash += pos["shares"] * exit_price
-                            rs63_exits.append(t)
-                for t in rs63_exits:
-                    del portfolio[t]
 
             # --- 200 DMA regime check (monthly) ---
             if regime_200dma and nifty200_data is not None and rebal_day in (rebal_set | monthly_set):

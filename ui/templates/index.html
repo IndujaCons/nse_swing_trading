@@ -1117,6 +1117,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
                 <button class="strategy-tab" onclick="switchStrategy('momentum')">Backtest</button>
                 <button class="strategy-tab" onclick="switchStrategy('trade_explain')">Trade Explain</button>
+                <button class="strategy-tab" onclick="switchStrategy('goldm')">GOLDM</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -1634,7 +1635,7 @@
 
                 <div class="panel ls-mom15-signals">
                     <div class="panel-header">
-                        <span class="panel-title" style="color:#00bcd4;">Mom15 — Nifty200 Momentum (2-Monthly, 30/30/40, Beta≤1.0)</span>
+                        <span class="panel-title" style="color:#00bcd4;">Mom15 — Nifty200 Momentum (2-Monthly, 50/50 12m+3m, Beta≤1.0)</span>
                         <label style="margin-left:12px;font-size:11px;cursor:pointer;color:var(--text-muted);">
                             <input type="checkbox" id="mom15-eps-filter" onchange="renderMom15()" checked>
                             EPS Filter (TTM&gt;0%)
@@ -1797,6 +1798,96 @@
                 </div>
                 <div id="trade-explain-content">
                     <div class="empty-state">Select a stock, strategy, and entry date to explain a trade</div>
+                </div>
+            </div>
+
+            <!-- GOLDM Tab -->
+            <div class="hidden" id="goldm-panels">
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+
+                    <!-- Left: Status + Controls -->
+                    <div style="flex:1; min-width:400px; display:flex; flex-direction:column; gap:10px;">
+
+                        <!-- Status Card -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <span class="panel-title" style="color:#ffd700;">GOLDM ORB — MCX Gold Mini</span>
+                                <button class="btn" onclick="goldmScan()" style="font-size:11px;padding:2px 10px;">Scan</button>
+                            </div>
+                            <div class="panel-body" id="goldm-status" style="padding:10px;">
+                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-size:12px;">
+                                    <div><span style="color:var(--text-muted);">OR High</span><br><b id="gm-or-high">—</b></div>
+                                    <div><span style="color:var(--text-muted);">OR Low</span><br><b id="gm-or-low">—</b></div>
+                                    <div><span style="color:var(--text-muted);">OR Range</span><br><b id="gm-or-range">—</b> <span id="gm-or-pct" style="font-size:10px;color:var(--text-muted);"></span></div>
+                                    <div><span style="color:var(--text-muted);">LTP</span><br><b id="gm-ltp" style="font-size:14px;">—</b></div>
+                                    <div><span style="color:var(--text-muted);">Signal</span><br><b id="gm-signal" style="font-size:14px;">—</b></div>
+                                    <div><span style="color:var(--text-muted);">Status</span><br><b id="gm-status-text">Waiting</b></div>
+                                </div>
+                                <div style="margin-top:8px; font-size:10px; color:var(--text-muted);">
+                                    OR=30min | Target=1.5× | SL=1.0× | Filter≤0.3% | ₹220/lot | 15-min bars
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Entry Controls -->
+                        <div class="panel" id="gm-entry-panel" style="display:none;">
+                            <div class="panel-header">
+                                <span class="panel-title" style="color:var(--green);">Signal Active</span>
+                            </div>
+                            <div class="panel-body" style="padding:10px; display:flex; gap:10px; align-items:center;">
+                                <span id="gm-signal-side" style="font-weight:700; font-size:16px;"></span>
+                                <span style="font-size:11px; color:var(--text-muted);">Entry: ₹<span id="gm-signal-entry"></span> | Target: ₹<span id="gm-signal-target"></span> | SL: ₹<span id="gm-signal-sl"></span></span>
+                                <span style="margin-left:auto;">
+                                    Lots: <input type="number" id="gm-lots" value="1" min="1" max="10" style="width:40px;font-size:12px;padding:2px;border:1px solid var(--border-color);border-radius:3px;background:var(--bg-secondary);color:var(--text-primary);">
+                                </span>
+                                <button onclick="goldmBuy()" style="background:var(--green);color:white;border:none;padding:6px 16px;border-radius:4px;font-weight:700;cursor:pointer;">BUY</button>
+                            </div>
+                        </div>
+
+                        <!-- Active Position -->
+                        <div class="panel" id="gm-position-panel" style="display:none;">
+                            <div class="panel-header">
+                                <span class="panel-title" style="color:#ffd700;">Active Position</span>
+                                <button onclick="goldmExit()" style="background:var(--red);color:white;border:none;padding:3px 12px;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;">EXIT</button>
+                            </div>
+                            <div class="panel-body" style="padding:10px;">
+                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; font-size:12px;">
+                                    <div><span style="color:var(--text-muted);">Side</span><br><b id="gm-pos-side">—</b></div>
+                                    <div><span style="color:var(--text-muted);">Entry</span><br><b id="gm-pos-entry">—</b></div>
+                                    <div><span style="color:var(--text-muted);">Target</span><br><b id="gm-pos-target" style="color:var(--green);">—</b></div>
+                                    <div><span style="color:var(--text-muted);">SL</span><br><b id="gm-pos-sl" style="color:var(--red);">—</b></div>
+                                    <div><span style="color:var(--text-muted);">LTP</span><br><b id="gm-pos-ltp">—</b></div>
+                                    <div><span style="color:var(--text-muted);">P&L/gram</span><br><b id="gm-pos-pnl-gram">—</b></div>
+                                    <div><span style="color:var(--text-muted);">P&L (lot)</span><br><b id="gm-pos-pnl" style="font-size:14px;">—</b></div>
+                                    <div><span style="color:var(--text-muted);">Lots</span><br><b id="gm-pos-lots">—</b></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Closed Trades -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <span class="panel-title">Closed Trades</span>
+                                <span class="panel-count" id="gm-closed-count">0</span>
+                            </div>
+                            <div class="panel-body" id="gm-closed-panel">
+                                <div class="empty-state">No closed trades</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Chart -->
+                    <div style="flex:1; min-width:400px;">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <span class="panel-title" style="color:#ffd700;">Today's Chart (15-min)</span>
+                            </div>
+                            <div class="panel-body" id="gm-chart-body" style="padding:8px; min-height:300px;">
+                                <div class="empty-state">Click Scan to load chart</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -2598,6 +2689,7 @@
             else if (strategy === 'live_signals') tabs[2].classList.add('active');
             else if (strategy === 'momentum') tabs[3].classList.add('active');
             else if (strategy === 'trade_explain') tabs[4].classList.add('active');
+            else if (strategy === 'goldm') tabs[5].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -2618,6 +2710,7 @@
                 }
             }
             document.getElementById('trade-explain-results').classList.toggle('hidden', strategy !== 'trade_explain');
+            document.getElementById('goldm-panels').classList.toggle('hidden', strategy !== 'goldm');
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
@@ -2803,7 +2896,7 @@
                 selectedTradeUser = null;
             }
 
-            sel.onchange = () => { selectedTradeUser = sel.value; loadLivePositions(); loadClosedTrades(); };
+            sel.onchange = () => { selectedTradeUser = sel.value; loadLivePositions(); loadExitSignals(); loadClosedTrades(); };
         }
 
         async function handleLogin(userId) {
@@ -4048,6 +4141,18 @@
                         '<span style="color:var(--green);">Stage 2 (2/3 out)</span>',
                     ];
                     stageLabel = stageLabels[Math.min(stage, 2)];
+                } else if (p.strategy === 'RS63') {
+                    // RS63: 8% SL, no stages, no T1/T2
+                    sl = (p.metadata || {}).sl_price || Math.round(ep * 0.92);
+                    t1 = null;
+                    t2 = null;
+                    stageLabel = '<span style="color:var(--text-muted);">--</span>';
+                } else if (p.strategy === 'MOM15') {
+                    // MOM15: no SL, no stages, hold until rebalance
+                    sl = null;
+                    t1 = null;
+                    t2 = null;
+                    stageLabel = '<span style="color:var(--text-muted);">Hold</span>';
                 } else {
                     // T: 3-stage
                     sl = Math.round(ep * 0.95);
@@ -4079,19 +4184,22 @@
                 return `
                 <tr>
                     <td class="ticker">${p.ticker}</td>
-                    <td>${p.strategy === 'J'
-                        ? '<span style="color:var(--green);font-weight:700;">J</span>'
-                        : p.strategy === 'R'
-                        ? '<span style="color:#ab47bc;font-weight:700;">R</span>'
-                        : '<span style="color:var(--blue);font-weight:700;">T</span>'}</td>
+                    <td>${
+                        p.strategy === 'J' ? '<span style="color:var(--green);font-weight:700;">J</span>'
+                        : p.strategy === 'R' ? '<span style="color:#ab47bc;font-weight:700;">R</span>'
+                        : p.strategy === 'RS63' ? '<span style="color:#e91e63;font-weight:700;">RS63</span>'
+                        : p.strategy === 'MOM15' ? '<span style="color:#00bcd4;font-weight:700;">Mom15</span>'
+                        : p.strategy === 'MW' ? '<span style="color:#e67e22;font-weight:700;">MW</span>'
+                        : '<span style="color:var(--blue);font-weight:700;">' + p.strategy + '</span>'
+                    }</td>
                     <td style="font-size:10px;color:var(--text-muted);">${userName}</td>
                     <td>${p.entry_date}</td>
                     <td class="price">${ep.toLocaleString()}</td>
                     ${ltpCell}
                     ${pnlCell}
-                    <td style="color:var(--red);">${sl.toLocaleString()} <span style="font-size:10px;">(${slPct}%)</span></td>
-                    <td class="price">${t1.toLocaleString()}</td>
-                    <td class="price">${t2.toLocaleString()}</td>
+                    <td style="color:var(--red);">${sl ? sl.toLocaleString() + ` <span style="font-size:10px;">(${slPct}%)</span>` : '<span style="color:var(--text-muted);">--</span>'}</td>
+                    <td class="price">${t1 ? t1.toLocaleString() : '<span style="color:var(--text-muted);">--</span>'}</td>
+                    <td class="price">${t2 ? t2.toLocaleString() : '<span style="color:var(--text-muted);">--</span>'}</td>
                     <td>${stageLabel}</td>
                     <td>${p.remaining_shares}/${p.shares}</td>
                     <td><button class="trade-btn" style="background:var(--red);color:#fff;padding:2px 7px;" onclick="forceExitPosition('${p.id}', this)" title="Sell on Zerodha & remove">Exit</button></td>
@@ -4164,14 +4272,20 @@
 
         function renderExitSignals(exits) {
             const panel = document.getElementById('ls-exits-panel');
-            document.getElementById('ls-exits-count').textContent = exits.length;
 
-            if (!exits || exits.length === 0) {
+            // Filter by selected trade user
+            const filtered = selectedTradeUser
+                ? (exits || []).filter(e => e.user_id === selectedTradeUser)
+                : (exits || []);
+            document.getElementById('ls-exits-count').textContent = filtered.length;
+
+            const exits_ = filtered;
+            if (!exits_ || exits_.length === 0) {
                 panel.innerHTML = '<div class="empty-state">No exit signals</div>';
                 return;
             }
 
-            const rows = exits.map(e => {
+            const rows = exits_.map(e => {
                 const pnlClass = e.pnl_pct >= 0 ? 'positive' : 'negative';
                 const pnlSign = e.pnl_pct >= 0 ? '+' : '';
                 return `
@@ -5107,6 +5221,324 @@
             toast.textContent = message;
             toast.className = `toast show ${type}`;
             setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ===== GOLDM Paper Trading =====
+        let _goldmLastScan = null;
+
+        async function goldmScan() {
+            const uid = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            if (!uid) { showToast('No user connected', 'error'); return; }
+
+            document.getElementById('gm-status-text').textContent = 'Scanning...';
+            try {
+                const res = await fetch('/api/goldm/scan', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: uid})
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.error || 'Scan failed', 'error');
+                    document.getElementById('gm-status-text').textContent = 'Error';
+                    return;
+                }
+                _goldmLastScan = data;
+                goldmRender(data);
+            } catch (e) {
+                showToast('Scan error: ' + e.message, 'error');
+                document.getElementById('gm-status-text').textContent = 'Error';
+            }
+        }
+
+        function goldmRender(data) {
+            // OR info
+            const or = data.or;
+            if (or) {
+                document.getElementById('gm-or-high').textContent = '₹' + or.or_high.toLocaleString('en-IN');
+                document.getElementById('gm-or-low').textContent = '₹' + or.or_low.toLocaleString('en-IN');
+                document.getElementById('gm-or-range').textContent = '₹' + or.or_range.toLocaleString('en-IN');
+                document.getElementById('gm-or-pct').textContent = '(' + or.or_range_pct + '%)';
+            }
+            if (data.current_price) {
+                document.getElementById('gm-ltp').textContent = '₹' + data.current_price.toLocaleString('en-IN');
+            }
+
+            // Signal
+            const sig = data.signal;
+            const sigEl = document.getElementById('gm-signal');
+            const entryPanel = document.getElementById('gm-entry-panel');
+            if (or && or.skip) {
+                sigEl.textContent = 'SKIP';
+                sigEl.style.color = 'var(--text-muted)';
+                document.getElementById('gm-status-text').textContent = 'Range too wide';
+                entryPanel.style.display = 'none';
+            } else if (sig) {
+                sigEl.textContent = sig.side;
+                sigEl.style.color = sig.side === 'LONG' ? 'var(--green)' : 'var(--red)';
+                document.getElementById('gm-status-text').textContent = 'Signal!';
+                // Show entry panel
+                entryPanel.style.display = '';
+                document.getElementById('gm-signal-side').textContent = sig.side;
+                document.getElementById('gm-signal-side').style.color = sig.side === 'LONG' ? 'var(--green)' : 'var(--red)';
+                document.getElementById('gm-signal-entry').textContent = sig.entry.toLocaleString('en-IN');
+                document.getElementById('gm-signal-target').textContent = sig.target.toLocaleString('en-IN');
+                document.getElementById('gm-signal-sl').textContent = sig.sl.toLocaleString('en-IN');
+            } else if (data.today && data.today.traded) {
+                sigEl.textContent = 'Traded';
+                sigEl.style.color = 'var(--text-muted)';
+                document.getElementById('gm-status-text').textContent = 'Done for today';
+                entryPanel.style.display = 'none';
+            } else {
+                sigEl.textContent = 'Waiting';
+                sigEl.style.color = 'var(--text-muted)';
+                document.getElementById('gm-status-text').textContent = or ? 'No breakout yet' : 'No data';
+                entryPanel.style.display = 'none';
+            }
+
+            // Active position
+            const posPanel = document.getElementById('gm-position-panel');
+            const pos = data.active;
+            if (pos) {
+                posPanel.style.display = '';
+                document.getElementById('gm-pos-side').textContent = pos.side;
+                document.getElementById('gm-pos-side').style.color = pos.side === 'LONG' ? 'var(--green)' : 'var(--red)';
+                document.getElementById('gm-pos-entry').textContent = '₹' + pos.entry_price.toLocaleString('en-IN');
+                document.getElementById('gm-pos-target').textContent = '₹' + pos.target.toLocaleString('en-IN');
+                document.getElementById('gm-pos-sl').textContent = '₹' + pos.sl.toLocaleString('en-IN');
+                document.getElementById('gm-pos-lots').textContent = pos.lots;
+
+                if (data.current_price) {
+                    const ltp = data.current_price;
+                    document.getElementById('gm-pos-ltp').textContent = '₹' + ltp.toLocaleString('en-IN');
+                    const pnlGram = pos.side === 'LONG' ? ltp - pos.entry_price : pos.entry_price - ltp;
+                    const pnlLot = pnlGram * pos.lot_size * pos.lots - 220 * pos.lots;
+                    document.getElementById('gm-pos-pnl-gram').textContent = '₹' + pnlGram.toFixed(0);
+                    document.getElementById('gm-pos-pnl-gram').style.color = pnlGram >= 0 ? 'var(--green)' : 'var(--red)';
+                    document.getElementById('gm-pos-pnl').textContent = '₹' + pnlLot.toLocaleString('en-IN', {maximumFractionDigits:0});
+                    document.getElementById('gm-pos-pnl').style.color = pnlLot >= 0 ? 'var(--green)' : 'var(--red)';
+                }
+
+                // Check exit signal
+                if (data.exit_signal) {
+                    showToast('GOLDM EXIT: ' + data.exit_signal, 'error');
+                }
+            } else {
+                posPanel.style.display = 'none';
+            }
+
+            // Closed trades
+            goldmRenderClosed(data);
+
+            // Chart
+            if (data.candles && data.candles.length > 0) {
+                goldmDrawChart(data);
+            }
+        }
+
+        function goldmRenderClosed(data) {
+            // Load from status endpoint for full history
+            const uid = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            fetch('/api/goldm/status?user_id=' + uid)
+                .then(r => r.json())
+                .then(sdata => {
+                    if (!sdata.success) return;
+                    const closed = sdata.closed || [];
+                    const panel = document.getElementById('gm-closed-panel');
+                    document.getElementById('gm-closed-count').textContent = closed.length;
+                    if (closed.length === 0) {
+                        panel.innerHTML = '<div class="empty-state">No closed trades</div>';
+                        return;
+                    }
+                    const totalPnl = closed.reduce((s, c) => s + (c.pnl || 0), 0);
+                    const wins = closed.filter(c => c.pnl > 0).length;
+                    const rows = closed.slice().reverse().map(c => {
+                        const pnlClass = c.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                        return `<tr>
+                            <td>${c.exit_date || c.entry_date}</td>
+                            <td style="color:${c.side==='LONG'?'var(--green)':'var(--red)'}; font-weight:600;">${c.side}</td>
+                            <td>₹${(c.entry_price||0).toLocaleString('en-IN')}</td>
+                            <td>₹${(c.exit_price||0).toLocaleString('en-IN')}</td>
+                            <td class="${pnlClass}" style="font-weight:600;">₹${(c.pnl||0).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+                            <td>${c.reason || ''}</td>
+                        </tr>`;
+                    }).join('');
+                    panel.innerHTML = `
+                        <div style="padding:6px 10px;font-size:11px;border-bottom:1px solid var(--border-color);display:flex;gap:12px;">
+                            <span class="${totalPnl>=0?'pnl-positive':'pnl-negative'}" style="font-weight:700;">
+                                Total: ₹${totalPnl.toLocaleString('en-IN',{maximumFractionDigits:0})}
+                            </span>
+                            <span style="color:var(--text-muted);">W:${wins} L:${closed.length-wins}</span>
+                        </div>
+                        <table class="stock-table">
+                            <thead><tr><th>Date</th><th>Side</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Reason</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>`;
+                });
+        }
+
+        function goldmDrawChart(data) {
+            const body = document.getElementById('gm-chart-body');
+            body.innerHTML = '<canvas id="gm-chart-canvas" style="width:100%;height:300px;cursor:crosshair;"></canvas>';
+            const canvas = document.getElementById('gm-chart-canvas');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = 300 * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = '300px';
+
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            const pad = {l: 60*dpr, r: 10*dpr, t: 20*dpr, b: 25*dpr};
+            const cw = W - pad.l - pad.r;
+            const ch = H - pad.t - pad.b;
+
+            const candles = data.candles;
+            const or = data.or;
+            const pos = data.active;
+            const allPrices = candles.flatMap(c => [c.high, c.low]);
+            if (or) { allPrices.push(or.or_high, or.or_low); }
+            if (pos) { allPrices.push(pos.target, pos.sl); }
+            const minP = Math.min(...allPrices) * 0.999;
+            const maxP = Math.max(...allPrices) * 1.001;
+            const pRange = maxP - minP;
+
+            const toX = i => pad.l + (i / Math.max(candles.length - 1, 1)) * cw;
+            const toY = p => pad.t + ch - ((p - minP) / pRange) * ch;
+            const barW = Math.max(2, cw / candles.length * 0.6);
+
+            // Grid
+            ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+            ctx.lineWidth = 1;
+            for (let j = 0; j < 5; j++) {
+                const y = pad.t + j * ch / 4;
+                ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+                const val = maxP - j * pRange / 4;
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.font = `${9*dpr}px monospace`;
+                ctx.textAlign = 'right';
+                ctx.fillText('₹' + Math.round(val).toLocaleString('en-IN'), pad.l - 4*dpr, y + 3*dpr);
+            }
+
+            // Candlesticks
+            candles.forEach((c, i) => {
+                const x = toX(i);
+                const isGreen = c.close >= c.open;
+                ctx.fillStyle = isGreen ? '#16a34a' : '#dc2626';
+                ctx.strokeStyle = isGreen ? '#16a34a' : '#dc2626';
+                ctx.lineWidth = 1;
+                // Wick
+                ctx.beginPath();
+                ctx.moveTo(x, toY(c.high));
+                ctx.lineTo(x, toY(c.low));
+                ctx.stroke();
+                // Body
+                const bodyTop = toY(Math.max(c.open, c.close));
+                const bodyBot = toY(Math.min(c.open, c.close));
+                ctx.fillRect(x - barW/2, bodyTop, barW, Math.max(bodyBot - bodyTop, 1));
+            });
+
+            // OR lines
+            if (or) {
+                ctx.setLineDash([6, 4]);
+                ctx.lineWidth = 1.5;
+                // OR High
+                ctx.strokeStyle = 'rgba(76,175,80,0.7)';
+                const yH = toY(or.or_high);
+                ctx.beginPath(); ctx.moveTo(pad.l, yH); ctx.lineTo(W-pad.r, yH); ctx.stroke();
+                ctx.fillStyle = 'rgba(76,175,80,0.7)';
+                ctx.font = `bold ${8*dpr}px monospace`;
+                ctx.textAlign = 'left';
+                ctx.fillText('OR High ₹' + or.or_high.toLocaleString('en-IN'), pad.l + 4, yH - 4);
+                // OR Low
+                ctx.strokeStyle = 'rgba(244,67,54,0.7)';
+                const yL = toY(or.or_low);
+                ctx.beginPath(); ctx.moveTo(pad.l, yL); ctx.lineTo(W-pad.r, yL); ctx.stroke();
+                ctx.fillStyle = 'rgba(244,67,54,0.7)';
+                ctx.fillText('OR Low ₹' + or.or_low.toLocaleString('en-IN'), pad.l + 4, yL + 12);
+                ctx.setLineDash([]);
+            }
+
+            // Target/SL lines for active position
+            if (pos) {
+                ctx.setLineDash([3, 3]);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = '#16a34a';
+                const yT = toY(pos.target);
+                ctx.beginPath(); ctx.moveTo(pad.l, yT); ctx.lineTo(W-pad.r, yT); ctx.stroke();
+                ctx.fillStyle = '#16a34a';
+                ctx.font = `${7*dpr}px monospace`;
+                ctx.fillText('TGT ₹' + pos.target.toLocaleString('en-IN'), W-pad.r-80*dpr, yT - 3);
+
+                ctx.strokeStyle = '#dc2626';
+                const yS = toY(pos.sl);
+                ctx.beginPath(); ctx.moveTo(pad.l, yS); ctx.lineTo(W-pad.r, yS); ctx.stroke();
+                ctx.fillStyle = '#dc2626';
+                ctx.fillText('SL ₹' + pos.sl.toLocaleString('en-IN'), W-pad.r-80*dpr, yS + 10);
+                ctx.setLineDash([]);
+
+                // Entry line
+                ctx.strokeStyle = '#ffd700';
+                ctx.lineWidth = 1.5;
+                const yE = toY(pos.entry_price);
+                ctx.beginPath(); ctx.moveTo(pad.l, yE); ctx.lineTo(W-pad.r, yE); ctx.stroke();
+            }
+        }
+
+        async function goldmBuy() {
+            if (!_goldmLastScan || !_goldmLastScan.signal) {
+                showToast('No signal to buy', 'error'); return;
+            }
+            const uid = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            const sig = _goldmLastScan.signal;
+            const lots = parseInt(document.getElementById('gm-lots').value) || 1;
+
+            const ok = confirm(`${sig.side} GOLDM\n${lots} lot(s) @ ₹${sig.entry.toLocaleString('en-IN')}\nTarget: ₹${sig.target.toLocaleString('en-IN')}\nSL: ₹${sig.sl.toLocaleString('en-IN')}`);
+            if (!ok) return;
+
+            try {
+                const res = await fetch('/api/goldm/buy', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: uid, signal: sig, lots})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Entered ${sig.side} GOLDM ${lots} lot(s)`, 'success');
+                    goldmScan();
+                } else {
+                    showToast(data.error || 'Buy failed', 'error');
+                }
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function goldmExit() {
+            const uid = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            const ltp = _goldmLastScan && _goldmLastScan.current_price;
+            if (!ltp) { showToast('No current price', 'error'); return; }
+
+            const ok = confirm(`Exit GOLDM @ ₹${ltp.toLocaleString('en-IN')}?`);
+            if (!ok) return;
+
+            try {
+                const res = await fetch('/api/goldm/exit', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: uid, exit_price: ltp, reason: 'MANUAL'})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Exited GOLDM: ₹${(data.trade.pnl||0).toLocaleString('en-IN')}`, data.trade.pnl >= 0 ? 'success' : 'error');
+                    goldmScan();
+                } else {
+                    showToast(data.error || 'Exit failed', 'error');
+                }
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
         }
     </script>
 </body>

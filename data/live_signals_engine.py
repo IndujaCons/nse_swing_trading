@@ -986,8 +986,8 @@ class LiveSignalsEngine:
                 z_12 = (mr_12_arr - mr_12_arr.mean()) / mr_12_arr.std() if mr_12_arr.std() > 0 else np.zeros_like(mr_12_arr)
                 z_6 = (mr_6_arr - mr_6_arr.mean()) / mr_6_arr.std() if mr_6_arr.std() > 0 else np.zeros_like(mr_6_arr)
                 z_3 = (mr_3_arr - mr_3_arr.mean()) / mr_3_arr.std() if mr_3_arr.std() > 0 else np.zeros_like(mr_3_arr)
-                # 30/30/40 weighting (frozen: heavier on recent 3m)
-                weighted_z = 0.30 * z_12 + 0.30 * z_6 + 0.40 * z_3
+                # 50/0/50 weighting (frozen: 12m + 3m, no 6m)
+                weighted_z = 0.50 * z_12 + 0.00 * z_6 + 0.50 * z_3
                 for idx_m, d in enumerate(mom15_pool):
                     z = weighted_z[idx_m]
                     d["norm_score_15"] = (1 + z) if z >= 0 else 1 / (1 - z)

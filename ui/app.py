@@ -45,11 +45,15 @@ kite_users = get_kite_users()
 brokers = {}       # {user_id: KiteBroker}
 user_engines = {}  # {user_id: LiveSignalsEngine}
 
+from data.goldm_engine import GoldmEngine
+goldm_engines = {}  # {user_id: GoldmEngine}
+
 for _u in kite_users:
     brokers[_u["id"]] = KiteBroker(
         user_id=_u["id"], name=_u["name"],
         api_key=_u["api_key"], api_secret=_u["api_secret"])
     user_engines[_u["id"]] = LiveSignalsEngine(user_id=_u["id"])
+    goldm_engines[_u["id"]] = GoldmEngine(user_id=_u["id"])
 
 # Track which user_id initiated the most recent login popup (for OAuth callback)
 _pending_login_user_id = None
@@ -1692,6 +1696,88 @@ def clear_paper_trades():
         "success": True,
         "message": "Paper trades cleared"
     })
+
+
+# ============ GOLDM Paper Trading ============
+
+@app.route("/api/goldm/scan", methods=["POST"])
+def goldm_scan():
+    """Scan GOLDM: fetch candles, compute OR, check signals + exits."""
+    user_id = request.json.get("user_id") if request.is_json else None
+    if not user_id:
+        user_id = list(brokers.keys())[0] if brokers else None
+    if not user_id or user_id not in brokers:
+        return jsonify({"success": False, "error": "No user connected"})
+
+    broker = brokers[user_id]
+    if not broker.connected:
+        return jsonify({"success": False, "error": "Kite not connected"})
+
+    engine = goldm_engines.get(user_id)
+    if not engine:
+        return jsonify({"success": False, "error": "No GOLDM engine"})
+
+    result = engine.scan(broker.kite)
+    if "error" in result and result.get("or") is None:
+        return jsonify({"success": False, "error": result["error"]})
+
+    return jsonify({"success": True, **result})
+
+
+@app.route("/api/goldm/buy", methods=["POST"])
+def goldm_buy():
+    """Paper buy GOLDM position."""
+    data = request.json
+    user_id = data.get("user_id", list(brokers.keys())[0] if brokers else None)
+    signal = data.get("signal")
+    lots = data.get("lots", 1)
+
+    if not signal:
+        return jsonify({"success": False, "error": "No signal provided"})
+
+    engine = goldm_engines.get(user_id)
+    if not engine:
+        return jsonify({"success": False, "error": "No GOLDM engine"})
+
+    pos, err = engine.add_position(signal, lots=lots)
+    if err:
+        return jsonify({"success": False, "error": err})
+
+    return jsonify({"success": True, "position": pos})
+
+
+@app.route("/api/goldm/exit", methods=["POST"])
+def goldm_exit():
+    """Exit GOLDM position."""
+    data = request.json
+    user_id = data.get("user_id", list(brokers.keys())[0] if brokers else None)
+    exit_price = data.get("exit_price")
+    reason = data.get("reason", "MANUAL")
+
+    if not exit_price:
+        return jsonify({"success": False, "error": "No exit_price"})
+
+    engine = goldm_engines.get(user_id)
+    if not engine:
+        return jsonify({"success": False, "error": "No GOLDM engine"})
+
+    trade, err = engine.close_position(exit_price, reason=reason)
+    if err:
+        return jsonify({"success": False, "error": err})
+
+    return jsonify({"success": True, "trade": trade})
+
+
+@app.route("/api/goldm/status", methods=["GET"])
+def goldm_status():
+    """Get GOLDM status: OR, position, closed trades."""
+    user_id = request.args.get("user_id", list(brokers.keys())[0] if brokers else None)
+    engine = goldm_engines.get(user_id)
+    if not engine:
+        return jsonify({"success": False, "error": "No GOLDM engine"})
+
+    status = engine.get_status()
+    return jsonify({"success": True, **status})
 
 
 # ============ Run Server ============
