@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETF Core — Momentum Rotation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #e8f0f2;
+            --bg-white: #f0f5f7;
+            --bg-card: #e3ecef;
+            --text-primary: #2c3e50;
+            --text-secondary: #546e7a;
+            --text-muted: #78909c;
+            --border-color: #cfd8dc;
+            --green: #27ae60;
+            --green-light: #d5f5e3;
+            --blue: #3498db;
+            --blue-light: #d6eaf8;
+            --red: #e74c3c;
+            --red-light: #fadbd8;
+            --orange: #e67e22;
+            --orange-light: #fdebd0;
+            --yellow: #f1c40f;
+            --yellow-light: #fef9e7;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Consolas', 'Menlo', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .header-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .last-updated {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .back-link {
+            font-size: 11px;
+            color: var(--blue);
+            text-decoration: none;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        .scan-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--green);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .scan-btn:hover { background: #219a52; }
+        .scan-btn.loading { opacity: 0.6; cursor: wait; }
+        .scan-btn.loading .scan-icon { animation: spin 1s linear infinite; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Layout */
+        .page-body {
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Signal Row */
+        .signals-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .signal-panel {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .signal-panel-header {
+            padding: 7px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .signal-panel-header.exit { background: rgba(231,76,60,0.08); }
+        .signal-panel-header.entry { background: rgba(39,174,96,0.08); }
+        .signal-panel-header.reentry { background: rgba(241,196,15,0.08); }
+
+        .signal-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .signal-title.exit { color: var(--red); }
+        .signal-title.entry { color: var(--green); }
+        .signal-title.reentry { color: var(--orange); }
+
+        .signal-count {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 1px 7px;
+            border-radius: 10px;
+        }
+
+        .signal-body {
+            padding: 8px 12px;
+            min-height: 36px;
+        }
+
+        .signal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+        .signal-item:last-child { border-bottom: none; }
+
+        .signal-sym {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .signal-detail {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .signal-price {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Two-column layout */
+        .main-row {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 10px;
+        }
+
+        /* Watchlist Table */
+        .watchlist-section {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 7px 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .section-body {
+            overflow-y: auto;
+            max-height: 420px;
+        }
+
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .stock-table th {
+            text-align: left;
+            padding: 6px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+        }
+
+        .stock-table td {
+            padding: 5px 8px;
+            font-size: 11px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stock-table tr:last-child td { border-bottom: none; }
+        .stock-table tr:hover { background: var(--bg-card); cursor: pointer; }
+        .stock-table tr.selected-row { background: var(--blue-light); }
+
+        .rank-badge {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .rank-badge.top5 { background: var(--green); color: white; }
+        .rank-badge.buffer { background: var(--orange-light); color: var(--orange); border: 1px solid var(--orange); }
+        .rank-badge.low { background: var(--bg-card); color: var(--text-muted); }
+
+        .ticker { font-weight: 700; color: var(--text-primary); }
+
+        .rs-val { font-weight: 600; }
+        .rs-val.pos { color: var(--green); }
+        .rs-val.neg { color: var(--red); }
+
+        .trend-ok { color: var(--green); font-weight: 700; }
+        .trend-no { color: var(--red); font-weight: 700; }
+
+        .signal-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .badge-entry    { background: var(--green-light); color: var(--green); }
+        .badge-exit1    { background: var(--red-light); color: var(--red); }
+        .badge-exit2    { background: var(--red-light); color: var(--red); }
+        .badge-exit3    { background: #3d1a1a; color: #ff6b6b; border: 1px solid #e53935; font-weight:800; }
+        .badge-exit4    { background: #3d2a0a; color: #f97316; border: 1px solid #f97316; font-weight:800; }
+        .badge-hold     { background: var(--blue-light); color: var(--blue); }
+        .badge-buffer   { background: var(--orange-light); color: var(--orange); }
+        .badge-watchlist{ background: var(--yellow-light); color: #b7950b; border: 1px solid var(--yellow); }
+        .badge-reentry  { background: var(--yellow-light); color: #7d6608; border: 1px solid #e2b714; font-weight:800;}
+        .badge-ranked   { background: var(--bg-card); color: var(--text-muted); }
+
+        .action-btn {
+            padding: 3px 8px;
+            font-family: inherit;
+            font-size: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            border: 1px solid;
+        }
+        .action-btn.buy { background: var(--green-light); border-color: var(--green); color: var(--green); }
+        .action-btn.sell { background: var(--red-light); border-color: var(--red); color: var(--red); }
+
+        /* Chart Panel */
+        .chart-section {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-header {
+            padding: 7px 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .period-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .period-btn {
+            padding: 3px 8px;
+            font-family: inherit;
+            font-size: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        .period-btn:hover { background: var(--bg-card); }
+        .period-btn.active { background: var(--green); color: white; border-color: var(--green); font-weight: 700; }
+
+        .chart-body {
+            flex: 1;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .chart-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* Misc */
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .pnl-positive { color: var(--green); font-weight: 700; }
+        .pnl-negative { color: var(--red); font-weight: 700; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 16px;
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+        }
+        .toast.show { display: block; animation: slideIn 0.3s ease; }
+        .toast.success { border-left: 3px solid var(--green); }
+        .toast.error { border-left: 3px solid var(--red); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-card); }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #bbb; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div>
+        <h1>ETF CORE — MOMENTUM ROTATION</h1>
+        <div class="header-sub">44-ETF universe · RS63 vs Nifty 200 · Top 5 · LIQUIDBEES idle</div>
+    </div>
+    <div class="header-right">
+        <a href="/" class="back-link">← Dashboard</a>
+        <span class="last-updated" id="last-updated">Not scanned</span>
+        <span id="vix-badge" style="font-size:11px;margin-left:6px;"></span>
+        <button class="scan-btn" id="scan-btn" onclick="etfScan()">
+            <svg class="scan-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Scan
+        </button>
+    </div>
+</div>
+
+<div class="page-body">
+
+    <!-- Main Row: Watchlist + Chart (TOP) -->
+    <div class="main-row">
+
+        <!-- ETF Watchlist Table -->
+        <div class="watchlist-section">
+            <div class="section-header">
+                <span class="section-title">ETF Universe — Ranked</span>
+                <span style="font-size:10px; color:var(--text-muted);">Click row to load chart</span>
+            </div>
+            <div class="section-body" id="watchlist-body">
+                <div class="empty-state">Press Scan to load rankings</div>
+            </div>
+        </div>
+
+        <!-- Chart Panel -->
+        <div class="chart-section">
+            <div class="chart-header">
+                <span class="chart-title" id="etf-chart-title">Select an ETF</span>
+                <div class="period-btns">
+                    <button class="period-btn" onclick="switchEtfPeriod('1mo')">1M</button>
+                    <button class="period-btn" onclick="switchEtfPeriod('3mo')">3M</button>
+                    <button class="period-btn active" onclick="switchEtfPeriod('6mo')">6M</button>
+                    <button class="period-btn" onclick="switchEtfPeriod('1y')">1Y</button>
+                </div>
+            </div>
+            <div class="chart-body" id="etf-chart-body">
+                <div class="chart-placeholder">Click a row in the ETF table to load chart</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Row: Entered | Exit Signals | Closed Trades -->
+    <div class="signals-row">
+
+        <!-- Entered (Active Positions) -->
+        <div class="signal-panel">
+            <div class="signal-panel-header entry" style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="signal-title entry">Entered</span>
+                    <span class="signal-count" id="entered-count">0</span>
+                </div>
+                <button onclick="openRecordTrade()" title="Record a manually executed trade"
+                        style="background:var(--green);color:#fff;border:none;border-radius:5px;
+                               padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;line-height:1.6;">+ Add</button>
+            </div>
+            <div class="signal-body" id="entered-body">
+                <div class="empty-state" style="padding:10px;">No active positions</div>
+            </div>
+        </div>
+
+        <!-- Exit Signals -->
+        <div class="signal-panel">
+            <div class="signal-panel-header exit">
+                <span class="signal-title exit">Exit Signals</span>
+                <span class="signal-count" id="exit-count">0</span>
+            </div>
+            <div class="signal-body" id="exit-signals-body">
+                <div class="empty-state" style="padding:10px;">No exit signals</div>
+            </div>
+        </div>
+
+        <!-- Closed Trades -->
+        <div class="signal-panel">
+            <div class="signal-panel-header" style="background:rgba(52,152,219,0.08);">
+                <span class="signal-title" style="color:var(--blue);">Closed Trades</span>
+                <span class="signal-count" id="history-summary"></span>
+            </div>
+            <div class="signal-body" style="padding:0; max-height:220px; overflow-y:auto;" id="history-body">
+                <div class="empty-state">No trades yet</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ── State ──────────────────────────────────────────────────────────────────
+    let _lastScan = null;
+    let _etfChartTicker = null;
+    let _etfChartPeriod = '6mo';
+    let _wlChartState = null;  // reused chart state name from index.html pattern
+
+    // ── Toast ──────────────────────────────────────────────────────────────────
+    function showToast(message, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = message;
+        t.className = `toast show ${type}`;
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── Scan ───────────────────────────────────────────────────────────────────
+    async function etfScan() {
+        const btn = document.getElementById('scan-btn');
+        btn.classList.add('loading');
+        btn.textContent = 'Scanning...';
+
+        try {
+            const res = await fetch('/api/etf/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+            const data = await res.json();
+            if (!data.success) {
+                showToast(data.error || 'Scan failed', 'error');
+                return;
+            }
+            _lastScan = data;
+            renderAll(data);
+            document.getElementById('last-updated').textContent = 'Updated: ' + (data.scan_time || '');
+            const vix = data.vix;
+            const vixBadge = document.getElementById('vix-badge');
+            if (vixBadge) {
+                vixBadge.innerHTML = vix != null
+                    ? `<span style="color:#9ca3af;">INIX ${vix.toFixed(1)}</span>`
+                    : '';
+            }
+        } catch (e) {
+            showToast('Scan error: ' + e.message, 'error');
+        } finally {
+            btn.classList.remove('loading');
+            btn.innerHTML = `<svg class="scan-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg> Scan`;
+        }
+    }
+
+    // ── Render All ─────────────────────────────────────────────────────────────
+    function renderAll(data) {
+        renderEntered(data.slots || []);
+        renderExitSignals(data.exit_signals || []);
+        renderWatchlist(data.watchlist || []);
+        loadHistory();
+    }
+
+    // ── Entered (Active Positions) ─────────────────────────────────────────────
+    function renderEntered(slots) {
+        const activeSlots = (slots || []).filter(s => s.state === 'ACTIVE' && s.symbol);
+        document.getElementById('entered-count').textContent = activeSlots.length;
+        const body = document.getElementById('entered-body');
+        if (activeSlots.length === 0) {
+            body.innerHTML = '<div class="empty-state" style="padding:10px;">No active positions</div>';
+            return;
+        }
+        body.innerHTML = activeSlots.map(slot => {
+            const pnlPct = slot.pnl_pct;
+            const pnlAbs = slot.pnl_abs;
+            const pnlColor = pnlPct === null || pnlPct === undefined ? 'var(--text-muted)'
+                : (pnlPct >= 0 ? 'var(--green)' : 'var(--red)');
+            const pnlPctStr = pnlPct !== null && pnlPct !== undefined
+                ? `<span style="color:${pnlColor};font-weight:700;">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%</span>`
+                : '';
+            const pnlAbsStr = pnlAbs !== null && pnlAbs !== undefined
+                ? `<span style="color:${pnlColor};font-size:10px;"> (${pnlAbs >= 0 ? '+' : ''}₹${Math.round(Math.abs(pnlAbs)).toLocaleString('en-IN')})</span>`
+                : '';
+            // Days held
+            const daysHeld = slot.entry_date
+                ? Math.floor((Date.now() - new Date(slot.entry_date)) / 86400000)
+                : null;
+            const daysStr = daysHeld !== null ? `${daysHeld}d` : '';
+            // Cost basis
+            const cost = slot.entry_price && slot.qty ? Math.round(slot.entry_price * slot.qty) : null;
+            const costStr = cost ? `₹${cost.toLocaleString('en-IN')}` : '';
+            const exitAlerts = slot.exit_alert || [];
+            const x4Warn = slot.x4
+                ? `<div style="font-size:10px;color:var(--orange,#f97316);font-weight:600;">⚠ X4: ${slot.x4}</div>`
+                : '';
+            const alertStr = exitAlerts.length > 0
+                ? `<div style="font-size:10px;color:var(--red);font-weight:600;">EXIT: ${exitAlerts.join(' | ')}</div>`
+                : '';
+            const etfMeta = ETF_UNIVERSE.find(e => e.symbol === slot.symbol);
+            const ticker = etfMeta ? etfMeta.yf : (slot.symbol + '.NS');
+            return `
+            <div class="signal-item" style="align-items:flex-start;">
+                <div style="flex:1;">
+                    <span class="signal-sym" style="cursor:pointer;text-decoration:underline dotted;"
+                          onclick="loadEtfChart('${ticker}')">${slot.symbol}</span>
+                    <div style="font-size:10px;color:var(--text-muted);">Entry ₹${fmtPrice(slot.entry_price)} × ${fmtQty(slot.qty, slot.symbol)} = ${costStr}
+                        <span style="cursor:pointer;margin-left:5px;opacity:0.6;" title="Edit entry"
+                              onclick="toggleEtfEdit('${slot.symbol}')">✎</span>
+                    </div>
+                    <div id="etf-edit-${slot.symbol}" style="display:none;margin-top:4px;display:none;">
+                        <input type="number" id="etf-edit-price-${slot.symbol}" placeholder="Price" step="0.01"
+                               value="${slot.entry_price || ''}"
+                               style="width:75px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px;">
+                        <input type="number" id="etf-edit-qty-${slot.symbol}" placeholder="Qty" step="any"
+                               value="${slot.qty || ''}"
+                               style="width:60px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px;margin-left:3px;">
+                        <button class="action-btn buy" style="padding:2px 7px;margin-left:3px;"
+                                onclick="etfModify('${slot.symbol}')">Save</button>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-muted);">${slot.entry_date || ''} · ${daysStr}</div>
+                    ${x4Warn}${alertStr}
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:11px;">LTP ₹${fmtPrice(slot.current_price || slot.entry_price)}</div>
+                    <div>${pnlPctStr}${pnlAbsStr}</div>
+                    <button class="action-btn sell" style="margin-top:4px;" onclick="etfExit('${slot.symbol}', ${slot.current_price || slot.entry_price || 0})">Exit</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── Exit Signals ───────────────────────────────────────────────────────────
+    function renderExitSignals(exits) {
+        document.getElementById('exit-count').textContent = exits.length;
+        const exitBody = document.getElementById('exit-signals-body');
+        if (exits.length === 0) {
+            exitBody.innerHTML = '<div class="empty-state" style="padding:10px;">No exit signals</div>';
+        } else {
+            exitBody.innerHTML = exits.map(s => `
+                <div class="signal-item">
+                    <div>
+                        <span class="signal-sym">${s.symbol}</span>
+                        <span class="signal-detail"> Slot ${s.slot_id}</span>
+                        <div style="font-size:10px; color:var(--red);">${(s.reasons || []).join(', ')}</div>
+                    </div>
+                    <div class="signal-price">₹${fmtPrice(s.price)}</div>
+                </div>`).join('');
+        }
+    }
+
+    // ── Watchlist Table ────────────────────────────────────────────────────────
+    function renderWatchlist(items) {
+        const body = document.getElementById('watchlist-body');
+        if (!items || items.length === 0) {
+            body.innerHTML = '<div class="empty-state">No data — press Scan</div>';
+            return;
+        }
+
+        const rows = items.map(item => {
+            const rank = item.rank;
+            let rankBadgeClass = 'low';
+            if (rank && rank <= 5) rankBadgeClass = 'top5';
+            else if (rank && rank <= 9) rankBadgeClass = 'buffer';
+
+            const rankStr = rank
+                ? `<span class="rank-badge ${rankBadgeClass}">${rank}</span>`
+                : '<span class="rank-badge low">—</span>';
+
+            const rsStr = item.rs63 !== null && item.rs63 !== undefined
+                ? `<span class="rs-val ${item.rs63 >= 0 ? 'pos' : 'neg'}">${fmtRs(item.rs63)}</span>`
+                : '<span style="color:var(--text-muted);">N/A</span>';
+
+            const trendStr = item.no_data
+                ? '<span style="color:var(--text-muted);">N/A</span>'
+                : item.trend_ok
+                    ? '<span class="trend-ok">▲</span>'
+                    : '<span class="trend-no">▼</span>';
+
+            const sig = item.signal || 'RANKED';
+            let badgeClass = 'badge-ranked';
+            if (sig === 'ENTRY') badgeClass = 'badge-entry';
+            else if (sig === 'EXIT_X1' || sig === 'EXIT_X2') badgeClass = 'badge-exit1';
+            else if (sig === 'EXIT_X3') badgeClass = 'badge-exit3';
+            else if (sig === 'EXIT_X4') badgeClass = 'badge-exit4';
+            else if (sig === 'HOLD') badgeClass = 'badge-hold';
+            else if (sig === 'BUFFER') badgeClass = 'badge-buffer';
+            else if (sig === 'WATCHLIST') badgeClass = 'badge-watchlist';
+            else if (sig === 'RE_ENTRY') badgeClass = 'badge-reentry';
+
+            let sigLabel = sig.replace('_', ' ');
+            const badgeStr = `<span class="signal-badge ${badgeClass}">${sigLabel}</span>`;
+
+            const actionBtn = `
+                <div style="display:flex;gap:4px;align-items:center;" onclick="event.stopPropagation()">
+                    <input type="number" id="amt-${item.symbol}" placeholder="₹ Amt" min="1000" step="1000"
+                           style="width:80px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px;">
+                    <button class="action-btn buy"  onclick="etfLimitOrder('${item.symbol}', ${item.price || 0}, ${item.inav || 0}, 'BUY')">B</button>
+                    <button class="action-btn sell" onclick="etfLimitOrder('${item.symbol}', ${item.price || 0}, ${item.inav || 0}, 'SELL')">S</button>
+                </div>`;
+
+            const nameShort = item.name ? item.name.substring(0, 28) + (item.name.length > 28 ? '…' : '') : '';
+            const priceFmt = item.price ? `₹${fmtPrice(item.price)}` : 'N/A';
+            const sma63Fmt = item.sma63 ? `₹${fmtPrice(item.sma63)}` : 'N/A';
+
+            // iNAV column
+            const inavFmt = item.inav ? `₹${fmtPrice(item.inav)}` : '—';
+            let premFmt = '—';
+            if (item.inav_prem !== null && item.inav_prem !== undefined) {
+                const prem = item.inav_prem;
+                const premColor = prem > 0.5 ? 'var(--red)' : prem < -0.5 ? 'var(--green)' : 'var(--text-muted)';
+                premFmt = `<span style="color:${premColor}">${prem > 0 ? '+' : ''}${prem.toFixed(2)}%</span>`;
+            }
+
+            const inPosIndicator = item.in_position ? ' ●' : '';
+            const inWlIndicator = item.in_watchlist ? ' ◆' : '';
+
+            const _etfMeta = ETF_UNIVERSE.find(e => e.symbol === item.symbol);
+            const _chartTicker = _etfMeta ? _etfMeta.yf : (item.symbol + '.NS');
+
+            return `
+            <tr onclick="loadEtfChart('${_chartTicker}')" data-sym="${item.symbol}">
+                <td>${rankStr}</td>
+                <td>
+                    <span class="ticker">${item.symbol}${inPosIndicator}${inWlIndicator}</span>
+                    <div style="font-size:10px; color:var(--text-muted);">${nameShort}</div>
+                </td>
+                <td style="font-size:10px; color:var(--text-muted);">${item.category || ''}</td>
+                <td>${priceFmt}</td>
+                <td style="font-size:11px;">${inavFmt}</td>
+                <td style="font-size:11px;">${premFmt}</td>
+                <td>${sma63Fmt}</td>
+                <td>${rsStr}</td>
+                <td>${trendStr}</td>
+                <td>${badgeStr}</td>
+                <td>${actionBtn}</td>
+            </tr>`;
+        }).join('');
+
+        body.innerHTML = `
+        <table class="stock-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ETF</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>iNAV</th>
+                    <th>Prem%</th>
+                    <th>SMA63</th>
+                    <th>RS63</th>
+                    <th>Trend</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    // ── Chart ──────────────────────────────────────────────────────────────────
+    async function loadEtfChart(ticker, period) {
+        if (ticker) _etfChartTicker = ticker;
+        if (period) _etfChartPeriod = period;
+        if (!_etfChartTicker) return;
+
+        // Highlight selected row
+        document.querySelectorAll('#watchlist-body tr').forEach(tr => {
+            const sym = _etfChartTicker.replace(/\.(NS|L)$/, '');
+            tr.classList.toggle('selected-row', tr.dataset.sym === sym);
+        });
+
+        // Update period buttons
+        const periodLabels = {'1mo': '1M', '3mo': '3M', '6mo': '6M', '1y': '1Y'};
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.trim() === (periodLabels[_etfChartPeriod] || '6M'));
+        });
+
+        const sym = _etfChartTicker.replace(/\.(NS|L)$/, '');
+        document.getElementById('etf-chart-title').textContent = `${sym} — ${periodLabels[_etfChartPeriod] || '6M'} Price`;
+
+        const body = document.getElementById('etf-chart-body');
+        body.innerHTML = '<div class="chart-placeholder">Loading chart...</div>';
+
+        try {
+            const res = await fetch(`/api/watchlist/chart?ticker=${_etfChartTicker}&period=${_etfChartPeriod}`);
+            const data = await res.json();
+            if (!data.success || !data.prices || data.prices.length < 2) {
+                body.innerHTML = '<div class="chart-placeholder">No chart data available.</div>';
+                return;
+            }
+            drawWatchlistChart(
+                data.dates, data.prices, sym,
+                data.rs, data.rs_label,
+                data.bench, data.bench_label,
+                data.currency || '₹',
+                data.rs_smooth, 'etf-chart-body',
+                data.dma50, data.dma100, data.dma200
+            );
+        } catch (e) {
+            body.innerHTML = `<div class="chart-placeholder" style="color:var(--red);">Failed: ${e.message}</div>`;
+        }
+    }
+
+    function switchEtfPeriod(period) {
+        loadEtfChart(null, period);
+    }
+
+    // ── Chart Drawing (copied from index.html) ─────────────────────────────────
+    function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma100, dma200) {
+        currency = currency || '₹';
+        const bodyId = targetBodyId || 'etf-chart-body';
+        const canvasId = 'etf-chart-canvas';
+        const body = document.getElementById(bodyId);
+        body.innerHTML = `<canvas id="${canvasId}" style="width:100%; height:300px;"></canvas>`;
+        const canvas = document.getElementById(canvasId);
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = 300 * dpr;
+        canvas.style.height = '300px';
+
+        _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 300, currency, rsSmooth, dma50: dma50 || [], dma100: dma100 || [], dma200: dma200 || [] };
+        _renderWatchlistChart(canvas);
+
+        canvas.onmousemove = function(e) {
+            if (!_wlChartState) return;
+            const s = _wlChartState;
+            const r = canvas.getBoundingClientRect();
+            const mx = e.clientX - r.left;
+            const pad = {top: 15, right: 55, bottom: 25, left: 45};
+            const cw = s.W - pad.left - pad.right;
+            const idx = Math.round(((mx - pad.left) / cw) * (s.prices.length - 1));
+            if (idx < 0 || idx >= s.prices.length || mx < pad.left || mx > s.W - pad.right) {
+                canvas.style.cursor = 'default';
+                _renderWatchlistChart(canvas);
+                return;
+            }
+            canvas.style.cursor = 'crosshair';
+            _renderWatchlistChart(canvas, idx);
+        };
+        canvas.onmouseleave = function() {
+            canvas.style.cursor = 'default';
+            _renderWatchlistChart(canvas);
+        };
+    }
+
+    function _renderWatchlistChart(canvas, hoverIdx) {
+        const s = _wlChartState;
+        const { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W, H, currency, rsSmooth } = s;
+        const cur = currency || '₹';
+        const ctx = canvas.getContext('2d');
+        ctx.resetTransform();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.scale(dpr, dpr);
+        const hasRS = rsData && rsData.some(v => v !== null);
+        const priceH = hasRS ? Math.floor(H * 0.55) : H - 50;
+        const rsTop = hasRS ? Math.floor(H * 0.62) : 0;
+        const rsH = hasRS ? Math.floor(H * 0.30) : 0;
+        const pad = {top: 15, right: 55, bottom: 25, left: 45};
+        const cw = W - pad.left - pad.right;
+
+        const validBench = (benchData || []).filter(v => v !== null);
+        const validDma50 = (s.dma50 || []).filter(v => v !== null);
+        const validDma100 = (s.dma100 || []).filter(v => v !== null);
+        const validDma200 = (s.dma200 || []).filter(v => v !== null);
+        const allPriceVals = [...prices, ...validBench, ...validDma50, ...validDma100, ...validDma200];
+        const minP = Math.min(...allPriceVals);
+        const maxP = Math.max(...allPriceVals);
+        const pRange = maxP - minP || 1;
+        const startP = prices[0];
+        const endP = prices[prices.length - 1];
+        const bullish = endP >= startP;
+
+        const cs = getComputedStyle(document.body);
+        const bgColor = cs.getPropertyValue('--bg-primary').trim() || '#fff';
+        const borderColor = cs.getPropertyValue('--border-color').trim() || '#e0e0e0';
+        const mutedColor = cs.getPropertyValue('--text-muted').trim() || '#999';
+        const greenColor = cs.getPropertyValue('--green').trim() || '#27ae60';
+        const redColor = cs.getPropertyValue('--red').trim() || '#e74c3c';
+        const blueColor = '#3b82f6';
+
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, W, H);
+
+        const pch = priceH - pad.top;
+
+        // Grid lines
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 0.5;
+        const gridLines = 4;
+        for (let i = 0; i <= gridLines; i++) {
+            const y = pad.top + (pch / gridLines) * i;
+            ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+            const pVal = maxP - (pRange / gridLines) * i;
+            ctx.fillStyle = mutedColor;
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'right';
+            ctx.fillText(cur + pVal.toLocaleString('en-IN', {maximumFractionDigits: 0}), pad.left - 4, y + 3);
+        }
+
+        // Price line
+        const lineColor = bullish ? greenColor : redColor;
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = 1.5;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        for (let i = 0; i < prices.length; i++) {
+            const x = pad.left + (i / (prices.length - 1)) * cw;
+            const y = pad.top + pch - ((prices[i] - minP) / pRange) * pch;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Fill
+        const lastX = pad.left + cw;
+        ctx.lineTo(lastX, pad.top + pch);
+        ctx.lineTo(pad.left, pad.top + pch);
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + pch);
+        grad.addColorStop(0, bullish ? 'rgba(39,174,96,0.12)' : 'rgba(231,76,60,0.12)');
+        grad.addColorStop(1, bullish ? 'rgba(39,174,96,0.01)' : 'rgba(231,76,60,0.01)');
+        ctx.fillStyle = grad; ctx.fill();
+
+        // DMA50
+        const dma50 = s.dma50 || [];
+        const hasDma50 = dma50.length === prices.length && dma50.some(v => v !== null);
+        if (hasDma50) {
+            ctx.strokeStyle = 'rgba(33,150,243,0.7)'; ctx.lineWidth = 1;
+            ctx.setLineDash([4, 3]); ctx.beginPath(); let started = false;
+            for (let i = 0; i < dma50.length; i++) {
+                if (dma50[i] === null) continue;
+                const x = pad.left + (i / (prices.length - 1)) * cw;
+                const y = pad.top + pch - ((dma50[i] - minP) / pRange) * pch;
+                if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+            }
+            ctx.stroke(); ctx.setLineDash([]);
+        }
+
+        // DMA100
+        const dma100 = s.dma100 || [];
+        const hasDma100 = dma100.length === prices.length && dma100.some(v => v !== null);
+        if (hasDma100) {
+            ctx.strokeStyle = 'rgba(156,39,176,0.7)'; ctx.lineWidth = 1;
+            ctx.setLineDash([5, 3]); ctx.beginPath(); let started100 = false;
+            for (let i = 0; i < dma100.length; i++) {
+                if (dma100[i] === null) continue;
+                const x = pad.left + (i / (prices.length - 1)) * cw;
+                const y = pad.top + pch - ((dma100[i] - minP) / pRange) * pch;
+                if (!started100) { ctx.moveTo(x, y); started100 = true; } else ctx.lineTo(x, y);
+            }
+            ctx.stroke(); ctx.setLineDash([]);
+        }
+
+        // DMA200
+        const dma200 = s.dma200 || [];
+        const hasDma200 = dma200.length === prices.length && dma200.some(v => v !== null);
+        if (hasDma200) {
+            ctx.strokeStyle = 'rgba(255,152,0,0.7)'; ctx.lineWidth = 1;
+            ctx.setLineDash([6, 4]); ctx.beginPath(); let started2 = false;
+            for (let i = 0; i < dma200.length; i++) {
+                if (dma200[i] === null) continue;
+                const x = pad.left + (i / (prices.length - 1)) * cw;
+                const y = pad.top + pch - ((dma200[i] - minP) / pRange) * pch;
+                if (!started2) { ctx.moveTo(x, y); started2 = true; } else ctx.lineTo(x, y);
+            }
+            ctx.stroke(); ctx.setLineDash([]);
+        }
+
+        // DMA legend
+        if (hasDma50 || hasDma100 || hasDma200) {
+            ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
+            let lx = pad.left + 2; const ly = pad.top + 10;
+            if (hasDma50)  { ctx.fillStyle = 'rgba(33,150,243,0.7)';  ctx.fillText('50DMA',  lx, ly); lx += ctx.measureText('50DMA').width + 6; }
+            if (hasDma100) { ctx.fillStyle = 'rgba(156,39,176,0.7)';  ctx.fillText('100DMA', lx, ly); lx += ctx.measureText('100DMA').width + 6; }
+            if (hasDma200) { ctx.fillStyle = 'rgba(255,152,0,0.7)';   ctx.fillText('200DMA', lx, ly); }
+        }
+
+        // Bench overlay
+        const hasBench = benchData && benchData.some(v => v !== null);
+        if (hasBench) {
+            ctx.strokeStyle = 'rgba(150,150,150,0.5)'; ctx.lineWidth = 1;
+            ctx.setLineDash([4, 3]); ctx.beginPath(); let bStarted = false;
+            for (let i = 0; i < benchData.length; i++) {
+                if (benchData[i] === null) continue;
+                const x = pad.left + (i / (benchData.length - 1)) * cw;
+                const y = pad.top + pch - ((benchData[i] - minP) / pRange) * pch;
+                const yc = Math.max(pad.top, Math.min(pad.top + pch, y));
+                if (!bStarted) { ctx.moveTo(x, yc); bStarted = true; } else ctx.lineTo(x, yc);
+            }
+            ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(150,150,150,0.7)'; ctx.font = '8px monospace'; ctx.textAlign = 'left';
+            ctx.fillText(benchLabel || 'Nifty 200', pad.left + 2, pad.top + pch - 4);
+        }
+
+        // Current price label
+        const lastPY = pad.top + pch - ((endP - minP) / pRange) * pch;
+        ctx.fillStyle = lineColor; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'left';
+        ctx.fillText(`${cur}${endP.toLocaleString('en-IN')}`, W - pad.right + 4, lastPY + 3);
+
+        // RS panel
+        if (hasRS) {
+            const validRS = rsData.filter(v => v !== null);
+            const validRSSmooth = (rsSmooth || []).filter(v => v !== null);
+            const allRSVals = [...validRS, ...validRSSmooth];
+            const minRS = Math.min(...allRSVals);
+            const maxRS = Math.max(...allRSVals);
+            const rsRange = maxRS - minRS || 1;
+            const rch = rsH - 5;
+
+            ctx.strokeStyle = borderColor; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(pad.left, rsTop - 5); ctx.lineTo(W - pad.right, rsTop - 5); ctx.stroke();
+
+            const zeroY = rsTop + rch - ((0 - minRS) / rsRange) * rch;
+            if (minRS < 0 && maxRS > 0) {
+                ctx.strokeStyle = mutedColor; ctx.lineWidth = 0.5; ctx.setLineDash([3, 3]);
+                ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(W - pad.right, zeroY); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = mutedColor; ctx.font = '8px monospace'; ctx.textAlign = 'right';
+                ctx.fillText('0', pad.left - 4, zeroY + 3);
+            }
+
+            ctx.fillStyle = mutedColor; ctx.font = '8px monospace'; ctx.textAlign = 'right';
+            ctx.fillText(`${maxRS.toFixed(0)}%`, pad.left - 4, rsTop + 6);
+            ctx.fillText(`${minRS.toFixed(0)}%`, pad.left - 4, rsTop + rch + 3);
+
+            ctx.fillStyle = blueColor; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
+            ctx.fillText(rsLabel || 'RS63', pad.left + 2, rsTop + 10);
+
+            // RS raw line
+            ctx.lineWidth = 0.8; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.35;
+            let prevX = null, prevY = null, prevVal = null;
+            for (let i = 0; i < rsData.length; i++) {
+                if (rsData[i] === null) continue;
+                const x = pad.left + (i / (rsData.length - 1)) * cw;
+                const y = rsTop + rch - ((rsData[i] - minRS) / rsRange) * rch;
+                const val = rsData[i];
+                if (prevX !== null) {
+                    if ((prevVal >= 0 && val < 0) || (prevVal < 0 && val >= 0)) {
+                        const t = prevVal / (prevVal - val);
+                        const midX = prevX + t * (x - prevX);
+                        ctx.strokeStyle = prevVal >= 0 ? greenColor : redColor;
+                        ctx.beginPath(); ctx.moveTo(prevX, prevY); ctx.lineTo(midX, zeroY); ctx.stroke();
+                        ctx.strokeStyle = val >= 0 ? greenColor : redColor;
+                        ctx.beginPath(); ctx.moveTo(midX, zeroY); ctx.lineTo(x, y); ctx.stroke();
+                    } else {
+                        ctx.strokeStyle = val >= 0 ? greenColor : redColor;
+                        ctx.beginPath(); ctx.moveTo(prevX, prevY); ctx.lineTo(x, y); ctx.stroke();
+                    }
+                }
+                prevX = x; prevY = y; prevVal = val;
+            }
+            ctx.globalAlpha = 1.0;
+
+            // RS smooth line
+            if (rsSmooth && rsSmooth.length) {
+                ctx.lineWidth = 1.5; ctx.lineJoin = 'round';
+                let spX = null, spY = null, spVal = null;
+                for (let i = 0; i < rsSmooth.length; i++) {
+                    if (rsSmooth[i] === null) continue;
+                    const x = pad.left + (i / (rsSmooth.length - 1)) * cw;
+                    const y = rsTop + rch - ((rsSmooth[i] - minRS) / rsRange) * rch;
+                    const val = rsSmooth[i];
+                    if (spX !== null) {
+                        if ((spVal >= 0 && val < 0) || (spVal < 0 && val >= 0)) {
+                            const t = spVal / (spVal - val);
+                            const midX = spX + t * (x - spX);
+                            ctx.strokeStyle = spVal >= 0 ? greenColor : redColor;
+                            ctx.beginPath(); ctx.moveTo(spX, spY); ctx.lineTo(midX, zeroY); ctx.stroke();
+                            ctx.strokeStyle = val >= 0 ? greenColor : redColor;
+                            ctx.beginPath(); ctx.moveTo(midX, zeroY); ctx.lineTo(x, y); ctx.stroke();
+                        } else {
+                            ctx.strokeStyle = val >= 0 ? greenColor : redColor;
+                            ctx.beginPath(); ctx.moveTo(spX, spY); ctx.lineTo(x, y); ctx.stroke();
+                        }
+                    }
+                    spX = x; spY = y; spVal = val;
+                }
+            }
+
+            // RS fill
+            if (minRS < 0 && maxRS > 0) {
+                ctx.beginPath(); let started = false;
+                for (let i = 0; i < rsData.length; i++) {
+                    if (rsData[i] === null) continue;
+                    const x = pad.left + (i / (rsData.length - 1)) * cw;
+                    const y = Math.min(rsTop + rch - ((rsData[i] - minRS) / rsRange) * rch, zeroY);
+                    if (!started) { ctx.moveTo(x, zeroY); ctx.lineTo(x, y); started = true; } else ctx.lineTo(x, y);
+                }
+                ctx.lineTo(pad.left + ((rsData.length - 1 - rsData.slice().reverse().findIndex(v => v !== null)) / (rsData.length - 1)) * cw, zeroY);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(39,174,96,0.08)'; ctx.fill();
+            }
+
+            // RS current label
+            const lastRS = validRS[validRS.length - 1];
+            const lastRSY = rsTop + rch - ((lastRS - minRS) / rsRange) * rch;
+            ctx.fillStyle = lastRS >= 0 ? greenColor : redColor;
+            ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
+            ctx.fillText(`${lastRS >= 0 ? '+' : ''}${lastRS.toFixed(1)}%`, W - pad.right + 4, lastRSY + 3);
+        }
+
+        // Date labels
+        ctx.fillStyle = mutedColor; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+        const step = Math.floor(dates.length / 5);
+        for (let i = 0; i < dates.length; i += step) {
+            const x = pad.left + (i / (dates.length - 1)) * cw;
+            ctx.fillText(dates[i].substring(5), x, H - 5);
+        }
+
+        // Hover crosshair
+        if (hoverIdx !== undefined && hoverIdx >= 0 && hoverIdx < prices.length) {
+            const idx = hoverIdx;
+            const x = pad.left + (idx / (prices.length - 1)) * cw;
+            ctx.strokeStyle = 'rgba(150,150,150,0.5)'; ctx.lineWidth = 0.5;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H - pad.bottom); ctx.stroke();
+            ctx.setLineDash([]);
+
+            const date = dates[idx];
+            const price = prices[idx];
+            let lines = [`${date}`, `Price: ${cur}${price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`];
+            if (benchData && benchData[idx] !== null) lines.push(`Nifty200: ${benchData[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+            const d50 = s.dma50 || [], d200 = s.dma200 || [];
+            if (d50[idx] !== null && d50[idx] !== undefined) lines.push(`D50: ${cur}${d50[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+            if (d200[idx] !== null && d200[idx] !== undefined) lines.push(`D200: ${cur}${d200[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+
+            ctx.font = '10px monospace';
+            const lineH = 14;
+            const tw = Math.max(...lines.map(l => ctx.measureText(l).width)) + 12;
+            const th = lines.length * lineH + 8;
+            let tx = x + 10;
+            let ty = pad.top + 5;
+            if (tx + tw > W - pad.right) tx = x - tw - 10;
+            if (ty + th > H - pad.bottom) ty = H - pad.bottom - th;
+
+            ctx.fillStyle = 'rgba(240,245,247,0.95)';
+            ctx.strokeStyle = borderColor; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.roundRect(tx, ty, tw, th, 3); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#2c3e50'; ctx.textAlign = 'left';
+            lines.forEach((l, i) => ctx.fillText(l, tx + 6, ty + 13 + i * lineH));
+
+            // Price dot
+            const py = pad.top + pch - ((price - minP) / pRange) * pch;
+            ctx.fillStyle = lineColor; ctx.beginPath();
+            ctx.arc(x, py, 3, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+
+    // ── History ────────────────────────────────────────────────────────────────
+    async function loadHistory() {
+        try {
+            const res = await fetch('/api/etf/positions');
+            const data = await res.json();
+            if (!data.success) return;
+            renderHistory(data.trade_log || []);
+        } catch (e) {
+            // silently ignore
+        }
+    }
+
+    function renderHistory(log) {
+        const body = document.getElementById('history-body');
+        if (!log || log.length === 0) {
+            body.innerHTML = '<div class="empty-state">No trades yet</div>';
+            document.getElementById('history-summary').textContent = '';
+            return;
+        }
+
+        const exits = log.filter(t => t.action === 'EXIT');
+        const totalPnl = exits.reduce((s, t) => s + (t.pnl || 0), 0);
+        const wins = exits.filter(t => (t.pnl || 0) > 0).length;
+        document.getElementById('history-summary').textContent =
+            `${exits.length} closed · W${wins}/L${exits.length - wins} · ${totalPnl >= 0 ? '+' : ''}₹${Math.round(totalPnl).toLocaleString('en-IN')}`;
+
+        // Show closed trades as compact signal-item rows (exits only, newest first)
+        const closedRows = exits.slice().reverse().map(t => {
+            const pnlColor = t.pnl === null ? 'var(--text-muted)' : (t.pnl >= 0 ? 'var(--green)' : 'var(--red)');
+            const pnlStr = t.pnl !== null && t.pnl !== undefined
+                ? `<span style="color:${pnlColor};font-weight:700;">${t.pnl >= 0 ? '+' : ''}₹${Math.round(t.pnl).toLocaleString('en-IN')}</span>`
+                : '—';
+            return `
+            <div class="signal-item">
+                <div>
+                    <span class="signal-sym">${t.symbol}</span>
+                    <div style="font-size:10px;color:var(--text-muted);">${t.date || ''} · ₹${fmtPrice(t.price)} × ${t.qty || 0}</div>
+                    <div style="font-size:10px;color:var(--text-muted);">${t.reason || ''}</div>
+                </div>
+                <div style="text-align:right;">${pnlStr}</div>
+            </div>`;
+        }).join('');
+
+        body.innerHTML = closedRows || '<div class="empty-state">No closed trades</div>';
+    }
+
+    // ── Trade Actions ──────────────────────────────────────────────────────────
+    function isFractionalEtf(symbol) {
+        // US-listed and LSE-listed ETFs support fractional units
+        const meta = ETF_UNIVERSE.find(e => e.symbol === symbol);
+        return meta ? !meta.yf.endsWith('.NS') : false;
+    }
+
+    function fmtQty(qty, symbol) {
+        if (!qty && qty !== 0) return '0';
+        if (isFractionalEtf(symbol)) {
+            // Show up to 6 decimal places, strip trailing zeros
+            return parseFloat(qty.toFixed(6)).toString();
+        }
+        return Math.round(qty).toString();
+    }
+
+    async function etfEnter(symbol, price) {
+        const etfInfo = _lastScan && _lastScan.watchlist
+            ? _lastScan.watchlist.find(x => x.symbol === symbol)
+            : null;
+        const capital = 200000;
+        const fractional = isFractionalEtf(symbol);
+        const suggestedQty = price > 0
+            ? (fractional ? parseFloat((capital / price).toFixed(6)) : Math.floor(capital / price))
+            : 0;
+
+        const qtyInput = prompt(
+            `BUY ${symbol}\nPrice: ₹${fmtPrice(price)}\nSuggested qty (₹2L): ${suggestedQty}\n\nEnter qty:`,
+            suggestedQty
+        );
+        if (qtyInput === null) return;
+        const qty = parseFloat(qtyInput);
+        if (isNaN(qty) || qty <= 0) { showToast('Invalid quantity', 'error'); return; }
+
+        const ok = confirm(`CONFIRM BUY\n${symbol} × ${qty} @ ₹${fmtPrice(price)}\nTotal: ₹${(qty * price).toLocaleString('en-IN', {maximumFractionDigits:0})}`);
+        if (!ok) return;
+
+        try {
+            const res = await fetch('/api/etf/enter', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ symbol, price, qty, reason: 'ENTRY' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`Entered ${symbol} × ${qty}`, 'success');
+                etfScan();
+            } else {
+                showToast(data.error || 'Entry failed', 'error');
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    function toggleEtfEdit(symbol) {
+        const row = document.getElementById(`etf-edit-${symbol}`);
+        if (!row) return;
+        row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+        row.style.alignItems = 'center';
+        row.style.gap = '2px';
+    }
+
+    async function etfModify(symbol) {
+        const priceEl = document.getElementById(`etf-edit-price-${symbol}`);
+        const qtyEl   = document.getElementById(`etf-edit-qty-${symbol}`);
+        const price = parseFloat(priceEl?.value);
+        const qty   = parseFloat(qtyEl?.value);
+        if (isNaN(price) || price <= 0) { showToast('Invalid price', 'error'); return; }
+        if (isNaN(qty)   || qty   <= 0) { showToast('Invalid qty',   'error'); return; }
+        try {
+            const res = await fetch('/api/etf/modify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ symbol, entry_price: price, qty })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`${symbol} updated`, 'success');
+                etfScan();
+            } else {
+                showToast(data.error || 'Update failed', 'error');
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    async function etfExit(symbol, price) {
+        const priceInput = prompt(
+            `EXIT ${symbol}\nCurrent: ₹${fmtPrice(price)}\n\nEnter exit price:`,
+            price
+        );
+        if (priceInput === null) return;
+        const exitPrice = parseFloat(priceInput);
+        if (isNaN(exitPrice) || exitPrice <= 0) { showToast('Invalid price', 'error'); return; }
+
+        const ok = confirm(`CONFIRM EXIT\n${symbol} @ ₹${fmtPrice(exitPrice)}`);
+        if (!ok) return;
+
+        try {
+            const res = await fetch('/api/etf/exit', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ symbol, exit_price: exitPrice, reason: 'MANUAL' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const pnl = data.trade && data.trade.pnl !== null ? data.trade.pnl : null;
+                const msg = pnl !== null ? `Exited ${symbol}: ₹${Math.round(pnl).toLocaleString('en-IN')}` : `Exited ${symbol}`;
+                showToast(msg, pnl !== null && pnl >= 0 ? 'success' : 'error');
+                etfScan();
+            } else {
+                showToast(data.error || 'Exit failed', 'error');
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    // ── Record Trade Modal ──────────────────────────────────────────────────────
+    let _rtCtx = {};  // { symbol, ltp, inav, side }
+
+    // Open from watchlist B/S button (symbol known, ltp/inav from scan)
+    function etfLimitOrder(symbol, ltp, inav, side) {
+        _rtCtx = { symbol, ltp, inav, side };
+        const isBuy = side === 'BUY';
+        document.getElementById('rt-title').textContent = isBuy ? 'Record Entry' : 'Record Exit';
+        document.getElementById('rt-title').style.color = isBuy ? 'var(--green)' : 'var(--red)';
+        document.getElementById('rt-sym-row').style.display = 'none';  // symbol fixed from row
+        document.getElementById('rt-sym-display').textContent = symbol;
+        document.getElementById('rt-sym-display').style.display = 'block';
+        _rtShowRef(ltp, inav);
+        document.getElementById('rt-price').value = '';
+        document.getElementById('rt-value').value = '';
+        rtUpdate();
+        document.getElementById('rt-modal').style.display = 'flex';
+        document.getElementById('rt-price').focus();
+    }
+
+    // Open from "+ Add" button (blank symbol, user types it)
+    function openRecordTrade() {
+        _rtCtx = { symbol: null, ltp: 0, inav: 0, side: 'BUY' };
+        document.getElementById('rt-title').textContent = 'Record Entry';
+        document.getElementById('rt-title').style.color = 'var(--green)';
+        document.getElementById('rt-sym-row').style.display = 'block';
+        document.getElementById('rt-sym-display').style.display = 'none';
+        document.getElementById('rt-sym-input').value = '';
+        document.getElementById('rt-ref').innerHTML = '';
+        document.getElementById('rt-price').value = '';
+        document.getElementById('rt-value').value = '';
+        rtUpdate();
+        document.getElementById('rt-modal').style.display = 'flex';
+        document.getElementById('rt-sym-input').focus();
+    }
+
+    function _rtShowRef(ltp, inav) {
+        const ltpFmt = ltp > 0 ? `₹${fmtPrice(ltp)}` : '—';
+        const inavFmt = inav > 0 ? `₹${fmtPrice(inav)}` : null;
+        let html = `LTP: <b>${ltpFmt}</b>`;
+        if (inavFmt) {
+            let premStr = '';
+            if (ltp > 0) {
+                const prem = ((ltp / inav) - 1) * 100;
+                const color = prem > 0.5 ? 'var(--red)' : prem < -0.5 ? 'var(--green)' : 'var(--text-muted)';
+                premStr = ` <span style="color:${color}">(${prem >= 0 ? '+' : ''}${prem.toFixed(2)}%)</span>`;
+            }
+            html += ` &nbsp;|&nbsp; iNAV: <b>${inavFmt}</b>${premStr}`;
+        }
+        document.getElementById('rt-ref').innerHTML = html;
+    }
+
+    // ── Symbol autocomplete ─────────────────────────────────────────────────────
+    let _rtDdIdx = -1;
+
+    function rtSymFilter(val) {
+        const q = val.toUpperCase().trim();
+        const dd = document.getElementById('rt-sym-dropdown');
+        if (!q) { dd.style.display = 'none'; _rtDdIdx = -1; return; }
+        const matches = ETF_UNIVERSE.filter(e =>
+            e.symbol.includes(q) || e.name.toUpperCase().includes(q)
+        ).slice(0, 8);
+        if (!matches.length) { dd.style.display = 'none'; return; }
+        _rtDdIdx = -1;
+        dd.innerHTML = matches.map((e, i) =>
+            `<div data-sym="${e.symbol}" onclick="rtSymSelect('${e.symbol}')">
+                <span class="dd-sym">${e.symbol}</span><span class="dd-name">${e.name}</span>
+             </div>`
+        ).join('');
+        dd.style.display = 'block';
+    }
+
+    function rtSymSelect(sym) {
+        const input = document.getElementById('rt-sym-input');
+        input.value = sym;
+        document.getElementById('rt-sym-dropdown').style.display = 'none';
+        document.getElementById('rt-price').focus();
+    }
+
+    function rtSymKey(e) {
+        const dd = document.getElementById('rt-sym-dropdown');
+        const items = dd.querySelectorAll('div');
+        if (!items.length || dd.style.display === 'none') {
+            if (e.key === 'Enter') document.getElementById('rt-price').focus();
+            return;
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            _rtDdIdx = Math.min(_rtDdIdx + 1, items.length - 1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            _rtDdIdx = Math.max(_rtDdIdx - 1, 0);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (_rtDdIdx >= 0) rtSymSelect(items[_rtDdIdx].dataset.sym);
+            else if (items.length === 1) rtSymSelect(items[0].dataset.sym);
+            return;
+        } else if (e.key === 'Escape') {
+            dd.style.display = 'none'; return;
+        } else { return; }
+        items.forEach((d, i) => d.classList.toggle('active', i === _rtDdIdx));
+        if (_rtDdIdx >= 0) items[_rtDdIdx].scrollIntoView({ block: 'nearest' });
+    }
+
+    function rtUpdate() {
+        const price = parseFloat(document.getElementById('rt-price').value);
+        const value = parseFloat(document.getElementById('rt-value').value);
+        const sym = _rtCtx?.symbol;
+        const fractional = sym ? isFractionalEtf(sym) : false;
+        const qty = (price > 0 && value > 0)
+            ? (fractional ? parseFloat((value / price).toFixed(6)) : Math.floor(value / price))
+            : 0;
+        const actual = qty > 0 ? qty * price : 0;
+        document.getElementById('rt-qty').textContent = qty > 0 ? fmtQty(qty, sym) : '—';
+        document.getElementById('rt-actual').textContent = actual > 0
+            ? `₹${Math.round(actual).toLocaleString('en-IN')}` : '—';
+    }
+
+    function rtClose() {
+        document.getElementById('rt-modal').style.display = 'none';
+        document.getElementById('rt-sym-dropdown').style.display = 'none';
+    }
+
+    async function rtConfirm() {
+        const price = parseFloat(document.getElementById('rt-price').value);
+        const value = parseFloat(document.getElementById('rt-value').value);
+        if (isNaN(price) || price <= 0) { showToast('Enter executed price', 'error'); return; }
+        if (isNaN(value) || value < 1) { showToast('Enter value ≥ ₹1', 'error'); return; }
+
+        // Resolve symbol
+        let symbol = _rtCtx.symbol;
+        if (!symbol) {
+            symbol = (document.getElementById('rt-sym-input').value || '').toUpperCase().trim();
+            if (!symbol) { showToast('Enter symbol', 'error'); return; }
+        }
+        const fractional = symbol ? isFractionalEtf(symbol) : false;
+        const qty = fractional
+            ? parseFloat((value / price).toFixed(6))
+            : Math.floor(value / price);
+        if (qty <= 0) { showToast('Value too small', 'error'); return; }
+        if (!fractional && qty < 1) { showToast('Value too small for 1 unit', 'error'); return; }
+        const side = _rtCtx.side;
+
+        rtClose();
+        try {
+            if (side === 'BUY') {
+                const res = await fetch('/api/etf/enter', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ symbol, entry_price: price, qty })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Recorded: ${qty} × ${symbol} @ ₹${fmtPrice(price)}`, 'success');
+                    etfScan();
+                } else {
+                    showToast(data.error || 'Failed to record', 'error');
+                }
+            } else {
+                const res = await fetch('/api/etf/exit', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ symbol, exit_price: price, reason: 'MANUAL' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const pnl = data.trade && data.trade.pnl !== null ? data.trade.pnl : null;
+                    const msg = pnl !== null
+                        ? `Recorded exit ${symbol}: ₹${Math.round(pnl).toLocaleString('en-IN')} P&L`
+                        : `Recorded exit ${symbol}`;
+                    showToast(msg, pnl !== null && pnl >= 0 ? 'success' : 'error');
+                    etfScan();
+                } else {
+                    showToast(data.error || 'Failed to record', 'error');
+                }
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    // ── Formatters ─────────────────────────────────────────────────────────────
+    function fmtPrice(p) {
+        if (p === null || p === undefined) return 'N/A';
+        return parseFloat(p).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function fmtRs(rs) {
+        if (rs === null || rs === undefined) return 'N/A';
+        const v = parseFloat(rs);
+        return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+    }
+
+    // ── Static ETF universe (pre-populated before scan) ────────────────────────
+    const ETF_UNIVERSE = [
+        // ── Indian Broad Market ──
+        {symbol:"JUNIORBEES", name:"Nippon Nifty Next 50",            category:"Large-Mid",       yf:"JUNIORBEES.NS"},
+        {symbol:"MID150BEES", name:"Nippon Nifty Midcap 150",          category:"Midcap",          yf:"MID150BEES.NS"},
+        {symbol:"HDFCSMALL",  name:"HDFC Nifty Smallcap 250",         category:"Smallcap",        yf:"HDFCSMALL.NS"},
+        // ── Indian Sectoral ──
+        {symbol:"BANKBEES",   name:"Nippon Nifty Bank BeES",           category:"Banking",         yf:"BANKBEES.NS"},
+        {symbol:"PSUBNKBEES", name:"Nippon Nifty PSU Bank BeES",       category:"PSU Bank",        yf:"PSUBNKBEES.NS"},
+        {symbol:"ITBEES",     name:"Nippon Nifty IT BeES",             category:"IT/Tech",         yf:"ITBEES.NS"},
+        {symbol:"HEALTHIETF", name:"ICICI Nifty Healthcare ETF",       category:"Healthcare",      yf:"HEALTHIETF.NS"},
+        {symbol:"AUTOBEES",   name:"Nippon Nifty Auto BeES",           category:"Auto",            yf:"AUTOBEES.NS"},
+        {symbol:"METALIETF",  name:"ICICI Nifty Metal ETF",            category:"Metals",          yf:"METALIETF.NS"},
+        {symbol:"CONSUMBEES", name:"Nippon Nifty Consumption BeES",    category:"Consumption",     yf:"CONSUMBEES.NS"},
+        {symbol:"INFRABEES",  name:"ICICI Nifty Infra ETF",            category:"Infrastructure",  yf:"INFRABEES.NS"},
+        {symbol:"OILIETF",    name:"ICICI Nifty Oil & Gas ETF",        category:"Energy",          yf:"OILIETF.NS"},
+        {symbol:"MOREALTY",   name:"Motilal Nifty Realty ETF",         category:"Realty",          yf:"MOREALTY.NS"},
+        // ── Indian Factor / Thematic ──
+        {symbol:"CPSEETF",    name:"CPSE ETF",                         category:"PSU/Govt",        yf:"CPSEETF.NS"},
+        {symbol:"SETFMOMET",  name:"Nippon Nifty200 Momentum30 ETF",   category:"Momentum",        yf:"MOM30IETF.NS"},
+        {symbol:"QUAL30IETF", name:"HDFC Nifty100 Quality30 ETF",      category:"Quality",         yf:"QUAL30IETF.NS"},
+        {symbol:"KOTAKLOWV",  name:"Kotak Nifty100 Low Vol30 ETF",     category:"Low Vol",         yf:"LOWVOLIETF.NS"},
+        {symbol:"ALPL30IETF", name:"ICICI Alpha Low Vol30 ETF",        category:"Alpha/LowVol",    yf:"ALPL30IETF.NS"},
+        {symbol:"MODEFENCE",  name:"Motilal Nifty India Defence ETF",  category:"Defence",         yf:"MODEFENCE.NS"},
+        {symbol:"MOMOMENTUM", name:"Nippon Nifty500 Momentum50 ETF",   category:"Broad Momentum",  yf:"MOMOMENTUM.NS"},
+        {symbol:"MONIFTY500", name:"Motilal Nifty 500 ETF",            category:"Broad 500",       yf:"MONIFTY500.NS"},
+        // ── Indian Commodities ──
+        {symbol:"GOLDBEES",   name:"Nippon Gold BeES",                 category:"Gold",            yf:"GOLDBEES.NS"},
+        {symbol:"SILVERBEES", name:"Nippon Silver BeES",               category:"Silver",          yf:"SILVERBEES.NS"},
+        {symbol:"LIQUIDBEES", name:"Nippon Liquid BeES (Cash proxy)",  category:"Cash",            yf:"LIQUIDBEES.NS"},
+        // ── Global — US & International (via INDMoney) ──
+        {symbol:"MON100",     name:"Motilal Nasdaq 100 ETF",           category:"US Tech",         yf:"MON100.NS"},
+        {symbol:"SETFNN50",   name:"SBI Nifty Next 50 ETF",            category:"Large-Mid",       yf:"SETFNN50.NS"},
+        // MASPTOP50 removed — structural loser (-₹21K, 36% WR over 10yr)
+        // HNGSNGBEES removed — China/HK bear market (-₹102K, 38% WR)
+        {symbol:"SOXX",       name:"iShares Semiconductor ETF",        category:"Semiconductors",  yf:"SOXX"},
+        {symbol:"BOTZ",       name:"Global X Robotics & AI ETF",       category:"AI/Robotics",     yf:"BOTZ"},
+        {symbol:"EWY",        name:"iShares MSCI South Korea ETF",     category:"South Korea",     yf:"EWY"},
+        {symbol:"FRDM",       name:"Freedom 100 EM ETF",               category:"EM",              yf:"FRDM"},
+        {symbol:"EMXC",       name:"iShares EM ex-China ETF",          category:"EM ex-China",     yf:"EMXC"},
+        {symbol:"AVDV",       name:"Avantis Intl SmallCap Value",      category:"Intl SmallCap",   yf:"AVDV"},
+        {symbol:"ILF",        name:"iShares Latin America 40",         category:"Latin America",   yf:"ILF"},
+        {symbol:"XLE",        name:"SPDR Energy Select Sector",        category:"US Energy",       yf:"XLE"},
+        // ── Miners (via INDMoney) ──
+        {symbol:"GDX",        name:"VanEck Gold Miners ETF",           category:"Gold Miners",     yf:"GDX"},
+        {symbol:"XME",        name:"SPDR Metals & Mining ETF",         category:"Metals/Mining",   yf:"XME"},
+        // ── Europe (via INDMoney) ──
+        {symbol:"VGK",        name:"Vanguard FTSE Europe ETF",         category:"Europe",          yf:"VGK"},
+        // EWU removed — UK structural weakness (-₹56K, 33% WR)
+        // ── UCITS equivalents (LSE-listed, Irish/Lux domicile — estate-tax friendly) ──
+        {symbol:"GDGB",       name:"VanEck Gold Miners UCITS [GDX]",  category:"Gold Miners UCITS", yf:"GDGB.L"},
+        {symbol:"VEUR",       name:"Vanguard Europe UCITS [VGK]",     category:"Europe UCITS",    yf:"VEUR.L"},
+        {symbol:"ISF",        name:"iShares FTSE 100 UCITS [EWU]",    category:"UK UCITS",        yf:"ISF.L"},
+        {symbol:"EMXU",       name:"Xtrackers EM ex-China UCITS [EMXC]", category:"EM ex-China UCITS", yf:"EMXU.L"},
+        {symbol:"LTAM",       name:"iShares Latin America UCITS [ILF]",  category:"LatAm UCITS",  yf:"LTAM.L"},
+        {symbol:"IUES",       name:"iShares S&P500 Energy UCITS [XLE]",  category:"US Energy UCITS", yf:"IUES.L"},
+        {symbol:"COPX",       name:"Sprott Copper Miners UCITS [XME≈]",  category:"Mining UCITS", yf:"COPX.L"},
+        {symbol:"WSML",       name:"iShares World SmallCap UCITS [AVDV≈]", category:"SmallCap UCITS", yf:"WSML.L"},
+    ];
+
+    function renderStaticWatchlist() {
+        const body = document.getElementById('watchlist-body');
+        const rows = ETF_UNIVERSE.map(etf => {
+            const nameShort = etf.name.substring(0, 28) + (etf.name.length > 28 ? '…' : '');
+            return `
+            <tr onclick="loadEtfChart('${etf.yf}')" data-sym="${etf.symbol}">
+                <td><span class="rank-badge low">—</span></td>
+                <td>
+                    <span class="ticker">${etf.symbol}</span>
+                    <div style="font-size:10px; color:var(--text-muted);">${nameShort}</div>
+                </td>
+                <td style="font-size:10px; color:var(--text-muted);">${etf.category}</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td><span class="signal-badge badge-ranked">UNRANKED</span></td>
+                <td>
+                    <div style="display:flex;gap:4px;align-items:center;" onclick="event.stopPropagation()">
+                        <input type="number" id="amt-${etf.symbol}" placeholder="₹ Amt" min="1000" step="1000"
+                               style="width:80px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:11px;">
+                        <button class="action-btn buy"  onclick="etfLimitOrder('${etf.symbol}', 0, 0, 'BUY')">B</button>
+                        <button class="action-btn sell" onclick="etfLimitOrder('${etf.symbol}', 0, 0, 'SELL')">S</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+        body.innerHTML = `
+        <table class="stock-table">
+            <thead>
+                <tr>
+                    <th>Rank</th><th>Symbol</th><th>Category</th>
+                    <th>Price</th><th>iNAV</th><th>Prem%</th><th>SMA63</th><th>RS63</th><th>Trend</th>
+                    <th>Signal</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+    window.onload = function() {
+        // Pre-populate watchlist with static ETF list immediately
+        renderStaticWatchlist();
+        // Load history on page load from cached state
+        loadHistory();
+        // Load last scan result if available
+        fetch('/api/etf/status')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.slots) {
+                    renderEntered(data.slots);
+                    document.getElementById('last-updated').textContent =
+                        data.last_scan ? 'Last: ' + data.last_scan : 'Not scanned';
+                    renderHistory(data.trade_log || []);
+                    if (data.last_scan_result) {
+                        renderWatchlist(data.last_scan_result);
+                    }
+                }
+            })
+            .catch(() => {});
+    };
+</script>
+
+<!-- ── Record Trade Modal ─────────────────────────────────────────────────── -->
+<style>
+#rt-modal input {
+    background: var(--bg-white);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 14px;
+    font-weight: 600;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+#rt-modal input:focus { border-color: var(--blue); }
+#rt-sym-dropdown {
+    position: absolute;
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 160px;
+    overflow-y: auto;
+    z-index: 10;
+    width: 100%;
+    left: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+#rt-sym-dropdown div {
+    padding: 7px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+#rt-sym-dropdown div:last-child { border-bottom: none; }
+#rt-sym-dropdown div:hover, #rt-sym-dropdown div.active { background: var(--blue-light); }
+#rt-sym-dropdown .dd-sym { font-weight: 700; margin-right: 8px; }
+#rt-sym-dropdown .dd-name { color: var(--text-muted); font-size: 11px; }
+</style>
+
+<div id="rt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;align-items:center;justify-content:center;"
+     onclick="if(event.target===this) rtClose()">
+    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:24px 28px;min-width:320px;max-width:400px;width:90%;"
+         onkeydown="if(event.key==='Escape') rtClose()">
+
+        <h3 id="rt-title" style="margin:0 0 4px;font-size:15px;font-weight:700;letter-spacing:0.5px;"></h3>
+        <div id="rt-sym-display" style="font-size:18px;font-weight:800;margin-bottom:8px;color:var(--text-primary);"></div>
+
+        <!-- Symbol input — shown only for manual "+ Add" flow -->
+        <div id="rt-sym-row" style="display:none;margin-bottom:12px;position:relative;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;">Symbol</label>
+            <input id="rt-sym-input" type="text" placeholder="e.g. BANKBEES" autocomplete="off"
+                   oninput="rtSymFilter(this.value)"
+                   onkeydown="rtSymKey(event)">
+            <div id="rt-sym-dropdown" style="display:none;"></div>
+        </div>
+
+        <div id="rt-ref" style="font-size:11px;color:var(--text-muted);margin-bottom:14px;min-height:14px;"></div>
+
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+            <div style="flex:1;">
+                <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;">Executed Price (₹)</label>
+                <input id="rt-price" type="number" min="0.01" step="0.01" placeholder="0.00"
+                       oninput="rtUpdate()"
+                       onkeydown="if(event.key==='Enter') document.getElementById('rt-value').focus()">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;">Value (₹)</label>
+                <input id="rt-value" type="number" min="1" step="1000" placeholder="200000"
+                       oninput="rtUpdate()"
+                       onkeydown="if(event.key==='Enter') rtConfirm()">
+            </div>
+        </div>
+
+        <div style="display:flex;gap:20px;font-size:12px;color:var(--text-muted);margin-bottom:20px;">
+            <span>Qty: <b id="rt-qty" style="color:var(--text-primary);">—</b></span>
+            <span>Actual: <b id="rt-actual" style="color:var(--text-primary);">—</b></span>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+            <button onclick="rtConfirm()"
+                    style="flex:1;padding:9px;border:none;border-radius:6px;
+                           background:var(--green);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+                Record
+            </button>
+            <button onclick="rtClose()"
+                    style="flex:1;padding:9px;border:1px solid var(--border-color);border-radius:6px;
+                           background:transparent;color:var(--text-primary);font-size:13px;cursor:pointer;">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

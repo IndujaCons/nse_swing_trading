@@ -48,6 +48,9 @@ user_engines = {}  # {user_id: LiveSignalsEngine}
 from data.goldm_engine import GoldmEngine
 goldm_engines = {}  # {user_id: GoldmEngine}
 
+from data.etf_engine import ETFEngine, ETF_YF_OVERRIDES
+etf_engine = ETFEngine()
+
 for _u in kite_users:
     brokers[_u["id"]] = KiteBroker(
         user_id=_u["id"], name=_u["name"],
@@ -237,6 +240,53 @@ def get_live_signals_data():
             "success": False,
             "error": str(e)
         }), 500
+
+
+def _get_connected_broker():
+    """Return first connected Zerodha broker, or None."""
+    for uid, broker in brokers.items():
+        if broker.access_token:
+            return broker
+    return None
+
+
+# NSE instrument token cache — refreshed once per day
+_nse_inst_cache = {"tokens": {}, "date": None}
+
+
+def _get_nse_tokens(broker):
+    """Return {tradingsymbol: instrument_token} for NSE (cached daily)."""
+    from datetime import date as _date
+    today = _date.today().isoformat()
+    if _nse_inst_cache["date"] == today and _nse_inst_cache["tokens"]:
+        return _nse_inst_cache["tokens"]
+    try:
+        instruments = broker._kite.instruments("NSE")
+        _nse_inst_cache["tokens"] = {i["tradingsymbol"]: i["instrument_token"] for i in instruments}
+        _nse_inst_cache["date"] = today
+    except Exception:
+        pass
+    return _nse_inst_cache["tokens"]
+
+
+def _kite_daily_closes(broker, symbol, from_date, to_date):
+    """Fetch daily close Series from Kite for a NSE symbol. Returns pd.Series or None."""
+    import pandas as pd
+    tokens = _get_nse_tokens(broker)
+    token = tokens.get(symbol)
+    if not token:
+        return None
+    try:
+        candles = broker._kite.historical_data(token, from_date, to_date, "day")
+    except Exception:
+        return None
+    if not candles:
+        return None
+    df = pd.DataFrame(candles)
+    df["date"] = pd.to_datetime(df["date"])
+    if df["date"].dt.tz is not None:
+        df["date"] = df["date"].dt.tz_localize(None)
+    return df.set_index("date")["close"].rename(symbol)
 
 
 def _fetch_zerodha_ltp(tickers):
@@ -1073,21 +1123,34 @@ def _get_active_group(data):
 
 
 ETF_TICKERS = [
-    "MONIFTY500", "HDFCSML250", "ALPHA", "NEXT50IETF",
-    "MODEFENCE", "MOM100", "MOCAPITAL", "NIFTYBEES",
-    "GOLDBEES", "MON100", "SILVERBEES", "HEALTHIETF", "ITBEES",
-    "BANKBEES", "PSUBNKBEES", "CPSEETF", "PHARMABEES",
-    "MOENERGY", "OILIETF", "INFRABEES", "AUTOBEES",
-    "METALIETF", "CONSUMBEES", "FMCGIETF",
+    # Indian Broad Market
+    "JUNIORBEES", "MID150BEES", "HDFCSMALL", "SETFNN50",
+    # Indian Sectoral
+    "BANKBEES", "PSUBNKBEES", "ITBEES", "HEALTHIETF", "AUTOBEES",
+    "METALIETF", "CONSUMBEES", "INFRABEES", "OILIETF", "MOREALTY",
+    # Indian Factor / Thematic
+    "CPSEETF", "SETFMOMET", "QUAL30IETF", "KOTAKLOWV", "ALPL30IETF",
+    "MODEFENCE", "MOMOMENTUM", "MONIFTY500",
+    # Indian Commodities
+    "GOLDBEES", "SILVERBEES",
+    # India-listed international trackers (NSE-listed, .NS suffix)
+    "MON100",  # MASPTOP50 removed
+    # Liquid / Cash
+    "LIQUIDBEES",
 ]
 
 # International ETFs (US-listed, no .NS suffix)
-INTL_ETF_TICKERS = ["FRDM", "EMXC", "AVDV", "ILF", "GARP"]
+INTL_ETF_TICKERS = ["FRDM", "EMXC", "AVDV", "ILF", "XLE", "GDX", "XME", "VGK",
+                    "SOXX", "BOTZ", "EWY"]
+# LSE-listed UCITS ETFs (estate-tax friendly; .L suffix)
+LSE_ETF_TICKERS = ["GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML"]
 
 def _yf_symbol(ticker):
-    """Return yfinance symbol — skip .NS for international ETFs."""
-    if ticker in INTL_ETF_TICKERS:
+    """Return yfinance symbol — skip .NS for international ETFs and index tickers."""
+    if ticker in INTL_ETF_TICKERS or ticker.startswith("^"):
         return ticker
+    if ticker in LSE_ETF_TICKERS:
+        return ticker + ".L"
     return f"{ticker}.NS"
 
 @app.route("/api/watchlist/tickers", methods=["GET"])
@@ -1331,19 +1394,52 @@ def watchlist_chart():
 
     try:
         import yfinance as yf
-        # Fetch stock and benchmark
-        stock_df = yf.download(_yf_symbol(ticker), period=fetch_period, progress=False)
-        bench_df = yf.download("^CNX200", period=fetch_period, progress=False)
-        if stock_df.empty:
+        from datetime import date as _date, timedelta as _timedelta
+        base_sym = ticker.replace(".NS", "").replace(".BO", "").replace(".L", "")
+
+        # Period → fetch days (display + RS lookback buffer)
+        period_days_extra = {"1mo": 100, "3mo": 160, "6mo": 250, "1y": 430}
+        fetch_days = period_days_extra[period]
+        from_date = _date.today() - _timedelta(days=fetch_days)
+        to_date = _date.today()
+
+        stock_closes = None
+        broker = _get_connected_broker()
+        if broker:
+            stock_closes = _kite_daily_closes(broker, base_sym, from_date, to_date)
+
+        # Fallback to yfinance
+        if stock_closes is None or len(stock_closes) < 5:
+            extra_map = {"1mo": "4mo", "3mo": "1y", "6mo": "2y", "1y": "2y"}
+            fetch_period = extra_map[period]
+            if base_sym in ETF_YF_OVERRIDES:
+                yf_ticker = ETF_YF_OVERRIDES[base_sym] + ".NS"
+            else:
+                yf_ticker = _yf_symbol(base_sym)
+            stock_df = yf.download(yf_ticker, period=fetch_period, progress=False)
+            if stock_df.empty:
+                return jsonify({"success": False, "error": "No data found"}), 404
+            stock_closes = stock_df["Close"].squeeze().dropna()
+            if stock_closes.index.tz is not None:
+                stock_closes.index = stock_closes.index.tz_localize(None)
+
+        # Benchmark: try Kite first (NIFTY 200), fall back to yfinance
+        bench_closes = None
+        if broker:
+            bench_closes = _kite_daily_closes(broker, "NIFTY 200", from_date, to_date)
+        if bench_closes is None or len(bench_closes) < 5:
+            extra_map = {"1mo": "4mo", "3mo": "1y", "6mo": "2y", "1y": "2y"}
+            bench_df = yf.download("^CNX200", period=extra_map[period], progress=False)
+            if not bench_df.empty:
+                bench_closes = bench_df["Close"].squeeze().dropna()
+                if bench_closes.index.tz is not None:
+                    bench_closes.index = bench_closes.index.tz_localize(None)
+
+        if stock_closes is None or len(stock_closes) < 5:
             return jsonify({"success": False, "error": "No data found"}), 404
 
-        stock_closes = stock_df["Close"].squeeze().dropna()
-        stock_closes.index = stock_closes.index.tz_localize(None)
-
         # Compute RS (raw) and RS smoothed (5-day avg on both ends)
-        if not bench_df.empty:
-            bench_closes = bench_df["Close"].squeeze().dropna()
-            bench_closes.index = bench_closes.index.tz_localize(None)
+        if bench_closes is not None and len(bench_closes) >= 5:
             # Raw RS
             bench_ret = (bench_closes / bench_closes.shift(rs_lookback) - 1) * 100
             stock_ret = (stock_closes / stock_closes.shift(rs_lookback) - 1) * 100
@@ -1358,6 +1454,11 @@ def watchlist_chart():
         else:
             rs_series = pd.Series(dtype=float)
             rs_smooth_series = pd.Series(dtype=float)
+
+        # DMA 50 and 200 — compute on full history before trimming
+        dma50_full = stock_closes.rolling(50, min_periods=50).mean()
+        dma100_full = stock_closes.rolling(100, min_periods=100).mean()
+        dma200_full = stock_closes.rolling(200, min_periods=200).mean()
 
         # Trim to requested period
         period_days_map = {"1mo": 30, "3mo": 90, "6mo": 180, "1y": 365}
@@ -1378,7 +1479,7 @@ def watchlist_chart():
 
         # Nifty 200 normalized to same scale as stock price for overlay
         bench_prices = []
-        if not bench_df.empty:
+        if bench_closes is not None and len(bench_closes) >= 5:
             bc = bench_closes.reindex(stock_closes.index, method="ffill").dropna()
             if len(bc) >= 2:
                 # Normalize: scale bench to start at same price as stock
@@ -1390,17 +1491,14 @@ def watchlist_chart():
                     else:
                         bench_prices.append(None)
 
-        # DMA 50 and DMA 200
-        # Compute on full history, then trim to display period
-        full_closes = stock_df["Close"].squeeze().dropna()
-        full_closes.index = full_closes.index.tz_localize(None)
-        dma50_full = full_closes.rolling(50, min_periods=50).mean()
-        dma200_full = full_closes.rolling(200, min_periods=200).mean()
         dma50_data = []
+        dma100_data = []
         dma200_data = []
         for d in stock_closes.index:
             v50 = dma50_full.get(d)
             dma50_data.append(round(float(v50), 2) if v50 is not None and not pd.isna(v50) else None)
+            v100 = dma100_full.get(d)
+            dma100_data.append(round(float(v100), 2) if v100 is not None and not pd.isna(v100) else None)
             v200 = dma200_full.get(d)
             dma200_data.append(round(float(v200), 2) if v200 is not None and not pd.isna(v200) else None)
 
@@ -1412,7 +1510,7 @@ def watchlist_chart():
             "rs_label": rs_label_map[period],
             "bench": bench_prices, "bench_label": "Nifty 200",
             "currency": "$" if is_intl else "₹",
-            "dma50": dma50_data, "dma200": dma200_data,
+            "dma50": dma50_data, "dma100": dma100_data, "dma200": dma200_data,
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -1696,6 +1794,95 @@ def clear_paper_trades():
         "success": True,
         "message": "Paper trades cleared"
     })
+
+
+# ============ ETF Core — Momentum Rotation ============
+
+@app.route("/etf-core")
+def etf_core():
+    """ETF Core strategy page."""
+    return render_template("etf_core.html")
+
+
+@app.route("/api/etf/scan", methods=["POST"])
+def etf_scan():
+    """Scan all 35 ETFs: compute RS63, SMA63, check entry/exit/reentry signals."""
+    try:
+        broker = _get_connected_broker()
+        kite = broker._kite if broker else None
+        result = etf_engine.scan(kite=kite)
+        if "error" in result:
+            return jsonify({"success": False, "error": result["error"]})
+        return jsonify({"success": True, **result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+
+@app.route("/api/etf/enter", methods=["POST"])
+def etf_enter():
+    """Enter an ETF position."""
+    data = request.get_json() or {}
+    symbol = data.get("symbol", "").upper().strip()
+    price = data.get("entry_price") or data.get("price")
+    qty = data.get("qty", 0)
+    reason = data.get("reason", "ENTRY")
+
+    if not symbol or not price:
+        return jsonify({"success": False, "error": "symbol and price required"})
+
+    slot, err = etf_engine.enter_position(symbol, float(price), float(qty), reason)
+    if err:
+        return jsonify({"success": False, "error": err})
+    return jsonify({"success": True, "slot": slot})
+
+
+@app.route("/api/etf/exit", methods=["POST"])
+def etf_exit():
+    """Exit an ETF position."""
+    data = request.get_json() or {}
+    symbol = data.get("symbol", "").upper().strip()
+    exit_price = data.get("exit_price") or data.get("price")
+    reason = data.get("reason", "MANUAL")
+
+    if not symbol or not exit_price:
+        return jsonify({"success": False, "error": "symbol and exit_price required"})
+
+    trade, err = etf_engine.exit_position(symbol, float(exit_price), reason)
+    if err:
+        return jsonify({"success": False, "error": err})
+    return jsonify({"success": True, "trade": trade})
+
+
+@app.route("/api/etf/modify", methods=["POST"])
+def etf_modify():
+    """Modify entry_price and/or qty of an active position."""
+    data = request.get_json() or {}
+    symbol = data.get("symbol", "").upper().strip()
+    price = data.get("entry_price")
+    qty = data.get("qty")
+    if not symbol:
+        return jsonify({"success": False, "error": "symbol required"})
+    if price is None and qty is None:
+        return jsonify({"success": False, "error": "entry_price or qty required"})
+    slot, err = etf_engine.modify_position(symbol, float(price) if price is not None else None,
+                                            float(qty) if qty is not None else None)
+    if err:
+        return jsonify({"success": False, "error": err})
+    return jsonify({"success": True, "slot": slot})
+
+
+@app.route("/api/etf/positions", methods=["GET"])
+def etf_positions():
+    """Return current positions and full trade history."""
+    status = etf_engine.get_status()
+    return jsonify({"success": True, **status})
+
+
+@app.route("/api/etf/status", methods=["GET"])
+def etf_status():
+    """Return last cached scan result."""
+    status = etf_engine.get_status()
+    return jsonify({"success": True, **status})
 
 
 # ============ GOLDM Paper Trading ============
