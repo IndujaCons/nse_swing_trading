@@ -1,0 +1,114 @@
+"""
+Telegram Notifier — ETF Core Signal Alerts
+==========================================
+Sends entry/exit notifications to a Telegram chat whenever
+ETF Core scan detects actionable signals.
+
+Config (via .env):
+    TELEGRAM_BOT_TOKEN  — from @BotFather
+    TELEGRAM_CHAT_ID    — your personal chat ID (get via /get_chat_id bot or api/getUpdates)
+"""
+
+import os
+import requests
+
+
+def _token() -> str:
+    return os.getenv("TELEGRAM_BOT_TOKEN", "")
+
+
+def _chat_id() -> str:
+    return os.getenv("TELEGRAM_CHAT_ID", "")
+
+
+def send_message(text: str) -> bool:
+    """Send a plain text / HTML message to the configured Telegram chat.
+    Returns True if the request succeeded, False otherwise."""
+    token = _token()
+    chat_id = _chat_id()
+    if not token or not chat_id:
+        print("[notifier] TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set — skipping")
+        return False
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    try:
+        r = requests.post(
+            url,
+            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+            timeout=10,
+        )
+        if not r.ok:
+            print(f"[notifier] Telegram error {r.status_code}: {r.text[:200]}")
+        return r.ok
+    except Exception as e:
+        print(f"[notifier] Request failed: {e}")
+        return False
+
+
+def format_etf_alert(scan_result: dict) -> str | None:
+    """
+    Format ETF Core scan result as a Telegram HTML message.
+    Returns None if there are no actionable signals (no entry / exit / re-entry).
+    """
+    entry_signals = scan_result.get("entry_signals", [])
+    exit_signals = scan_result.get("exit_signals", [])
+    reentry_signals = scan_result.get("reentry_signals", [])
+
+    if not entry_signals and not exit_signals and not reentry_signals:
+        return None
+
+    scan_time = scan_result.get("scan_time", "")
+    vix = scan_result.get("vix")
+    vix_str = f" | VIX {vix:.1f}" if vix else ""
+    lines = [f"<b>📊 ETF Core Signal</b> — {scan_time}{vix_str}"]
+
+    if entry_signals:
+        lines.append("")
+        lines.append("🟢 <b>ENTRY</b>")
+        for s in entry_signals:
+            intl_note = " ⚠️ INTL CAP" if s.get("intl_blocked") else ""
+            lines.append(
+                f"  • <b>{s['symbol']}</b> (#{s['rank']}) "
+                f"RS63={s['rs63']:.2f}% @ ₹{s['price']}{intl_note}"
+            )
+
+    if reentry_signals:
+        lines.append("")
+        lines.append("🔵 <b>RE-ENTRY</b>")
+        for s in reentry_signals:
+            lines.append(
+                f"  • <b>{s['symbol']}</b> (#{s['rank']}) "
+                f"RS63={s['rs63']:.2f}% @ ₹{s['price']}"
+            )
+
+    if exit_signals:
+        lines.append("")
+        lines.append("🔴 <b>EXIT</b>")
+        for s in exit_signals:
+            reasons = ", ".join(s["reasons"])
+            lines.append(
+                f"  • <b>{s['symbol']}</b> @ ₹{s['price']} — {reasons}"
+            )
+
+    return "\n".join(lines)
+
+
+def get_chat_id() -> str | None:
+    """Helper to fetch your chat_id from getUpdates (call once after messaging the bot)."""
+    token = _token()
+    if not token:
+        print("[notifier] TELEGRAM_BOT_TOKEN not set")
+        return None
+    url = f"https://api.telegram.org/bot{token}/getUpdates"
+    try:
+        r = requests.get(url, timeout=10)
+        data = r.json()
+        results = data.get("result", [])
+        if not results:
+            print("[notifier] No messages yet — send any message to your bot first, then retry.")
+            return None
+        chat_id = str(results[-1]["message"]["chat"]["id"])
+        print(f"[notifier] Your chat_id: {chat_id}")
+        return chat_id
+    except Exception as e:
+        print(f"[notifier] getUpdates failed: {e}")
+        return None

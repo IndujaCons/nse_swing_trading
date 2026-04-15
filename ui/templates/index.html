@@ -1118,6 +1118,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('momentum')">Backtest</button>
                 <button class="strategy-tab" onclick="switchStrategy('trade_explain')">Trade Explain</button>
                 <button class="strategy-tab" onclick="switchStrategy('goldm')">GOLDM</button>
+                <button class="strategy-tab" onclick="window.location.href='/etf-core'" style="color:#4db8ff;">ETF Core</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2246,7 +2247,7 @@
                     chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">No chart data available.</div>';
                     return;
                 }
-                drawWatchlistChart(data.dates, data.prices, wlSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, null, data.dma50, data.dma200);
+                drawWatchlistChart(data.dates, data.prices, wlSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, null, data.dma50, data.dma200, data.volumes);
             } catch (e) {
                 chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--red);">Failed to load chart.</div>';
             }
@@ -2258,7 +2259,7 @@
 
         let _wlChartState = null;
 
-        function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma200) {
+        function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma200, volumes) {
             currency = currency || '₹';
             const bodyId = targetBodyId || 'wl-chart-body';
             const canvasId = bodyId === 'ls-chart-body' ? 'ls-chart-canvas' : 'wl-chart-canvas';
@@ -2271,7 +2272,7 @@
             canvas.height = 280 * dpr;
             canvas.style.height = '280px';
 
-            _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 280, currency, rsSmooth, dma50: dma50 || [], dma200: dma200 || [] };
+            _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 280, currency, rsSmooth, dma50: dma50 || [], dma200: dma200 || [], volumes: volumes || [] };
             _renderWatchlistChart(canvas);
 
             canvas.onmousemove = function(e) {
@@ -2353,6 +2354,22 @@
                 ctx.font = '9px monospace';
                 ctx.textAlign = 'right';
                 ctx.fillText(cur + pVal.toLocaleString('en-IN', {maximumFractionDigits: 0}), pad.left - 4, y + 3);
+            }
+
+            // Volume bars (bottom 20% of price pane, behind price line)
+            const volumes = s.volumes || [];
+            if (volumes.length === prices.length && volumes.some(v => v !== null)) {
+                const maxVol = Math.max(...volumes.filter(v => v !== null));
+                const volMaxH = pch * 0.22;
+                const barW = Math.max(1, cw / prices.length - 0.5);
+                for (let i = 0; i < volumes.length; i++) {
+                    if (volumes[i] === null || volumes[i] === 0) continue;
+                    const x = pad.left + (i / (prices.length - 1)) * cw;
+                    const barH = (volumes[i] / maxVol) * volMaxH;
+                    const up = i === 0 || prices[i] >= prices[i - 1];
+                    ctx.fillStyle = up ? 'rgba(34,197,94,0.30)' : 'rgba(239,68,68,0.30)';
+                    ctx.fillRect(x - barW / 2, pad.top + pch - barH, barW, barH);
+                }
             }
 
             // Price line
@@ -2632,6 +2649,12 @@
                 if (benchData && benchData[idx] !== null) {
                     lines.push(`Nifty200: ${cur}${benchData[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
                 }
+                const volArr = s.volumes || [];
+                if (volArr[idx] !== null && volArr[idx] !== undefined && volArr[idx] > 0) {
+                    const vol = volArr[idx];
+                    const volStr = vol >= 1e7 ? (vol/1e7).toFixed(2)+'Cr' : vol >= 1e5 ? (vol/1e5).toFixed(1)+'L' : vol.toLocaleString('en-IN');
+                    lines.push(`Vol: ${volStr}`);
+                }
                 const d50 = s.dma50 || [];
                 const d200 = s.dma200 || [];
                 if (d50[idx] !== null && d50[idx] !== undefined) {
@@ -2662,6 +2685,7 @@
                 lines.forEach((line, i) => {
                     if (i === 0) ctx.fillStyle = '#666';
                     else if (line.startsWith('Price')) ctx.fillStyle = bullish ? '#16a34a' : '#dc2626';
+                    else if (line.startsWith('Vol')) ctx.fillStyle = '#888';
                     else if (line.startsWith('D50')) ctx.fillStyle = '#1976d2';
                     else if (line.startsWith('D200')) ctx.fillStyle = '#e65100';
                     else ctx.fillStyle = '#555';
@@ -3212,7 +3236,7 @@
                         return;
                     }
                     // Reuse the exact same watchlist chart renderer, targeting ls-chart-body
-                    drawWatchlistChart(data.dates, data.prices, lsSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, 'ls-chart-body', data.dma50, data.dma200);
+                    drawWatchlistChart(data.dates, data.prices, lsSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, 'ls-chart-body', data.dma50, data.dma200, data.volumes);
                 })
                 .catch(() => {
                     chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--red);">Chart failed.</div>';
@@ -3258,7 +3282,7 @@
                         ? 'font-size:10px;color:var(--text-muted);'
                         : 'font-size:10px;color:var(--text-muted);font-style:italic;';
                     const retColor12 = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
-                    const retColor6 = s.ret_6m > 0 ? 'var(--green)' : 'var(--red)';
+                    const retColor3 = s.ret_3m > 0 ? 'var(--green)' : 'var(--red)';
                     const scoreColor = s.momentum_score > 1.5 ? 'var(--green)' : s.momentum_score > 1.0 ? 'var(--text)' : 'var(--text-muted)';
                     const betaColor = s.beta <= 0.8 ? 'var(--green)' : 'var(--text)';
                     const epsVal = s.ttm_eps_growth;
@@ -3271,7 +3295,7 @@
                         <td class="ticker">${s.ticker}</td>
                         <td class="price">${s.price.toLocaleString()}</td>
                         <td style="color:${retColor12};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
-                        <td style="color:${retColor6};">${s.ret_6m > 0 ? '+' : ''}${s.ret_6m}%</td>
+                        <td style="color:${retColor3};">${s.ret_3m !== null && s.ret_3m !== undefined ? (s.ret_3m > 0 ? '+' : '') + s.ret_3m + '%' : 'N/A'}</td>
                         <td>${s.volatility}%</td>
                         <td style="color:${betaColor};">${s.beta}</td>
                         <td style="color:${scoreColor};font-weight:600;">${s.momentum_score.toFixed(2)}</td>
@@ -3282,7 +3306,7 @@
                     <table class="stock-table">
                         <thead><tr>
                             <th>#</th><th>Stock</th><th>Close</th>
-                            <th>12m Ret</th><th>6m Ret</th><th>Vol</th><th>Beta</th><th>Mom Score</th><th>TTM EPS</th>
+                            <th>12m Ret</th><th>3m Ret</th><th>Vol</th><th>Beta</th><th>Mom Score</th><th>TTM EPS</th>
                         </tr></thead>
                         <tbody>${mom15Rows}</tbody>
                     </table>

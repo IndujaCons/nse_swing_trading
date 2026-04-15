@@ -789,7 +789,8 @@
                 data.bench, data.bench_label,
                 data.currency || '₹',
                 data.rs_smooth, 'etf-chart-body',
-                data.dma50, data.dma100, data.dma200
+                data.dma50, data.dma100, data.dma200,
+                data.volumes
             );
         } catch (e) {
             body.innerHTML = `<div class="chart-placeholder" style="color:var(--red);">Failed: ${e.message}</div>`;
@@ -801,7 +802,7 @@
     }
 
     // ── Chart Drawing (copied from index.html) ─────────────────────────────────
-    function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma100, dma200) {
+    function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma100, dma200, volumes) {
         currency = currency || '₹';
         const bodyId = targetBodyId || 'etf-chart-body';
         const canvasId = 'etf-chart-canvas';
@@ -814,7 +815,7 @@
         canvas.height = 300 * dpr;
         canvas.style.height = '300px';
 
-        _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 300, currency, rsSmooth, dma50: dma50 || [], dma100: dma100 || [], dma200: dma200 || [] };
+        _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 300, currency, rsSmooth, dma50: dma50 || [], dma100: dma100 || [], dma200: dma200 || [], volumes: volumes || [] };
         _renderWatchlistChart(canvas);
 
         canvas.onmousemove = function(e) {
@@ -891,6 +892,22 @@
             ctx.font = '9px monospace';
             ctx.textAlign = 'right';
             ctx.fillText(cur + pVal.toLocaleString('en-IN', {maximumFractionDigits: 0}), pad.left - 4, y + 3);
+        }
+
+        // Volume bars
+        const volumes = s.volumes || [];
+        if (volumes.length === prices.length && volumes.some(v => v !== null)) {
+            const maxVol = Math.max(...volumes.filter(v => v !== null));
+            const volMaxH = pch * 0.22;
+            const barW = Math.max(1, cw / prices.length - 0.5);
+            for (let i = 0; i < volumes.length; i++) {
+                if (volumes[i] === null || volumes[i] === 0) continue;
+                const x = pad.left + (i / (prices.length - 1)) * cw;
+                const barH = (volumes[i] / maxVol) * volMaxH;
+                const up = i === 0 || prices[i] >= prices[i - 1];
+                ctx.fillStyle = up ? 'rgba(34,197,94,0.30)' : 'rgba(239,68,68,0.30)';
+                ctx.fillRect(x - barW / 2, pad.top + pch - barH, barW, barH);
+            }
         }
 
         // Price line
@@ -1118,6 +1135,12 @@
             const d50 = s.dma50 || [], d200 = s.dma200 || [];
             if (d50[idx] !== null && d50[idx] !== undefined) lines.push(`D50: ${cur}${d50[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
             if (d200[idx] !== null && d200[idx] !== undefined) lines.push(`D200: ${cur}${d200[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+            const volArr = s.volumes || [];
+            if (volArr[idx] !== null && volArr[idx] !== undefined && volArr[idx] > 0) {
+                const vol = volArr[idx];
+                const volStr = vol >= 1e7 ? (vol/1e7).toFixed(2)+'Cr' : vol >= 1e5 ? (vol/1e5).toFixed(1)+'L' : vol.toLocaleString('en-IN');
+                lines.push(`Vol: ${volStr}`);
+            }
 
             ctx.font = '10px monospace';
             const lineH = 14;
@@ -1133,7 +1156,11 @@
             ctx.beginPath(); ctx.roundRect(tx, ty, tw, th, 3); ctx.fill(); ctx.stroke();
 
             ctx.fillStyle = '#2c3e50'; ctx.textAlign = 'left';
-            lines.forEach((l, i) => ctx.fillText(l, tx + 6, ty + 13 + i * lineH));
+            lines.forEach((l, i) => {
+                if (l.startsWith('Vol')) ctx.fillStyle = '#888';
+                else ctx.fillStyle = '#2c3e50';
+                ctx.fillText(l, tx + 6, ty + 13 + i * lineH);
+            });
 
             // Price dot
             const py = pad.top + pch - ((price - minP) / pRange) * pch;

@@ -184,6 +184,20 @@ TICKER_ALIASES = {
     # TATAMTRDVR (DVR delisted), TV18BRDCST (merged Network18)
 }
 
+# RS63 structural blacklist — stocks with documented 0-25% WR across 5+ trades
+# in 11yr PIT backtest. These generate false RS63 crossovers via policy/macro events
+# not sustained relative strength. See rejected_rs63.md for full analysis.
+_RS63_BLACKLIST = {
+    # PSU commodity traders — policy spikes, not price trends
+    "COALINDIA", "NMDC", "SAIL", "MOIL", "NALCO",
+    # Rate-sensitive banking — RBI/macro spikes then consolidation
+    "ICICIBANK", "KOTAKBANK", "RBLBANK", "YESBANK", "BANDHANBNK",
+    # Premium irregular-cycle — long flat + cyclical spike pattern
+    "EICHERMOT", "TIINDIA",
+    # Media — event-driven, no sustained RS
+    "ZEEL", "SUNTV", "NETWORK18", "TV18BRDCST",
+}
+
 def load_pit_nifty200():
     """Load point-in-time Nifty 200 constituent database.
     Returns dict: effective_date_str -> set of symbols.
@@ -307,6 +321,38 @@ class MomentumBacktester:
         rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))
         return rsi
+
+    @staticmethod
+    def compute_heikinashi(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Convert OHLC DataFrame to Heikin-Ashi candles.
+
+        HA_Close = (O + H + L + C) / 4
+        HA_Open  = (prev_HA_Open + prev_HA_Close) / 2  (first bar seeds from real O/C avg)
+        HA_High  = max(H, HA_Open, HA_Close)
+        HA_Low   = min(L, HA_Open, HA_Close)
+
+        Returns a new DataFrame with columns: HA_Open, HA_High, HA_Low, HA_Close.
+        """
+        o = df["Open"].values
+        h = df["High"].values
+        l = df["Low"].values
+        c = df["Close"].values
+        n = len(df)
+
+        ha_close = (o + h + l + c) / 4.0
+        ha_open = np.empty(n)
+        ha_open[0] = (o[0] + c[0]) / 2.0
+        for i in range(1, n):
+            ha_open[i] = (ha_open[i - 1] + ha_close[i - 1]) / 2.0
+
+        ha_high = np.maximum(h, np.maximum(ha_open, ha_close))
+        ha_low  = np.minimum(l, np.minimum(ha_open, ha_close))
+
+        return pd.DataFrame(
+            {"HA_Open": ha_open, "HA_High": ha_high, "HA_Low": ha_low, "HA_Close": ha_close},
+            index=df.index,
+        )
 
     @staticmethod
     def _find_swing_lows(lows: pd.Series, left: int = 5, right: int = 3) -> list:
@@ -3967,7 +4013,11 @@ class MomentumBacktester:
         return {"trades": trades, "rebalance_dates": rebal_dates}
 
     def run_rs55_backtest(self, period_days=365*11, capital_lakhs=10,
-                           max_positions=7, end_date=None, pit_universe=True):
+                           max_positions=7, end_date=None, pit_universe=True,
+                           filter_a=False, filter_b=False, filter_c=False,
+                           filter_a_jump=0.08, filter_b_weeks=3,
+                           filter_d=False, filter_d_days=3,
+                           filter_e=False, filter_e_threshold=0.55):
         """
         RS55 Satellite Strategy — Vivek Bajaj RS Framework.
 
@@ -4004,67 +4054,83 @@ class MomentumBacktester:
         daily_start = end_date - timedelta(days=period_days + 600)
         bt_start_date = (end_date - timedelta(days=period_days)).date()
 
-        # --- Phase 1: Fetch data ---
-        stock_data = {}
-        total = len(tickers)
-        for idx, ticker in enumerate(tickers):
-            nse_symbol = f"{ticker}.NS"
+        # --- Phase 1: Fetch data (with pickle cache for deterministic runs) ---
+        import pickle, os as _os
+        _cache_dir = _os.path.join(_os.path.dirname(__file__), '..', 'data', 'cache')
+        _os.makedirs(_cache_dir, exist_ok=True)
+        _cache_key = f"rs63_{period_days}d_{'pit' if pit_universe else 'npit'}_{end_date.strftime('%Y%m%d')}"
+        _cache_file = _os.path.join(_cache_dir, f"{_cache_key}.pkl")
+
+        if _os.path.exists(_cache_file):
+            print(f"  Loading cached data from {_os.path.basename(_cache_file)} ...")
+            with open(_cache_file, "rb") as _f:
+                stock_data, bench_data, nifty50_data, sector_rs63 = pickle.load(_f)
+            print(f"  Cache hit: {len(stock_data)} stocks, {len(bench_data)} bench bars")
+        else:
+            stock_data = {}
+            total = len(tickers)
+            for idx, ticker in enumerate(tickers):
+                nse_symbol = f"{ticker}.NS"
+                try:
+                    daily = yf.Ticker(nse_symbol).history(start=daily_start, end=end_date)
+                except Exception:
+                    daily = pd.DataFrame()
+                if (daily.empty or len(daily) < 300) and ticker in TICKER_ALIASES:
+                    daily = _fetch_alias(ticker, daily_start, end_date)
+                if not daily.empty and len(daily) >= 300:
+                    stock_data[ticker] = daily
+                if (idx + 1) % 50 == 0:
+                    print(f"  Loaded {idx + 1}/{total} stocks...")
+
+            print(f"  Data loaded: {len(stock_data)} stocks with sufficient history")
+
+            # Fetch Nifty 200 benchmark for RS calculation
             try:
-                daily = yf.Ticker(nse_symbol).history(start=daily_start, end=end_date)
+                bench_data = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
+                print(f"  Nifty 200 benchmark: {len(bench_data)} bars")
             except Exception:
-                daily = pd.DataFrame()
-            if (daily.empty or len(daily) < 300) and ticker in TICKER_ALIASES:
-                daily = _fetch_alias(ticker, daily_start, end_date)
-            if not daily.empty and len(daily) >= 300:
-                stock_data[ticker] = daily
-            if (idx + 1) % 50 == 0:
-                print(f"  Loaded {idx + 1}/{total} stocks...")
+                print("  ERROR: Could not fetch Nifty 200 benchmark")
+                return {"trades": []}
 
-        print(f"  Data loaded: {len(stock_data)} stocks with sufficient history")
-
-        # Fetch Nifty 200 benchmark for RS calculation
-        try:
-            bench_data = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
-            print(f"  Nifty 200 benchmark: {len(bench_data)} bars")
-        except Exception:
-            print("  ERROR: Could not fetch Nifty 200 benchmark")
-            return {"trades": []}
-
-        # Fetch Nifty 50 for beta calculation
-        nifty50_data = None
-        try:
-            nifty50_data = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
-            print(f"  Nifty 50 loaded: {len(nifty50_data)} bars (for beta filter)")
-        except Exception:
-            print("  WARNING: Could not fetch Nifty 50 for beta")
-
-        # Fetch sectoral indices and compute sector RS63
-        from data.live_signals_engine import SECTORAL_INDICES
-        from sector_mapping import STOCK_SECTOR_MAP
-        sector_rs63 = {}  # sector_name -> {date -> rs63_value}
-        print("  Fetching sectoral indices for sector RS filter...")
-        for sector_name, sector_symbol in SECTORAL_INDICES.items():
-            if sector_name == "NIFTY HEALTHCARE":  # duplicate of PHARMA
-                continue
+            # Fetch Nifty 50 for beta calculation
+            nifty50_data = None
             try:
-                sec_df = yf.Ticker(sector_symbol).history(start=daily_start, end=end_date)
-                if len(sec_df) < 100:
+                nifty50_data = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
+                print(f"  Nifty 50 loaded: {len(nifty50_data)} bars (for beta filter)")
+            except Exception:
+                print("  WARNING: Could not fetch Nifty 50 for beta")
+
+            # Fetch sectoral indices and compute sector RS63
+            from data.live_signals_engine import SECTORAL_INDICES
+            sector_rs63 = {}  # sector_name -> {date -> rs63_value}
+            print("  Fetching sectoral indices for sector RS filter...")
+            for sector_name, sector_symbol in SECTORAL_INDICES.items():
+                if sector_name == "NIFTY HEALTHCARE":  # duplicate of PHARMA
                     continue
-                sec_close = sec_df["Close"]
-                bench_aligned_sec = bench_data["Close"].reindex(sec_df.index, method="ffill")
-                sec_ratio = sec_close / bench_aligned_sec
-                sec_rs63_raw = (sec_ratio / sec_ratio.shift(63) - 1) * 100
-                sec_rs63 = sec_rs63_raw.rolling(5, min_periods=1).mean()
-                # Build date lookup
-                date_vals = {}
-                for idx in sec_rs63.index:
-                    dt = idx.date() if hasattr(idx, 'date') else idx
-                    if not pd.isna(sec_rs63[idx]):
-                        date_vals[dt] = float(sec_rs63[idx])
-                sector_rs63[sector_name] = date_vals
-            except Exception:
-                pass
-        print(f"  Sector RS63 loaded for {len(sector_rs63)} sectors")
+                try:
+                    sec_df = yf.Ticker(sector_symbol).history(start=daily_start, end=end_date)
+                    if len(sec_df) < 100:
+                        continue
+                    sec_close = sec_df["Close"]
+                    bench_aligned_sec = bench_data["Close"].reindex(sec_df.index, method="ffill")
+                    sec_ratio = sec_close / bench_aligned_sec
+                    sec_rs63_raw = (sec_ratio / sec_ratio.shift(63) - 1) * 100
+                    sec_rs63 = sec_rs63_raw.rolling(5, min_periods=1).mean()
+                    date_vals = {}
+                    for idx in sec_rs63.index:
+                        dt = idx.date() if hasattr(idx, 'date') else idx
+                        if not pd.isna(sec_rs63[idx]):
+                            date_vals[dt] = float(sec_rs63[idx])
+                    sector_rs63[sector_name] = date_vals
+                except Exception:
+                    pass
+
+            print(f"  Sector RS63 loaded for {len(sector_rs63)} sectors")
+            print(f"  Saving cache to {_os.path.basename(_cache_file)} ...")
+            with open(_cache_file, "wb") as _f:
+                pickle.dump((stock_data, bench_data, nifty50_data, sector_rs63), _f)
+
+        from sector_mapping import STOCK_SECTOR_MAP
 
         # --- Phase 2: Pre-compute indicators ---
         print("  Pre-computing indicators...")
@@ -4138,6 +4204,9 @@ class MomentumBacktester:
 
             # RS ratio: RS123 for entry, RS63 for exit (both smoothed)
             rs_ratio = closes / bench_aligned
+            # FIP (Frog-in-the-Pan): % of last 63 days where daily RS ratio went up
+            _rs_daily_up = (rs_ratio.diff() > 0).astype(int)
+            fip_63 = _rs_daily_up.rolling(63, min_periods=32).mean()
             rs123_raw = (rs_ratio / rs_ratio.shift(123) - 1) * 100
             rs123 = rs123_raw.rolling(5, min_periods=1).mean()  # entry
             rs55_raw = (rs_ratio / rs_ratio.shift(63) - 1) * 100
@@ -4174,6 +4243,7 @@ class MomentumBacktester:
             # Volume average
             vol_avg20 = volumes.rolling(20).mean()
 
+
             # Rolling 1-year beta vs Nifty 50
             beta_series = pd.Series(index=closes.index, dtype=float)
             if nifty50_data is not None:
@@ -4197,6 +4267,7 @@ class MomentumBacktester:
                 "vol_avg20": vol_avg20,
                 "rsi14_exit": rsi14_exit,
                 "rs63_streak": rs63_streak,
+                "fip_63": fip_63,
             }
 
         # --- Phase 3: Build date mapping ---
@@ -4341,6 +4412,40 @@ class MomentumBacktester:
                 if rs55_v <= 0 or rsi_v <= 50:
                     continue
 
+                # Filter D — RS63 must be > 0 for N consecutive days (streak gate)
+                if filter_d:
+                    streak_v = float(ind["rs63_streak"].iloc[ci]) if not pd.isna(ind["rs63_streak"].iloc[ci]) else 0
+                    if streak_v < filter_d_days:
+                        continue
+
+                # Filter C — Structural blacklist: PSU commodity traders, rate-sensitive banks,
+                # premium irregular-cycle stocks with documented 0% WR in 11yr backtest
+                if filter_c and ticker in _RS63_BLACKLIST:
+                    continue
+
+                # Filter A — RS63 Depth Check: block event spikes
+                # If RS63 jumped > N% in last 15 trading days, it's a spike origin not a trend build
+                if filter_a and ci >= 15:
+                    rs63_15d = float(ind["rs55"].iloc[ci - 15]) if not pd.isna(ind["rs55"].iloc[ci - 15]) else rs55_v
+                    if (rs55_v - rs63_15d) >= filter_a_jump:
+                        continue
+
+                # Filter B — RS63 3-week positivity: RS63 must have been > 2% for N*5 trading days
+                # Guards against fresh crossovers from negative territory
+                if filter_b:
+                    lookback = filter_b_weeks * 5  # weeks → trading days
+                    if ci >= lookback:
+                        rs63_Nw_ago = float(ind["rs55"].iloc[ci - lookback]) if not pd.isna(ind["rs55"].iloc[ci - lookback]) else 0
+                        if rs63_Nw_ago <= 0.02:
+                            continue
+
+                # Filter E — Frog-in-the-Pan: require smooth RS path
+                # % of last 63 daily RS moves that were positive; blocks event-spike entries
+                if filter_e:
+                    fip_v = float(ind["fip_63"].iloc[ci]) if not pd.isna(ind["fip_63"].iloc[ci]) else 0.0
+                    if fip_v < filter_e_threshold:
+                        continue
+
                 # IBS > 0.5 (close in upper half of day's range) + green candle
                 high_today = float(df["High"].iloc[ci])
                 low_today = float(df["Low"].iloc[ci])
@@ -4410,6 +4515,216 @@ class MomentumBacktester:
             })
 
         print(f"  RS55 backtest complete: {len(trades)} trades")
+        return {"trades": trades}
+
+    def run_rs63_weekly_backtest(self, period_days=365*11, capital_lakhs=20,
+                                  max_positions=10, buffer_in=10, buffer_out=30,
+                                  end_date=None, pit_universe=True):
+        """
+        RS63 Weekly Rotation Strategy.
+
+        Every Friday EOD: rank Nifty 200 stocks by RS63 (5d SMA of 63-day relative return).
+        Only stocks with RS63 > 0 are eligible for entry/retention.
+        Buffer: existing position stays if rank <= buffer_out, new enters if rank <= buffer_in.
+        Execution: Friday EOD signal -> next trading day (Monday) open.
+        Pure rank-based exits — no hard SL, no RSI stops.
+        """
+        import pickle, os as _os
+        from collections import defaultdict
+
+        # PIT universe
+        pit_data = None
+        if pit_universe:
+            pit_data = load_pit_nifty200()
+            if pit_data is None:
+                print("  WARNING: pit_universe=True but nifty200_pit.json not found")
+
+        if pit_data is not None:
+            all_pit_tickers = get_all_pit_tickers(pit_data)
+            tickers = sorted(all_pit_tickers)
+            print(f"  PIT universe: {len(tickers)} unique tickers")
+        else:
+            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+
+        TOTAL_CAPITAL = capital_lakhs * 100000
+        PER_STOCK = TOTAL_CAPITAL // max_positions
+
+        end_date = end_date or datetime.now()
+        daily_start = end_date - timedelta(days=period_days + 600)
+        bt_start_date = (end_date - timedelta(days=period_days)).date()
+
+        # Reuse same cache as run_rs55_backtest
+        _cache_dir = _os.path.join(_os.path.dirname(__file__), '..', 'data', 'cache')
+        _os.makedirs(_cache_dir, exist_ok=True)
+        _cache_key = f"rs63_{period_days}d_{'pit' if pit_universe else 'npit'}_{end_date.strftime('%Y%m%d')}"
+        _cache_file = _os.path.join(_cache_dir, f"{_cache_key}.pkl")
+
+        if _os.path.exists(_cache_file):
+            print(f"  Loading cached data from {_os.path.basename(_cache_file)} ...")
+            with open(_cache_file, "rb") as _f:
+                stock_data, bench_data, nifty50_data, sector_rs63 = pickle.load(_f)
+            print(f"  Cache hit: {len(stock_data)} stocks, {len(bench_data)} bench bars")
+        else:
+            print("  No cache found — run run_rs55_backtest() first to build cache")
+            return {"trades": []}
+
+        # Pre-compute RS63 and price lookups for each stock
+        bench_close = bench_data["Close"]
+        rs63_map = {}   # ticker -> {date -> rs63_value}
+        open_map = {}   # ticker -> {date -> open_price}
+        close_map = {}  # ticker -> {date -> close_price}
+
+        print("  Pre-computing RS63 and price lookups...")
+        for ticker, df in stock_data.items():
+            closes = df["Close"]
+            bench_aligned = bench_close.reindex(closes.index, method="ffill")
+            rs_ratio = closes / bench_aligned
+            rs63_raw = (rs_ratio / rs_ratio.shift(63) - 1) * 100
+            rs63 = rs63_raw.rolling(5, min_periods=1).mean()
+
+            rs63_map[ticker] = {}
+            for idx, v in rs63.items():
+                if not pd.isna(v):
+                    d = idx.date() if hasattr(idx, 'date') else idx
+                    rs63_map[ticker][d] = float(v)
+
+            open_map[ticker] = {}
+            for idx, v in df["Open"].items():
+                if not pd.isna(v):
+                    d = idx.date() if hasattr(idx, 'date') else idx
+                    open_map[ticker][d] = float(v)
+
+            close_map[ticker] = {}
+            for idx, v in closes.items():
+                if not pd.isna(v):
+                    d = idx.date() if hasattr(idx, 'date') else idx
+                    close_map[ticker][d] = float(v)
+
+        # All trading days in backtest window
+        all_dates_set = set()
+        for df in stock_data.values():
+            for idx in df.index:
+                d = idx.date() if hasattr(idx, 'date') else idx
+                all_dates_set.add(d)
+        trading_days = sorted(d for d in all_dates_set if d >= bt_start_date)
+
+        # Group by ISO week; take last trading day of each week as the signal day
+        weeks = defaultdict(list)
+        for d in trading_days:
+            week_key = d.isocalendar()[:2]  # (year, week)
+            weeks[week_key].append(d)
+        signal_days = sorted(max(days) for days in weeks.values())
+
+        # Build a fast next-trading-day lookup
+        td_set = set(trading_days)
+        def next_trading_day(d):
+            candidate = d + timedelta(days=1)
+            for _ in range(7):
+                if candidate in td_set:
+                    return candidate
+                candidate += timedelta(days=1)
+            return None
+
+        portfolio = {}  # ticker -> {entry_date, entry_price, shares}
+        trades = []
+
+        print(f"  Trading days: {len(trading_days)} | Signal days (weekly): {len(signal_days)}")
+
+        for sig_idx, signal_day in enumerate(signal_days):
+            pit_set = get_pit_universe(pit_data, signal_day) if pit_data is not None else None
+
+            # Score eligible stocks: RS63 > 0, in PIT universe, sufficient history (>=68 bars)
+            scores = {}
+            for ticker in stock_data:
+                if pit_set is not None and ticker not in pit_set:
+                    continue
+                rs63_val = rs63_map.get(ticker, {}).get(signal_day)
+                if rs63_val is None or rs63_val <= 0:
+                    continue
+                scores[ticker] = rs63_val
+
+            # Rank by RS63 descending
+            ranked = sorted(scores, key=lambda t: scores[t], reverse=True)
+            rank_map = {t: i + 1 for i, t in enumerate(ranked)}
+
+            # Buffer rule
+            new_holdings = set()
+            for t in portfolio:
+                r = rank_map.get(t, 999)
+                if r <= buffer_out:  # existing stays if still in top buffer_out
+                    new_holdings.add(t)
+            for t in ranked[:buffer_in]:  # new enters if in top buffer_in
+                if t not in portfolio:
+                    new_holdings.add(t)
+            # Cap at max_positions, prefer highest ranked
+            if len(new_holdings) > max_positions:
+                new_holdings = set(
+                    sorted(new_holdings, key=lambda t: rank_map.get(t, 999))[:max_positions]
+                )
+
+            exec_day = next_trading_day(signal_day)
+            if exec_day is None:
+                continue
+
+            # Sells first (free up capital)
+            to_sell = set(portfolio.keys()) - new_holdings
+            for t in sorted(to_sell):
+                pos = portfolio.pop(t)
+                sell_price = open_map.get(t, {}).get(exec_day)
+                if sell_price is None:
+                    avail = [d for d in close_map.get(t, {}) if d <= exec_day]
+                    sell_price = close_map[t][max(avail)] if avail else pos["entry_price"]
+
+                gross_pnl = (sell_price - pos["entry_price"]) * pos["shares"]
+                rank_str = rank_map.get(t, "N/A")
+                reason = "RS63_NEG" if t not in scores else f"RANK_EXIT({rank_str})"
+                trades.append({
+                    "symbol": t, "strategy": "RS63W",
+                    "entry_date": pos["entry_date"], "exit_date": exec_day,
+                    "entry_price": pos["entry_price"], "exit_price": sell_price,
+                    "shares": pos["shares"], "pnl": gross_pnl,
+                    "exit_reason": reason,
+                    "hold_days": (exec_day - pos["entry_date"]).days,
+                })
+
+            # Buys (highest ranked first)
+            to_buy = new_holdings - set(portfolio.keys())
+            for t in sorted(to_buy, key=lambda x: rank_map.get(x, 999)):
+                if len(portfolio) >= max_positions:
+                    break
+                buy_price = open_map.get(t, {}).get(exec_day)
+                if buy_price is None or buy_price <= 0:
+                    continue
+                shares = int(PER_STOCK // buy_price)
+                if shares <= 0:
+                    continue
+                portfolio[t] = {
+                    "entry_date": exec_day,
+                    "entry_price": buy_price,
+                    "shares": shares,
+                }
+
+            if (sig_idx + 1) % 100 == 0:
+                print(f"    Week {sig_idx+1}/{len(signal_days)}, positions: {len(portfolio)}, trades: {len(trades)}")
+
+        # Close all open positions at backtest end
+        last_day = trading_days[-1]
+        for ticker, pos in list(portfolio.items()):
+            sell_price = close_map.get(ticker, {}).get(last_day)
+            if sell_price is None:
+                avail = [d for d in close_map.get(ticker, {}) if d <= last_day]
+                sell_price = close_map[ticker][max(avail)] if avail else pos["entry_price"]
+            gross_pnl = (sell_price - pos["entry_price"]) * pos["shares"]
+            trades.append({
+                "symbol": ticker, "strategy": "RS63W",
+                "entry_date": pos["entry_date"], "exit_date": last_day,
+                "entry_price": pos["entry_price"], "exit_price": sell_price,
+                "shares": pos["shares"], "pnl": gross_pnl,
+                "exit_reason": "BACKTEST_END",
+                "hold_days": (last_day - pos["entry_date"]).days,
+            })
+
+        print(f"  RS63 Weekly backtest complete: {len(trades)} trades")
         return {"trades": trades}
 
     def run_lowvol_backtest(self, period_days=365*11, capital_lakhs=20,

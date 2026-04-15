@@ -55,6 +55,11 @@ UNIVERSE = [
     ("GDX",         "Gold Miners",           "GDX"),
     ("XME",         "Metals & Mining",       "XME"),
     ("VGK",         "Europe (broad)",        "VGK"),
+    ("XLK",         "US Technology",         "XLK"),
+    ("XLP",         "US Cons Staples",       "XLP"),
+    ("TLT",         "US LT Treasuries",      "TLT"),
+    ("XLV",         "US Healthcare",         "XLV"),
+    ("ITA",         "US Aerospace/Defence",  "ITA"),
     # UCITS equivalents (LSE-listed, Irish/Lux domicile — estate-tax friendly)
     ("GDGB",        "Gold Miners UCITS",     "GDGB.L"),   # GDX equiv
     ("VEUR",        "Europe UCITS",          "VEUR.L"),   # VGK equiv
@@ -72,17 +77,18 @@ FETCH_FROM     = "2015-03-01"   # extra history for RS63 warm-up
 END_DATE       = date.today().isoformat()
 CAPITAL        = 200_000        # per slot
 N_SLOTS_MIN    = 5              # starting slots; grows as profits compound
-MAX_SLOTS      = 8              # hard cap on slots; beyond ₹20L increase capital per slot instead
+MAX_SLOTS      = 10             # hard cap on slots; beyond ₹20L increase capital per slot instead
 ENTRY_RANK_MAX = 5              # hard cap — no entries beyond rank 5
 ENTRY_RS63_MIN = 0.02           # minimum RS63 for entry (2% threshold)
 LIQUIDBEES_PA  = 0.065          # 6.5% p.a. return on idle slots (LIQUIDBEES proxy)
 MAX_SLOT_CAPITAL = 300_000      # ₹3L cap per slot; excess compounds in LIQUIDBEES
 RS63_DECAY_MAX = 0.03           # allow RS63 to dip up to 3% below prev week before blocking entry
-MAX_INTL_SLOTS = 3              # max slots in international ETFs at any time
+MAX_INTL_SLOTS = 5              # max slots in international ETFs at any time
 INTL_ETFS = {
     "XLE", "GDX", "XME", "VGK",
     "AVDV", "ILF", "FRDM", "EMXC",
     "MON100", "SOXX", "BOTZ", "EWY",
+    "XLK", "XLP", "TLT", "XLV", "ITA",
     # UCITS (LSE-listed)
     "GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML",
 }
@@ -199,6 +205,8 @@ def compute_indicators(closes_dict, bench, kalman_params=None):
         sma50  = s.rolling(50, min_periods=50).mean()
         sma20  = s.rolling(20, min_periods=20).mean()
         high20 = s.rolling(20, min_periods=10).max()
+        # Prior week's Friday close: shift back 5 trading bars (last Friday's close)
+        prev_wk_close = s.shift(5)
 
         # Kalman slope (optional)
         kalman_slope_series = None
@@ -225,6 +233,7 @@ def compute_indicators(closes_dict, bench, kalman_params=None):
                 "sma50":  float(sma50[dt])   if not pd.isna(sma50[dt])  else None,
                 "sma20":  float(sma20[dt])   if not pd.isna(sma20[dt])  else None,
                 "high20": float(high20[dt])  if not pd.isna(high20[dt]) else None,
+                "prev_wk_close": float(prev_wk_close[dt]) if not pd.isna(prev_wk_close[dt]) else None,
             }
             if kalman_slope_series is not None:
                 v = kalman_slope_series[dt]
@@ -496,6 +505,9 @@ def run_backtest(closes_dict, bench, rs63_decay_allowance=RS63_DECAY_MAX,
                     continue
                 if rs63_decay_allowance is not None and not use_kalman and sig < prev_rs - rs63_decay_allowance:
                     continue  # decay check (RS63 only; Kalman already smooths)
+                prev_wk_c = d.get("prev_wk_close")
+                if prev_wk_c is not None and price <= prev_wk_c:
+                    continue  # this Friday close must exceed last Friday close (weekly momentum)
                 if sym in INTL_ETFS and intl_active >= MAX_INTL_SLOTS:
                     continue  # geography cap: max 3 intl slots
                 pending_syms = {s for s, _, _ in pending_entries}
@@ -528,6 +540,9 @@ def run_backtest(closes_dict, bench, rs63_decay_allowance=RS63_DECAY_MAX,
                     continue
                 if rs63_decay_allowance is not None and not use_kalman and sig < prev_rs - rs63_decay_allowance:
                     continue  # decay check (RS63 only; Kalman already smooths)
+                prev_wk_c = d.get("prev_wk_close")
+                if prev_wk_c is not None and price <= prev_wk_c:
+                    continue  # this Friday close must exceed last Friday close (weekly momentum)
                 if sym in INTL_ETFS and intl_active >= MAX_INTL_SLOTS:
                     continue  # geography cap: max 3 intl slots
                 pending_syms = {s for s, _, _ in pending_entries}

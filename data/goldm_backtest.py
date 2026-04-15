@@ -185,6 +185,40 @@ def detect_regime(day_df: pd.DataFrame, cfg: dict) -> str:
         return 'NEUTRAL'
 
 # =============================================================================
+# HEIKIN-ASHI HELPER
+# =============================================================================
+
+def compute_heikinashi(day_df: pd.DataFrame) -> dict:
+    """
+    Compute Heikin-Ashi candles for a day's OHLC data.
+
+    HA_Close = (O + H + L + C) / 4
+    HA_Open  = (prev_HA_Open + prev_HA_Close) / 2  (first bar: (O + C) / 2)
+    HA_High  = max(H, HA_Open, HA_Close)
+    HA_Low   = min(L, HA_Open, HA_Close)
+
+    Returns dict: {timestamp -> ('green'|'red', ha_open, ha_close)}
+    """
+    o = day_df['open'].values
+    h = day_df['high'].values
+    l = day_df['low'].values
+    c = day_df['close'].values
+    n = len(day_df)
+
+    ha_close = (o + h + l + c) / 4.0
+    ha_open = np.empty(n)
+    ha_open[0] = (o[0] + c[0]) / 2.0
+    for i in range(1, n):
+        ha_open[i] = (ha_open[i - 1] + ha_close[i - 1]) / 2.0
+
+    result = {}
+    for i, ts in enumerate(day_df.index):
+        color = 'green' if ha_close[i] >= ha_open[i] else 'red'
+        result[ts] = (color, ha_open[i], ha_close[i])
+    return result
+
+
+# =============================================================================
 # STRATEGY 1: ORB
 # =============================================================================
 
@@ -295,6 +329,126 @@ def strategy_orb(day_df: pd.DataFrame, cfg: dict) -> list:
         trades.append({**position, 'exit': exit_p, 'pnl': pnl,
                        'result': 'EOD', 'exit_ts': trade_data.index[-1], 'strategy': 'ORB'})
     return trades
+
+# =============================================================================
+# STRATEGY 1b: HA-CONFIRMED ORB
+# =============================================================================
+
+def strategy_ha_orb(day_df: pd.DataFrame, cfg: dict) -> list:
+    """
+    HA-Confirmed ORB: identical to ORB but the breakout bar must also be
+    a Heikin-Ashi green candle (long) or HA red candle (short).
+
+    Filters out wick-above-OR spikes where price closes back inside the range
+    but HA still looks bullish/bearish due to smoothing — or more usefully,
+    rejects candles where raw close breaks out but HA color hasn't confirmed
+    the momentum (close > OR high but HA still red = weak/fake breakout).
+
+    Everything else (entry on next bar, SL/target, EOD squareoff) is identical.
+    """
+    trades = []
+    date_str = str(day_df.index[0].date())
+    slippage = cfg['slippage_ticks'] * cfg['tick_size']
+
+    or_end = day_df.index[0] + pd.Timedelta(minutes=cfg['orb_minutes'])
+    or_data = day_df[day_df.index <= or_end]
+    trade_data = day_df[
+        (day_df.index > or_end) &
+        (day_df.index.time <= pd.Timestamp(cfg['squareoff_time']).time())
+    ]
+
+    if len(or_data) < 2 or len(trade_data) < 2:
+        return []
+
+    or_high = or_data['high'].max()
+    or_low = or_data['low'].min()
+    or_range = or_high - or_low
+
+    if or_range <= 0:
+        return []
+
+    or_range_pct = or_range / or_data['close'].iloc[-1] * 100
+    if or_range_pct > 0.3:
+        return []
+
+    target_dist = or_range * cfg['orb_target_mult']
+    sl_dist = or_range * cfg['orb_sl_mult']
+
+    # Pre-compute HA for the full day so smoothing carries through from open
+    ha_map = compute_heikinashi(day_df)
+
+    position = None
+    breakout_signal = None
+    traded_today = False
+
+    for bar_idx, (ts, row) in enumerate(trade_data.iterrows()):
+        # Execute pending entry on this bar's open
+        if breakout_signal and not traded_today:
+            if breakout_signal == 'LONG':
+                entry = row['open'] + slippage
+                position = dict(side='LONG', entry=entry,
+                                sl=entry - sl_dist,
+                                target=entry + target_dist,
+                                entry_ts=ts, date=date_str)
+            elif breakout_signal == 'SHORT':
+                entry = row['open'] - slippage
+                position = dict(side='SHORT', entry=entry,
+                                sl=entry + sl_dist,
+                                target=entry - target_dist,
+                                entry_ts=ts, date=date_str)
+            traded_today = True
+            breakout_signal = None
+
+        # Manage open position
+        if position is not None:
+            side = position['side']
+            if side == 'LONG':
+                if row['low'] <= position['sl']:
+                    exit_p = position['sl'] - slippage
+                    pnl = (exit_p - position['entry']) * cfg['lot_size'] - cfg['charges_per_lot']
+                    trades.append({**position, 'exit': exit_p, 'pnl': pnl,
+                                   'result': 'SL', 'exit_ts': ts, 'strategy': 'HA_ORB'})
+                    position = None
+                elif row['high'] >= position['target']:
+                    exit_p = position['target']
+                    pnl = (exit_p - position['entry']) * cfg['lot_size'] - cfg['charges_per_lot']
+                    trades.append({**position, 'exit': exit_p, 'pnl': pnl,
+                                   'result': 'TARGET', 'exit_ts': ts, 'strategy': 'HA_ORB'})
+                    position = None
+            elif side == 'SHORT':
+                if row['high'] >= position['sl']:
+                    exit_p = position['sl'] + slippage
+                    pnl = (position['entry'] - exit_p) * cfg['lot_size'] - cfg['charges_per_lot']
+                    trades.append({**position, 'exit': exit_p, 'pnl': pnl,
+                                   'result': 'SL', 'exit_ts': ts, 'strategy': 'HA_ORB'})
+                    position = None
+                elif row['low'] <= position['target']:
+                    exit_p = position['target']
+                    pnl = (position['entry'] - exit_p) * cfg['lot_size'] - cfg['charges_per_lot']
+                    trades.append({**position, 'exit': exit_p, 'pnl': pnl,
+                                   'result': 'TARGET', 'exit_ts': ts, 'strategy': 'HA_ORB'})
+                    position = None
+            continue
+
+        # Detect breakout — HA color must confirm direction
+        if not traded_today and breakout_signal is None:
+            ha_color = ha_map.get(ts, ('green',))[0]
+            if row['close'] > or_high and ha_color == 'green':
+                breakout_signal = 'LONG'
+            elif (row['close'] < or_low and ha_color == 'red'
+                  and not cfg.get('orb_long_only', False)):
+                breakout_signal = 'SHORT'
+
+    # EOD square-off
+    if position is not None and len(trade_data) > 0:
+        exit_p = trade_data.iloc[-1]['close'] + (
+            -slippage if position['side'] == 'LONG' else slippage)
+        mult = 1 if position['side'] == 'LONG' else -1
+        pnl = mult * (exit_p - position['entry']) * cfg['lot_size'] - cfg['charges_per_lot']
+        trades.append({**position, 'exit': exit_p, 'pnl': pnl,
+                       'result': 'EOD', 'exit_ts': trade_data.index[-1], 'strategy': 'HA_ORB'})
+    return trades
+
 
 # =============================================================================
 # STRATEGY 2: VWAP SD (IMPROVED)
@@ -433,6 +587,8 @@ def run_backtest(df: pd.DataFrame, mode: str = 'hybrid', cfg: dict = CFG) -> pd.
         trades = []
         if mode == 'orb':
             trades = strategy_orb(day_df, cfg)
+        elif mode == 'ha_orb':
+            trades = strategy_ha_orb(day_df, cfg)
         elif mode == 'vwap_sd':
             trades = strategy_vwap_sd(day_df, cfg)
         elif mode == 'hybrid':
@@ -541,7 +697,7 @@ def print_stats(stats: dict):
 def main():
     parser = argparse.ArgumentParser(description="GOLDM Intraday Backtest")
     parser.add_argument("--strategy", default="all",
-                        choices=["orb", "vwap_sd", "hybrid", "all"])
+                        choices=["orb", "ha_orb", "vwap_sd", "hybrid", "all"])
     args = parser.parse_args()
 
     print(f"\n{'='*65}")
@@ -552,7 +708,7 @@ def main():
     df = load_data(resample='15min')
     print(f"  Loaded  : {len(df):,} bars  |  {df.index[0].date()} → {df.index[-1].date()}")
 
-    strategies = ["orb", "vwap_sd", "hybrid"] if args.strategy == "all" else [args.strategy]
+    strategies = ["orb", "ha_orb", "vwap_sd", "hybrid"] if args.strategy == "all" else [args.strategy]
     all_stats = {}
 
     for strat in strategies:

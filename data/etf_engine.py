@@ -72,6 +72,11 @@ ETF_UNIVERSE = [
     {"symbol": "GDX",         "name": "Gold Miners ETF",                 "category": "Gold Miners"},
     {"symbol": "XME",         "name": "Metals & Mining ETF",             "category": "Metals Mining"},
     {"symbol": "VGK",         "name": "Europe Broad ETF",                "category": "Europe"},
+    {"symbol": "XLK",         "name": "US Technology ETF",               "category": "US Tech"},
+    {"symbol": "XLP",         "name": "US Consumer Staples ETF",         "category": "US Cons Staples"},
+    {"symbol": "TLT",         "name": "US LT Treasuries ETF",            "category": "US Bonds"},
+    {"symbol": "XLV",         "name": "US Healthcare ETF",               "category": "US Healthcare"},
+    {"symbol": "ITA",         "name": "US Aerospace & Defence ETF",      "category": "US Defence"},
     # EWU removed — UK structural weakness (-₹56K, 33% WR)
     # UCITS equivalents (LSE-listed, Irish/Lux domicile — estate-tax friendly)
     {"symbol": "GDGB",        "name": "Gold Miners UCITS (GDX equiv)",   "category": "Gold Miners UCITS"},
@@ -90,12 +95,12 @@ ETF_MAP = {e["symbol"]: e for e in ETF_UNIVERSE}
 # International ETFs for geography cap (MAX_INTL_SLOTS=3)
 # MON100/MASPTOP50 are NSE-listed but count as international; the rest are US-listed (no .NS)
 INTL_ETFS = {"MON100", "FRDM", "EMXC", "AVDV", "ILF", "XLE", "GDX", "XME", "VGK",
-             "SOXX", "BOTZ", "EWY",
+             "SOXX", "BOTZ", "EWY", "XLK", "XLP", "TLT", "XLV", "ITA",
              "GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML"}
 US_LISTED_ETFS = {"FRDM", "EMXC", "AVDV", "ILF", "XLE", "GDX", "XME", "VGK",
-                  "SOXX", "BOTZ", "EWY"}  # no .NS suffix
+                  "SOXX", "BOTZ", "EWY", "XLK", "XLP", "TLT", "XLV", "ITA"}  # no .NS suffix
 LSE_ETFS = {"GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML"}  # .L suffix (UCITS)
-MAX_INTL_SLOTS = 3  # geography cap
+MAX_INTL_SLOTS = 5  # geography cap
 
 CORR_GROUPS = [
     {"GOLDBEES", "GDX"},  # physical gold vs gold miners — pick the higher ranked

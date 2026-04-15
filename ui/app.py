@@ -1141,7 +1141,7 @@ ETF_TICKERS = [
 
 # International ETFs (US-listed, no .NS suffix)
 INTL_ETF_TICKERS = ["FRDM", "EMXC", "AVDV", "ILF", "XLE", "GDX", "XME", "VGK",
-                    "SOXX", "BOTZ", "EWY"]
+                    "SOXX", "BOTZ", "EWY", "XLK", "XLP", "TLT", "XLV", "ITA"]
 # LSE-listed UCITS ETFs (estate-tax friendly; .L suffix)
 LSE_ETF_TICKERS = ["GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML"]
 
@@ -1404,6 +1404,7 @@ def watchlist_chart():
         to_date = _date.today()
 
         stock_closes = None
+        stock_volumes = None
         broker = _get_connected_broker()
         if broker:
             stock_closes = _kite_daily_closes(broker, base_sym, from_date, to_date)
@@ -1422,6 +1423,10 @@ def watchlist_chart():
             stock_closes = stock_df["Close"].squeeze().dropna()
             if stock_closes.index.tz is not None:
                 stock_closes.index = stock_closes.index.tz_localize(None)
+            if "Volume" in stock_df.columns:
+                stock_volumes = stock_df["Volume"].squeeze()
+                if stock_volumes.index.tz is not None:
+                    stock_volumes.index = stock_volumes.index.tz_localize(None)
 
         # Benchmark: try Kite first (NIFTY 200), fall back to yfinance
         bench_closes = None
@@ -1502,6 +1507,12 @@ def watchlist_chart():
             v200 = dma200_full.get(d)
             dma200_data.append(round(float(v200), 2) if v200 is not None and not pd.isna(v200) else None)
 
+        volumes_data = []
+        if stock_volumes is not None:
+            for d in stock_closes.index:
+                v = stock_volumes.get(d)
+                volumes_data.append(int(v) if v is not None and not pd.isna(v) and v > 0 else None)
+
         rs_label_map = {"1mo": "RS-21d", "3mo": "RS-63d", "6mo": "RS-123d", "1y": "RS-123d"}
         is_intl = ticker in INTL_ETF_TICKERS
         return jsonify({
@@ -1511,6 +1522,7 @@ def watchlist_chart():
             "bench": bench_prices, "bench_label": "Nifty 200",
             "currency": "$" if is_intl else "₹",
             "dma50": dma50_data, "dma100": dma100_data, "dma200": dma200_data,
+            "volumes": volumes_data,
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -1967,6 +1979,106 @@ def goldm_status():
     return jsonify({"success": True, **status})
 
 
+# ============ ETF Core Signal Scheduler ============
+
+def _etf_signal_scheduler():
+    """Background thread: scan ETF Core every hour during Indian OR US market hours.
+
+    Indian market window : Mon–Fri  09:00–16:00 IST
+    US market window     : Mon–Fri  19:00–02:30 IST (next day)
+      → Mon 19:00 – Tue 02:30, ..., Fri 19:00 – Sat 02:30 IST
+
+    Deduplicates: only alerts when signals change vs the previous notification.
+    """
+    import time
+    from datetime import timezone, timedelta
+    from data.notifier import send_message, format_etf_alert
+
+    IST = timezone(timedelta(hours=5, minutes=30))
+    SCAN_INTERVAL = 3600  # 1 hour
+
+    # Indian window (IST hours, inclusive start / exclusive end)
+    IN_OPEN, IN_CLOSE = 9, 16       # 09:00–16:00
+
+    # US window expressed in IST hours
+    US_OPEN  = 19                   # 19:00 IST → ~09:30 EDT / 10:00 EST
+    US_CLOSE_NEXT = 2               # 02:00 IST next day → ~16:30 EDT / 20:30 UTC
+
+    def _in_window(dt):
+        """Return True if dt falls inside Indian or US trading window."""
+        wd = dt.weekday()   # 0=Mon … 6=Sun
+        h  = dt.hour
+
+        # Indian: Mon-Fri 09:00–16:00
+        if wd < 5 and IN_OPEN <= h < IN_CLOSE:
+            return True
+
+        # US evening leg: Mon-Fri 19:00–23:59
+        if wd < 5 and h >= US_OPEN:
+            return True
+
+        # US early-morning leg: Tue-Sat 00:00–02:00
+        # (Sat 00:00–02:00 is still US Friday session)
+        if 0 < wd <= 5 and h < US_CLOSE_NEXT:
+            return True
+
+        return False
+
+    def _next_window_open(dt):
+        """Return the next datetime when a trading window opens."""
+        candidate = dt.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+        for _ in range(200):  # safety cap
+            if _in_window(candidate):
+                return candidate
+            candidate += timedelta(hours=1)
+        return candidate  # fallback
+
+    print("[ETF scheduler] Started — scanning every hour during Indian (09–16 IST) "
+          "and US (19–02 IST) market windows")
+
+    last_signal_key = None  # dedup: only notify when signals change
+
+    while True:
+        now_ist = datetime.now(IST)
+
+        if not _in_window(now_ist):
+            target = _next_window_open(now_ist)
+            sleep_secs = (target - now_ist).total_seconds()
+            print(f"[ETF scheduler] Outside market hours — sleeping until "
+                  f"{target.strftime('%Y-%m-%d %H:%M IST')}")
+            time.sleep(max(sleep_secs, 60))
+            continue
+
+        # Run scan
+        print(f"[ETF scheduler] Scanning at {now_ist.strftime('%Y-%m-%d %H:%M IST')}")
+        try:
+            result = etf_engine.scan()
+            msg = format_etf_alert(result)
+            if msg:
+                entry_syms = tuple(s["symbol"] for s in result.get("entry_signals", []))
+                exit_syms  = tuple(s["symbol"] for s in result.get("exit_signals", []))
+                re_syms    = tuple(s["symbol"] for s in result.get("reentry_signals", []))
+                signal_key = (entry_syms, exit_syms, re_syms)
+                if signal_key != last_signal_key:
+                    print(f"[ETF scheduler] New signals — sending Telegram alert")
+                    send_message(msg)
+                    last_signal_key = signal_key
+                else:
+                    print(f"[ETF scheduler] Signals unchanged — skipping duplicate alert")
+            else:
+                print(f"[ETF scheduler] No signals")
+                last_signal_key = None
+        except Exception as e:
+            err = f"⚠️ ETF Core scan error: {e}"
+            print(f"[ETF scheduler] {err}")
+            try:
+                send_message(err)
+            except Exception:
+                pass
+
+        time.sleep(SCAN_INTERVAL)
+
+
 # ============ Run Server ============
 
 def run_server():
@@ -1980,6 +2092,10 @@ def run_server():
     print(f"  Auto-refresh: Every {config['cache_ttl_minutes']} minutes")
     print(f"  Mode: {'Paper Trading' if PAPER_TRADING_ONLY else 'Live Trading'}")
     print(f"{'='*60}\n")
+
+    # Start ETF signal scheduler (daemon so it exits with the main process)
+    scheduler_thread = threading.Thread(target=_etf_signal_scheduler, daemon=True, name="etf-scheduler")
+    scheduler_thread.start()
 
     app.run(
         host=FLASK_HOST,
