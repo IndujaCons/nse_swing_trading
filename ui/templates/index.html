@@ -3444,18 +3444,13 @@
                         <td>${s.ibs}</td>
                         <td>${s.stop_pct}%</td>
                         <td style="color:var(--red);">₹${s.sl_price.toLocaleString()}</td>
-                        <td style="text-align:center;">
-                            <span class="rs63-buy-btn" style="background:var(--green);color:white;padding:2px 10px;border-radius:3px;font-size:10px;font-weight:700;cursor:pointer;"
-                                  data-ticker="${s.ticker}" data-price="${s.price}" data-sl="${s.sl_price}"
-                                  onclick="rs63PlaceBuy(this)">RECORD</span>
-                        </td>
                     </tr>`;
                 }).join('');
                 rs63Panel.innerHTML = `
                     <table class="stock-table">
                         <thead><tr>
                             <th>#</th><th>Stock</th><th>Close</th>
-                            <th>RS63</th><th>RSI</th><th>IBS</th><th>StopDist</th><th>8% SL</th><th></th>
+                            <th>RS63</th><th>RSI</th><th>IBS</th><th>StopDist</th><th>8% SL</th>
                         </tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
