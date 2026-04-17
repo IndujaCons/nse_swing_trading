@@ -128,7 +128,7 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
             return "3h+"
 
     lines = [f"<b>📈 RS63</b> {len(signals)}sig | {ist}", "<code>"]
-    lines.append(f"{'#':<2}{'Ticker':<9} {'Px':>6} {'D/1H':>9} {'Age':>3}")
+    lines.append(f"{'#':<2}{'Ticker':<9} {'Px':>6} {'D/1H':>9} {'RSI':>3}")
     lines.append("─" * 32)
     for s in signals:
         rank   = str(s.get('rank', '?'))[:2]
@@ -138,8 +138,8 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
         rs1h_v = s.get('rs63_1h')
         rs1h   = f"{rs1h_v:+.1f}" if rs1h_v is not None else "—"
         d1h    = f"{rs63}/{rs1h}"
-        dur    = _dur_label(s['ticker'])
-        lines.append(f"{rank:<2}{ticker:<9} {price:>6} {d1h:>9} {dur:>3}")
+        rsi    = str(int(round(s.get('rsi', 0))))
+        lines.append(f"{rank:<2}{ticker:<9} {price:>6} {d1h:>9} {rsi:>3}")
     lines.append("</code>")
     return "\n".join(lines)
 
