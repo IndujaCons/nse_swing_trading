@@ -119,6 +119,27 @@ def format_rs63_alert(scan_result: dict) -> str | None:
     return "\n".join(lines)
 
 
+def format_rs63_exit_alert(exit_signals: list) -> str | None:
+    """Format RS63 exit signals as a Telegram HTML message. Returns None if no exits."""
+    # Filter RS63 exits only
+    rs63_exits = [e for e in exit_signals if e.get("strategy") == "RS63"]
+    if not rs63_exits:
+        return None
+
+    from datetime import datetime, timezone, timedelta
+    ist = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d %H:%M")
+    lines = [f"<b>🚨 RS63 Exit Signal</b> — {ist} IST"]
+    for e in rs63_exits:
+        pnl = e.get("pnl_pct", 0)
+        pnl_str = f"+{pnl:.1f}%" if pnl >= 0 else f"{pnl:.1f}%"
+        pnl_color = "🟢" if pnl >= 0 else "🔴"
+        lines.append(
+            f"  {pnl_color} <b>{e['ticker']}</b> @ ₹{e.get('current_price', '?')} "
+            f"({pnl_str}) — {e.get('reason', '?')}"
+        )
+    return "\n".join(lines)
+
+
 def get_chat_id() -> str | None:
     """Helper to fetch your chat_id from getUpdates (call once after messaging the bot)."""
     token = _token()

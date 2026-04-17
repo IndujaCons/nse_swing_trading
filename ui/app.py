@@ -2093,8 +2093,9 @@ def _etf_signal_scheduler():
     print("[ETF scheduler] Started — scanning every hour during Indian (09–16 IST) "
           "and US (19–02 IST) market windows")
 
-    last_etf_key  = None  # dedup for ETF Core
-    last_rs63_key = None  # dedup for RS63
+    last_etf_key       = None  # dedup for ETF Core
+    last_rs63_key      = None  # dedup for RS63 entries
+    last_rs63_exit_key = None  # dedup for RS63 exits
 
     while True:
         now_ist = datetime.now(IST)
@@ -2138,20 +2139,43 @@ def _etf_signal_scheduler():
         # ── RS63 scan (Indian market hours only — NSE stocks) ────────────────
         if _in_indian_window(now_ist):
             try:
-                from data.notifier import format_rs63_alert
+                from data.notifier import format_rs63_alert, format_rs63_exit_alert
                 rs63_result = live_signals_scanner.scan_entry_signals(force_refresh=True)
+
+                # Entry signals
                 rs63_msg = format_rs63_alert(rs63_result)
                 if rs63_msg:
                     rs63_tickers = tuple(s["ticker"] for s in rs63_result.get("rs63_signals", []))
                     if rs63_tickers != last_rs63_key:
-                        print(f"[ETF scheduler] RS63 new signals — alerting")
+                        print(f"[ETF scheduler] RS63 new entry signals — alerting")
                         send_message(rs63_msg)
                         last_rs63_key = rs63_tickers
                     else:
-                        print(f"[ETF scheduler] RS63 signals unchanged — skipping")
+                        print(f"[ETF scheduler] RS63 entry signals unchanged — skipping")
                 else:
-                    print(f"[ETF scheduler] RS63 no signals")
+                    print(f"[ETF scheduler] RS63 no entry signals")
                     last_rs63_key = None
+
+                # Exit signals — check all user engines
+                all_exits = []
+                for engine in user_engines.values():
+                    try:
+                        exits = engine.check_exit_signals()
+                        all_exits.extend(exits)
+                    except Exception:
+                        pass
+                exit_msg = format_rs63_exit_alert(all_exits)
+                if exit_msg:
+                    exit_key = tuple(e["ticker"] + e.get("reason", "") for e in all_exits if e.get("strategy") == "RS63")
+                    if exit_key != last_rs63_exit_key:
+                        print(f"[ETF scheduler] RS63 exit signals — alerting")
+                        send_message(exit_msg)
+                        last_rs63_exit_key = exit_key
+                    else:
+                        print(f"[ETF scheduler] RS63 exit signals unchanged — skipping")
+                else:
+                    last_rs63_exit_key = None
+
             except Exception as e:
                 err = f"⚠️ RS63 scan error: {e}"
                 print(f"[ETF scheduler] {err}")
