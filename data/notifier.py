@@ -103,28 +103,31 @@ def format_etf_alert(scan_result: dict) -> str | None:
 
 def format_rs63_alert(scan_result: dict) -> str | None:
     """
-    Format RS63 live signals scan result as a Telegram HTML message.
+    Format RS63 live signals scan result as a compact Telegram message.
     Returns None if no RS63 signals are present.
     """
     signals = scan_result.get("rs63_signals", [])
     if not signals:
         return None
 
-    scan_time = scan_result.get("scan_time", "")
-    lines = [f"<b>📈 RS63 Entry Signals</b> — {scan_time}"]
-    lines.append(f"<i>{len(signals)} stocks qualifying today</i>")
-    lines.append("")
+    from datetime import datetime, timezone, timedelta
+    ist = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%d %b %H:%M")
 
-    for s in signals[:10]:  # cap at 10 to keep message readable
-        lines.append(
-            f"  #{s.get('rank', '?')} <b>{s['ticker']}</b> "
-            f"@ ₹{s['price']:,.0f} | RS63={s['rs63']}% | RSI={s['rsi']} | "
-            f"SL=₹{s['sl_price']:,.0f} ({s['stop_pct']}%)"
-        )
+    top = signals[:10]
+    lines = [f"<b>📈 RS63 Entry</b> — {len(signals)} signals | {ist} IST", "<code>"]
+    lines.append(f"{'#':<2} {'Ticker':<11} {'Price':>6}  {'RS63':>5}  {'SL%':>4}")
+    lines.append("─" * 34)
+    for s in top:
+        rank     = str(s.get('rank', '?'))
+        ticker   = s['ticker'][:11]
+        price    = f"{s['price']:,.0f}"
+        rs63     = f"{s['rs63']}%"
+        sl_pct   = f"{s['stop_pct']}%"
+        lines.append(f"{rank:<2} {ticker:<11} {price:>6}  {rs63:>5}  {sl_pct:>4}")
 
     if len(signals) > 10:
-        lines.append(f"  <i>…and {len(signals) - 10} more</i>")
-
+        lines.append(f"  …and {len(signals) - 10} more")
+    lines.append("</code>")
     return "\n".join(lines)
 
 
