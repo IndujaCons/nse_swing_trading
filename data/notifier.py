@@ -101,9 +101,10 @@ def format_etf_alert(scan_result: dict) -> str | None:
     return "\n".join(lines)
 
 
-def format_rs63_alert(scan_result: dict) -> str | None:
+def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> str | None:
     """
     Format RS63 live signals scan result as a compact Telegram message.
+    duration_map: {ticker: hours_present} — shows 'new', '1h', '2h', '3h+' column.
     Returns None if no RS63 signals are present.
     """
     signals = scan_result.get("rs63_signals", [])
@@ -113,17 +114,31 @@ def format_rs63_alert(scan_result: dict) -> str | None:
     from datetime import datetime, timezone, timedelta
     ist = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%d %b %H:%M")
 
+    def _dur_label(ticker):
+        if not duration_map:
+            return ""
+        h = duration_map.get(ticker, 0)
+        if h < 0.9:
+            return "new"
+        elif h < 2:
+            return "1h"
+        elif h < 3:
+            return "2h"
+        else:
+            return "3h+"
+
     top = signals[:10]
     lines = [f"<b>📈 RS63 Entry</b> — {len(signals)} signals | {ist} IST", "<code>"]
-    lines.append(f"{'#':<2} {'Ticker':<11} {'Price':>6}  {'RS63':>5}  {'SL%':>4}")
-    lines.append("─" * 34)
+    lines.append(f"{'#':<2} {'Ticker':<11} {'Price':>6}  {'RS63':>5}  {'SL%':>4}  {'Since':>5}")
+    lines.append("─" * 41)
     for s in top:
-        rank     = str(s.get('rank', '?'))
-        ticker   = s['ticker'][:11]
-        price    = f"{s['price']:,.0f}"
-        rs63     = f"{s['rs63']}%"
-        sl_pct   = f"{s['stop_pct']}%"
-        lines.append(f"{rank:<2} {ticker:<11} {price:>6}  {rs63:>5}  {sl_pct:>4}")
+        rank   = str(s.get('rank', '?'))
+        ticker = s['ticker'][:11]
+        price  = f"{s['price']:,.0f}"
+        rs63   = f"{s['rs63']}%"
+        sl_pct = f"{s['stop_pct']}%"
+        dur    = _dur_label(s['ticker'])
+        lines.append(f"{rank:<2} {ticker:<11} {price:>6}  {rs63:>5}  {sl_pct:>4}  {dur:>5}")
 
     if len(signals) > 10:
         lines.append(f"  …and {len(signals) - 10} more")

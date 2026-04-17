@@ -2139,11 +2139,31 @@ def _etf_signal_scheduler():
         # ── RS63 scan (Indian market hours only — NSE stocks) ────────────────
         if _in_indian_window(now_ist):
             try:
+                import json as _json
+                from pathlib import Path as _Path
                 from data.notifier import format_rs63_alert, format_rs63_exit_alert
+
                 rs63_result = live_signals_scanner.scan_entry_signals(force_refresh=True)
 
+                # Load / update signal duration tracker
+                _tracker_file = _Path("data_store/rs63_signal_tracker.json")
+                _tracker = _json.loads(_tracker_file.read_text()) if _tracker_file.exists() else {}
+                _now_iso = now_ist.isoformat()
+                _current = {s["ticker"] for s in rs63_result.get("rs63_signals", [])}
+                _tracker = {t: _tracker.get(t, _now_iso) for t in _current}  # keep existing, drop gone
+                _tracker_file.write_text(_json.dumps(_tracker))
+
+                # Build duration map: ticker → hours present
+                _dur = {}
+                for _t, _first in _tracker.items():
+                    try:
+                        _first_dt = datetime.fromisoformat(_first)
+                        _dur[_t] = (now_ist - _first_dt).total_seconds() / 3600
+                    except Exception:
+                        _dur[_t] = 0.0
+
                 # Entry signals
-                rs63_msg = format_rs63_alert(rs63_result)
+                rs63_msg = format_rs63_alert(rs63_result, duration_map=_dur)
                 if rs63_msg:
                     rs63_tickers = tuple(s["ticker"] for s in rs63_result.get("rs63_signals", []))
                     if rs63_tickers != last_rs63_key:
