@@ -3321,9 +3321,24 @@
         // ── RS63 Manual Entry Modal ───────────────────────────────────────────────
         let _rs63PendingEntry = null;
 
+        async function _loadRS63TickerList() {
+            const dl = document.getElementById('rs63-ticker-datalist');
+            if (dl.children.length > 0) return; // already loaded
+            try {
+                const r = await fetch('/api/watchlist/tickers');
+                const d = await r.json();
+                (d.tickers || []).forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t;
+                    dl.appendChild(opt);
+                });
+            } catch(e) { /* silent */ }
+        }
+
         function rs63AddManual() {
             // Open modal with blank ticker field for free-form entry
             _rs63PendingEntry = { ticker: '', sl: null, btn: null };
+            _loadRS63TickerList();
             document.getElementById('rs63-entry-ticker-row').style.display = 'table-row';
             document.getElementById('rs63-entry-ticker').textContent = '';
             document.getElementById('rs63-entry-ticker-input').value = '';
@@ -5618,8 +5633,11 @@
             <tr id="rs63-entry-ticker-row" style="display:none;">
                 <td style="padding:6px 0;color:var(--text-muted);width:100px;">Ticker</td>
                 <td><input id="rs63-entry-ticker-input" type="text" placeholder="e.g. HDFCBANK"
+                    list="rs63-ticker-datalist"
                     style="width:120px;padding:4px 8px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-secondary);color:var(--text-primary);font-size:13px;text-transform:uppercase;"
-                    onkeydown="if(event.key==='Enter')document.getElementById('rs63-entry-price').focus()"></td>
+                    oninput="this.value=this.value.toUpperCase()"
+                    onkeydown="if(event.key==='Enter')document.getElementById('rs63-entry-price').focus()">
+                <datalist id="rs63-ticker-datalist"></datalist></td>
             </tr>
             <tr>
                 <td style="padding:6px 0;color:var(--text-muted);width:100px;">Entry Price ₹</td>
