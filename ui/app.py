@@ -2093,10 +2093,11 @@ def _etf_signal_scheduler():
     print("[ETF scheduler] Started — scanning every hour during Indian (09–16 IST) "
           "and US (19–02 IST) market windows")
 
-    last_etf_key       = None  # dedup for ETF Core
-    last_rs63_key      = None  # dedup for RS63 entries
-    last_rs63_exit_key = None  # dedup for RS63 exits
-    startup_scan_done  = False  # one-time scan on startup regardless of window
+    last_etf_key          = None   # dedup for ETF Core
+    last_rs63_key         = None   # dedup for RS63 entries
+    last_rs63_exit_key    = None   # dedup for RS63 exits
+    startup_scan_done     = False  # one-time ETF scan on startup regardless of window
+    startup_scan_done_rs63 = False  # one-time RS63 scan on startup regardless of window
 
     while True:
         now_ist = datetime.now(IST)
@@ -2139,7 +2140,8 @@ def _etf_signal_scheduler():
                 pass
 
         # ── RS63 scan (Indian market hours only — NSE stocks) ────────────────
-        if _in_indian_window(now_ist):
+        if _in_indian_window(now_ist) or not startup_scan_done_rs63:
+            startup_scan_done_rs63 = True
             try:
                 import json as _json
                 from pathlib import Path as _Path
