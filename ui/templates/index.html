@@ -3177,10 +3177,13 @@
         }
 
         function updateLastUpdated(timestamp, cacheAge) {
-            const date = new Date(timestamp);
-            const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            // Server timestamps are UTC strings — append Z so JS parses as UTC, then display in IST
+            const date = new Date(timestamp.replace(' ', 'T') + 'Z');
+            const timeStr = date.toLocaleTimeString('en-IN', {
+                hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata'
+            });
             const ageStr = cacheAge !== null ? ` (${Math.round(cacheAge)}m ago)` : '';
-            document.getElementById('last-updated').textContent = `Updated: ${timeStr}${ageStr}`;
+            document.getElementById('last-updated').textContent = `Updated: ${timeStr} IST${ageStr}`;
         }
 
         function showError(message) {
@@ -3314,36 +3317,67 @@
             }
         }
 
-        async function rs63PlaceBuy(btn) {
-            const ticker = btn.dataset.ticker;
-            const price = parseFloat(btn.dataset.price);
-            const sl = parseFloat(btn.dataset.sl);
-            const inp = btn.closest('tr').querySelector('input');
-            const amount = parseIndian(inp.value);
+        // ── RS63 Manual Entry Modal ───────────────────────────────────────────────
+        let _rs63PendingEntry = null;
+
+        function rs63PlaceBuy(btn) {
+            const ticker  = btn.dataset.ticker;
+            const sigPrice = parseFloat(btn.dataset.price);
+            const sl      = parseFloat(btn.dataset.sl);
+            const suggestQty = Math.floor(200000 / sigPrice);
 
             if (!selectedTradeUser) {
-                showToast('No Zerodha user selected. Connect first.', 'error');
+                showToast('Select a user first (top-right)', 'error');
                 return;
             }
 
-            const qty = Math.floor(amount / price);
-            if (qty <= 0) {
-                showToast('Amount too small for 1 share', 'error');
+            _rs63PendingEntry = { ticker, sl, btn };
+
+            // Pre-fill modal fields
+            document.getElementById('rs63-entry-ticker').textContent  = ticker;
+            document.getElementById('rs63-entry-sl').textContent      = '₹' + sl.toLocaleString('en-IN');
+            document.getElementById('rs63-entry-price').value         = sigPrice;
+            document.getElementById('rs63-entry-qty').value           = suggestQty;
+            rs63UpdateEntryCalc();
+            document.getElementById('rs63-entry-modal').style.display = 'flex';
+            document.getElementById('rs63-entry-price').focus();
+            document.getElementById('rs63-entry-price').select();
+        }
+
+        function rs63UpdateEntryCalc() {
+            const price = parseFloat(document.getElementById('rs63-entry-price').value) || 0;
+            const qty   = parseInt(document.getElementById('rs63-entry-qty').value)    || 0;
+            const amt   = price * qty;
+            document.getElementById('rs63-entry-amount').textContent =
+                '₹' + amt.toLocaleString('en-IN', {maximumFractionDigits: 0});
+        }
+
+        function rs63CloseModal() {
+            document.getElementById('rs63-entry-modal').style.display = 'none';
+            _rs63PendingEntry = null;
+        }
+
+        async function rs63ConfirmEntry() {
+            if (!_rs63PendingEntry) return;
+            const { ticker, sl, btn } = _rs63PendingEntry;
+            const price = parseFloat(document.getElementById('rs63-entry-price').value);
+            const qty   = parseInt(document.getElementById('rs63-entry-qty').value);
+
+            if (!price || price <= 0 || !qty || qty <= 0) {
+                showToast('Enter valid price and qty', 'error');
                 return;
             }
 
-            const ok = confirm(`BUY ${ticker}\n${qty} shares @ ₹${price.toLocaleString('en-IN')}\nAmount: ₹${amount.toLocaleString('en-IN')}\n8% SL: ₹${sl.toLocaleString('en-IN')}`);
-            if (!ok) return;
-
+            rs63CloseModal();
             btn.disabled = true;
             btn.textContent = '...';
 
             try {
-                const res = await fetch('/api/live-signals/buy', {
+                const res = await fetch('/api/live-signals/manual-entry', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        ticker, strategy: 'RS63', price, amount,
+                        ticker, strategy: 'RS63', price, qty,
                         user_id: selectedTradeUser,
                         metadata: { sl_price: sl }
                     })
@@ -3351,18 +3385,18 @@
                 const data = await res.json();
                 if (data.success) {
                     const userName = (kiteUsers.find(u => u.config_user_id === selectedTradeUser) || {}).config_name || selectedTradeUser;
-                    showToast(`Bought ${data.position.shares} shares of ${ticker} [${userName}]`, 'success');
+                    showToast(`Recorded ${qty} × ${ticker} @ ₹${price.toLocaleString('en-IN')} [${userName}]`, 'success');
                     btn.textContent = '✓';
                     btn.style.background = 'var(--text-muted)';
                     loadLivePositions();
                 } else {
-                    showToast(data.error || 'Buy failed', 'error');
-                    btn.textContent = 'BUY';
+                    showToast(data.error || 'Failed to record entry', 'error');
+                    btn.textContent = 'RECORD';
                     btn.disabled = false;
                 }
             } catch (e) {
                 showToast('Network error: ' + e.message, 'error');
-                btn.textContent = 'BUY';
+                btn.textContent = 'RECORD';
                 btn.disabled = false;
             }
         }
@@ -3371,7 +3405,6 @@
             window._rs63LastData = data;
             const rs63Panel = document.getElementById('ls-rs63-panel');
             const rs63Signals = data.rs63_signals || [];
-            const buyAmt = parseInt(document.getElementById('rs63-buy-amount').value.replace(/,/g, '')) || 200000;
             document.getElementById('ls-rs63-count').textContent = rs63Signals.length > 0 ? `Top ${rs63Signals.length}` : '0';
             if (rs63Signals.length === 0) {
                 rs63Panel.innerHTML = '<div class="empty-state">No RS63 signals</div>';
@@ -3380,7 +3413,6 @@
                     const rank = s.rank || (idx + 1);
                     const rs63Color = s.rs63 > 10 ? 'var(--green)' : 'var(--text)';
                     const rsiColor = s.rsi > 60 ? 'var(--green)' : 'var(--text)';
-                    const qty = Math.floor(buyAmt / s.price);
                     return `
                     <tr>
                         <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
@@ -3391,19 +3423,11 @@
                         <td>${s.ibs}</td>
                         <td>${s.stop_pct}%</td>
                         <td style="color:var(--red);">₹${s.sl_price.toLocaleString()}</td>
-                        <td style="white-space:nowrap;">
-                            ₹<input type="text" value="${buyAmt.toLocaleString('en-IN')}"
-                                style="width:75px;font-size:10px;padding:1px 3px;border:1px solid var(--border-color);border-radius:3px;background:var(--bg-secondary);color:var(--text-primary);text-align:right;"
-                                onfocus="this.value=this.value.replace(/,/g,'')"
-                                onblur="const v=parseInt(this.value)||0;this.value=v.toLocaleString('en-IN');this.nextElementSibling.textContent='('+Math.floor(v/${s.price})+')'"
-                                onchange="const v=parseInt(this.value.replace(/,/g,''))||0;this.nextElementSibling.textContent='('+Math.floor(v/${s.price})+')'"
-                            ><span style="font-size:10px;color:var(--text-muted);margin-left:3px;">(${qty})</span>
-                        </td>
                         <td style="text-align:center;">
                             <span class="rs63-buy-btn" style="background:var(--green);color:white;padding:2px 10px;border-radius:3px;font-size:10px;font-weight:700;cursor:pointer;"
                                   data-ticker="${s.ticker}" data-price="${s.price}" data-sl="${s.sl_price}"
                                   onclick="rs63PlaceBuy(this)">
-                                BUY
+                                RECORD
                             </span>
                         </td>
                     </tr>`;
@@ -3412,7 +3436,7 @@
                     <table class="stock-table">
                         <thead><tr>
                             <th>#</th><th>Stock</th><th>Close</th>
-                            <th>RS63</th><th>RSI</th><th>IBS</th><th>StopDist</th><th>8% SL</th><th>Amount (Qty)</th><th></th>
+                            <th>RS63</th><th>RSI</th><th>IBS</th><th>StopDist</th><th>8% SL</th><th></th>
                         </tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
@@ -5565,5 +5589,49 @@
             }
         }
     </script>
+
+<!-- RS63 Manual Entry Modal -->
+<div id="rs63-entry-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-white);border-radius:8px;padding:24px 28px;min-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+        <div style="font-size:15px;font-weight:700;margin-bottom:16px;">
+            Record Entry — <span id="rs63-entry-ticker" style="color:var(--green);"></span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">
+            Enter the price and qty you actually bought on Zerodha.<br>
+            8% SL: <span id="rs63-entry-sl" style="color:var(--red);font-weight:600;"></span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <tr>
+                <td style="padding:6px 0;color:var(--text-muted);width:100px;">Entry Price ₹</td>
+                <td><input id="rs63-entry-price" type="number" step="0.05"
+                    style="width:120px;padding:4px 8px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-secondary);color:var(--text-primary);font-size:13px;"
+                    oninput="rs63UpdateEntryCalc()"
+                    onkeydown="if(event.key==='Enter')rs63ConfirmEntry()"></td>
+            </tr>
+            <tr>
+                <td style="padding:6px 0;color:var(--text-muted);">Qty</td>
+                <td><input id="rs63-entry-qty" type="number" min="1"
+                    style="width:120px;padding:4px 8px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-secondary);color:var(--text-primary);font-size:13px;"
+                    oninput="rs63UpdateEntryCalc()"
+                    onkeydown="if(event.key==='Enter')rs63ConfirmEntry()"></td>
+            </tr>
+            <tr>
+                <td style="padding:6px 0;color:var(--text-muted);">Amount</td>
+                <td style="font-weight:600;" id="rs63-entry-amount">₹0</td>
+            </tr>
+        </table>
+        <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+            <button onclick="rs63CloseModal()"
+                style="padding:7px 18px;border:1px solid var(--border-color);border-radius:4px;background:transparent;color:var(--text);cursor:pointer;font-size:13px;">
+                Cancel
+            </button>
+            <button onclick="rs63ConfirmEntry()"
+                style="padding:7px 18px;border:none;border-radius:4px;background:var(--green);color:white;cursor:pointer;font-size:13px;font-weight:700;">
+                Record Entry
+            </button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

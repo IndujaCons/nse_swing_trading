@@ -588,6 +588,59 @@ def buy_live_signal():
                     "order_id": order_result.get("order_id")})
 
 
+@app.route("/api/live-signals/manual-entry", methods=["POST"])
+def manual_entry_live_signal():
+    """Record a manually-executed RS63 entry (no broker order placed).
+    User buys on Zerodha at their chosen price, then calls this to log the position."""
+    data = request.get_json()
+    ticker   = data.get("ticker")
+    strategy = data.get("strategy", "RS63")
+    price    = data.get("price")
+    qty      = data.get("qty")
+    support  = data.get("support", 0)
+    ibs      = data.get("ibs", 0)
+    metadata = data.get("metadata", {})
+    user_id  = data.get("user_id")
+
+    if not ticker or not price or not qty:
+        return jsonify({"success": False, "error": "ticker, price, qty required"}), 400
+
+    if strategy not in ("J", "T", "R", "MW", "RS", "RS63", "MOM15"):
+        return jsonify({"success": False, "error": "Invalid strategy"}), 400
+
+    if not user_id or user_id not in user_engines:
+        return jsonify({"success": False, "error": "Valid user_id required"}), 400
+
+    try:
+        price = float(price)
+        qty   = int(qty)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "Invalid price or qty"}), 400
+
+    if qty <= 0:
+        return jsonify({"success": False, "error": "qty must be > 0"}), 400
+
+    amount = price * qty
+    metadata["manual_entry"] = True
+
+    # Store Nifty close at entry for crash shield
+    try:
+        import yfinance as yf
+        nifty = yf.Ticker("^NSEI").history(period="5d")
+        if not nifty.empty:
+            metadata["nifty_at_entry"] = float(nifty["Close"].iloc[-1])
+    except Exception:
+        pass
+
+    engine = user_engines[user_id]
+    result = engine.add_position(ticker, strategy, price, amount, support, ibs, metadata)
+
+    if "error" in result:
+        return jsonify({"success": False, "error": result["error"]}), 400
+
+    return jsonify({"success": True, "position": result})
+
+
 @app.route("/api/live-signals/exits", methods=["GET"])
 def get_live_exit_signals():
     """Check exit conditions for all active positions (merged across users)."""
@@ -2004,6 +2057,10 @@ def _etf_signal_scheduler():
     US_OPEN  = 19                   # 19:00 IST → ~09:30 EDT / 10:00 EST
     US_CLOSE_NEXT = 2               # 02:00 IST next day → ~16:30 EDT / 20:30 UTC
 
+    def _in_indian_window(dt):
+        """Return True if dt is within Indian market hours (Mon-Fri 09:00-16:00 IST)."""
+        return dt.weekday() < 5 and IN_OPEN <= dt.hour < IN_CLOSE
+
     def _in_window(dt):
         """Return True if dt falls inside Indian or US trading window."""
         wd = dt.weekday()   # 0=Mon … 6=Sun
@@ -2036,7 +2093,8 @@ def _etf_signal_scheduler():
     print("[ETF scheduler] Started — scanning every hour during Indian (09–16 IST) "
           "and US (19–02 IST) market windows")
 
-    last_signal_key = None  # dedup: only notify when signals change
+    last_etf_key  = None  # dedup for ETF Core
+    last_rs63_key = None  # dedup for RS63
 
     while True:
         now_ist = datetime.now(IST)
@@ -2049,25 +2107,26 @@ def _etf_signal_scheduler():
             time.sleep(max(sleep_secs, 60))
             continue
 
-        # Run scan
         print(f"[ETF scheduler] Scanning at {now_ist.strftime('%Y-%m-%d %H:%M IST')}")
+
+        # ── ETF Core scan ────────────────────────────────────────────────────
         try:
-            result = etf_engine.scan()
-            msg = format_etf_alert(result)
-            if msg:
-                entry_syms = tuple(s["symbol"] for s in result.get("entry_signals", []))
-                exit_syms  = tuple(s["symbol"] for s in result.get("exit_signals", []))
-                re_syms    = tuple(s["symbol"] for s in result.get("reentry_signals", []))
-                signal_key = (entry_syms, exit_syms, re_syms)
-                if signal_key != last_signal_key:
-                    print(f"[ETF scheduler] New signals — sending Telegram alert")
-                    send_message(msg)
-                    last_signal_key = signal_key
+            etf_result = etf_engine.scan()
+            etf_msg = format_etf_alert(etf_result)
+            if etf_msg:
+                entry_syms = tuple(s["symbol"] for s in etf_result.get("entry_signals", []))
+                exit_syms  = tuple(s["symbol"] for s in etf_result.get("exit_signals", []))
+                re_syms    = tuple(s["symbol"] for s in etf_result.get("reentry_signals", []))
+                etf_key = (entry_syms, exit_syms, re_syms)
+                if etf_key != last_etf_key:
+                    print(f"[ETF scheduler] ETF new signals — alerting")
+                    send_message(etf_msg)
+                    last_etf_key = etf_key
                 else:
-                    print(f"[ETF scheduler] Signals unchanged — skipping duplicate alert")
+                    print(f"[ETF scheduler] ETF signals unchanged — skipping")
             else:
-                print(f"[ETF scheduler] No signals")
-                last_signal_key = None
+                print(f"[ETF scheduler] ETF no signals")
+                last_etf_key = None
         except Exception as e:
             err = f"⚠️ ETF Core scan error: {e}"
             print(f"[ETF scheduler] {err}")
@@ -2075,6 +2134,31 @@ def _etf_signal_scheduler():
                 send_message(err)
             except Exception:
                 pass
+
+        # ── RS63 scan (Indian market hours only — NSE stocks) ────────────────
+        if _in_indian_window(now_ist):
+            try:
+                from data.notifier import format_rs63_alert
+                rs63_result = live_signals_scanner.scan_entry_signals(force_refresh=True)
+                rs63_msg = format_rs63_alert(rs63_result)
+                if rs63_msg:
+                    rs63_tickers = tuple(s["ticker"] for s in rs63_result.get("rs63_signals", []))
+                    if rs63_tickers != last_rs63_key:
+                        print(f"[ETF scheduler] RS63 new signals — alerting")
+                        send_message(rs63_msg)
+                        last_rs63_key = rs63_tickers
+                    else:
+                        print(f"[ETF scheduler] RS63 signals unchanged — skipping")
+                else:
+                    print(f"[ETF scheduler] RS63 no signals")
+                    last_rs63_key = None
+            except Exception as e:
+                err = f"⚠️ RS63 scan error: {e}"
+                print(f"[ETF scheduler] {err}")
+                try:
+                    send_message(err)
+                except Exception:
+                    pass
 
         time.sleep(SCAN_INTERVAL)
 

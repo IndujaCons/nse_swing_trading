@@ -92,6 +92,33 @@ def format_etf_alert(scan_result: dict) -> str | None:
     return "\n".join(lines)
 
 
+def format_rs63_alert(scan_result: dict) -> str | None:
+    """
+    Format RS63 live signals scan result as a Telegram HTML message.
+    Returns None if no RS63 signals are present.
+    """
+    signals = scan_result.get("rs63_signals", [])
+    if not signals:
+        return None
+
+    scan_time = scan_result.get("scan_time", "")
+    lines = [f"<b>📈 RS63 Entry Signals</b> — {scan_time}"]
+    lines.append(f"<i>{len(signals)} stocks qualifying today</i>")
+    lines.append("")
+
+    for s in signals[:10]:  # cap at 10 to keep message readable
+        lines.append(
+            f"  #{s.get('rank', '?')} <b>{s['ticker']}</b> "
+            f"@ ₹{s['price']:,.0f} | RS63={s['rs63']}% | RSI={s['rsi']} | "
+            f"SL=₹{s['sl_price']:,.0f} ({s['stop_pct']}%)"
+        )
+
+    if len(signals) > 10:
+        lines.append(f"  <i>…and {len(signals) - 10} more</i>")
+
+    return "\n".join(lines)
+
+
 def get_chat_id() -> str | None:
     """Helper to fetch your chat_id from getUpdates (call once after messaging the bot)."""
     token = _token()
