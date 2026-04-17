@@ -127,11 +127,10 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
         else:
             return "3h+"
 
-    top = signals[:10]
     lines = [f"<b>📈 RS63 Entry</b> — {len(signals)} signals | {ist} IST", "<code>"]
     lines.append(f"{'#':<2} {'Ticker':<11} {'Price':>6}  {'RS63':>5}  {'SL%':>4}  {'Since':>5}")
     lines.append("─" * 41)
-    for s in top:
+    for s in signals:
         rank   = str(s.get('rank', '?'))
         ticker = s['ticker'][:11]
         price  = f"{s['price']:,.0f}"
@@ -139,9 +138,6 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
         sl_pct = f"{s['stop_pct']}%"
         dur    = _dur_label(s['ticker'])
         lines.append(f"{rank:<2} {ticker:<11} {price:>6}  {rs63:>5}  {sl_pct:>4}  {dur:>5}")
-
-    if len(signals) > 10:
-        lines.append(f"  …and {len(signals) - 10} more")
     lines.append("</code>")
     return "\n".join(lines)
 
