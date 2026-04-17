@@ -143,6 +143,7 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
         vol    = f"{vr:.1f}x" if vr is not None else "  —"
         dur    = _dur_label(s['ticker'])
         lines.append(f"{rank:<2}{ticker:<9} {price:>5} {d1h:>9} {rsi:>3} {vol:>4} {dur:>3}")
+        lines.append("")
     lines.append("</code>")
     return "\n".join(lines)
 
