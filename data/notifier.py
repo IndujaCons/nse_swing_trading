@@ -17,31 +17,40 @@ def _token() -> str:
     return os.getenv("TELEGRAM_BOT_TOKEN", "")
 
 
-def _chat_id() -> str:
-    return os.getenv("TELEGRAM_CHAT_ID", "")
+def _chat_ids() -> list[str]:
+    """Returns list of all configured chat IDs (supports TELEGRAM_CHAT_ID and TELEGRAM_CHAT_ID_2)."""
+    ids = []
+    for key in ("TELEGRAM_CHAT_ID", "TELEGRAM_CHAT_ID_2"):
+        v = os.getenv(key, "").strip()
+        if v:
+            ids.append(v)
+    return ids
 
 
 def send_message(text: str) -> bool:
-    """Send a plain text / HTML message to the configured Telegram chat.
-    Returns True if the request succeeded, False otherwise."""
+    """Send a plain text / HTML message to all configured Telegram chats.
+    Returns True if at least one message succeeded."""
     token = _token()
-    chat_id = _chat_id()
-    if not token or not chat_id:
+    chat_ids = _chat_ids()
+    if not token or not chat_ids:
         print("[notifier] TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set — skipping")
         return False
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    try:
-        r = requests.post(
-            url,
-            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
-            timeout=10,
-        )
-        if not r.ok:
-            print(f"[notifier] Telegram error {r.status_code}: {r.text[:200]}")
-        return r.ok
-    except Exception as e:
-        print(f"[notifier] Request failed: {e}")
-        return False
+    any_ok = False
+    for chat_id in chat_ids:
+        try:
+            r = requests.post(
+                url,
+                json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+                timeout=10,
+            )
+            if not r.ok:
+                print(f"[notifier] Telegram error {r.status_code} for {chat_id}: {r.text[:200]}")
+            else:
+                any_ok = True
+        except Exception as e:
+            print(f"[notifier] Request failed for {chat_id}: {e}")
+    return any_ok
 
 
 def format_etf_alert(scan_result: dict) -> str | None:
