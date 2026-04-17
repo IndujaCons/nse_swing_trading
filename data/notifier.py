@@ -128,8 +128,8 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
             return "3h+"
 
     lines = [f"<b>📈 RS63</b> {len(signals)}sig | {ist}", "<code>"]
-    lines.append(f"{'#':<2}{'Ticker':<9} {'Px':>5} {'D/1H':>9} {'RSI':>3} {'Age':>3}")
-    lines.append("─" * 34)
+    lines.append(f"{'#':<2}{'Ticker':<9} {'Px':>5} {'D/1H':>9} {'RSI':>3} {'Vol':>4} {'Age':>3}")
+    lines.append("─" * 38)
     for s in signals:
         rank   = str(s.get('rank', '?'))[:2]
         ticker = s['ticker'][:9]
@@ -139,8 +139,10 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
         rs1h   = f"{rs1h_v:+.1f}" if rs1h_v is not None else "—"
         d1h    = f"{rs63}/{rs1h}"
         rsi    = str(int(round(s.get('rsi', 0))))
+        vr     = s.get('vol_ratio')
+        vol    = f"{vr:.1f}x" if vr is not None else "  —"
         dur    = _dur_label(s['ticker'])
-        lines.append(f"{rank:<2}{ticker:<9} {price:>5} {d1h:>9} {rsi:>3} {dur:>3}")
+        lines.append(f"{rank:<2}{ticker:<9} {price:>5} {d1h:>9} {rsi:>3} {vol:>4} {dur:>3}")
     lines.append("</code>")
     return "\n".join(lines)
 

@@ -3452,6 +3452,9 @@
                     const rs1h = s.rs63_1h;
                     const rs1hStr = rs1h != null ? `${rs1h > 0 ? '+' : ''}${rs1h}%` : '—';
                     const rs1hColor = rs1h == null ? 'var(--text-muted)' : rs1h > 0 ? 'var(--green)' : 'var(--red)';
+                    const vr = s.vol_ratio;
+                    const vrStr = vr != null ? `${vr.toFixed(1)}x` : '—';
+                    const vrColor = vr == null ? 'var(--text-muted)' : vr >= 1.5 ? 'var(--green)' : vr >= 1.0 ? 'var(--text)' : 'var(--text-muted)';
                     return `
                     <tr>
                         <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
@@ -3461,6 +3464,7 @@
                         <td style="color:${rs1hColor};font-weight:600;">${rs1hStr}</td>
                         <td style="color:${rsiColor};">${s.rsi}</td>
                         <td>${s.ibs}</td>
+                        <td style="color:${vrColor};font-weight:600;">${vrStr}</td>
                         <td>${s.stop_pct}%</td>
                         <td style="color:var(--red);">₹${s.sl_price.toLocaleString()}</td>
                     </tr>`;
@@ -3469,7 +3473,7 @@
                     <table class="stock-table">
                         <thead><tr>
                             <th>#</th><th>Stock</th><th>Close</th>
-                            <th>RS63D</th><th>RS63 1H</th><th>RSI</th><th>IBS</th><th>StopDist</th><th>8% SL</th>
+                            <th>RS63D</th><th>RS63 1H</th><th>RSI</th><th>IBS</th><th>Vol/20d</th><th>StopDist</th><th>8% SL</th>
                         </tr></thead>
                         <tbody>${rows}</tbody>
                     </table>

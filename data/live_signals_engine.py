@@ -673,6 +673,11 @@ class LiveSignalsEngine:
                         # 8% SL level
                         sl_price = round(price * 0.92, 1)
 
+                        # Volume ratio: today vs 20-day average
+                        vol_today = float(volumes.iloc[i])
+                        vol_20d_avg = float(volumes.iloc[max(0, i-20):i].mean()) if i >= 5 else vol_today
+                        vol_ratio = round(vol_today / vol_20d_avg, 1) if vol_20d_avg > 0 else None
+
                         rs63_signals.append({
                             "ticker": ticker,
                             "price": round(price, 2),
@@ -682,6 +687,7 @@ class LiveSignalsEngine:
                             "ibs": round(ibs, 2),
                             "stop_pct": stop_pct,
                             "sl_price": sl_price,
+                            "vol_ratio": vol_ratio,
                             "rank": 0,  # set after sorting
                         })
             except Exception:
