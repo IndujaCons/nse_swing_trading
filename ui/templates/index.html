@@ -3403,10 +3403,13 @@
                 showToast('Enter valid price and qty', 'error');
                 return;
             }
+            if (!selectedTradeUser) {
+                showToast('Select a user first (top-right)', 'error');
+                return;
+            }
 
             rs63CloseModal();
-            btn.disabled = true;
-            btn.textContent = '...';
+            if (btn) { btn.disabled = true; btn.textContent = '...'; }
 
             try {
                 const res = await fetch('/api/live-signals/manual-entry', {
@@ -3422,18 +3425,15 @@
                 if (data.success) {
                     const userName = (kiteUsers.find(u => u.config_user_id === selectedTradeUser) || {}).config_name || selectedTradeUser;
                     showToast(`Recorded ${qty} × ${ticker} @ ₹${price.toLocaleString('en-IN')} [${userName}]`, 'success');
-                    btn.textContent = '✓';
-                    btn.style.background = 'var(--text-muted)';
+                    if (btn) { btn.textContent = '✓'; btn.style.background = 'var(--text-muted)'; }
                     loadLivePositions();
                 } else {
                     showToast(data.error || 'Failed to record entry', 'error');
-                    btn.textContent = 'RECORD';
-                    btn.disabled = false;
+                    if (btn) { btn.textContent = 'RECORD'; btn.disabled = false; }
                 }
             } catch (e) {
                 showToast('Network error: ' + e.message, 'error');
-                btn.textContent = 'RECORD';
-                btn.disabled = false;
+                if (btn) { btn.textContent = 'RECORD'; btn.disabled = false; }
             }
         }
 
