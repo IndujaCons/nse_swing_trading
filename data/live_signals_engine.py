@@ -643,6 +643,29 @@ class LiveSignalsEngine:
                     rsi_v = float(rsi_smooth.iloc[i]) if not pd.isna(rsi_smooth.iloc[i]) else 0
 
                     if rs63_v > 0 and rsi_v > 50 and ibs > 0.5 and is_green:
+                        # 1-hour RS63 filter: stock must also outperform bench on 1h timeframe
+                        rs63_1h_val = None
+                        try:
+                            h1_stk = yf.Ticker(f"{ticker}.NS").history(period="20d", interval="1h")
+                            h1_bch = yf.Ticker("^CNX200").history(period="20d", interval="1h")
+                            if len(h1_stk) >= 64 and not h1_bch.empty:
+                                h1_cls = h1_stk["Close"].astype(float)
+                                # Align benchmark to stock timestamps
+                                h1_bch_idx = h1_bch["Close"].astype(float)
+                                h1_bch_idx.index = h1_bch_idx.index.tz_localize(None) if h1_bch_idx.index.tzinfo else h1_bch_idx.index
+                                h1_cls.index = h1_cls.index.tz_localize(None) if h1_cls.index.tzinfo else h1_cls.index
+                                h1_bch_aligned = h1_bch_idx.reindex(h1_cls.index, method="ffill").ffill()
+                                rs_1h = h1_cls / h1_bch_aligned
+                                rs63_1h_raw = (rs_1h / rs_1h.shift(63) - 1) * 100
+                                val = float(rs63_1h_raw.iloc[-1]) if not pd.isna(rs63_1h_raw.iloc[-1]) else None
+                                rs63_1h_val = round(val, 1) if val is not None else None
+                        except Exception:
+                            pass
+
+                        # Skip if 1h RS63 is negative (pass through if data unavailable)
+                        if rs63_1h_val is not None and rs63_1h_val <= 0:
+                            continue
+
                         # Stop distance (for ranking)
                         low_20d = float(lows.rolling(20).min().iloc[i]) if i >= 20 else low
                         stop_pct = round((price - low_20d) / price * 100, 1) if price > 0 else 99
@@ -654,6 +677,7 @@ class LiveSignalsEngine:
                             "ticker": ticker,
                             "price": round(price, 2),
                             "rs63": round(rs63_v, 1),
+                            "rs63_1h": rs63_1h_val,
                             "rsi": round(rsi_v, 1),
                             "ibs": round(ibs, 2),
                             "stop_pct": stop_pct,

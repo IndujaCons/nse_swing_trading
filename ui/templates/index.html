@@ -3449,12 +3449,16 @@
                     const rank = s.rank || (idx + 1);
                     const rs63Color = s.rs63 > 10 ? 'var(--green)' : 'var(--text)';
                     const rsiColor = s.rsi > 60 ? 'var(--green)' : 'var(--text)';
+                    const rs1h = s.rs63_1h;
+                    const rs1hStr = rs1h != null ? `${rs1h > 0 ? '+' : ''}${rs1h}%` : '—';
+                    const rs1hColor = rs1h == null ? 'var(--text-muted)' : rs1h > 0 ? 'var(--green)' : 'var(--red)';
                     return `
                     <tr>
                         <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
                         <td class="ticker">${s.ticker}</td>
                         <td class="price">${s.price.toLocaleString()}</td>
                         <td style="color:${rs63Color};font-weight:600;">+${s.rs63}%</td>
+                        <td style="color:${rs1hColor};font-weight:600;">${rs1hStr}</td>
                         <td style="color:${rsiColor};">${s.rsi}</td>
                         <td>${s.ibs}</td>
                         <td>${s.stop_pct}%</td>
@@ -3465,7 +3469,7 @@
                     <table class="stock-table">
                         <thead><tr>
                             <th>#</th><th>Stock</th><th>Close</th>
-                            <th>RS63</th><th>RSI</th><th>IBS</th><th>StopDist</th><th>8% SL</th>
+                            <th>RS63D</th><th>RS63 1H</th><th>RSI</th><th>IBS</th><th>StopDist</th><th>8% SL</th>
                         </tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
