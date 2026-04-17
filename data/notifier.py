@@ -127,19 +127,19 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
         else:
             return "3h+"
 
-    lines = [f"<b>📈 RS63 Entry</b> — {len(signals)} signals | {ist} IST", "<code>"]
-    lines.append(f"{'#':<2} {'Ticker':<11} {'Price':>6}  {'RS63D':>6}  {'1H':>5}  {'SL%':>4}  {'Since':>5}")
-    lines.append("─" * 48)
+    lines = [f"<b>📈 RS63</b> {len(signals)}sig | {ist}", "<code>"]
+    lines.append(f"{'#':<2}{'Ticker':<9} {'Px':>6} {'D/1H':>9} {'Age':>3}")
+    lines.append("─" * 32)
     for s in signals:
-        rank   = str(s.get('rank', '?'))
-        ticker = s['ticker'][:11]
-        price  = f"{s['price']:,.0f}"
-        rs63   = f"{s['rs63']}%"
+        rank   = str(s.get('rank', '?'))[:2]
+        ticker = s['ticker'][:9]
+        price  = str(int(s['price']))
+        rs63   = f"{s['rs63']:.1f}"
         rs1h_v = s.get('rs63_1h')
-        rs1h   = f"{rs1h_v:+.1f}%" if rs1h_v is not None else "  —  "
-        sl_pct = f"{s['stop_pct']}%"
+        rs1h   = f"{rs1h_v:+.1f}" if rs1h_v is not None else "—"
+        d1h    = f"{rs63}/{rs1h}"
         dur    = _dur_label(s['ticker'])
-        lines.append(f"{rank:<2} {ticker:<11} {price:>6}  {rs63:>6}  {rs1h:>5}  {sl_pct:>4}  {dur:>5}")
+        lines.append(f"{rank:<2}{ticker:<9} {price:>6} {d1h:>9} {dur:>3}")
     lines.append("</code>")
     return "\n".join(lines)
 
