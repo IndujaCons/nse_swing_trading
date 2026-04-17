@@ -2096,11 +2096,12 @@ def _etf_signal_scheduler():
     last_etf_key       = None  # dedup for ETF Core
     last_rs63_key      = None  # dedup for RS63 entries
     last_rs63_exit_key = None  # dedup for RS63 exits
+    startup_scan_done  = False  # one-time scan on startup regardless of window
 
     while True:
         now_ist = datetime.now(IST)
 
-        if not _in_window(now_ist):
+        if not _in_window(now_ist) and startup_scan_done:
             target = _next_window_open(now_ist)
             sleep_secs = (target - now_ist).total_seconds()
             print(f"[ETF scheduler] Outside market hours — sleeping until "
@@ -2108,6 +2109,7 @@ def _etf_signal_scheduler():
             time.sleep(max(sleep_secs, 60))
             continue
 
+        startup_scan_done = True
         print(f"[ETF scheduler] Scanning at {now_ist.strftime('%Y-%m-%d %H:%M IST')}")
 
         # ── ETF Core scan ────────────────────────────────────────────────────
