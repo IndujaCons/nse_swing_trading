@@ -1040,8 +1040,8 @@ class LiveSignalsEngine:
                         "atr_pct": 0,
                     })
 
-        # RS63 Satellite: rank by tightest stop, top 15 for display
-        rs63_signals.sort(key=lambda s: s["stop_pct"])
+        # RS63 Satellite: rank by volume ratio high to low
+        rs63_signals.sort(key=lambda s: s.get("vol_ratio") or 0, reverse=True)
         for rank_i, s in enumerate(rs63_signals):
             s["rank"] = rank_i + 1
 
