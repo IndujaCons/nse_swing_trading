@@ -1546,7 +1546,7 @@
                                 <button onclick="switchChartPeriod('1y')" class="wl-period-btn wl-period-active" style="padding:2px 8px; font-size:10px; border:1px solid var(--green); border-left:0; background:var(--green); color:white; cursor:pointer; border-radius:0 4px 4px 0; font-weight:700;">1Y</button>
                             </div>
                         </div>
-                        <div class="panel-body" id="wl-chart-body" style="padding:8px;">
+                        <div class="panel-body" id="wl-chart-body" style="padding:8px; max-height:none; overflow:visible;">
                             <div style="padding:20px; text-align:center; color:var(--text-muted);">
                                 Click a stock above to view its price chart.
                             </div>
@@ -1696,7 +1696,7 @@
                                 <button onclick="switchLsChartPeriod('1y')" class="ls-chart-period-btn" style="padding:2px 8px; font-size:10px; border:1px solid var(--green); border-left:0; background:var(--green); color:white; cursor:pointer; border-radius:0 4px 4px 0; font-weight:700;">1Y</button>
                             </div>
                         </div>
-                        <div class="panel-body" id="ls-chart-body" style="padding:8px;">
+                        <div class="panel-body" id="ls-chart-body" style="padding:8px; max-height:none; overflow:visible;">
                             <div style="padding:40px 20px; text-align:center; color:var(--text-muted);">
                                 Click any stock to view chart
                             </div>
@@ -2248,7 +2248,7 @@
                     chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">No chart data available.</div>';
                     return;
                 }
-                drawWatchlistChart(data.dates, data.prices, wlSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, null, data.dma50, data.dma200, data.volumes);
+                drawWatchlistChart(data.dates, data.prices, wlSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, null, data.dma50, data.dma200, data.volumes, data.rsi);
             } catch (e) {
                 chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--red);">Failed to load chart.</div>';
             }
@@ -2260,20 +2260,20 @@
 
         let _wlChartState = null;
 
-        function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma200, volumes) {
+        function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma200, volumes, rsiData) {
             currency = currency || '₹';
             const bodyId = targetBodyId || 'wl-chart-body';
             const canvasId = bodyId === 'ls-chart-body' ? 'ls-chart-canvas' : 'wl-chart-canvas';
             const body = document.getElementById(bodyId);
-            body.innerHTML = `<canvas id="${canvasId}" style="width:100%; height:280px;"></canvas>`;
+            body.innerHTML = `<canvas id="${canvasId}" style="width:100%; height:380px;"></canvas>`;
             const canvas = document.getElementById(canvasId);
             const dpr = window.devicePixelRatio || 1;
             const rect = canvas.getBoundingClientRect();
             canvas.width = rect.width * dpr;
-            canvas.height = 280 * dpr;
-            canvas.style.height = '280px';
+            canvas.height = 380 * dpr;
+            canvas.style.height = '380px';
 
-            _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 280, currency, rsSmooth, dma50: dma50 || [], dma200: dma200 || [], volumes: volumes || [] };
+            _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 380, currency, rsSmooth, dma50: dma50 || [], dma200: dma200 || [], volumes: volumes || [], rsiData: rsiData || [] };
             _renderWatchlistChart(canvas);
 
             canvas.onmousemove = function(e) {
@@ -2300,17 +2300,20 @@
 
         function _renderWatchlistChart(canvas, hoverIdx) {
             const s = _wlChartState;
-            const { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W, H, currency, rsSmooth } = s;
+            const { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W, H, currency, rsSmooth, rsiData } = s;
             const cur = currency || '₹';
             const ctx = canvas.getContext('2d');
             ctx.resetTransform();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.scale(dpr, dpr);
             const hasRS = rsData && rsData.some(v => v !== null);
-            // Split: top 60% for price, bottom 35% for RS, 5% gap
-            const priceH = hasRS ? Math.floor(H * 0.55) : H - 50;
-            const rsTop = hasRS ? Math.floor(H * 0.62) : 0;
-            const rsH = hasRS ? Math.floor(H * 0.30) : 0;
+            const hasRSI = rsiData && rsiData.some(v => v !== null);
+            // 3-panel layout: price (top ~45%), RS (mid ~22%), RSI (bottom ~20%), gaps
+            const priceH = hasRS ? Math.floor(H * 0.44) : H - 50;
+            const rsTop  = hasRS  ? Math.floor(H * 0.49) : 0;
+            const rsH    = hasRS  ? Math.floor(H * 0.22) : 0;
+            const rsiTop = hasRSI ? Math.floor(H * 0.74) : 0;
+            const rsiH   = hasRSI ? Math.floor(H * 0.20) : 0;
             const pad = {top: 15, right: 55, bottom: 25, left: 45};
             const cw = W - pad.left - pad.right;
 
@@ -2646,6 +2649,63 @@
                 ctx.fillText(`${lastRS >= 0 ? '+' : ''}${lastRS.toFixed(1)}%`, W - pad.right + 4, lastRSY + 3);
             }
 
+            // --- RSI(14) PANEL ---
+            if (hasRSI && rsiData && rsiData.length === prices.length) {
+                const rch2 = rsiH - 5;
+                // Separator line
+                ctx.strokeStyle = borderColor;
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(pad.left, rsiTop - 5);
+                ctx.lineTo(W - pad.right, rsiTop - 5);
+                ctx.stroke();
+
+                // Reference lines at 30, 50, 70
+                const refLevels = [30, 50, 70];
+                refLevels.forEach(level => {
+                    const ry = rsiTop + rch2 - ((level - 0) / 100) * rch2;
+                    ctx.strokeStyle = level === 50 ? 'rgba(150,150,150,0.5)' : 'rgba(150,150,150,0.25)';
+                    ctx.lineWidth = 0.5;
+                    ctx.setLineDash(level === 50 ? [4, 4] : [2, 2]);
+                    ctx.beginPath(); ctx.moveTo(pad.left, ry); ctx.lineTo(W - pad.right, ry); ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = mutedColor;
+                    ctx.font = '8px monospace';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(level, pad.left - 4, ry + 3);
+                });
+
+                // RSI line
+                ctx.strokeStyle = '#a855f7';
+                ctx.lineWidth = 1.2;
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                let rsiStarted = false;
+                for (let i = 0; i < rsiData.length; i++) {
+                    if (rsiData[i] === null) { rsiStarted = false; continue; }
+                    const x = pad.left + (i / (rsiData.length - 1)) * cw;
+                    const y = rsiTop + rch2 - (rsiData[i] / 100) * rch2;
+                    if (!rsiStarted) { ctx.moveTo(x, y); rsiStarted = true; }
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // RSI label
+                ctx.fillStyle = mutedColor;
+                ctx.font = '9px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('RSI14', pad.left + 2, rsiTop + 10);
+
+                // Current RSI value
+                const validRSI = rsiData.filter(v => v !== null);
+                const lastRSIVal = validRSI[validRSI.length - 1];
+                const lastRSIColor = lastRSIVal >= 70 ? redColor : lastRSIVal <= 30 ? greenColor : '#a855f7';
+                ctx.fillStyle = lastRSIColor;
+                ctx.font = 'bold 9px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(lastRSIVal.toFixed(0), W - pad.right + 4, rsiTop + rch2 - (lastRSIVal / 100) * rch2 + 3);
+            }
+
             // --- DATE LABELS (bottom) ---
             ctx.fillStyle = mutedColor;
             ctx.font = '9px monospace';
@@ -2684,10 +2744,14 @@
                 const d50 = s.dma50 || [];
                 const d200 = s.dma200 || [];
                 if (d50[idx] !== null && d50[idx] !== undefined) {
-                    lines.push(`D50: ${cur}${d50[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+                    lines.push(`D63: ${cur}${d50[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
                 }
                 if (d200[idx] !== null && d200[idx] !== undefined) {
                     lines.push(`D200: ${cur}${d200[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+                }
+                const rsiArr = s.rsiData || [];
+                if (rsiArr[idx] !== null && rsiArr[idx] !== undefined) {
+                    lines.push(`RSI: ${rsiArr[idx].toFixed(1)}`);
                 }
 
                 // Draw tooltip box
@@ -2712,8 +2776,9 @@
                     if (i === 0) ctx.fillStyle = '#666';
                     else if (line.startsWith('Price')) ctx.fillStyle = bullish ? '#16a34a' : '#dc2626';
                     else if (line.startsWith('Vol')) ctx.fillStyle = '#888';
-                    else if (line.startsWith('D50')) ctx.fillStyle = '#1976d2';
+                    else if (line.startsWith('D63')) ctx.fillStyle = '#1976d2';
                     else if (line.startsWith('D200')) ctx.fillStyle = '#e65100';
+                    else if (line.startsWith('RSI')) ctx.fillStyle = '#a855f7';
                     else ctx.fillStyle = '#555';
                     ctx.fillText(line, tx + 6, ty + 13 + i * lineH);
                 });
@@ -3265,7 +3330,7 @@
                         return;
                     }
                     // Reuse the exact same watchlist chart renderer, targeting ls-chart-body
-                    drawWatchlistChart(data.dates, data.prices, lsSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, 'ls-chart-body', data.dma50, data.dma200, data.volumes);
+                    drawWatchlistChart(data.dates, data.prices, lsSelectedTicker, data.rs, data.rs_label, data.bench, data.bench_label, data.currency || '₹', data.rs_smooth, 'ls-chart-body', data.dma50, data.dma200, data.volumes, data.rsi);
                 })
                 .catch(() => {
                     chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--red);">Chart failed.</div>';

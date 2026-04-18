@@ -790,7 +790,7 @@
                 data.currency || '₹',
                 data.rs_smooth, 'etf-chart-body',
                 data.dma50, data.dma100, data.dma200,
-                data.volumes
+                data.volumes, data.rsi
             );
         } catch (e) {
             body.innerHTML = `<div class="chart-placeholder" style="color:var(--red);">Failed: ${e.message}</div>`;
@@ -802,20 +802,20 @@
     }
 
     // ── Chart Drawing (copied from index.html) ─────────────────────────────────
-    function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma100, dma200, volumes) {
+    function drawWatchlistChart(dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, currency, rsSmooth, targetBodyId, dma50, dma100, dma200, volumes, rsiData) {
         currency = currency || '₹';
         const bodyId = targetBodyId || 'etf-chart-body';
         const canvasId = 'etf-chart-canvas';
         const body = document.getElementById(bodyId);
-        body.innerHTML = `<canvas id="${canvasId}" style="width:100%; height:300px;"></canvas>`;
+        body.innerHTML = `<canvas id="${canvasId}" style="width:100%; height:400px;"></canvas>`;
         const canvas = document.getElementById(canvasId);
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
         canvas.width = rect.width * dpr;
-        canvas.height = 300 * dpr;
-        canvas.style.height = '300px';
+        canvas.height = 400 * dpr;
+        canvas.style.height = '400px';
 
-        _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 300, currency, rsSmooth, dma50: dma50 || [], dma100: dma100 || [], dma200: dma200 || [], volumes: volumes || [] };
+        _wlChartState = { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W: rect.width, H: 400, currency, rsSmooth, dma50: dma50 || [], dma100: dma100 || [], dma200: dma200 || [], volumes: volumes || [], rsiData: rsiData || [] };
         _renderWatchlistChart(canvas);
 
         canvas.onmousemove = function(e) {
@@ -842,16 +842,20 @@
 
     function _renderWatchlistChart(canvas, hoverIdx) {
         const s = _wlChartState;
-        const { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W, H, currency, rsSmooth } = s;
+        const { dates, prices, ticker, rsData, rsLabel, benchData, benchLabel, dpr, W, H, currency, rsSmooth, rsiData } = s;
         const cur = currency || '₹';
         const ctx = canvas.getContext('2d');
         ctx.resetTransform();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.scale(dpr, dpr);
         const hasRS = rsData && rsData.some(v => v !== null);
-        const priceH = hasRS ? Math.floor(H * 0.55) : H - 50;
-        const rsTop = hasRS ? Math.floor(H * 0.62) : 0;
-        const rsH = hasRS ? Math.floor(H * 0.30) : 0;
+        const hasRSI = rsiData && rsiData.some(v => v !== null);
+        // 3-panel layout: price (top ~44%), RS (mid ~22%), RSI (bottom ~20%)
+        const priceH = hasRS ? Math.floor(H * 0.44) : H - 50;
+        const rsTop  = hasRS  ? Math.floor(H * 0.49) : 0;
+        const rsH    = hasRS  ? Math.floor(H * 0.22) : 0;
+        const rsiTop = hasRSI ? Math.floor(H * 0.74) : 0;
+        const rsiH   = hasRSI ? Math.floor(H * 0.20) : 0;
         const pad = {top: 15, right: 55, bottom: 25, left: 45};
         const cw = W - pad.left - pad.right;
 
@@ -982,8 +986,8 @@
         if (hasDma50 || hasDma100 || hasDma200) {
             ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
             let lx = pad.left + 2; const ly = pad.top + 10;
-            if (hasDma50)  { ctx.fillStyle = 'rgba(33,150,243,0.7)';  ctx.fillText('50DMA',  lx, ly); lx += ctx.measureText('50DMA').width + 6; }
-            if (hasDma100) { ctx.fillStyle = 'rgba(156,39,176,0.7)';  ctx.fillText('100DMA', lx, ly); lx += ctx.measureText('100DMA').width + 6; }
+            if (hasDma50)  { ctx.fillStyle = 'rgba(33,150,243,0.7)';  ctx.fillText('63DMA',  lx, ly); lx += ctx.measureText('63DMA').width + 6; }
+            if (hasDma100) { ctx.fillStyle = 'rgba(156,39,176,0.7)';  ctx.fillText('126DMA', lx, ly); lx += ctx.measureText('126DMA').width + 6; }
             if (hasDma200) { ctx.fillStyle = 'rgba(255,152,0,0.7)';   ctx.fillText('200DMA', lx, ly); }
         }
 
@@ -1111,6 +1115,46 @@
             ctx.fillText(`${lastRS >= 0 ? '+' : ''}${lastRS.toFixed(1)}%`, W - pad.right + 4, lastRSY + 3);
         }
 
+        // --- RSI(14) PANEL ---
+        if (hasRSI && rsiData && rsiData.length === prices.length) {
+            const rch2 = rsiH - 5;
+            // Separator line
+            ctx.strokeStyle = borderColor; ctx.lineWidth = 0.5;
+            ctx.beginPath(); ctx.moveTo(pad.left, rsiTop - 5); ctx.lineTo(W - pad.right, rsiTop - 5); ctx.stroke();
+
+            // Reference lines at 30, 50, 70
+            [30, 50, 70].forEach(level => {
+                const ry = rsiTop + rch2 - (level / 100) * rch2;
+                ctx.strokeStyle = level === 50 ? 'rgba(150,150,150,0.5)' : 'rgba(150,150,150,0.25)';
+                ctx.lineWidth = 0.5;
+                ctx.setLineDash(level === 50 ? [4, 4] : [2, 2]);
+                ctx.beginPath(); ctx.moveTo(pad.left, ry); ctx.lineTo(W - pad.right, ry); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = mutedColor; ctx.font = '8px monospace'; ctx.textAlign = 'right';
+                ctx.fillText(level, pad.left - 4, ry + 3);
+            });
+
+            // RSI line
+            ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 1.2; ctx.lineJoin = 'round';
+            ctx.beginPath(); let rsiStarted = false;
+            for (let i = 0; i < rsiData.length; i++) {
+                if (rsiData[i] === null) { rsiStarted = false; continue; }
+                const x = pad.left + (i / (rsiData.length - 1)) * cw;
+                const y = rsiTop + rch2 - (rsiData[i] / 100) * rch2;
+                if (!rsiStarted) { ctx.moveTo(x, y); rsiStarted = true; } else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // RSI label + current value
+            ctx.fillStyle = mutedColor; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+            ctx.fillText('RSI14', pad.left + 2, rsiTop + 10);
+            const validRSI = rsiData.filter(v => v !== null);
+            const lastRSIVal = validRSI[validRSI.length - 1];
+            const lastRSIColor = lastRSIVal >= 70 ? redColor : lastRSIVal <= 30 ? greenColor : '#a855f7';
+            ctx.fillStyle = lastRSIColor; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
+            ctx.fillText(lastRSIVal.toFixed(0), W - pad.right + 4, rsiTop + rch2 - (lastRSIVal / 100) * rch2 + 3);
+        }
+
         // Date labels
         ctx.fillStyle = mutedColor; ctx.font = '9px monospace'; ctx.textAlign = 'center';
         const step = Math.floor(dates.length / 5);
@@ -1133,8 +1177,10 @@
             let lines = [`${date}`, `Price: ${cur}${price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`];
             if (benchData && benchData[idx] !== null) lines.push(`Nifty200: ${benchData[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
             const d50 = s.dma50 || [], d200 = s.dma200 || [];
-            if (d50[idx] !== null && d50[idx] !== undefined) lines.push(`D50: ${cur}${d50[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+            if (d50[idx] !== null && d50[idx] !== undefined) lines.push(`D63: ${cur}${d50[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
             if (d200[idx] !== null && d200[idx] !== undefined) lines.push(`D200: ${cur}${d200[idx].toLocaleString('en-IN', {minimumFractionDigits: 1, maximumFractionDigits: 1})}`);
+            const rsiArr = s.rsiData || [];
+            if (rsiArr[idx] !== null && rsiArr[idx] !== undefined) lines.push(`RSI: ${rsiArr[idx].toFixed(1)}`);
             const volArr = s.volumes || [];
             if (volArr[idx] !== null && volArr[idx] !== undefined && volArr[idx] > 0) {
                 const vol = volArr[idx];

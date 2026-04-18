@@ -1549,9 +1549,16 @@ def watchlist_chart():
                     else:
                         bench_prices.append(None)
 
+        # RSI(14)
+        _delta = stock_closes.diff()
+        _gain  = _delta.clip(lower=0).ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+        _loss  = (-_delta).clip(lower=0).ewm(alpha=1/14, min_periods=14, adjust=False).mean()
+        rsi_full = 100 - (100 / (1 + _gain / _loss.replace(0, 1e-10)))
+
         dma50_data = []
         dma100_data = []
         dma200_data = []
+        rsi_data = []
         for d in stock_closes.index:
             v50 = dma50_full.get(d)
             dma50_data.append(round(float(v50), 2) if v50 is not None and not pd.isna(v50) else None)
@@ -1559,6 +1566,8 @@ def watchlist_chart():
             dma100_data.append(round(float(v100), 2) if v100 is not None and not pd.isna(v100) else None)
             v200 = dma200_full.get(d)
             dma200_data.append(round(float(v200), 2) if v200 is not None and not pd.isna(v200) else None)
+            vr = rsi_full.get(d)
+            rsi_data.append(round(float(vr), 1) if vr is not None and not pd.isna(vr) else None)
 
         volumes_data = []
         if stock_volumes is not None:
@@ -1575,7 +1584,7 @@ def watchlist_chart():
             "bench": bench_prices, "bench_label": "Nifty 200",
             "currency": "$" if is_intl else "₹",
             "dma50": dma50_data, "dma100": dma100_data, "dma200": dma200_data,
-            "volumes": volumes_data,
+            "volumes": volumes_data, "rsi": rsi_data,
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
