@@ -2398,7 +2398,7 @@
             ctx.fillStyle = grad;
             ctx.fill();
 
-            // DMA 50 line (blue, dashed)
+            // DMA 63 line (blue, dashed)
             const dma50 = s.dma50 || [];
             const hasDma50 = dma50.length === prices.length && dma50.some(v => v !== null);
             if (hasDma50) {
@@ -2412,6 +2412,26 @@
                     const x = pad.left + (i / (prices.length - 1)) * cw;
                     const y = pad.top + pch - ((dma50[i] - minP) / pRange) * pch;
                     if (!started) { ctx.moveTo(x, y); started = true; }
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // DMA 126 line (purple, dashed)
+            const dma100 = s.dma100 || [];
+            const hasDma100 = dma100.length === prices.length && dma100.some(v => v !== null);
+            if (hasDma100) {
+                ctx.strokeStyle = 'rgba(156,39,176,0.7)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 3]);
+                ctx.beginPath();
+                let started100 = false;
+                for (let i = 0; i < dma100.length; i++) {
+                    if (dma100[i] === null) continue;
+                    const x = pad.left + (i / (prices.length - 1)) * cw;
+                    const y = pad.top + pch - ((dma100[i] - minP) / pRange) * pch;
+                    if (!started100) { ctx.moveTo(x, y); started100 = true; }
                     else ctx.lineTo(x, y);
                 }
                 ctx.stroke();
@@ -2438,16 +2458,21 @@
                 ctx.setLineDash([]);
             }
 
-            // DMA legend (small, top-left, same size as RS-123d label)
-            if (hasDma50 || hasDma200) {
+            // DMA legend (small, top-left)
+            if (hasDma50 || hasDma100 || hasDma200) {
                 ctx.font = 'bold 9px monospace';
                 ctx.textAlign = 'left';
                 let lx = pad.left + 2;
                 const ly = pad.top + 10;
                 if (hasDma50) {
                     ctx.fillStyle = 'rgba(33,150,243,0.7)';
-                    ctx.fillText('50DMA', lx, ly);
-                    lx += ctx.measureText('50DMA').width + 6;
+                    ctx.fillText('63DMA', lx, ly);
+                    lx += ctx.measureText('63DMA').width + 6;
+                }
+                if (hasDma100) {
+                    ctx.fillStyle = 'rgba(156,39,176,0.7)';
+                    ctx.fillText('126DMA', lx, ly);
+                    lx += ctx.measureText('126DMA').width + 6;
                 }
                 if (hasDma200) {
                     ctx.fillStyle = 'rgba(255,152,0,0.7)';

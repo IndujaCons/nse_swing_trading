@@ -1513,9 +1513,9 @@ def watchlist_chart():
             rs_series = pd.Series(dtype=float)
             rs_smooth_series = pd.Series(dtype=float)
 
-        # DMA 50 and 200 — compute on full history before trimming
-        dma50_full = stock_closes.rolling(50, min_periods=50).mean()
-        dma100_full = stock_closes.rolling(100, min_periods=100).mean()
+        # DMA 63, 126, 200 — compute on full history before trimming
+        dma50_full = stock_closes.rolling(63, min_periods=63).mean()
+        dma100_full = stock_closes.rolling(126, min_periods=126).mean()
         dma200_full = stock_closes.rolling(200, min_periods=200).mean()
 
         # Trim to requested period
