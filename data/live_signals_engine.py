@@ -657,7 +657,8 @@ class LiveSignalsEngine:
                                 h1_bch_aligned = h1_bch_idx.reindex(h1_cls.index, method="ffill").ffill()
                                 rs_1h = h1_cls / h1_bch_aligned
                                 rs63_1h_raw = (rs_1h / rs_1h.shift(63) - 1) * 100
-                                val = float(rs63_1h_raw.iloc[-1]) if not pd.isna(rs63_1h_raw.iloc[-1]) else None
+                                rs63_1h_sma = rs63_1h_raw.rolling(5, min_periods=1).mean()
+                                val = float(rs63_1h_sma.iloc[-1]) if not pd.isna(rs63_1h_sma.iloc[-1]) else None
                                 rs63_1h_val = round(val, 1) if val is not None else None
                         except Exception:
                             pass

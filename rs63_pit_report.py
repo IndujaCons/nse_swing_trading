@@ -361,7 +361,6 @@ def run(refresh=False):
                 continue
             if ticker not in pit_set:
                 continue
-
             idx_map = date_to_iloc.get(ticker, {})
             ci = idx_map.get(day)
             if ci is None or ci < 210:
@@ -383,6 +382,7 @@ def run(refresh=False):
                 continue
             if rsi_v <= 50:
                 continue
+
             day_range = high - low
             ibs = (price - low) / day_range if day_range > 0 else 0
             if ibs <= 0.5:
