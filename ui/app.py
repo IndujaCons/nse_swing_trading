@@ -2156,7 +2156,20 @@ def _etf_signal_scheduler():
                 from pathlib import Path as _Path
                 from data.notifier import format_rs63_alert, format_rs63_exit_alert
 
-                rs63_result = live_signals_scanner.scan_entry_signals(force_refresh=True)
+                from data.live_signals_engine import (NIFTY_50_TICKERS, NIFTY_NEXT50_TICKERS,
+                                                      NIFTY_200_NEXT100_TICKERS)
+                from config.settings import load_config as _load_config
+                _config = _load_config()
+                _universe = _config.get("live_signals_universe", 50)
+                if _universe <= 50:
+                    _scan_tickers = NIFTY_50_TICKERS
+                elif _universe <= 100:
+                    _scan_tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
+                else:
+                    _scan_tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+                _ltp_map = _fetch_zerodha_ltp(_scan_tickers)
+
+                rs63_result = live_signals_scanner.scan_entry_signals(force_refresh=True, ltp_map=_ltp_map)
 
                 # Load / update signal duration tracker
                 _tracker_file = _Path("data_store/rs63_signal_tracker.json")
