@@ -169,14 +169,18 @@ def build_indicators(stock_data, bench_close):
         rsi14_2d   = rsi14_raw.rolling(2, min_periods=1).mean() # exit
 
         vol_avg20  = volumes.rolling(20).mean()
+        low_5d     = lows.rolling(5).min().shift(1)
         low_20d    = lows.rolling(20).min().shift(1)
+        sma20      = closes.rolling(20).mean().shift(1)
 
         indicators[ticker] = {
             "rs63":      rs63,
             "rsi14_3d":  rsi14_3d,
             "rsi14_2d":  rsi14_2d,
             "vol_avg20": vol_avg20,
+            "low_5d":    low_5d,
             "low_20d":   low_20d,
+            "sma20":     sma20,
         }
     print(f"  Indicators built for {len(indicators)} stocks")
     return indicators
@@ -396,13 +400,18 @@ def run(refresh=False, end_date=None, max_daily_entries=None):
             stop_pct  = (price - l20d) / price * 100 if price > 0 and l20d > 0 else 8
             vol_ratio = vol / va if va > 0 else 0
 
+            l5d  = float(ind["low_5d"].iloc[ci])  if not pd.isna(ind["low_5d"].iloc[ci])  else 0
+            s20  = float(ind["sma20"].iloc[ci])   if not pd.isna(ind["sma20"].iloc[ci])   else price
+
             signals.append({
-                "ticker":    ticker,
-                "price":     price,
-                "rs63":      rs63_v,
-                "rsi":       rsi_v,
-                "vol_ratio": vol_ratio,
-                "stop_pct":  stop_pct,
+                "ticker":      ticker,
+                "price":       price,
+                "rs63":        rs63_v,
+                "rsi":         rsi_v,
+                "vol_ratio":   vol_ratio,
+                "stop_pct":    stop_pct,                              # active ranking
+                "stop_sma20":  (price - s20)  / price if price > 0 else 8,   # future use
+                "low_rising":  (l5d - l20d)   / price if price > 0 and l5d > 0 and l20d > 0 else -1,  # future use
             })
 
         # Rank by tightest stop (close − 20d_low) / close ascending
