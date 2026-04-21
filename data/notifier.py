@@ -127,11 +127,13 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
         else:
             return "3h+"
 
+    signals = sorted(signals, key=lambda s: s.get('stop_pct', 99))
+
     lines = [f"<b>📈 RS63</b> {len(signals)}sig | {ist}", "<code>"]
-    lines.append(f"{'#':<2}{'Ticker':<9} {'Px':>5} {'D/1H':>9} {'RSI':>3} {'Vol':>4} {'Age':>3}")
+    lines.append(f"{'#':<2}{'Ticker':<9} {'Px':>5} {'D/1H':>9} {'RSI':>3} {'Stp%':>4} {'Age':>3}")
     lines.append("─" * 38)
-    for s in signals:
-        rank   = str(s.get('rank', '?'))[:2]
+    for i, s in enumerate(signals, 1):
+        marker = "★ " if i <= 2 else "  "
         ticker = s['ticker'][:9]
         price  = str(int(s['price']))
         rs63   = f"{s['rs63']:.1f}"
@@ -139,10 +141,10 @@ def format_rs63_alert(scan_result: dict, duration_map: dict | None = None) -> st
         rs1h   = f"{rs1h_v:+.1f}" if rs1h_v is not None else "—"
         d1h    = f"{rs63}/{rs1h}"
         rsi    = str(int(round(s.get('rsi', 0))))
-        vr     = s.get('vol_ratio')
-        vol    = f"{vr:.1f}x" if vr is not None else "  —"
+        sp     = s.get('stop_pct')
+        stp    = f"{sp:.1f}%" if sp is not None else "  —"
         dur    = _dur_label(s['ticker'])
-        lines.append(f"{rank:<2}{ticker:<9} {price:>5} {d1h:>9} {rsi:>3} {vol:>4} {dur:>3}")
+        lines.append(f"{marker}{i:<2}{ticker:<9} {price:>5} {d1h:>9} {rsi:>3} {stp:>4} {dur:>3}")
         lines.append("")
     lines.append("</code>")
     return "\n".join(lines)
