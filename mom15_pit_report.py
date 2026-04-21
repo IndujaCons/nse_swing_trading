@@ -396,10 +396,14 @@ def run(refresh=False, mom20=False, use_regime=True):
     total_charges = 0.0
     rebal_nav = []            # rebalance-date NAV snapshots for portfolio correlation analysis
 
+    if mom20:
+        banner = f"  MOM20 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Beta≤1.2  |  {regime_label}"
+    else:
+        banner = f"  MOM15 PIT BACKTEST  |  NAV/15 slot  |  2-Month Rebalance  |  Beta≤1.0  |  {regime_label}"
     print()
-    print("=" * 72)
-    print("  MOM15 PIT BACKTEST  |  NAV/15 slot  |  2-Month Rebalance  |  Beta≤1.0")
-    print("=" * 72)
+    print("=" * len(banner))
+    print(banner)
+    print("=" * len(banner))
 
     for rebal_idx, rebal_day in enumerate(rebal_dates):
         # Portfolio value on rebal day (MTM)
@@ -707,9 +711,10 @@ def run(refresh=False, mom20=False, use_regime=True):
     # Export rebalance-date NAV series for portfolio correlation analysis
     if rebal_nav:
         import os as _os
-        nav_csv = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "mom15_rebal.csv")
+        csv_name = "mom20_rebal.csv" if mom20 else "mom15_rebal.csv"
+        nav_csv = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), csv_name)
         pd.DataFrame(rebal_nav).to_csv(nav_csv, index=False)
-        print(f"  Rebalance NAV exported → mom15_rebal.csv ({len(rebal_nav)} rows)")
+        print(f"  Rebalance NAV exported → {csv_name} ({len(rebal_nav)} rows)")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Mom15 / Mom20 PIT Backtest Report")
