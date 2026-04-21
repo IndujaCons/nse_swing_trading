@@ -303,14 +303,16 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False, mom20=False):
+def run(refresh=False, mom20=False, use_regime=True):
     # Override constants for Mom20 variant
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP
     if mom20:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
-        print("=== Mom20 — Monthly Rebalance, β≤1.2 ===")
+        label = "Mom20 — Monthly Rebalance, β≤1.2"
     else:
-        print("=== Mom15 — Bi-monthly Rebalance, β≤1.0 ===")
+        label = "Mom15 — Bi-monthly Rebalance, β≤1.0"
+    regime_label = "Regime ON" if use_regime else "Regime OFF"
+    print(f"=== {label} | {regime_label} ===")
 
     # Load supporting data
     print("Loading PIT universe...")
@@ -466,10 +468,28 @@ def run(refresh=False, mom20=False):
         if len(new_set) > slots_available:
             new_set = set(sorted(new_set, key=lambda t: ticker_rank.get(t, 9999))[:slots_available])
 
+        # ── REGIME CHECK (before exits and entries) ──────────────────────────
+        regime_off = False
+        if use_regime and not n200_raw.empty:
+            n200_ci = n200_iloc.get(rebal_day)
+            if n200_ci is None:
+                for off in range(1, 6):
+                    n200_ci = n200_iloc.get(rebal_day - timedelta(days=off))
+                    if n200_ci is not None:
+                        break
+            if n200_ci is not None:
+                n200_close = float(n200_raw["Close"].iloc[n200_ci])
+                n200_sma   = n200_raw["sma200"].iloc[n200_ci]
+                if not pd.isna(n200_sma) and n200_close < float(n200_sma):
+                    regime_off = True
+                    print(f"\n  [REGIME OFF] Nifty200 {n200_close:,.1f} < SMA200 {float(n200_sma):,.1f} — holding all, skipping exits & entries")
+
         # ── EXITS ────────────────────────────────────────────────────────────
         to_sell = current_set - new_set
         exit_rows = []
         for t in sorted(to_sell):
+            if regime_off:
+                break
             pos = portfolio[t]
             ep = pos.get("curr_price", pos["entry_price"])
             gross_pnl = (ep - pos["entry_price"]) * pos["shares"]
@@ -515,22 +535,6 @@ def run(refresh=False, mom20=False):
         to_buy = new_set - current_set
         entry_rows = []
         skipped_52w = []
-
-        # Regime filter: skip all new entries if Nifty 200 < its 200-day SMA
-        regime_off = False
-        if not n200_raw.empty:
-            n200_ci = n200_iloc.get(rebal_day)
-            if n200_ci is None:
-                for off in range(1, 6):
-                    n200_ci = n200_iloc.get(rebal_day - timedelta(days=off))
-                    if n200_ci is not None:
-                        break
-            if n200_ci is not None:
-                n200_close = float(n200_raw["Close"].iloc[n200_ci])
-                n200_sma   = n200_raw["sma200"].iloc[n200_ci]
-                if not pd.isna(n200_sma) and n200_close < float(n200_sma):
-                    regime_off = True
-                    print(f"\n  [REGIME OFF] Nifty200 {n200_close:,.1f} < SMA200 {float(n200_sma):,.1f} — skipping {len(to_buy)} new entr{'y' if len(to_buy)==1 else 'ies'}")
 
         for t in sorted(to_buy, key=lambda t: ticker_rank.get(t, 9999)):
             if regime_off:
@@ -666,9 +670,14 @@ def run(refresh=False, mom20=False):
     print(f"  Total Return  : {pct(total_return)}")
     print(f"  CAGR          : {pct(cagr)}")
     print()
+    gross_win  = sum(tr["gross_pnl"] for tr in winners)
+    gross_loss = abs(sum(tr["gross_pnl"] for tr in losers))
+    pf         = gross_win / gross_loss if gross_loss > 0 else float('inf')
+    wr         = len(winners) / len(all_trades) * 100 if all_trades else 0
+
     print(f"  Closed Trades : {len(all_trades)}  |  Open: {len(portfolio)}")
-    print(f"  Winners       : {len(winners)}  ({len(winners)/len(all_trades)*100:.0f}%)")
-    print(f"  Losers        : {len(losers)}  ({len(losers)/len(all_trades)*100:.0f}%)")
+    print(f"  Win Rate      : {wr:.1f}%  ({len(winners)}W / {len(losers)}L)")
+    print(f"  Profit Factor : {pf:.2f}")
     print(f"  Avg hold      : {avg_hold:.0f} days")
     print(f"  Total charges : {inr(total_charges)}")
     print(f"  Closed net P&L: {inr(closed_pnl)}")
@@ -707,5 +716,7 @@ if __name__ == "__main__":
     parser.add_argument("--refresh", action="store_true", help="Re-download price data")
     parser.add_argument("--mom20", action="store_true",
                         help="Run Mom20 variant (top 20, monthly rebalance, β≤1.2)")
+    parser.add_argument("--no-regime", action="store_true",
+                        help="Disable regime filter (allow entries even when Nifty200 < SMA200)")
     args = parser.parse_args()
-    run(refresh=args.refresh, mom20=args.mom20)
+    run(refresh=args.refresh, mom20=args.mom20, use_regime=not args.no_regime)
