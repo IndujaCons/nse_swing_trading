@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PPFAS TSF — Portfolio Evolution</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#e8edf2;padding:24px;color:#1e293b}
+.card{max-width:940px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.13)}
+
+.hdr{background:linear-gradient(135deg,#0c5c5c 0%,#0f7373 60%,#108888 100%);color:#fff;padding:22px 24px 18px;text-align:center;position:relative}
+.hdr-tag{position:absolute;top:14px;right:18px;text-align:right;line-height:1.4}
+.hdr-tag .t1{font-size:12px;font-weight:700;color:#80d8d8;letter-spacing:.5px}
+.hdr-tag .t2{font-size:10px;color:#60b8b8}
+.fund{font-size:22px;font-weight:800;letter-spacing:.2px;margin-bottom:8px}
+.pill{display:inline-block;background:#fff;color:#0c5c5c;border-radius:20px;padding:4px 20px;font-size:13px;font-weight:700;margin-bottom:5px}
+.sub{color:#a0d8d8;font-size:11px}
+
+.stats{display:flex}
+.stat{flex:1;text-align:center;padding:15px 6px;border-right:1px solid #eef2f6;border-bottom:2px solid #eef2f6}
+.stat:last-child{border-right:none}
+.sn{font-size:28px;font-weight:800;line-height:1.1}
+.sl{font-size:10px;color:#94a3b8;margin-top:2px;letter-spacing:.4px;text-transform:uppercase}
+.ct{color:#0d9488} .cg{color:#16a34a} .cr{color:#dc2626} .cb{color:#2563eb} .co{color:#d97706} .cy{color:#6b7280}
+
+.alloc{padding:14px 22px 12px;border-bottom:1px solid #eef2f6;background:#fafcfd}
+.at{font-size:10px;font-weight:700;color:#64748b;letter-spacing:.7px;text-transform:uppercase;margin-bottom:10px}
+.arow{display:flex;align-items:center;margin-bottom:8px;gap:10px}
+.albl{width:28px;font-size:11px;color:#64748b;font-weight:600;text-align:right}
+.abar{flex:1;display:flex;height:24px;border-radius:5px;overflow:hidden;font-size:11px;font-weight:600}
+.beq{background:#0d9488;display:flex;align-items:center;justify-content:center;color:#fff}
+.bdt{background:#3b82f6;display:flex;align-items:center;justify-content:center;color:#fff}
+.bcs{background:#94a3b8;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px}
+.leg{display:flex;gap:18px;justify-content:center;font-size:11px;color:#64748b;margin-top:6px}
+.ld{width:10px;height:10px;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:3px}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#0c5c5c;color:#fff;padding:9px 10px;font-size:11px;font-weight:600;white-space:nowrap}
+thead th:nth-child(n+4){text-align:center}
+thead th:nth-child(n+6){text-align:right}
+tbody tr{border-bottom:1px solid #f1f5f9;transition:background .1s}
+tbody tr:hover{background:#eef9f9 !important}
+tbody tr.rn{background:#f0fdf4}
+tbody tr.re{background:#fff5f5}
+td{padding:7px 10px;vertical-align:middle}
+td small{font-size:10px}
+.tn{text-align:right;color:#cbd5e1;font-size:11px;width:28px}
+.tnm{font-weight:500;font-size:12px}
+.tsc{color:#64748b;font-size:11px;max-width:130px}
+.tc{text-align:center}
+.tr{text-align:right;font-variant-numeric:tabular-nums}
+
+.badge{display:inline-block;padding:2px 9px;border-radius:11px;font-size:10px;font-weight:700}
+.bg{background:#dcfce7;color:#15803d}
+.br{background:#fee2e2;color:#b91c1c}
+.bb{background:#dbeafe;color:#1d4ed8}
+.by{background:#fef3c7;color:#b45309}
+.bh{background:#f1f5f9;color:#64748b}
+.dp{color:#16a34a;font-weight:600}
+.dn{color:#dc2626;font-weight:600}
+.muted{color:#94a3b8}
+.dash{color:#cbd5e1}
+
+.foot{padding:10px 20px;font-size:10px;color:#94a3b8;text-align:center;border-top:1px solid #eef2f6;background:#fafcfd}
+</style>
+</head>
+<body>
+<div class="card">
+
+<div class="hdr">
+  <div class="hdr-tag"><div class="t1">Portfolio Evolution</div><div class="t2">PPFAS Tax Saver Fund</div></div>
+  <div class="fund">Parag Parikh ELSS Tax Saver Fund</div>
+  <div class="pill">Feb 2026 → Mar 2026</div>
+  <div class="sub">Showing 40 equity + REIT holdings</div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="sn ct">40</div><div class="sl">Total</div></div>
+  <div class="stat"><div class="sn cg">0</div><div class="sl">Fresh Buys</div></div>
+  <div class="stat"><div class="sn cr">0</div><div class="sl">Exits</div></div>
+  <div class="stat"><div class="sn cb">13 ▲</div><div class="sl">INC</div></div>
+  <div class="stat"><div class="sn co">1 ▼</div><div class="sl">DEC</div></div>
+  <div class="stat"><div class="sn cy">26</div><div class="sl">Hold</div></div>
+</div>
+
+<div class="alloc">
+  <div class="at">▣ Asset Allocation</div>
+  <div class="arow">
+    <div class="albl">Feb</div>
+    <div class="abar">
+      <div class="beq" style="width:89.6%">89.6%</div>
+      <div class="bdt" style="width:8.7%">8.7%</div>
+      <div class="bcs" style="width:1.7%">1.7%</div>
+    </div>
+  </div>
+  <div class="arow">
+    <div class="albl">Mar</div>
+    <div class="abar">
+      <div class="beq" style="width:93.4%">93.4%</div>
+      <div class="bdt" style="width:4.9%">4.9%</div>
+      <div class="bcs" style="width:1.9%">1.9%</div>
+    </div>
+  </div>
+  <div class="leg">
+    <span><span class="ld" style="background:#0d9488"></span>Equity</span>
+    <span><span class="ld" style="background:#3b82f6"></span>Debt</span>
+    <span><span class="ld" style="background:#94a3b8"></span>Cash/Repo</span>
+  </div>
+</div>
+
+<div style="overflow-x:auto">
+<table>
+<thead><tr>
+  <th>#</th><th>Stock</th><th>Sector</th>
+  <th>Sts</th><th>Δ Change</th>
+  <th style="text-align:right">Feb</th><th style="text-align:right">Mar</th>
+</tr></thead>
+<tbody><tr class="">
+  <td class="tn">1</td>
+  <td class="tnm">Embassy Office Parks REIT</td>
+  <td class="tsc">Realty</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+31.48L</span><br><small class="dp">(+2.5%)</small></td>
+  <td class="tr">2.75Cr<br><small class="muted">(0.1%)</small></td>
+  <td class="tr">135Cr<br><small class="muted">(2.6%)</small></td>
+</tr><tr class="">
+  <td class="tn">2</td>
+  <td class="tnm">Brookfield India Real Estate Trust</td>
+  <td class="tsc">Realty</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+14.54L</span><br><small class="dp">(+0.8%)</small></td>
+  <td class="tr">96.5Cr<br><small class="muted">(1.7%)</small></td>
+  <td class="tr">132Cr<br><small class="muted">(2.5%)</small></td>
+</tr><tr class="">
+  <td class="tn">3</td>
+  <td class="tnm">HDFC Bank Limited</td>
+  <td class="tsc">Banks</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+10.00L</span><br><small class="dp">(+0.6%)</small></td>
+  <td class="tr">424Cr<br><small class="muted">(7.4%)</small></td>
+  <td class="tr">422Cr<br><small class="muted">(8.0%)</small></td>
+</tr><tr class="">
+  <td class="tn">4</td>
+  <td class="tnm">Zydus Wellness Limited</td>
+  <td class="tsc">Food Products</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+14.4K</span><br><small class="dp">(+0.2%)</small></td>
+  <td class="tr">44.2Cr<br><small class="muted">(0.8%)</small></td>
+  <td class="tr">49.6Cr<br><small class="muted">(0.9%)</small></td>
+</tr><tr class="">
+  <td class="tn">5</td>
+  <td class="tnm">West Coast Paper Mills Limited</td>
+  <td class="tsc">Paper, Forest & Jute Products</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+95.5K</span><br><small class="dp">(+0.1%)</small></td>
+  <td class="tr">1.88Cr<br><small class="muted">(0.0%)</small></td>
+  <td class="tr">5.70Cr<br><small class="muted">(0.1%)</small></td>
+</tr><tr class="">
+  <td class="tn">6</td>
+  <td class="tnm">Tata Consultancy Services Limited</td>
+  <td class="tsc">IT - Software</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+25.0K</span><br><small class="dp">(+0.1%)</small></td>
+  <td class="tr">113Cr<br><small class="muted">(2.0%)</small></td>
+  <td class="tr">107Cr<br><small class="muted">(2.0%)</small></td>
+</tr><tr class="">
+  <td class="tn">7</td>
+  <td class="tnm">Sundrop Brands Ltd</td>
+  <td class="tsc">Agricultural Food & other Products</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+58.2K</span><br><small class="dp">(+0.1%)</small></td>
+  <td class="tr">95L<br><small class="muted">(0.0%)</small></td>
+  <td class="tr">4.09Cr<br><small class="muted">(0.1%)</small></td>
+</tr><tr class="">
+  <td class="tn">8</td>
+  <td class="tnm">VST Industries Limited</td>
+  <td class="tsc">Cigarettes & Tobacco Products</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+2.31L</span><br><small class="dp">(+0.0%)</small></td>
+  <td class="tr">48.6Cr<br><small class="muted">(0.8%)</small></td>
+  <td class="tr">46.2Cr<br><small class="muted">(0.9%)</small></td>
+</tr><tr class="">
+  <td class="tn">9</td>
+  <td class="tnm">Mahanagar Gas Limited</td>
+  <td class="tsc">Gas</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+3.0K</span><br><small class="dp">(+0.0%)</small></td>
+  <td class="tr">10L<br><small class="muted">(0.0%)</small></td>
+  <td class="tr">36L<br><small class="muted">(0.0%)</small></td>
+</tr><tr class="">
+  <td class="tn">10</td>
+  <td class="tnm">Indraprastha Gas Limited</td>
+  <td class="tsc">Gas</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+30.0K</span><br><small class="dp">(+0.0%)</small></td>
+  <td class="tr">30L<br><small class="muted">(0.0%)</small></td>
+  <td class="tr">69L<br><small class="muted">(0.0%)</small></td>
+</tr><tr class="">
+  <td class="tn">11</td>
+  <td class="tnm">Kotak Mahindra Bank Limited</td>
+  <td class="tsc">Banks</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+2.75L</span><br><small class="dp">(-0.1%)</small></td>
+  <td class="tr">241Cr<br><small class="muted">(4.2%)</small></td>
+  <td class="tr">215Cr<br><small class="muted">(4.1%)</small></td>
+</tr><tr class="">
+  <td class="tn">12</td>
+  <td class="tnm">CMS Info System Limited</td>
+  <td class="tsc">Commercial Services & Supplies</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+40.4K</span><br><small class="dp">(-0.1%)</small></td>
+  <td class="tr">186Cr<br><small class="muted">(3.2%)</small></td>
+  <td class="tr">164Cr<br><small class="muted">(3.1%)</small></td>
+</tr><tr class="">
+  <td class="tn">13</td>
+  <td class="tnm">Mahindra & Mahindra Limited</td>
+  <td class="tsc">Automobiles</td>
+  <td class="tc"><b class="badge bb">Inc</b></td>
+  <td class="tc"><span class="dp">+3.7K</span><br><small class="dp">(-0.2%)</small></td>
+  <td class="tr">212Cr<br><small class="muted">(3.7%)</small></td>
+  <td class="tr">185Cr<br><small class="muted">(3.5%)</small></td>
+</tr><tr class="">
+  <td class="tn">14</td>
+  <td class="tnm">Balkrishna Industries Limited</td>
+  <td class="tsc">Auto Components</td>
+  <td class="tc"><b class="badge by">Dec</b></td>
+  <td class="tc"><span class="dn">−26.8K</span><br><small class="dn">(-0.1%)</small></td>
+  <td class="tr">34.9Cr<br><small class="muted">(0.6%)</small></td>
+  <td class="tr">24.9Cr<br><small class="muted">(0.5%)</small></td>
+</tr><tr class="">
+  <td class="tn">15</td>
+  <td class="tnm">Coal India Limited</td>
+  <td class="tsc">Consumable Fuels</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dp">+16.3Cr</span><br><small class="dp">+0.85%</small></td>
+  <td class="tr">354Cr<br><small class="muted">(6.2%)</small></td>
+  <td class="tr">370Cr<br><small class="muted">(7.0%)</small></td>
+</tr><tr class="">
+  <td class="tn">16</td>
+  <td class="tnm">Power Grid Corporation of India Limited</td>
+  <td class="tsc">Power</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-3.5Cr</span><br><small class="dn">+0.56%</small></td>
+  <td class="tr">408Cr<br><small class="muted">(7.1%)</small></td>
+  <td class="tr">404Cr<br><small class="muted">(7.7%)</small></td>
+</tr><tr class="">
+  <td class="tn">17</td>
+  <td class="tnm">CCL Products (India) Limited</td>
+  <td class="tsc">Agricultural Food & other Products</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dp">+3.7Cr</span><br><small class="dp">+0.28%</small></td>
+  <td class="tr">142Cr<br><small class="muted">(2.5%)</small></td>
+  <td class="tr">146Cr<br><small class="muted">(2.8%)</small></td>
+</tr><tr class="">
+  <td class="tn">18</td>
+  <td class="tnm">HCL Technologies Limited</td>
+  <td class="tsc">IT - Software</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-7.6Cr</span><br><small class="dn">+0.2%</small></td>
+  <td class="tr">222Cr<br><small class="muted">(3.9%)</small></td>
+  <td class="tr">214Cr<br><small class="muted">(4.1%)</small></td>
+</tr><tr class="">
+  <td class="tn">19</td>
+  <td class="tnm">Infosys Limited</td>
+  <td class="tsc">IT - Software</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-7.4Cr</span><br><small class="dn">+0.16%</small></td>
+  <td class="tr">195Cr<br><small class="muted">(3.4%)</small></td>
+  <td class="tr">188Cr<br><small class="muted">(3.6%)</small></td>
+</tr><tr class="">
+  <td class="tn">20</td>
+  <td class="tnm">Bharti Airtel Limited</td>
+  <td class="tsc">Telecom - Services</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-10.2Cr</span><br><small class="dn">+0.11%</small></td>
+  <td class="tr">197Cr<br><small class="muted">(3.4%)</small></td>
+  <td class="tr">187Cr<br><small class="muted">(3.5%)</small></td>
+</tr><tr class="">
+  <td class="tn">21</td>
+  <td class="tnm">Dr. Reddy's Laboratories Limited</td>
+  <td class="tsc">Pharmaceuticals & Biotechnology</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-1.9Cr</span><br><small class="dn">+0.08%</small></td>
+  <td class="tr">78.4Cr<br><small class="muted">(1.4%)</small></td>
+  <td class="tr">76.5Cr<br><small class="muted">(1.4%)</small></td>
+</tr><tr class="">
+  <td class="tn">22</td>
+  <td class="tnm">The Great Eastern Shipping Company Limited</td>
+  <td class="tsc">Transport Services</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dp">+1.0Cr</span><br><small class="dp">+0.05%</small></td>
+  <td class="tr">18.0Cr<br><small class="muted">(0.3%)</small></td>
+  <td class="tr">19.0Cr<br><small class="muted">(0.4%)</small></td>
+</tr><tr class="">
+  <td class="tn">23</td>
+  <td class="tnm">Zydus Lifesciences Limited</td>
+  <td class="tsc">Pharmaceuticals & Biotechnology</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-4.1Cr</span><br><small class="dn">+0.04%</small></td>
+  <td class="tr">74.9Cr<br><small class="muted">(1.3%)</small></td>
+  <td class="tr">70.8Cr<br><small class="muted">(1.4%)</small></td>
+</tr><tr class="">
+  <td class="tn">24</td>
+  <td class="tnm">Wipro Limited</td>
+  <td class="tsc">IT - Software</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-6.6Cr</span><br><small class="dn">+0.03%</small></td>
+  <td class="tr">99.2Cr<br><small class="muted">(1.7%)</small></td>
+  <td class="tr">92.6Cr<br><small class="muted">(1.8%)</small></td>
+</tr><tr class="">
+  <td class="tn">25</td>
+  <td class="tnm">Swaraj Engines Limited</td>
+  <td class="tsc">Industrial Products</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-0.9Cr</span><br><small class="dn">+0.0%</small></td>
+  <td class="tr">11.4Cr<br><small class="muted">(0.2%)</small></td>
+  <td class="tr">10.5Cr<br><small class="muted">(0.2%)</small></td>
+</tr><tr class="">
+  <td class="tn">26</td>
+  <td class="tnm">Indus Towers Limited</td>
+  <td class="tsc">Telecom - Services</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-0.4Cr</span><br><small class="dn">+0.0%</small></td>
+  <td class="tr">4.55Cr<br><small class="muted">(0.1%)</small></td>
+  <td class="tr">4.18Cr<br><small class="muted">(0.1%)</small></td>
+</tr><tr class="">
+  <td class="tn">27</td>
+  <td class="tnm">ICRA Limited</td>
+  <td class="tsc">Capital Markets</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-0.3Cr</span><br><small class="dn">+0.0%</small></td>
+  <td class="tr">3.21Cr<br><small class="muted">(0.1%)</small></td>
+  <td class="tr">2.90Cr<br><small class="muted">(0.1%)</small></td>
+</tr><tr class="">
+  <td class="tn">28</td>
+  <td class="tnm">Nesco Limited</td>
+  <td class="tsc">Commercial Services & Supplies</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-0.2Cr</span><br><small class="dn">+0.0%</small></td>
+  <td class="tr">1.69Cr<br><small class="muted">(0.0%)</small></td>
+  <td class="tr">1.53Cr<br><small class="muted">(0.0%)</small></td>
+</tr><tr class="">
+  <td class="tn">29</td>
+  <td class="tnm">CIE Automotive India Limited</td>
+  <td class="tsc">Auto Components</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-0.1Cr</span><br><small class="dn">+0.0%</small></td>
+  <td class="tr">1.64Cr<br><small class="muted">(0.0%)</small></td>
+  <td class="tr">1.55Cr<br><small class="muted">(0.0%)</small></td>
+</tr><tr class="">
+  <td class="tn">30</td>
+  <td class="tnm">Cipla Limited</td>
+  <td class="tsc">Pharmaceuticals & Biotechnology</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-6.8Cr</span><br><small class="dn">-0.01%</small></td>
+  <td class="tr">74.0Cr<br><small class="muted">(1.3%)</small></td>
+  <td class="tr">67.2Cr<br><small class="muted">(1.3%)</small></td>
+</tr><tr class="">
+  <td class="tn">31</td>
+  <td class="tnm">Indian Energy Exchange Limited</td>
+  <td class="tsc">Capital Markets</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-4.3Cr</span><br><small class="dn">-0.01%</small></td>
+  <td class="tr">49.6Cr<br><small class="muted">(0.9%)</small></td>
+  <td class="tr">45.3Cr<br><small class="muted">(0.9%)</small></td>
+</tr><tr class="">
+  <td class="tn">32</td>
+  <td class="tnm">EID Parry India Limited</td>
+  <td class="tsc">Food Products</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-3.0Cr</span><br><small class="dn">-0.01%</small></td>
+  <td class="tr">28.7Cr<br><small class="muted">(0.5%)</small></td>
+  <td class="tr">25.7Cr<br><small class="muted">(0.5%)</small></td>
+</tr><tr class="">
+  <td class="tn">33</td>
+  <td class="tnm">Central Depository Services (India) Limited</td>
+  <td class="tsc">Capital Markets</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-1.6Cr</span><br><small class="dn">-0.01%</small></td>
+  <td class="tr">13.1Cr<br><small class="muted">(0.2%)</small></td>
+  <td class="tr">11.6Cr<br><small class="muted">(0.2%)</small></td>
+</tr><tr class="">
+  <td class="tn">34</td>
+  <td class="tnm">ITC Limited</td>
+  <td class="tsc">Diversified FMCG</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-24.1Cr</span><br><small class="dn">-0.02%</small></td>
+  <td class="tr">292Cr<br><small class="muted">(5.1%)</small></td>
+  <td class="tr">268Cr<br><small class="muted">(5.1%)</small></td>
+</tr><tr class="">
+  <td class="tn">35</td>
+  <td class="tnm">Narayana Hrudayalaya Limited</td>
+  <td class="tsc">Healthcare Services</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-2.4Cr</span><br><small class="dn">-0.02%</small></td>
+  <td class="tr">19.2Cr<br><small class="muted">(0.3%)</small></td>
+  <td class="tr">16.8Cr<br><small class="muted">(0.3%)</small></td>
+</tr><tr class="">
+  <td class="tn">36</td>
+  <td class="tnm">ICICI Bank Limited</td>
+  <td class="tsc">Banks</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-35.2Cr</span><br><small class="dn">-0.24%</small></td>
+  <td class="tr">281Cr<br><small class="muted">(4.9%)</small></td>
+  <td class="tr">245Cr<br><small class="muted">(4.7%)</small></td>
+</tr><tr class="">
+  <td class="tn">37</td>
+  <td class="tnm">Axis Bank Limited</td>
+  <td class="tsc">Banks</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-35.6Cr</span><br><small class="dn">-0.34%</small></td>
+  <td class="tr">221Cr<br><small class="muted">(3.9%)</small></td>
+  <td class="tr">186Cr<br><small class="muted">(3.5%)</small></td>
+</tr><tr class="">
+  <td class="tn">38</td>
+  <td class="tnm">Maruti Suzuki India Limited</td>
+  <td class="tsc">Automobiles</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-40.6Cr</span><br><small class="dn">-0.41%</small></td>
+  <td class="tr">236Cr<br><small class="muted">(4.1%)</small></td>
+  <td class="tr">196Cr<br><small class="muted">(3.7%)</small></td>
+</tr><tr class="">
+  <td class="tn">39</td>
+  <td class="tnm">Maharashtra Scooters Limited</td>
+  <td class="tsc">Finance</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-50.8Cr</span><br><small class="dn">-0.49%</small></td>
+  <td class="tr">313Cr<br><small class="muted">(5.5%)</small></td>
+  <td class="tr">262Cr<br><small class="muted">(5.0%)</small></td>
+</tr><tr class="">
+  <td class="tn">40</td>
+  <td class="tnm">Bajaj Holdings & Investment Limited</td>
+  <td class="tsc">Finance</td>
+  <td class="tc"><b class="badge bh">Hold</b></td>
+  <td class="tc"><span class="dn">-72.6Cr</span><br><small class="dn">-0.8%</small></td>
+  <td class="tr">381Cr<br><small class="muted">(6.7%)</small></td>
+  <td class="tr">309Cr<br><small class="muted">(5.9%)</small></td>
+</tr></tbody>
+</table>
+</div>
+
+<div class="foot">Data from PPFAS Monthly Portfolio Statement (public disclosure) · Values in Rs. Crores · % = weight of Net Assets · Δ Change = shares added/sold + weight Δ</div>
+</div>
+</body>
+</html>

@@ -169,7 +169,7 @@ def build_indicators(stock_data, bench_close):
         rsi14_2d   = rsi14_raw.rolling(2, min_periods=1).mean() # exit
 
         vol_avg20  = volumes.rolling(20).mean()
-        low_20d    = lows.rolling(20).min().shift(1)  # prior day's 20d low (stop reference)
+        low_20d    = lows.rolling(20).min().shift(1)
 
         indicators[ticker] = {
             "rs63":      rs63,
@@ -197,7 +197,7 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False):
+def run(refresh=False, end_date=None, max_daily_entries=None):
     print("Loading PIT universe...")
     pit_data    = load_pit()
     all_tickers = get_all_pit_tickers(pit_data)
@@ -236,7 +236,9 @@ def run(refresh=False):
         for d in df.index:
             dt = d.date()
             day_counts[dt] = day_counts.get(dt, 0) + 1
-    trading_days = sorted(d for d, c in day_counts.items() if c >= 50 and d >= START_DATE)
+    trading_days = sorted(d for d, c in day_counts.items()
+                          if c >= 50 and d >= START_DATE
+                          and (end_date is None or d <= end_date))
     print(f"  Trading days: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
 
     indicators = build_indicators(stock_data, bench_close)
@@ -250,6 +252,7 @@ def run(refresh=False):
     # Per-year tracking
     year_entries  = {}   # year → list of entry rows
     year_exits    = {}   # year → list of exit rows
+    monthly_nav   = []   # month-end NAV snapshots for portfolio correlation analysis
 
     print()
     print("=" * 76)
@@ -390,7 +393,7 @@ def run(refresh=False):
             if price <= open_:  # not a green candle
                 continue
 
-            stop_pct = (price - l20d) / price * 100 if price > 0 and l20d > 0 else 8
+            stop_pct  = (price - l20d) / price * 100 if price > 0 and l20d > 0 else 8
             vol_ratio = vol / va if va > 0 else 0
 
             signals.append({
@@ -402,8 +405,10 @@ def run(refresh=False):
                 "stop_pct":  stop_pct,
             })
 
-        # Rank by tightest stop (baseline ranking)
+        # Rank by tightest stop (close − 20d_low) / close ascending
         signals.sort(key=lambda s: s["stop_pct"])
+        if max_daily_entries is not None:
+            signals = signals[:max_daily_entries]
         for sig in signals:
             if len(portfolio) >= MAX_POSITIONS:
                 break
@@ -430,6 +435,18 @@ def run(refresh=False):
                 "rs63":   sig["rs63"], "rsi": sig["rsi"],
                 "vol_ratio": sig["vol_ratio"],
             })
+
+        # Month-end NAV snapshot
+        next_day = trading_days[day_idx + 1] if day_idx + 1 < len(trading_days) else None
+        if next_day is None or next_day.month != day.month:
+            nav_snap = cash
+            for t, pos in portfolio.items():
+                ci_t = date_to_iloc.get(t, {}).get(day)
+                if ci_t is not None:
+                    nav_snap += pos["shares"] * float(stock_data[t]["Close"].iloc[ci_t])
+                else:
+                    nav_snap += pos["shares"] * pos["entry_price"]
+            monthly_nav.append({"date": day, "nav": nav_snap})
 
     # Print final year
     if current_year is not None:
@@ -491,6 +508,12 @@ def run(refresh=False):
         sign  = "+" if ret_y >= 0 else "-"
         print(f"  {yr}  {sign}{abs(ret_y):5.1f}%  {bar}")
     print()
+
+    # Export month-end NAV series for portfolio correlation analysis
+    if monthly_nav:
+        nav_csv = os.path.join(BASE_DIR, "rs63_monthly.csv")
+        pd.DataFrame(monthly_nav).to_csv(nav_csv, index=False)
+        print(f"  Monthly NAV exported → {os.path.basename(nav_csv)} ({len(monthly_nav)} rows)")
 
 
 def _print_year_summary(yr, year_entries, year_exits, portfolio,
@@ -562,5 +585,10 @@ def _print_year_summary(yr, year_entries, year_exits, portfolio,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="RS63 PIT Backtest Report")
     parser.add_argument("--refresh", action="store_true", help="Re-download price data")
+    parser.add_argument("--end-date", type=str, default=None,
+                        help="Truncate backtest to this end date YYYY-MM-DD (for noise measurement)")
+    parser.add_argument("--max-daily-entries", type=int, default=None,
+                        help="Cap new entries per day (default: unlimited)")
     args = parser.parse_args()
-    run(refresh=args.refresh)
+    end_dt = date.fromisoformat(args.end_date) if args.end_date else None
+    run(refresh=args.refresh, end_date=end_dt, max_daily_entries=args.max_daily_entries)

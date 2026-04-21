@@ -381,6 +381,7 @@ def run(refresh=False):
     portfolio = {}            # ticker → {entry_date, entry_price, shares, entry_cost}
     all_trades = []           # closed trades
     total_charges = 0.0
+    rebal_nav = []            # rebalance-date NAV snapshots for portfolio correlation analysis
 
     print()
     print("=" * 72)
@@ -404,6 +405,8 @@ def run(refresh=False):
             else:
                 pos["curr_price"] = pos["entry_price"]
             port_value += pos["shares"] * pos["curr_price"]
+
+        rebal_nav.append({"date": rebal_day, "nav": port_value})
 
         # Slot size = NAV / 15, recomputed each rebalance (Option A)
         slots_available = MAX_SLOTS
@@ -680,6 +683,13 @@ def run(refresh=False):
         start_val += pnl_y
 
     print()
+
+    # Export rebalance-date NAV series for portfolio correlation analysis
+    if rebal_nav:
+        import os as _os
+        nav_csv = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "mom15_rebal.csv")
+        pd.DataFrame(rebal_nav).to_csv(nav_csv, index=False)
+        print(f"  Rebalance NAV exported → mom15_rebal.csv ({len(rebal_nav)} rows)")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Mom15 PIT Backtest Report")

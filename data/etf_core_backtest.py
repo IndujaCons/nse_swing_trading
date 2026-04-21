@@ -1085,3 +1085,14 @@ if __name__ == "__main__":
     else:
         weekly_log, trades, bench, liquidbees_income = run_backtest(closes_dict, bench)
         print_results(weekly_log, trades, bench, liquidbees_income)
+
+        # Export month-end NAV for portfolio correlation analysis
+        import os as _os
+        wl_df = pd.DataFrame(weekly_log)
+        if not wl_df.empty and 'portfolio_val' in wl_df.columns:
+            wl_df['date'] = pd.to_datetime(wl_df['date'])
+            wl_df = wl_df.set_index('date').sort_index()
+            monthly_etf = wl_df['portfolio_val'].resample('ME').last().dropna()
+            nav_csv = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'etf_monthly.csv')
+            monthly_etf.reset_index().rename(columns={'portfolio_val': 'nav'}).to_csv(nav_csv, index=False)
+            print(f"\n  Monthly NAV exported → etf_monthly.csv ({len(monthly_etf)} rows)")
