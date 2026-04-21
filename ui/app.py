@@ -2090,6 +2090,30 @@ def _etf_signal_scheduler():
 
         return False
 
+    def _next_scan_time(dt):
+        """Return next scan datetime.
+
+        Indian hours: fires at :15 past each hour (09:15, 10:15, … 15:15 IST).
+        Outside Indian hours (US window etc.): next top-of-hour inside window.
+        """
+        # If within Indian window, align to next :15 mark
+        if _in_indian_window(dt):
+            next_15 = dt.replace(minute=15, second=0, microsecond=0)
+            if next_15 <= dt:
+                next_15 += timedelta(hours=1)
+            return next_15
+
+        # Outside Indian hours — find next window open (top of hour)
+        candidate = dt.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+        for _ in range(200):
+            if _in_window(candidate):
+                # If re-entering Indian window, align to :15
+                if _in_indian_window(candidate):
+                    return candidate.replace(minute=15, second=0, microsecond=0)
+                return candidate
+            candidate += timedelta(hours=1)
+        return candidate
+
     def _next_window_open(dt):
         """Return the next datetime when a trading window opens."""
         candidate = dt.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
@@ -2099,15 +2123,13 @@ def _etf_signal_scheduler():
             candidate += timedelta(hours=1)
         return candidate  # fallback
 
-    print("[ETF scheduler] Started — scanning every hour during Indian (09–16 IST) "
-          "and US (19–02 IST) market windows; guaranteed RS63 scan at 15:15 IST")
+    print("[ETF scheduler] Started — RS63 scans at :15 past each hour 09:15–15:15 IST")
 
     last_etf_key          = None   # dedup for ETF Core
     last_rs63_key         = None   # dedup for RS63 entries
     last_rs63_exit_key    = None   # dedup for RS63 exits
     startup_scan_done     = False  # one-time ETF scan on startup regardless of window
     startup_scan_done_rs63 = False  # one-time RS63 scan on startup regardless of window
-    last_eod_scan_date    = None   # date of last 15:15 EOD scan
 
     while True:
         now_ist = datetime.now(IST)
@@ -2231,26 +2253,12 @@ def _etf_signal_scheduler():
                 except Exception:
                     pass
 
-        # Sleep until next scan — but always wake at 15:15 IST on Indian market days
+        # Sleep until next :15-past-the-hour scan (or next window open)
         now_ist = datetime.now(IST)
-        eod_target = now_ist.replace(hour=15, minute=15, second=0, microsecond=0)
-        eod_today = now_ist.date()
-        needs_eod = (
-            now_ist.weekday() < 5                  # weekday
-            and now_ist < eod_target               # not yet 15:15
-            and last_eod_scan_date != eod_today    # not already done today
-        )
-        if needs_eod:
-            secs_to_eod = (eod_target - now_ist).total_seconds()
-            sleep_secs = min(SCAN_INTERVAL, secs_to_eod)
-        else:
-            sleep_secs = SCAN_INTERVAL
+        next_scan = _next_scan_time(now_ist)
+        sleep_secs = (next_scan - now_ist).total_seconds()
+        print(f"[ETF scheduler] Next scan at {next_scan.strftime('%H:%M IST')} (sleep {int(sleep_secs)}s)")
         time.sleep(max(sleep_secs, 30))
-
-        # If we just crossed 15:15, mark EOD scan done after the upcoming loop iteration
-        now_ist = datetime.now(IST)
-        if now_ist.weekday() < 5 and now_ist >= now_ist.replace(hour=15, minute=15, second=0, microsecond=0):
-            last_eod_scan_date = now_ist.date()
 
 
 # ============ Run Server ============
