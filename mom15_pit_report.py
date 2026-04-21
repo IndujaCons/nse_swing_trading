@@ -270,9 +270,12 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
     return raw
 
 # ── REBALANCE DATES ───────────────────────────────────────────────────────────
-def get_rebal_dates(trading_days):
-    """First trading day of Feb, Apr, Jun, Aug, Oct, Dec each year from START_DATE."""
-    rebal_months = {2, 4, 6, 8, 10, 12}
+def get_rebal_dates(trading_days, monthly=False):
+    """Return rebalance dates.
+    monthly=False: first trading day of Feb/Apr/Jun/Aug/Oct/Dec (Mom15 bi-monthly)
+    monthly=True:  first trading day of every month (Mom20 monthly)
+    """
+    rebal_months = set(range(1, 13)) if monthly else {2, 4, 6, 8, 10, 12}
     seen = set()
     result = []
     for d in trading_days:
@@ -300,7 +303,15 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False):
+def run(refresh=False, mom20=False):
+    # Override constants for Mom20 variant
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP
+    if mom20:
+        MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
+        print("=== Mom20 — Monthly Rebalance, β≤1.2 ===")
+    else:
+        print("=== Mom15 — Bi-monthly Rebalance, β≤1.0 ===")
+
     # Load supporting data
     print("Loading PIT universe...")
     pit_data = load_pit()
@@ -373,7 +384,7 @@ def run(refresh=False):
     trading_days = sorted(d for d, c in day_counts.items() if c >= 50 and d >= START_DATE)
     print(f"  Trading days in backtest: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
 
-    rebal_dates = get_rebal_dates(trading_days)
+    rebal_dates = get_rebal_dates(trading_days, monthly=mom20)
     print(f"  Rebalance dates: {len(rebal_dates)}")
 
     # ── Portfolio state ──────────────────────────────────────────────────────
@@ -692,7 +703,9 @@ def run(refresh=False):
         print(f"  Rebalance NAV exported → mom15_rebal.csv ({len(rebal_nav)} rows)")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Mom15 PIT Backtest Report")
+    parser = argparse.ArgumentParser(description="Mom15 / Mom20 PIT Backtest Report")
     parser.add_argument("--refresh", action="store_true", help="Re-download price data")
+    parser.add_argument("--mom20", action="store_true",
+                        help="Run Mom20 variant (top 20, monthly rebalance, β≤1.2)")
     args = parser.parse_args()
-    run(refresh=args.refresh)
+    run(refresh=args.refresh, mom20=args.mom20)
