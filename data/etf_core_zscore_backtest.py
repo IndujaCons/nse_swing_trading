@@ -133,6 +133,20 @@ def get_rebal_dates(trading_days):
             dates.append(d)
     return dates
 
+# ── DISPLAY HELPERS ──────────────────────────────────────────────────────────
+def inr(v):
+    return f"₹{v:>+,.0f}" if v != 0 else "₹0"
+
+def pct(v):
+    return f"{v:+.1f}%"
+
+def print_table(headers, rows, col_widths):
+    hdr = "  ".join(str(h).ljust(w) for h, w in zip(headers, col_widths))
+    print("  " + hdr)
+    print("  " + "  ".join("─" * w for w in col_widths))
+    for row in rows:
+        print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
+
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
 def run(refresh=False, use_regime=False, start_override=None):
     global START_DATE
@@ -240,13 +254,10 @@ def run(refresh=False, use_regime=False, start_override=None):
             return None
         return float(s.iloc[idx])
 
-    print(f"\n=== ETF MOM — Monthly Z-Score | β≤{BETA_CAP} | {MAX_SLOTS} slots ===")
-    print(f"{'Rebal':12s}  {'NAV':>12s}  {'Port':50s}")
-
     for rebal_idx, rebal_day in enumerate(rebal_dates):
         nav = portfolio_nav(rebal_day)
 
-        # Update slot capital (NAV / MAX_SLOTS, no compounding cap for ETFs)
+        # Update slot capital: NAV/5 compounding
         new_sc = nav / MAX_SLOTS if nav > SLOT_START * MAX_SLOTS else SLOT_START
         slot_capital = max(SLOT_START, new_sc)
 
@@ -273,7 +284,7 @@ def run(refresh=False, use_regime=False, start_override=None):
                     regime_off = True
 
         # ── Score all ETFs ────────────────────────────────────────────────────
-        scores = {}
+        score_data = {}   # sym → {score, beta, ret12, ret3}
         mr12_vals, mr3_vals = {}, {}
         for sym in all_syms:
             r12 = _indicator_on(ret12, sym, rebal_day)
@@ -283,9 +294,10 @@ def run(refresh=False, use_regime=False, start_override=None):
             if None in (r12, r3, v) or v == 0:
                 continue
             if b is not None and abs(b) > BETA_CAP:
-                continue   # beta filter
+                continue
             mr12_vals[sym] = r12 / v
             mr3_vals[sym]  = r3  / v
+            score_data[sym] = {"beta": b or 0, "ret12": r12, "ret3": r3}
 
         eligible = [s for s in mr12_vals if s in mr3_vals]
         if len(eligible) >= 3:
@@ -299,19 +311,27 @@ def run(refresh=False, use_regime=False, start_override=None):
             waz = W12 * z12 + W3 * z3
             sc  = np.where(waz >= 0, 1 + waz, 1.0 / (1 - waz))
             for i, sym in enumerate(eligible):
-                scores[sym] = sc[i]
+                score_data[sym]["score"] = float(sc[i])
 
-        ranked = sorted(scores, key=lambda s: scores[s], reverse=True)
+        ranked   = sorted((s for s in score_data if "score" in score_data[s]),
+                          key=lambda s: score_data[s]["score"], reverse=True)
         rank_map = {sym: i + 1 for i, sym in enumerate(ranked)}
 
-        # ── Determine holds and exits ─────────────────────────────────────────
-        current_set = set(portfolio.keys())
-        # Keep if rank ≤ BUFFER_OUT and not regime_off
+        # ── Rebalance header ─────────────────────────────────────────────────
+        print()
+        print("=" * 72)
+        print(f"  REBALANCE #{rebal_idx+1:02d}  —  {rebal_day.strftime('%d %b %Y')}")
+        print(f"  NAV: ₹{nav:,.0f}  |  Slot: ₹{slot_capital:,.0f}  |  Cash: ₹{cash:,.0f}")
+        print("=" * 72)
         if regime_off:
-            to_sell = set()   # hold everything during regime-off
-        else:
-            to_sell = {sym for sym in current_set
-                       if rank_map.get(sym, 9999) > BUFFER_OUT or sym not in scores}
+            print(f"\n  [REGIME OFF] Nifty200 below SMA200 — holding all, skipping exits & entries")
+
+        # ── Exits ─────────────────────────────────────────────────────────────
+        current_set = set(portfolio.keys())
+        to_sell = set() if regime_off else {
+            sym for sym in current_set
+            if rank_map.get(sym, 9999) > BUFFER_OUT or sym not in score_data
+        }
 
         exit_rows = []
         for sym in sorted(to_sell):
@@ -322,54 +342,122 @@ def run(refresh=False, use_regime=False, start_override=None):
             gp       = sell_val - sc_
             chrg     = calc_charges(sc_, sell_val)
             total_charges += chrg
-            pnl  = gp - chrg
+            pnl       = gp - chrg
+            pnl_pct   = gp / sc_ * 100
+            hold_days = (rebal_day.date() - pos["entry_date"]).days
             cash += sell_val
             all_trades.append({
                 "sym": sym, "entry": pos["entry_date"], "exit": rebal_day.date(),
                 "entry_px": pos["entry_price"], "exit_px": ep,
                 "gross_pnl": gp, "net_pnl": pnl, "charges": chrg,
-                "hold_days": (rebal_day.date() - pos["entry_date"]).days,
+                "hold_days": hold_days,
             })
-            exit_rows.append(f"{sym}({gp/sc_*100:+.0f}%)")
+            sd = score_data.get(sym, {})
+            exit_rows.append((
+                sym,
+                pos["entry_date"].strftime("%d-%b-%y"),
+                f"{pos['entry_price']:,.1f}",
+                f"{ep:,.1f}",
+                inr(gp),
+                pct(pnl_pct),
+                f"{hold_days}d",
+            ))
             del portfolio[sym]
 
-        # ── Entries ───────────────────────────────────────────────────────────
-        if not regime_off:
-            slots_free = MAX_SLOTS - len(portfolio)
-            candidates = [s for s in ranked
-                          if s not in portfolio
-                          and rank_map.get(s, 9999) <= BUFFER_IN
-                          and slots_free > 0]
-            entry_rows = []
-            for sym in candidates[:slots_free]:
-                ep  = _price_on(sym, rebal_day, None)
-                if ep is None:
-                    continue
-                sc_ = slot_capital
-                shares = sc_ / ep
-                cash -= sc_
-                portfolio[sym] = {
-                    "entry_price": ep,
-                    "entry_date":  rebal_day.date(),
-                    "shares":      shares,
-                    "slot_capital": sc_,
-                }
-                entry_rows.append(sym)
-                slots_free -= 1
-        else:
-            entry_rows = []
-
-        # ── Log ───────────────────────────────────────────────────────────────
-        nav_after = portfolio_nav(rebal_day)
-        port_str  = " ".join(
-            f"{s}#{rank_map.get(s,'?')}" for s in sorted(portfolio)
-        ) or "(empty)"
-        regime_tag = " [REGIME OFF]" if regime_off else ""
-        print(f"{rebal_day.date()}  ₹{nav_after/1e5:>8.2f}L  {port_str}{regime_tag}")
+        print(f"\n  EXITS ({len(exit_rows)})")
         if exit_rows:
-            print(f"  EXIT : {' '.join(exit_rows)}")
+            print_table(
+                ["ETF", "Entry", "Entry₹", "Exit₹", "Gross P&L", "P&L%", "Hold"],
+                sorted(exit_rows, key=lambda r: float(r[5].replace('+','').replace('%','')), reverse=True),
+                [12, 10, 10, 10, 12, 8, 6],
+            )
+        else:
+            print("    —")
+
+        # ── Entries ───────────────────────────────────────────────────────────
+        to_buy = set() if regime_off else {
+            s for s in ranked
+            if s not in current_set and rank_map.get(s, 9999) <= BUFFER_IN
+        }
+        slots_free = MAX_SLOTS - len(portfolio)
+
+        entry_rows = []
+        for sym in sorted(to_buy, key=lambda s: rank_map.get(s, 9999)):
+            if slots_free <= 0:
+                break
+            ep = _price_on(sym, rebal_day, None)
+            if ep is None:
+                continue
+            sc_    = min(slot_capital, cash) if cash < slot_capital else slot_capital
+            if sc_ < 1000:
+                continue
+            shares = sc_ / ep
+            cash  -= sc_
+            portfolio[sym] = {
+                "entry_price": ep,
+                "entry_date":  rebal_day.date(),
+                "shares":      shares,
+                "slot_capital": sc_,
+            }
+            sd = score_data.get(sym, {})
+            entry_rows.append((
+                sym,
+                rank_map[sym],
+                f"{sd.get('score', 0):.3f}",
+                f"{sd.get('beta', 0):.2f}",
+                f"{sd.get('ret12', 0)*100:+.1f}%",
+                f"{sd.get('ret3',  0)*100:+.1f}%",
+                f"{ep:,.1f}",
+                inr(sc_),
+            ))
+            slots_free -= 1
+
+        print(f"\n  ENTRIES ({len(entry_rows)})")
         if entry_rows:
-            print(f"  ENTRY: {' '.join(entry_rows)}")
+            print_table(
+                ["ETF", "Rank", "Score", "Beta", "Ret12m", "Ret3m", "Entry₹", "Capital"],
+                entry_rows,
+                [12, 5, 7, 5, 8, 8, 10, 12],
+            )
+        else:
+            print("    —")
+
+        # ── Holds ─────────────────────────────────────────────────────────────
+        holds = current_set - to_sell
+        hold_rows = []
+        for sym in sorted(holds, key=lambda s: rank_map.get(s, 9999)):
+            pos = portfolio[sym]
+            cp  = _price_on(sym, rebal_day, pos["entry_price"])
+            gp  = (cp / pos["entry_price"] - 1) * 100
+            sd  = score_data.get(sym, {})
+            hold_rows.append((
+                sym,
+                rank_map.get(sym, "—"),
+                pos["entry_date"].strftime("%d-%b-%y"),
+                f"{sd.get('score', 0):.3f}",
+                f"{pos['entry_price']:,.1f}",
+                f"{cp:,.1f}",
+                pct(gp),
+            ))
+
+        print(f"\n  HOLDS ({len(hold_rows)})")
+        if hold_rows:
+            print_table(
+                ["ETF", "Rank", "Since", "Score", "Entry₹", "Now₹", "P&L%"],
+                hold_rows,
+                [12, 5, 10, 7, 10, 10, 8],
+            )
+        else:
+            print("    —")
+
+        # ── After summary ─────────────────────────────────────────────────────
+        nav_after = portfolio_nav(rebal_day)
+        invested  = sum(
+            pos["slot_capital"] * _price_on(sym, rebal_day, pos["entry_price"]) / pos["entry_price"]
+            for sym, pos in portfolio.items()
+        )
+        print(f"\n  AFTER: Invested ₹{invested:,.0f} | Cash ₹{cash:,.0f} | "
+              f"Total ₹{nav_after:,.0f} | Positions {len(portfolio)}/{MAX_SLOTS} | Slot ₹{slot_capital:,.0f}")
 
         rebal_nav.append({"date": rebal_day.date(), "nav": nav_after})
 

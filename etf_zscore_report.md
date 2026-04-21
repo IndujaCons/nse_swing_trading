@@ -1,191 +1,2824 @@
 Loading cache from /Users/jay/Desktop/relative_strength/data/cache/etf_zscore_daily.pkl...
 Universe: 24 ETFs  |  2014-10-08 → 2026-04-20
 
-=== ETF MOM — Monthly Z-Score | β≤1.2 | 5 slots ===
-Rebal                  NAV  Port                                              
-2016-01-01  ₹   10.00L  AUTOBEES#1 CPSEETF#2 INFRABEES#3 ITBEES#4 METALIETF#5
-  ENTRY: AUTOBEES CPSEETF INFRABEES ITBEES METALIETF
-2016-02-01  ₹    9.28L  AUTOBEES#4 CPSEETF#5 INFRABEES#7 ITBEES#2 METALIETF#6
-2016-03-01  ₹    8.89L  AUTOBEES#4 CPSEETF#5 GOLDBEES#1 INFRABEES#6 ITBEES#3
-  EXIT : METALIETF(-8%)
-  ENTRY: GOLDBEES
-2016-04-01  ₹    9.33L  AUTOBEES#3 CPSEETF#7 GOLDBEES#1 INFRABEES#6 ITBEES#4
-2016-05-02  ₹    9.63L  AUTOBEES#2 CPSEETF#7 GOLDBEES#1 INFRABEES#6 ITBEES#5
-2016-06-01  ₹    9.81L  AUTOBEES#1 CPSEETF#7 GOLDBEES#5 INFRABEES#3 ITBEES#4
-2016-07-01  ₹   10.11L  AUTOBEES#2 CPSEETF#7 GOLDBEES#1 INFRABEES#5 ITBEES#8
-2016-08-01  ₹   10.44L  AUTOBEES#1 CPSEETF#4 GOLDBEES#2 INFRABEES#5 ITBEES#7
-2016-09-01  ₹   10.45L  AUTOBEES#1 CPSEETF#3 GOLDBEES#2 INFRABEES#7 ITBEES#8
-2016-10-03  ₹   10.57L  AUTOBEES#1 CPSEETF#3 GOLDBEES#5 INFRABEES#8 ITBEES#9
-2016-11-01  ₹   10.55L  AUTOBEES#3 CPSEETF#1 GOLDBEES#5 INFRABEES#8 ITBEES#9
-2016-12-01  ₹   10.10L  CPSEETF#1 GOLDBEES#4 INFRABEES#6 ITBEES#7 SETFNN50#2
-  EXIT : AUTOBEES(+9%)
-  ENTRY: SETFNN50
-2017-01-02  ₹   10.03L  CPSEETF#1 GOLDBEES#5 INFRABEES#3 ITBEES#7 SETFNN50#2
-2017-02-01  ₹   10.54L  CPSEETF#1 GOLDBEES#6 INFRABEES#3 ITBEES#7 SETFNN50#4
-2017-03-01  ₹   10.91L  CPSEETF#2 GOLDBEES#7 INFRABEES#4 ITBEES#6 SETFNN50#5
-2017-04-03  ₹   11.04L  CPSEETF#2 GOLDBEES#6 INFRABEES#3 ITBEES#7 SETFNN50#4
-2017-05-02  ₹   11.33L  CPSEETF#1 GOLDBEES#6 INFRABEES#3 ITBEES#7 SETFNN50#4
-2017-06-01  ₹   11.19L  CPSEETF#3 GOLDBEES#7 INFRABEES#2 ITBEES#6 SETFNN50#4
-2017-07-03  ₹   10.92L  CPSEETF#5 GOLDBEES#6 INFRABEES#3 ITBEES#7 SETFNN50#2
-2017-08-01  ₹   11.35L  CPSEETF#6 GOLDBEES#7 INFRABEES#3 ITBEES#5 SETFNN50#2
-2017-09-01  ₹   11.46L  CPSEETF#5 GOLDBEES#6 INFRABEES#3 ITBEES#7 SETFNN50#1
-2017-10-03  ₹   11.40L  CPSEETF#1 GOLDBEES#6 INFRABEES#5 ITBEES#4 SETFNN50#3
-2017-11-01  ₹   12.11L  CPSEETF#1 GOLDBEES#7 INFRABEES#2 ITBEES#6 SETFNN50#4
-2017-12-01  ₹   11.83L  CPSEETF#5 GOLDBEES#8 INFRABEES#3 ITBEES#6 SETFNN50#1
-2018-01-01  ₹   12.32L  CPSEETF#6 GOLDBEES#8 INFRABEES#2 ITBEES#5 SETFNN50#1
-2018-02-01  ₹   12.63L  CPSEETF#8 GOLDBEES#7 INFRABEES#4 ITBEES#1 SETFNN50#3
-2018-03-01  ₹   12.27L  CPSEETF#8 GOLDBEES#7 INFRABEES#5 ITBEES#1 SETFNN50#2
-2018-04-02  ₹   12.03L  CPSEETF#8 GOLDBEES#2 INFRABEES#6 ITBEES#1 SETFNN50#3
-2018-05-02  ₹   12.39L  CPSEETF#8 GOLDBEES#3 INFRABEES#7 ITBEES#1 SETFNN50#4
-2018-06-01  ₹   12.12L  CPSEETF#8 GOLDBEES#3 INFRABEES#7 ITBEES#1 SETFNN50#4
-2018-07-02  ₹   11.70L  CPSEETF#7 GOLDBEES#4 INFRABEES#8 ITBEES#1 SETFNN50#5
-2018-08-01  ₹   12.18L  CPSEETF#5 GOLDBEES#7 INFRABEES#8 ITBEES#1 SETFNN50#4
-2018-09-03  ₹   12.65L  CPSEETF#5 GOLDBEES#8 INFRABEES#7 ITBEES#1 SETFNN50#2
-2018-10-01  ₹   12.10L  CPSEETF#2 GOLDBEES#3 INFRABEES#7 ITBEES#1 SETFNN50#6
-2018-11-01  ₹   11.71L  CPSEETF#6 GOLDBEES#1 INFRABEES#7 ITBEES#2 SETFNN50#5
-2018-12-03  ₹   11.67L  CPSEETF#7 GOLDBEES#2 INFRABEES#5 ITBEES#1 SETFNN50#6
-2019-01-01  ₹   11.87L  CPSEETF#7 GOLDBEES#1 INFRABEES#4 ITBEES#3 SETFNN50#5
-2019-02-01  ₹   11.84L  CPSEETF#8 GOLDBEES#2 INFRABEES#6 ITBEES#1 SETFNN50#5
-2019-03-01  ₹   11.92L  CPSEETF#4 GOLDBEES#1 INFRABEES#9 ITBEES#2 SETFNN50#7
-2019-04-01  ₹   12.41L  CPSEETF#3 GOLDBEES#6 INFRABEES#8 ITBEES#2 SETFNN50#7
-2019-05-02  ₹   12.39L  CPSEETF#3 GOLDBEES#10 INFRABEES#5 ITBEES#2 SETFNN50#6
-2019-06-03  ₹   12.75L  CPSEETF#2 GOLDBEES#9 INFRABEES#3 ITBEES#4 SETFNN50#7
-2019-07-01  ₹   12.65L  CPSEETF#6 GOLDBEES#2 INFRABEES#3 ITBEES#4 SETFNN50#8
-2019-08-01  ₹   11.85L  CPSEETF#7 GOLDBEES#1 INFRABEES#5 ITBEES#3 SETFNN50#6
-2019-09-03  ₹   12.05L  CPSEETF#9 GOLDBEES#1 INFRABEES#6 ITBEES#2 SETFNN50#4
-2019-10-01  ₹   12.21L  CPSEETF#8 GOLDBEES#1 INFRABEES#6 ITBEES#5 SETFNN50#4
-2019-11-01  ₹   12.72L  CPSEETF#8 GOLDBEES#1 INFRABEES#4 ITBEES#7 SETFNN50#3
-2019-12-02  ₹   12.40L  CPSEETF#7 GOLDBEES#3 INFRABEES#2 ITBEES#8 SETFNN50#4
-2020-01-01  ₹   12.58L  CPSEETF#7 INFRABEES#4 ITBEES#2 MOREALTY#1 SETFNN50#5
-  EXIT : GOLDBEES(+30%)
-  ENTRY: MOREALTY
-2020-02-03  ₹   12.29L  CPSEETF#8 INFRABEES#6 ITBEES#2 MOREALTY#1 SETFNN50#7
-2020-03-02  ₹   11.56L  CPSEETF#8 INFRABEES#7 ITBEES#2 MOREALTY#1 SETFNN50#4
-2020-04-01  ₹    8.77L  CPSEETF#10 INFRABEES#5 ITBEES#4 MOREALTY#7 SETFNN50#6
-2020-05-04  ₹    9.59L  CPSEETF#9 GOLDBEES#1 INFRABEES#5 ITBEES#4 SETFNN50#6
-  EXIT : MOREALTY(-41%)
-  ENTRY: GOLDBEES
-2020-06-01  ₹   10.04L  CPSEETF#10 GOLDBEES#1 INFRABEES#4 ITBEES#5 SETFNN50#6
-2020-07-01  ₹   10.43L  GOLDBEES#10 INFRABEES#1 ITBEES#7 MID150BEES#3 SETFNN50#2
-  EXIT : CPSEETF(-19%)
-  ENTRY: MID150BEES
-2020-08-03  ₹   11.48L  GOLDBEES#10 INFRABEES#5 ITBEES#1 MID150BEES#7 SETFNN50#3
-2020-09-01  ₹   11.68L  INFRABEES#9 ITBEES#1 METALIETF#2 MID150BEES#6 SETFNN50#7
-  EXIT : GOLDBEES(+6%)
-  ENTRY: METALIETF
-2020-10-01  ₹   11.83L  INFRABEES#10 ITBEES#1 METALIETF#6 MID150BEES#2 SETFNN50#7
-2020-11-02  ₹   12.04L  ITBEES#1 JUNIORBEES#2 METALIETF#6 MID150BEES#4 SETFNN50#8
-  EXIT : INFRABEES(+11%)
-  ENTRY: JUNIORBEES
-2020-12-01  ₹   14.05L  ITBEES#1 JUNIORBEES#2 METALIETF#3 MID150BEES#4 SETFNN50#5
-2021-01-01  ₹   15.21L  ITBEES#1 JUNIORBEES#4 METALIETF#3 MID150BEES#8 SETFNN50#5
-2021-02-01  ₹   15.53L  ITBEES#1 JUNIORBEES#2 METALIETF#4 MID150BEES#9 SETFNN50#6
-2021-03-01  ₹   16.92L  ITBEES#3 JUNIORBEES#2 METALIETF#1 MID150BEES#8 SETFNN50#7
-2021-04-01  ₹   17.53L  ITBEES#4 JUNIORBEES#1 METALIETF#2 MID150BEES#3 SETFNN50#6
-2021-05-03  ₹   18.11L  ITBEES#5 JUNIORBEES#3 METALIETF#1 MID150BEES#2 SETFNN50#4
-2021-06-01  ₹   19.23L  ITBEES#4 JUNIORBEES#6 METALIETF#1 MID150BEES#2 SETFNN50#5
-2021-07-01  ₹   20.06L  ITBEES#5 JUNIORBEES#6 METALIETF#1 MID150BEES#2 SETFNN50#4
-2021-08-02  ₹   21.37L  ITBEES#4 JUNIORBEES#7 METALIETF#1 MID150BEES#3 SETFNN50#6
-2021-09-01  ₹   21.98L  ITBEES#1 JUNIORBEES#10 METALIETF#6 MID150BEES#4 SETFNN50#7
-2021-10-01  ₹   22.74L  ITBEES#3 JUNIORBEES#8 KOTAKLOWV#1 MID150BEES#2 SETFNN50#5
-  EXIT : METALIETF(+126%)
-  ENTRY: KOTAKLOWV
-2021-11-01  ₹   23.04L  ITBEES#3 JUNIORBEES#6 KOTAKLOWV#4 MID150BEES#2 SETFNN50#5
-2021-12-01  ₹   22.59L  ITBEES#5 JUNIORBEES#4 KOTAKLOWV#9 MID150BEES#3 SETFNN50#6
-2022-01-03  ₹   23.72L  ITBEES#1 JUNIORBEES#3 KOTAKLOWV#9 MID150BEES#2 SETFNN50#5
-2022-02-01  ₹   22.83L  ITBEES#3 JUNIORBEES#6 KOTAKLOWV#8 MID150BEES#2 SETFNN50#5
-2022-03-02  ₹   21.45L  ITBEES#3 JUNIORBEES#10 KOTAKLOWV#7 MID150BEES#5 SETFNN50#6
-2022-04-01  ₹   22.67L  ITBEES#4 JUNIORBEES#8 KOTAKLOWV#9 MID150BEES#6 SETFNN50#5
-2022-05-02  ₹   21.76L  CPSEETF#1 JUNIORBEES#10 KOTAKLOWV#9 MID150BEES#6 SETFNN50#4
-  EXIT : ITBEES(+179%)
-  ENTRY: CPSEETF
-2022-06-01  ₹   20.89L  CPSEETF#1 JUNIORBEES#7 KOTAKLOWV#6 MID150BEES#4 SETFNN50#10
-2022-07-01  ₹   19.71L  CPSEETF#3 JUNIORBEES#8 KOTAKLOWV#5 MID150BEES#7 SETFNN50#10
-2022-08-01  ₹   21.79L  AUTOBEES#1 CPSEETF#3 JUNIORBEES#7 KOTAKLOWV#6 MID150BEES#5
-  EXIT : SETFNN50(+97%)
-  ENTRY: AUTOBEES
-2022-09-01  ₹   22.60L  AUTOBEES#2 CPSEETF#3 JUNIORBEES#6 KOTAKLOWV#10 MID150BEES#4
-2022-10-03  ₹   21.61L  AUTOBEES#4 CONSUMBEES#1 CPSEETF#2 JUNIORBEES#8 MID150BEES#3
-  EXIT : KOTAKLOWV(-5%)
-  ENTRY: CONSUMBEES
-2022-11-01  ₹   22.99L  AUTOBEES#3 CONSUMBEES#2 CPSEETF#1 JUNIORBEES#9 MID150BEES#5
-2022-12-01  ₹   23.03L  AUTOBEES#8 BANKBEES#1 CPSEETF#2 JUNIORBEES#9 MID150BEES#10
-  EXIT : CONSUMBEES(+2%)
-  ENTRY: BANKBEES
-2023-01-02  ₹   22.68L  AUTOBEES#7 BANKBEES#3 CPSEETF#2 JUNIORBEES#6 MID150BEES#8
-2023-02-01  ₹   22.17L  AUTOBEES#3 BANKBEES#4 CPSEETF#2 JUNIORBEES#6 MID150BEES#8
-2023-03-01  ₹   22.33L  AUTOBEES#3 BANKBEES#4 CPSEETF#1 JUNIORBEES#5 MID150BEES#6
-2023-04-03  ₹   22.15L  AUTOBEES#3 BANKBEES#5 CPSEETF#2 GOLDBEES#1 JUNIORBEES#7
-  EXIT : MID150BEES(+108%)
-  ENTRY: GOLDBEES
-2023-05-02  ₹   23.30L  AUTOBEES#4 BANKBEES#5 CPSEETF#2 GOLDBEES#1 JUNIORBEES#7
-2023-06-01  ₹   23.84L  AUTOBEES#5 BANKBEES#7 GOLDBEES#9 JUNIORBEES#1 MOREALTY#2
-  EXIT : CPSEETF(+17%)
-  ENTRY: MOREALTY
-2023-07-03  ₹   24.84L  AUTOBEES#5 BANKBEES#10 JUNIORBEES#1 MID150BEES#2 MOREALTY#6
-  EXIT : GOLDBEES(-2%)
-  ENTRY: MID150BEES
-2023-08-01  ₹   25.96L  AUTOBEES#9 CPSEETF#2 JUNIORBEES#3 MID150BEES#1 MOREALTY#10
-  EXIT : BANKBEES(+5%)
-  ENTRY: CPSEETF
-2023-09-01  ₹   26.81L  AUTOBEES#4 CPSEETF#2 JUNIORBEES#3 MID150BEES#1 MOREALTY#9
-2023-10-03  ₹   27.67L  AUTOBEES#8 CPSEETF#1 JUNIORBEES#2 MID150BEES#3 MOREALTY#6
-2023-11-01  ₹   27.43L  AUTOBEES#6 CPSEETF#1 JUNIORBEES#4 MID150BEES#2 MOREALTY#3
-2023-12-01  ₹   31.01L  AUTOBEES#5 CPSEETF#1 JUNIORBEES#4 MID150BEES#6 MOREALTY#2
-2024-01-01  ₹   33.65L  AUTOBEES#7 CPSEETF#1 JUNIORBEES#6 MID150BEES#8 MOREALTY#2
-2024-02-01  ₹   35.79L  AUTOBEES#8 CPSEETF#1 JUNIORBEES#6 MID150BEES#5 MOREALTY#4
-2024-03-01  ₹   37.99L  AUTOBEES#6 CPSEETF#1 JUNIORBEES#9 MID150BEES#10 MOREALTY#5
-2024-04-01  ₹   38.33L  ALPL30IETF#1 AUTOBEES#2 CPSEETF#5 JUNIORBEES#10 MID150BEES#9
-  EXIT : MOREALTY(+94%)
-  ENTRY: ALPL30IETF
-2024-05-02  ₹   40.19L  ALPL30IETF#5 AUTOBEES#2 CPSEETF#3 MID150BEES#9 SETFNN50#1
-  EXIT : JUNIORBEES(+202%)
-  ENTRY: SETFNN50
-2024-06-03  ₹   42.91L  ALPL30IETF#7 AUTOBEES#2 MID150BEES#4 MOMOMENTUM#3 SETFNN50#1
-  EXIT : CPSEETF(+106%)
-  ENTRY: MOMOMENTUM
-2024-07-01  ₹   44.09L  ALPL30IETF#8 AUTOBEES#3 MID150BEES#4 MOMOMENTUM#6 SETFNN50#1
-2024-08-01  ₹   45.84L  ALPL30IETF#2 AUTOBEES#4 MID150BEES#6 MOMOMENTUM#8 SETFNN50#5
-2024-09-02  ₹   46.06L  ALPL30IETF#2 AUTOBEES#7 MID150BEES#9 MOMOMENTUM#10 SETFNN50#4
-2024-10-01  ₹   47.30L  ALPL30IETF#2 AUTOBEES#5 MID150BEES#8 MOMOMENTUM#9 SETFNN50#4
-2024-11-01  ₹   43.57L  ALPL30IETF#4 GOLDBEES#1 MID150BEES#10 MOMOMENTUM#8 SETFNN50#2
-  EXIT : AUTOBEES(+84%)
-  ENTRY: GOLDBEES
-2024-12-02  ₹   42.84L  ALPL30IETF#8 GOLDBEES#1 MID150BEES#5 MOMOMENTUM#9 SETFNN50#2
-2025-01-01  ₹   42.04L  GOLDBEES#2 HDFCSMALL#3 HEALTHIETF#1 MID150BEES#5 SETFNN50#6
-  EXIT : ALPL30IETF(+4%) MOMOMENTUM(-8%)
-  ENTRY: HEALTHIETF HDFCSMALL
-2025-02-01  ₹   39.95L  CONSUMBEES#2 GOLDBEES#1 HEALTHIETF#4 ITBEES#3 MID150BEES#10
-  EXIT : HDFCSMALL(-11%) SETFNN50(-3%)
-  ENTRY: CONSUMBEES ITBEES
-2025-03-03  ₹   37.11L  CONSUMBEES#6 GOLDBEES#1 HEALTHIETF#4 ITBEES#8 SILVERBEES#2
-  EXIT : MID150BEES(+34%)
-  ENTRY: SILVERBEES
-2025-04-01  ₹   38.62L  BANKBEES#3 CONSUMBEES#5 GOLDBEES#1 HEALTHIETF#4 SILVERBEES#2
-  EXIT : ITBEES(-16%)
-  ENTRY: BANKBEES
-2025-05-02  ₹   39.79L  BANKBEES#2 CONSUMBEES#4 GOLDBEES#1 HEALTHIETF#3 SILVERBEES#7
-2025-06-02  ₹   40.56L  BANKBEES#2 CONSUMBEES#6 GOLDBEES#1 HEALTHIETF#9 MID150BEES#3
-  EXIT : SILVERBEES(+4%)
-  ENTRY: MID150BEES
-2025-07-01  ₹   41.71L  BANKBEES#2 CONSUMBEES#6 GOLDBEES#1 JUNIORBEES#4 MID150BEES#3
-  EXIT : HEALTHIETF(-3%)
-  ENTRY: JUNIORBEES
-2025-08-01  ₹   40.72L  BANKBEES#7 CONSUMBEES#10 GOLDBEES#2 JUNIORBEES#9 MID150BEES#4
-2025-09-01  ₹   41.52L  BANKBEES#9 CONSUMBEES#3 GOLDBEES#2 JUNIORBEES#8 MID150BEES#7
-2025-10-01  ₹   43.17L  BANKBEES#7 CONSUMBEES#4 GOLDBEES#1 PSUBNKBEES#3 SILVERBEES#2
-  EXIT : JUNIORBEES(-5%) MID150BEES(+0%)
-  ENTRY: SILVERBEES PSUBNKBEES
-2025-11-03  ₹   45.22L  BANKBEES#5 CONSUMBEES#6 GOLDBEES#1 PSUBNKBEES#3 SILVERBEES#2
-2025-12-01  ₹   48.03L  AUTOBEES#5 BANKBEES#4 GOLDBEES#1 PSUBNKBEES#3 SILVERBEES#2
-  EXIT : CONSUMBEES(+9%)
-  ENTRY: AUTOBEES
-2026-01-01  ₹   51.61L  AUTOBEES#7 BANKBEES#3 GOLDBEES#2 PSUBNKBEES#4 SILVERBEES#1
-2026-02-02  ₹   52.38L  AUTOBEES#5 BANKBEES#4 GOLDBEES#2 PSUBNKBEES#3 SILVERBEES#1
-2026-03-02  ₹   59.98L  AUTOBEES#7 BANKBEES#6 GOLDBEES#2 PSUBNKBEES#3 SILVERBEES#1
-2026-04-01  ₹   50.85L  CPSEETF#3 GOLDBEES#1 MODEFENCE#5 PSUBNKBEES#4 SILVERBEES#2
-  EXIT : AUTOBEES(-13%) BANKBEES(+1%)
-  ENTRY: CPSEETF MODEFENCE
+========================================================================
+  REBALANCE #01  —  01 Jan 2016
+  NAV: ₹1,000,000  |  Slot: ₹200,000  |  Cash: ₹1,000,000
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (5)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  AUTOBEES      1      2.111    1.01   +0.8%     +9.8%     8,328.3     ₹+200,000   
+  CPSEETF       2      1.147    0.90   -12.1%    +7.3%     21.7        ₹+200,000   
+  INFRABEES     3      1.076    1.05   -7.1%     +1.5%     2,792.9     ₹+200,000   
+  ITBEES        4      1.026    0.66   +0.7%     -5.6%     11,174.8    ₹+200,000   
+  METALIETF     5      0.715    1.11   -30.0%    +11.4%    1,830.3     ₹+200,000   
+
+  HOLDS (0)
+    —
+
+  AFTER: Invested ₹1,000,000 | Cash ₹0 | Total ₹1,000,000 | Positions 5/5 | Slot ₹200,000
+
+========================================================================
+  REBALANCE #02  —  01 Feb 2016
+  NAV: ₹927,665  |  Slot: ₹200,000  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        2      01-Jan-16   1.650    11,174.8    11,305.2    +1.2%   
+  AUTOBEES      4      01-Jan-16   0.834    8,328.3     7,569.9     -9.1%   
+  CPSEETF       5      01-Jan-16   0.800    21.7        20.2        -6.8%   
+  METALIETF     6      01-Jan-16   0.560    1,830.3     1,663.8     -9.1%   
+  INFRABEES     7      01-Jan-16   0.400    2,792.9     2,447.9     -12.4%  
+
+  AFTER: Invested ₹927,665 | Cash ₹0 | Total ₹927,665 | Positions 5/5 | Slot ₹200,000
+
+========================================================================
+  REBALANCE #03  —  01 Mar 2016
+  NAV: ₹889,371  |  Slot: ₹200,000  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  METALIETF     01-Jan-16   1,830.3     1,678.3     ₹-16,609      -8.3%     60d   
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  GOLDBEES      1      2.979    -0.20  +7.8%     +14.8%    26.5        ₹+183,391   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        3      01-Jan-16   0.761    11,174.8    10,637.3    -4.8%   
+  AUTOBEES      4      01-Jan-16   0.700    8,328.3     7,396.0     -11.2%  
+  CPSEETF       5      01-Jan-16   0.570    21.7        18.5        -14.7%  
+  INFRABEES     6      01-Jan-16   0.513    2,792.9     2,336.2     -16.4%  
+
+  AFTER: Invested ₹889,371 | Cash ₹0 | Total ₹889,371 | Positions 5/5 | Slot ₹200,000
+
+========================================================================
+  REBALANCE #04  —  01 Apr 2016
+  NAV: ₹933,375  |  Slot: ₹200,000  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   3.072    26.5        25.8        -2.7%   
+  AUTOBEES      3      01-Jan-16   0.965    8,328.3     8,030.0     -3.6%   
+  ITBEES        4      01-Jan-16   0.952    11,174.8    11,194.7    +0.2%   
+  INFRABEES     6      01-Jan-16   0.497    2,792.9     2,551.9     -8.6%   
+  CPSEETF       7      01-Jan-16   0.492    21.7        19.4        -10.5%  
+
+  AFTER: Invested ₹933,375 | Cash ₹0 | Total ₹933,375 | Positions 5/5 | Slot ₹200,000
+
+========================================================================
+  REBALANCE #05  —  02 May 2016
+  NAV: ₹962,797  |  Slot: ₹200,000  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   3.025    26.5        27.5        +3.6%   
+  AUTOBEES      2      01-Jan-16   1.263    8,328.3     8,299.0     -0.4%   
+  ITBEES        5      01-Jan-16   0.674    11,174.8    11,117.7    -0.5%   
+  INFRABEES     6      01-Jan-16   0.613    2,792.9     2,629.8     -5.8%   
+  CPSEETF       7      01-Jan-16   0.539    21.7        20.2        -6.9%   
+
+  AFTER: Invested ₹962,797 | Cash ₹0 | Total ₹962,797 | Positions 5/5 | Slot ₹200,000
+
+========================================================================
+  REBALANCE #06  —  01 Jun 2016
+  NAV: ₹980,796  |  Slot: ₹200,000  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  AUTOBEES      1      01-Jan-16   1.797    8,328.3     8,670.8     +4.1%   
+  INFRABEES     3      01-Jan-16   1.150    2,792.9     2,769.1     -0.9%   
+  ITBEES        4      01-Jan-16   1.144    11,174.8    11,494.9    +2.9%   
+  GOLDBEES      5      01-Mar-16   1.080    26.5        26.5        -0.1%   
+  CPSEETF       7      01-Jan-16   0.496    21.7        20.1        -7.4%   
+
+  AFTER: Invested ₹980,796 | Cash ₹0 | Total ₹980,796 | Positions 5/5 | Slot ₹200,000
+
+========================================================================
+  REBALANCE #07  —  01 Jul 2016
+  NAV: ₹1,010,397  |  Slot: ₹202,079  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   2.713    26.5        28.0        +5.7%   
+  AUTOBEES      2      01-Jan-16   1.381    8,328.3     8,894.8     +6.8%   
+  INFRABEES     5      01-Jan-16   0.933    2,792.9     2,882.4     +3.2%   
+  CPSEETF       7      01-Jan-16   0.627    21.7        21.5        -1.0%   
+  ITBEES        8      01-Jan-16   0.468    11,174.8    11,098.4    -0.7%   
+
+  AFTER: Invested ₹1,010,397 | Cash ₹0 | Total ₹1,010,397 | Positions 5/5 | Slot ₹202,079
+
+========================================================================
+  REBALANCE #08  —  01 Aug 2016
+  NAV: ₹1,042,448  |  Slot: ₹208,490  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  AUTOBEES      1      01-Jan-16   1.848    8,328.3     9,530.0     +14.4%  
+  GOLDBEES      2      01-Mar-16   1.732    26.5        28.5        +7.3%   
+  CPSEETF       4      01-Jan-16   0.953    21.7        22.5        +3.8%   
+  INFRABEES     5      01-Jan-16   0.727    2,792.9     2,929.4     +4.9%   
+  ITBEES        7      01-Jan-16   0.501    11,174.8    11,139.0    -0.3%   
+
+  AFTER: Invested ₹1,042,448 | Cash ₹0 | Total ₹1,042,448 | Positions 5/5 | Slot ₹208,490
+
+========================================================================
+  REBALANCE #09  —  01 Sep 2016
+  NAV: ₹1,044,456  |  Slot: ₹208,891  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  AUTOBEES      1      01-Jan-16   1.889    8,328.3     9,940.0     +19.4%  
+  GOLDBEES      2      01-Mar-16   1.801    26.5        27.8        +4.9%   
+  CPSEETF       3      01-Jan-16   1.601    21.7        23.7        +9.1%   
+  INFRABEES     7      01-Jan-16   0.534    2,792.9     2,885.6     +3.3%   
+  ITBEES        8      01-Jan-16   0.331    11,174.8    10,533.2    -5.7%   
+
+  AFTER: Invested ₹1,044,456 | Cash ₹0 | Total ₹1,044,456 | Positions 5/5 | Slot ₹208,891
+
+========================================================================
+  REBALANCE #10  —  03 Oct 2016
+  NAV: ₹1,055,621  |  Slot: ₹211,124  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  AUTOBEES      1      01-Jan-16   2.097    8,328.3     10,275.5    +23.4%  
+  CPSEETF       3      01-Jan-16   1.732    21.7        24.4        +12.5%  
+  GOLDBEES      5      01-Mar-16   1.178    26.5        28.2        +6.3%   
+  INFRABEES     8      01-Jan-16   0.502    2,792.9     2,855.4     +2.2%   
+  ITBEES        9      01-Jan-16   0.338    11,174.8    10,309.8    -7.7%   
+
+  AFTER: Invested ₹1,055,621 | Cash ₹0 | Total ₹1,055,621 | Positions 5/5 | Slot ₹211,124
+
+========================================================================
+  REBALANCE #11  —  01 Nov 2016
+  NAV: ₹1,054,601  |  Slot: ₹210,920  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Jan-16   2.142    21.7        25.9        +19.1%  
+  AUTOBEES      3      01-Jan-16   1.760    8,328.3     10,105.5    +21.3%  
+  GOLDBEES      5      01-Mar-16   0.980    26.5        27.4        +3.4%   
+  INFRABEES     8      01-Jan-16   0.485    2,792.9     2,867.3     +2.7%   
+  ITBEES        9      01-Jan-16   0.349    11,174.8    9,990.6     -10.6%  
+
+  AFTER: Invested ₹1,054,601 | Cash ₹0 | Total ₹1,054,601 | Positions 5/5 | Slot ₹210,920
+
+========================================================================
+  REBALANCE #12  —  01 Dec 2016
+  NAV: ₹1,010,196  |  Slot: ₹202,039  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  AUTOBEES      01-Jan-16   8,328.3     9,041.0     ₹+17,115      +8.6%     335d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  SETFNN50      2      1.202    0.73   +14.4%    -3.2%     219.2       ₹+202,039   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Jan-16   2.740    21.7        25.4        +17.1%  
+  GOLDBEES      4      01-Mar-16   0.825    26.5        26.2        -1.3%   
+  INFRABEES     6      01-Jan-16   0.724    2,792.9     2,767.4     -0.9%   
+  ITBEES        7      01-Jan-16   0.485    11,174.8    10,049.8    -10.1%  
+
+  AFTER: Invested ₹995,121 | Cash ₹15,076 | Total ₹1,010,196 | Positions 5/5 | Slot ₹202,039
+
+========================================================================
+  REBALANCE #13  —  02 Jan 2017
+  NAV: ₹1,003,644  |  Slot: ₹200,729  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Jan-16   2.639    21.7        25.4        +16.9%  
+  SETFNN50      2      01-Dec-16   0.965    219.2       213.0       -2.9%   
+  INFRABEES     3      01-Jan-16   0.835    2,792.9     2,736.8     -2.0%   
+  GOLDBEES      5      01-Mar-16   0.745    26.5        25.6        -3.5%   
+  ITBEES        7      01-Jan-16   0.688    11,174.8    10,367.0    -7.2%   
+
+  AFTER: Invested ₹988,568 | Cash ₹15,076 | Total ₹1,003,644 | Positions 5/5 | Slot ₹200,729
+
+========================================================================
+  REBALANCE #14  —  01 Feb 2017
+  NAV: ₹1,054,523  |  Slot: ₹210,905  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Jan-16   2.559    21.7        27.4        +26.1%  
+  INFRABEES     3      01-Jan-16   1.510    2,792.9     2,975.6     +6.5%   
+  SETFNN50      4      01-Dec-16   1.050    219.2       235.3       +7.3%   
+  GOLDBEES      6      01-Mar-16   0.515    26.5        26.4        -0.3%   
+  ITBEES        7      01-Jan-16   0.448    11,174.8    9,750.0     -12.8%  
+
+  AFTER: Invested ₹1,039,447 | Cash ₹15,076 | Total ₹1,054,523 | Positions 5/5 | Slot ₹210,905
+
+========================================================================
+  REBALANCE #15  —  01 Mar 2017
+  NAV: ₹1,090,465  |  Slot: ₹218,093  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       2      01-Jan-16   2.165    21.7        28.0        +29.2%  
+  INFRABEES     4      01-Jan-16   0.979    2,792.9     2,994.8     +7.2%   
+  SETFNN50      5      01-Dec-16   0.917    219.2       242.9       +10.8%  
+  ITBEES        6      01-Jan-16   0.568    11,174.8    10,748.0    -3.8%   
+  GOLDBEES      7      01-Mar-16   0.461    26.5        26.9        +1.6%   
+
+  AFTER: Invested ₹1,075,389 | Cash ₹15,076 | Total ₹1,090,465 | Positions 5/5 | Slot ₹218,093
+
+========================================================================
+  REBALANCE #16  —  03 Apr 2017
+  NAV: ₹1,104,675  |  Slot: ₹220,935  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       2      01-Jan-16   2.021    21.7        28.3        +30.4%  
+  INFRABEES     3      01-Jan-16   1.608    2,792.9     3,147.5     +12.7%  
+  SETFNN50      4      01-Dec-16   1.340    219.2       253.3       +15.5%  
+  GOLDBEES      6      01-Mar-16   0.463    26.5        26.1        -1.6%   
+  ITBEES        7      01-Jan-16   0.412    11,174.8    10,592.0    -5.2%   
+
+  AFTER: Invested ₹1,089,599 | Cash ₹15,076 | Total ₹1,104,675 | Positions 5/5 | Slot ₹220,935
+
+========================================================================
+  REBALANCE #17  —  02 May 2017
+  NAV: ₹1,133,557  |  Slot: ₹226,711  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Jan-16   2.189    21.7        30.5        +40.6%  
+  INFRABEES     3      01-Jan-16   1.455    2,792.9     3,231.2     +15.7%  
+  SETFNN50      4      01-Dec-16   1.402    219.2       266.6       +21.6%  
+  GOLDBEES      6      01-Mar-16   0.447    26.5        26.2        -1.3%   
+  ITBEES        7      01-Jan-16   0.407    11,174.8    10,006.3    -10.5%  
+
+  AFTER: Invested ₹1,118,481 | Cash ₹15,076 | Total ₹1,133,557 | Positions 5/5 | Slot ₹226,711
+
+========================================================================
+  REBALANCE #18  —  01 Jun 2017
+  NAV: ₹1,118,860  |  Slot: ₹223,772  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  INFRABEES     2      01-Jan-16   1.534    2,792.9     3,240.0     +16.0%  
+  CPSEETF       3      01-Jan-16   1.435    21.7        28.2        +30.1%  
+  SETFNN50      4      01-Dec-16   1.262    219.2       260.9       +19.0%  
+  ITBEES        6      01-Jan-16   0.473    11,174.8    10,574.7    -5.4%   
+  GOLDBEES      7      01-Mar-16   0.439    26.5        26.3        -0.8%   
+
+  AFTER: Invested ₹1,103,784 | Cash ₹15,076 | Total ₹1,118,860 | Positions 5/5 | Slot ₹223,772
+
+========================================================================
+  REBALANCE #19  —  03 Jul 2017
+  NAV: ₹1,093,016  |  Slot: ₹218,603  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SETFNN50      2      01-Dec-16   1.836    219.2       266.7       +21.7%  
+  INFRABEES     3      01-Jan-16   1.427    2,792.9     3,222.9     +15.4%  
+  CPSEETF       5      01-Jan-16   0.779    21.7        26.2        +20.7%  
+  GOLDBEES      6      01-Mar-16   0.488    26.5        25.7        -3.2%   
+  ITBEES        7      01-Jan-16   0.424    11,174.8    10,189.8    -8.8%   
+
+  AFTER: Invested ₹1,077,940 | Cash ₹15,076 | Total ₹1,093,016 | Positions 5/5 | Slot ₹218,603
+
+========================================================================
+  REBALANCE #20  —  01 Aug 2017
+  NAV: ₹1,135,697  |  Slot: ₹227,139  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SETFNN50      2      01-Dec-16   1.450    219.2       280.9       +28.1%  
+  INFRABEES     3      01-Jan-16   1.361    2,792.9     3,407.9     +22.0%  
+  ITBEES        5      01-Jan-16   0.817    11,174.8    10,801.8    -3.3%   
+  CPSEETF       6      01-Jan-16   0.559    21.7        26.8        +23.5%  
+  GOLDBEES      7      01-Mar-16   0.452    26.5        25.7        -3.2%   
+
+  AFTER: Invested ₹1,120,621 | Cash ₹15,076 | Total ₹1,135,697 | Positions 5/5 | Slot ₹227,139
+
+========================================================================
+  REBALANCE #21  —  01 Sep 2017
+  NAV: ₹1,145,758  |  Slot: ₹229,152  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SETFNN50      1      01-Dec-16   2.231    219.2       286.3       +30.6%  
+  INFRABEES     3      01-Jan-16   1.206    2,792.9     3,327.8     +19.2%  
+  CPSEETF       5      01-Jan-16   0.692    21.7        27.7        +27.5%  
+  GOLDBEES      6      01-Mar-16   0.576    26.5        26.8        +1.1%   
+  ITBEES        7      01-Jan-16   0.485    11,174.8    10,514.4    -5.9%   
+
+  AFTER: Invested ₹1,130,683 | Cash ₹15,076 | Total ₹1,145,758 | Positions 5/5 | Slot ₹229,152
+
+========================================================================
+  REBALANCE #22  —  03 Oct 2017
+  NAV: ₹1,139,802  |  Slot: ₹227,960  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Jan-16   2.228    21.7        28.4        +30.7%  
+  SETFNN50      3      01-Dec-16   1.397    219.2       280.9       +28.1%  
+  ITBEES        4      01-Jan-16   0.702    11,174.8    10,546.1    -5.6%   
+  INFRABEES     5      01-Jan-16   0.678    2,792.9     3,237.6     +15.9%  
+  GOLDBEES      6      01-Mar-16   0.622    26.5        26.6        +0.3%   
+
+  AFTER: Invested ₹1,124,727 | Cash ₹15,076 | Total ₹1,139,802 | Positions 5/5 | Slot ₹227,960
+
+========================================================================
+  REBALANCE #23  —  01 Nov 2017
+  NAV: ₹1,210,750  |  Slot: ₹242,150  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Jan-16   2.239    21.7        30.7        +41.6%  
+  INFRABEES     2      01-Jan-16   1.682    2,792.9     3,611.7     +29.3%  
+  SETFNN50      4      01-Dec-16   1.288    219.2       301.9       +37.7%  
+  ITBEES        6      01-Jan-16   0.533    11,174.8    10,817.3    -3.2%   
+  GOLDBEES      7      01-Mar-16   0.499    26.5        26.3        -0.7%   
+
+  AFTER: Invested ₹1,195,674 | Cash ₹15,076 | Total ₹1,210,750 | Positions 5/5 | Slot ₹242,150
+
+========================================================================
+  REBALANCE #24  —  01 Dec 2017
+  NAV: ₹1,183,629  |  Slot: ₹236,726  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SETFNN50      1      01-Dec-16   1.853    219.2       298.1       +36.0%  
+  INFRABEES     3      01-Jan-16   1.582    2,792.9     3,470.8     +24.3%  
+  CPSEETF       5      01-Jan-16   1.195    21.7        29.1        +33.9%  
+  ITBEES        6      01-Jan-16   0.866    11,174.8    10,948.5    -2.0%   
+  GOLDBEES      8      01-Mar-16   0.329    26.5        26.2        -1.0%   
+
+  AFTER: Invested ₹1,168,553 | Cash ₹15,076 | Total ₹1,183,629 | Positions 5/5 | Slot ₹236,726
+
+========================================================================
+  REBALANCE #25  —  01 Jan 2018
+  NAV: ₹1,231,594  |  Slot: ₹246,319  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SETFNN50      1      01-Dec-16   2.509    219.2       313.0       +42.7%  
+  INFRABEES     2      01-Jan-16   1.780    2,792.9     3,636.6     +30.2%  
+  ITBEES        5      01-Jan-16   0.832    11,174.8    11,565.8    +3.5%   
+  CPSEETF       6      01-Jan-16   0.745    21.7        30.1        +38.9%  
+  GOLDBEES      8      01-Mar-16   0.374    26.5        26.4        -0.3%   
+
+  AFTER: Invested ₹1,216,518 | Cash ₹15,076 | Total ₹1,231,594 | Positions 5/5 | Slot ₹246,319
+
+========================================================================
+  REBALANCE #26  —  01 Feb 2018
+  NAV: ₹1,262,535  |  Slot: ₹252,507  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.387    11,174.8    12,964.6    +16.0%  
+  SETFNN50      3      01-Dec-16   1.209    219.2       308.7       +40.8%  
+  INFRABEES     4      01-Jan-16   0.845    2,792.9     3,648.1     +30.6%  
+  GOLDBEES      7      01-Mar-16   0.597    26.5        27.1        +2.4%   
+  CPSEETF       8      01-Jan-16   0.507    21.7        30.6        +41.0%  
+
+  AFTER: Invested ₹1,247,460 | Cash ₹15,076 | Total ₹1,262,535 | Positions 5/5 | Slot ₹252,507
+
+========================================================================
+  REBALANCE #27  —  01 Mar 2018
+  NAV: ₹1,226,210  |  Slot: ₹245,242  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.603    11,174.8    12,769.5    +14.3%  
+  SETFNN50      2      01-Dec-16   1.373    219.2       296.2       +35.1%  
+  INFRABEES     5      01-Jan-16   0.790    2,792.9     3,443.4     +23.3%  
+  GOLDBEES      7      01-Mar-16   0.660    26.5        27.2        +2.5%   
+  CPSEETF       8      01-Jan-16   0.639    21.7        29.8        +37.5%  
+
+  AFTER: Invested ₹1,211,134 | Cash ₹15,076 | Total ₹1,226,210 | Positions 5/5 | Slot ₹245,242
+
+========================================================================
+  REBALANCE #28  —  02 Apr 2018
+  NAV: ₹1,202,214  |  Slot: ₹240,443  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.469    11,174.8    12,707.1    +13.7%  
+  GOLDBEES      2      01-Mar-16   1.402    26.5        27.5        +3.5%   
+  SETFNN50      3      01-Dec-16   1.354    219.2       293.5       +33.9%  
+  INFRABEES     6      01-Jan-16   0.744    2,792.9     3,380.2     +21.0%  
+  CPSEETF       8      01-Jan-16   0.427    21.7        27.9        +28.7%  
+
+  AFTER: Invested ₹1,187,139 | Cash ₹15,076 | Total ₹1,202,214 | Positions 5/5 | Slot ₹240,443
+
+========================================================================
+  REBALANCE #29  —  02 May 2018
+  NAV: ₹1,238,543  |  Slot: ₹247,709  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.717    11,174.8    13,754.3    +23.1%  
+  GOLDBEES      3      01-Mar-16   1.277    26.5        27.7        +4.5%   
+  SETFNN50      4      01-Dec-16   1.189    219.2       307.0       +40.0%  
+  INFRABEES     7      01-Jan-16   0.679    2,792.9     3,479.9     +24.6%  
+  CPSEETF       8      01-Jan-16   0.354    21.7        27.5        +26.8%  
+
+  AFTER: Invested ₹1,223,467 | Cash ₹15,076 | Total ₹1,238,543 | Positions 5/5 | Slot ₹247,709
+
+========================================================================
+  REBALANCE #30  —  01 Jun 2018
+  NAV: ₹1,211,457  |  Slot: ₹242,291  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.551    11,174.8    13,558.5    +21.3%  
+  GOLDBEES      3      01-Mar-16   1.176    26.5        27.6        +4.3%   
+  SETFNN50      4      01-Dec-16   1.090    219.2       293.7       +33.9%  
+  INFRABEES     7      01-Jan-16   0.546    2,792.9     3,314.3     +18.7%  
+  CPSEETF       8      01-Jan-16   0.403    21.7        27.6        +27.3%  
+
+  AFTER: Invested ₹1,196,381 | Cash ₹15,076 | Total ₹1,211,457 | Positions 5/5 | Slot ₹242,291
+
+========================================================================
+  REBALANCE #31  —  02 Jul 2018
+  NAV: ₹1,169,405  |  Slot: ₹233,881  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.949    11,174.8    14,072.3    +25.9%  
+  GOLDBEES      4      01-Mar-16   0.860    26.5        27.1        +2.4%   
+  SETFNN50      5      01-Dec-16   0.784    219.2       284.3       +29.7%  
+  CPSEETF       7      01-Jan-16   0.486    21.7        25.3        +16.7%  
+  INFRABEES     8      01-Jan-16   0.459    2,792.9     3,063.6     +9.7%   
+
+  AFTER: Invested ₹1,154,329 | Cash ₹15,076 | Total ₹1,169,405 | Positions 5/5 | Slot ₹233,881
+
+========================================================================
+  REBALANCE #32  —  01 Aug 2018
+  NAV: ₹1,217,881  |  Slot: ₹243,576  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.838    11,174.8    14,679.3    +31.4%  
+  SETFNN50      4      01-Dec-16   0.989    219.2       302.6       +38.0%  
+  CPSEETF       5      01-Jan-16   0.766    21.7        27.4        +26.1%  
+  GOLDBEES      7      01-Mar-16   0.562    26.5        26.5        +0.0%   
+  INFRABEES     8      01-Jan-16   0.432    2,792.9     3,149.8     +12.8%  
+
+  AFTER: Invested ₹1,202,805 | Cash ₹15,076 | Total ₹1,217,881 | Positions 5/5 | Slot ₹243,576
+
+========================================================================
+  REBALANCE #33  —  03 Sep 2018
+  NAV: ₹1,265,236  |  Slot: ₹253,047  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   3.092    11,174.8    15,724.7    +40.7%  
+  SETFNN50      2      01-Dec-16   1.504    219.2       318.5       +45.3%  
+  CPSEETF       5      01-Jan-16   0.591    21.7        27.6        +27.4%  
+  INFRABEES     7      01-Jan-16   0.567    2,792.9     3,275.0     +17.3%  
+  GOLDBEES      8      01-Mar-16   0.485    26.5        26.9        +1.4%   
+
+  AFTER: Invested ₹1,250,160 | Cash ₹15,076 | Total ₹1,265,236 | Positions 5/5 | Slot ₹253,047
+
+========================================================================
+  REBALANCE #34  —  01 Oct 2018
+  NAV: ₹1,209,770  |  Slot: ₹241,954  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   3.314    11,174.8    16,213.6    +45.1%  
+  CPSEETF       2      01-Jan-16   1.298    21.7        27.0        +24.2%  
+  GOLDBEES      3      01-Mar-16   0.876    26.5        27.2        +2.5%   
+  SETFNN50      6      01-Dec-16   0.769    219.2       277.6       +26.6%  
+  INFRABEES     7      01-Jan-16   0.615    2,792.9     2,965.2     +6.2%   
+
+  AFTER: Invested ₹1,194,694 | Cash ₹15,076 | Total ₹1,209,770 | Positions 5/5 | Slot ₹241,954
+
+========================================================================
+  REBALANCE #35  —  01 Nov 2018
+  NAV: ₹1,169,519  |  Slot: ₹233,904  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   2.575    26.5        28.4        +7.2%   
+  ITBEES        2      01-Jan-16   2.323    11,174.8    14,622.0    +30.8%  
+  SETFNN50      5      01-Dec-16   0.727    219.2       271.8       +24.0%  
+  CPSEETF       6      01-Jan-16   0.706    21.7        25.0        +15.3%  
+  INFRABEES     7      01-Jan-16   0.705    2,792.9     3,001.6     +7.5%   
+
+  AFTER: Invested ₹1,154,443 | Cash ₹15,076 | Total ₹1,169,519 | Positions 5/5 | Slot ₹233,904
+
+========================================================================
+  REBALANCE #36  —  03 Dec 2018
+  NAV: ₹1,166,689  |  Slot: ₹233,338  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.260    11,174.8    14,740.4    +31.9%  
+  GOLDBEES      2      01-Mar-16   2.178    26.5        27.3        +2.8%   
+  INFRABEES     5      01-Jan-16   0.930    2,792.9     3,120.1     +11.7%  
+  SETFNN50      6      01-Dec-16   0.692    219.2       281.5       +28.4%  
+  CPSEETF       7      01-Jan-16   0.476    21.7        23.5        +8.2%   
+
+  AFTER: Invested ₹1,151,613 | Cash ₹15,076 | Total ₹1,166,689 | Positions 5/5 | Slot ₹233,338
+
+========================================================================
+  REBALANCE #37  —  01 Jan 2019
+  NAV: ₹1,185,753  |  Slot: ₹237,151  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   2.095    26.5        28.2        +6.3%   
+  ITBEES        3      01-Jan-16   1.143    11,174.8    14,450.9    +29.3%  
+  INFRABEES     4      01-Jan-16   1.027    2,792.9     3,190.6     +14.2%  
+  SETFNN50      5      01-Dec-16   0.948    219.2       286.5       +30.7%  
+  CPSEETF       7      01-Jan-16   0.484    21.7        24.4        +12.4%  
+
+  AFTER: Invested ₹1,170,677 | Cash ₹15,076 | Total ₹1,185,753 | Positions 5/5 | Slot ₹237,151
+
+========================================================================
+  REBALANCE #38  —  01 Feb 2019
+  NAV: ₹1,182,594  |  Slot: ₹236,519  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.296    11,174.8    15,724.3    +40.7%  
+  GOLDBEES      2      01-Mar-16   2.289    26.5        29.5        +11.1%  
+  SETFNN50      5      01-Dec-16   0.822    219.2       273.3       +24.7%  
+  INFRABEES     6      01-Jan-16   0.695    2,792.9     2,997.9     +7.3%   
+  CPSEETF       8      01-Jan-16   0.507    21.7        23.4        +7.9%   
+
+  AFTER: Invested ₹1,167,518 | Cash ₹15,076 | Total ₹1,182,594 | Positions 5/5 | Slot ₹236,519
+
+========================================================================
+  REBALANCE #39  —  01 Mar 2019
+  NAV: ₹1,190,813  |  Slot: ₹238,163  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   2.641    26.5        29.1        +9.6%   
+  ITBEES        2      01-Jan-16   2.447    11,174.8    15,848.3    +41.8%  
+  CPSEETF       4      01-Jan-16   1.112    21.7        24.9        +14.6%  
+  SETFNN50      7      01-Dec-16   0.712    219.2       272.6       +24.3%  
+  INFRABEES     9      01-Jan-16   0.555    2,792.9     2,942.6     +5.4%   
+
+  AFTER: Invested ₹1,175,737 | Cash ₹15,076 | Total ₹1,190,813 | Positions 5/5 | Slot ₹238,163
+
+========================================================================
+  REBALANCE #40  —  01 Apr 2019
+  NAV: ₹1,240,372  |  Slot: ₹248,074  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        2      01-Jan-16   2.126    11,174.8    15,840.7    +41.8%  
+  CPSEETF       3      01-Jan-16   1.218    21.7        27.0        +24.3%  
+  GOLDBEES      6      01-Mar-16   0.814    26.5        28.1        +5.9%   
+  SETFNN50      7      01-Dec-16   0.803    219.2       289.6       +32.1%  
+  INFRABEES     8      01-Jan-16   0.717    2,792.9     3,238.6     +16.0%  
+
+  AFTER: Invested ₹1,225,296 | Cash ₹15,076 | Total ₹1,240,372 | Positions 5/5 | Slot ₹248,074
+
+========================================================================
+  REBALANCE #41  —  02 May 2019
+  NAV: ₹1,238,180  |  Slot: ₹247,636  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        2      01-Jan-16   2.436    11,174.8    16,403.7    +46.8%  
+  CPSEETF       3      01-Jan-16   1.928    21.7        27.4        +26.3%  
+  INFRABEES     5      01-Jan-16   0.841    2,792.9     3,132.1     +12.1%  
+  SETFNN50      6      01-Dec-16   0.750    219.2       282.4       +28.8%  
+  GOLDBEES      10     01-Mar-16   0.559    26.5        27.8        +4.9%   
+
+  AFTER: Invested ₹1,223,104 | Cash ₹15,076 | Total ₹1,238,180 | Positions 5/5 | Slot ₹247,636
+
+========================================================================
+  REBALANCE #42  —  03 Jun 2019
+  NAV: ₹1,274,223  |  Slot: ₹254,845  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       2      01-Jan-16   1.609    21.7        28.6        +31.8%  
+  INFRABEES     3      01-Jan-16   1.577    2,792.9     3,357.9     +20.2%  
+  ITBEES        4      01-Jan-16   1.416    11,174.8    16,360.5    +46.4%  
+  SETFNN50      7      01-Dec-16   0.930    219.2       287.6       +31.2%  
+  GOLDBEES      9      01-Mar-16   0.563    26.5        28.5        +7.6%   
+
+  AFTER: Invested ₹1,259,147 | Cash ₹15,076 | Total ₹1,274,223 | Positions 5/5 | Slot ₹254,845
+
+========================================================================
+  REBALANCE #43  —  01 Jul 2019
+  NAV: ₹1,263,039  |  Slot: ₹252,608  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      2      01-Mar-16   2.242    26.5        29.6        +11.6%  
+  INFRABEES     3      01-Jan-16   1.755    2,792.9     3,388.9     +21.3%  
+  ITBEES        4      01-Jan-16   1.689    11,174.8    15,916.7    +42.4%  
+  CPSEETF       6      01-Jan-16   1.001    21.7        27.9        +28.7%  
+  SETFNN50      8      01-Dec-16   0.589    219.2       280.4       +27.9%  
+
+  AFTER: Invested ₹1,247,963 | Cash ₹15,076 | Total ₹1,263,039 | Positions 5/5 | Slot ₹252,608
+
+========================================================================
+  REBALANCE #44  —  01 Aug 2019
+  NAV: ₹1,182,925  |  Slot: ₹236,585  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   3.491    26.5        30.5        +14.9%  
+  ITBEES        3      01-Jan-16   1.279    11,174.8    15,332.1    +37.2%  
+  INFRABEES     5      01-Jan-16   1.152    2,792.9     3,048.1     +9.1%   
+  SETFNN50      6      01-Dec-16   0.742    219.2       264.7       +20.7%  
+  CPSEETF       7      01-Jan-16   0.610    21.7        23.9        +10.3%  
+
+  AFTER: Invested ₹1,167,849 | Cash ₹15,076 | Total ₹1,182,925 | Positions 5/5 | Slot ₹236,585
+
+========================================================================
+  REBALANCE #45  —  03 Sep 2019
+  NAV: ₹1,200,294  |  Slot: ₹240,059  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   3.743    26.5        34.5        +29.9%  
+  ITBEES        2      01-Jan-16   1.424    11,174.8    15,984.9    +43.0%  
+  SETFNN50      4      01-Dec-16   0.880    219.2       271.5       +23.9%  
+  INFRABEES     6      01-Jan-16   0.790    2,792.9     2,924.4     +4.7%   
+  CPSEETF       9      01-Jan-16   0.587    21.7        21.8        +0.6%   
+
+  AFTER: Invested ₹1,185,218 | Cash ₹15,076 | Total ₹1,200,294 | Positions 5/5 | Slot ₹240,059
+
+========================================================================
+  REBALANCE #46  —  01 Oct 2019
+  NAV: ₹1,217,545  |  Slot: ₹243,509  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   3.352    26.5        32.6        +23.1%  
+  SETFNN50      4      01-Dec-16   1.141    219.2       280.8       +28.1%  
+  ITBEES        5      01-Jan-16   0.969    11,174.8    15,300.2    +36.9%  
+  INFRABEES     6      01-Jan-16   0.968    2,792.9     3,164.2     +13.3%  
+  CPSEETF       8      01-Jan-16   0.566    21.7        23.6        +8.8%   
+
+  AFTER: Invested ₹1,202,469 | Cash ₹15,076 | Total ₹1,217,545 | Positions 5/5 | Slot ₹243,509
+
+========================================================================
+  REBALANCE #47  —  01 Nov 2019
+  NAV: ₹1,266,717  |  Slot: ₹253,343  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Mar-16   2.788    26.5        34.2        +28.9%  
+  SETFNN50      3      01-Dec-16   1.251    219.2       295.6       +34.8%  
+  INFRABEES     4      01-Jan-16   0.999    2,792.9     3,302.4     +18.2%  
+  ITBEES        7      01-Jan-16   0.519    11,174.8    15,471.2    +38.4%  
+  CPSEETF       8      01-Jan-16   0.470    21.7        24.9        +14.7%  
+
+  AFTER: Invested ₹1,251,641 | Cash ₹15,076 | Total ₹1,266,717 | Positions 5/5 | Slot ₹253,343
+
+========================================================================
+  REBALANCE #48  —  02 Dec 2019
+  NAV: ₹1,235,776  |  Slot: ₹247,155  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  INFRABEES     2      01-Jan-16   1.488    2,792.9     3,333.5     +19.4%  
+  GOLDBEES      3      01-Mar-16   1.472    26.5        33.4        +26.0%  
+  SETFNN50      4      01-Dec-16   1.456    219.2       293.6       +33.9%  
+  CPSEETF       7      01-Jan-16   0.522    21.7        23.3        +7.3%   
+  ITBEES        8      01-Jan-16   0.466    11,174.8    14,852.0    +32.9%  
+
+  AFTER: Invested ₹1,220,700 | Cash ₹15,076 | Total ₹1,235,776 | Positions 5/5 | Slot ₹247,155
+
+========================================================================
+  REBALANCE #49  —  01 Jan 2020
+  NAV: ₹1,253,494  |  Slot: ₹250,699  |  Cash: ₹15,076
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  GOLDBEES      01-Mar-16   26.5        34.3        ₹+54,186      +29.5%    1401d 
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  MOREALTY      1      3.045    1.14   +25.9%    +11.2%    297.9       ₹+250,699   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        2      01-Jan-16   1.192    11,174.8    15,722.2    +40.7%  
+  INFRABEES     4      01-Jan-16   0.925    2,792.9     3,263.2     +16.8%  
+  SETFNN50      5      01-Dec-16   0.830    219.2       291.6       +33.0%  
+  CPSEETF       7      01-Jan-16   0.483    21.7        23.5        +8.5%   
+
+  AFTER: Invested ₹1,251,540 | Cash ₹1,954 | Total ₹1,253,494 | Positions 5/5 | Slot ₹250,699
+
+========================================================================
+  REBALANCE #50  —  03 Feb 2020
+  NAV: ₹1,224,518  |  Slot: ₹244,904  |  Cash: ₹1,954
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  MOREALTY      1      01-Jan-20   2.767    297.9       310.0       +4.1%   
+  ITBEES        2      01-Jan-16   1.600    11,174.8    16,059.9    +43.7%  
+  INFRABEES     6      01-Jan-16   0.856    2,792.9     3,183.0     +14.0%  
+  SETFNN50      7      01-Dec-16   0.746    219.2       283.4       +29.2%  
+  CPSEETF       8      01-Jan-16   0.336    21.7        20.1        -7.4%   
+
+  AFTER: Invested ₹1,222,564 | Cash ₹1,954 | Total ₹1,224,518 | Positions 5/5 | Slot ₹244,904
+
+========================================================================
+  REBALANCE #51  —  02 Mar 2020
+  NAV: ₹1,150,676  |  Slot: ₹230,135  |  Cash: ₹1,954
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  MOREALTY      1      01-Jan-20   2.352    297.9       279.6       -6.1%   
+  ITBEES        2      01-Jan-16   1.560    11,174.8    15,427.7    +38.1%  
+  SETFNN50      4      01-Dec-16   1.099    219.2       273.6       +24.8%  
+  INFRABEES     7      01-Jan-16   0.751    2,792.9     2,972.4     +6.4%   
+  CPSEETF       8      01-Jan-16   0.357    21.7        18.7        -13.9%  
+
+  AFTER: Invested ₹1,148,722 | Cash ₹1,954 | Total ₹1,150,676 | Positions 5/5 | Slot ₹230,135
+
+========================================================================
+  REBALANCE #52  —  01 Apr 2020
+  NAV: ₹872,111  |  Slot: ₹200,000  |  Cash: ₹1,954
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        4      01-Jan-16   1.279    11,174.8    12,045.8    +7.8%   
+  INFRABEES     5      01-Jan-16   0.865    2,792.9     2,283.6     -18.2%  
+  SETFNN50      6      01-Dec-16   0.857    219.2       219.4       +0.0%   
+  MOREALTY      7      01-Jan-20   0.689    297.9       172.1       -42.2%  
+  CPSEETF       10     01-Jan-16   0.600    21.7        15.6        -28.0%  
+
+  AFTER: Invested ₹870,157 | Cash ₹1,954 | Total ₹872,111 | Positions 5/5 | Slot ₹200,000
+
+========================================================================
+  REBALANCE #53  —  04 May 2020
+  NAV: ₹954,547  |  Slot: ₹200,000  |  Cash: ₹1,954
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  MOREALTY      01-Jan-20   297.9       174.3       ₹-103,991     -41.5%    124d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  GOLDBEES      1      2.804    -0.01  +53.0%    +19.2%    42.7        ₹+148,661   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        4      01-Jan-16   1.376    11,174.8    13,454.2    +20.4%  
+  INFRABEES     5      01-Jan-16   1.206    2,792.9     2,666.6     -4.5%   
+  SETFNN50      6      01-Dec-16   1.015    219.2       238.8       +8.9%   
+  CPSEETF       9      01-Jan-16   0.630    21.7        16.7        -22.9%  
+
+  AFTER: Invested ₹954,547 | Cash ₹0 | Total ₹954,547 | Positions 5/5 | Slot ₹200,000
+
+========================================================================
+  REBALANCE #54  —  01 Jun 2020
+  NAV: ₹1,000,906  |  Slot: ₹200,181  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      04-May-20   2.441    42.7        41.2        -3.6%   
+  INFRABEES     4      01-Jan-16   1.693    2,792.9     2,885.9     +3.3%   
+  ITBEES        5      01-Jan-16   1.289    11,174.8    14,307.1    +28.0%  
+  SETFNN50      6      01-Dec-16   1.191    219.2       253.4       +15.6%  
+  CPSEETF       10     01-Jan-16   0.639    21.7        17.5        -19.4%  
+
+  AFTER: Invested ₹1,000,906 | Cash ₹0 | Total ₹1,000,906 | Positions 5/5 | Slot ₹200,181
+
+========================================================================
+  REBALANCE #55  —  01 Jul 2020
+  NAV: ₹1,038,337  |  Slot: ₹207,667  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  CPSEETF       01-Jan-16   21.7        17.6        ₹-37,880      -18.9%    1643d 
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  MID150BEES    3      1.747    0.56   -7.0%     +33.3%    55.8        ₹+162,120   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  INFRABEES     1      01-Jan-16   1.930    2,792.9     3,031.4     +8.5%   
+  SETFNN50      2      01-Dec-16   1.923    219.2       266.8       +21.7%  
+  ITBEES        7      01-Jan-16   1.138    11,174.8    14,732.2    +31.8%  
+  GOLDBEES      10     04-May-20   0.712    42.7        43.0        +0.6%   
+
+  AFTER: Invested ₹1,038,337 | Cash ₹0 | Total ₹1,038,337 | Positions 5/5 | Slot ₹207,667
+
+========================================================================
+  REBALANCE #56  —  03 Aug 2020
+  NAV: ₹1,135,550  |  Slot: ₹227,110  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.717    11,174.8    17,965.8    +60.8%  
+  SETFNN50      3      01-Dec-16   1.492    219.2       276.6       +26.1%  
+  INFRABEES     5      01-Jan-16   1.284    2,792.9     3,113.2     +11.5%  
+  MID150BEES    7      01-Jul-20   1.019    55.8        59.1        +5.9%   
+  GOLDBEES      10     04-May-20   0.657    42.7        47.3        +10.7%  
+
+  AFTER: Invested ₹1,135,550 | Cash ₹0 | Total ₹1,135,550 | Positions 5/5 | Slot ₹227,110
+
+========================================================================
+  REBALANCE #57  —  01 Sep 2020
+  NAV: ₹1,152,909  |  Slot: ₹230,582  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  GOLDBEES      04-May-20   42.7        45.5        ₹+9,498       +6.4%     120d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  METALIETF     2      1.888    1.06   +13.3%    +26.6%    2,496.8     ₹+158,159   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.117    11,174.8    17,814.1    +59.4%  
+  MID150BEES    6      01-Jul-20   1.509    55.8        64.4        +15.3%  
+  SETFNN50      7      01-Dec-16   1.082    219.2       281.7       +28.5%  
+  INFRABEES     9      01-Jan-16   0.918    2,792.9     3,202.9     +14.7%  
+
+  AFTER: Invested ₹1,152,909 | Cash ₹0 | Total ₹1,152,909 | Positions 5/5 | Slot ₹230,582
+
+========================================================================
+  REBALANCE #58  —  01 Oct 2020
+  NAV: ₹1,174,424  |  Slot: ₹234,885  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   3.315    11,174.8    20,110.4    +80.0%  
+  MID150BEES    2      01-Jul-20   1.520    55.8        65.8        +17.8%  
+  METALIETF     6      01-Sep-20   1.082    2,496.8     2,261.2     -9.4%   
+  SETFNN50      7      01-Dec-16   1.008    219.2       280.3       +27.8%  
+  INFRABEES     10     01-Jan-16   0.774    2,792.9     3,101.1     +11.0%  
+
+  AFTER: Invested ₹1,174,424 | Cash ₹0 | Total ₹1,174,424 | Positions 5/5 | Slot ₹234,885
+
+========================================================================
+  REBALANCE #59  —  02 Nov 2020
+  NAV: ₹1,192,792  |  Slot: ₹238,558  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  INFRABEES     01-Jan-16   2,792.9     3,098.7     ₹+21,894      +10.9%    1767d 
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  JUNIORBEES    2      1.666    0.96   +3.9%     +10.0%    4,716.7     ₹+221,894   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   3.059    11,174.8    20,732.3    +85.5%  
+  MID150BEES    4      01-Jul-20   1.565    55.8        65.3        +17.0%  
+  METALIETF     6      01-Sep-20   1.083    2,496.8     2,338.9     -6.3%   
+  SETFNN50      8      01-Dec-16   0.886    219.2       284.3       +29.7%  
+
+  AFTER: Invested ₹1,192,792 | Cash ₹0 | Total ₹1,192,792 | Positions 5/5 | Slot ₹238,558
+
+========================================================================
+  REBALANCE #60  —  01 Dec 2020
+  NAV: ₹1,362,490  |  Slot: ₹272,498  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.867    11,174.8    22,170.9    +98.4%  
+  JUNIORBEES    2      02-Nov-20   1.909    4,716.7     5,590.5     +18.5%  
+  METALIETF     3      01-Sep-20   1.506    2,496.8     2,974.1     +19.1%  
+  MID150BEES    4      01-Jul-20   1.372    55.8        76.0        +36.2%  
+  SETFNN50      5      01-Dec-16   1.216    219.2       318.6       +45.3%  
+
+  AFTER: Invested ₹1,362,490 | Cash ₹0 | Total ₹1,362,490 | Positions 5/5 | Slot ₹272,498
+
+========================================================================
+  REBALANCE #61  —  01 Jan 2021
+  NAV: ₹1,465,276  |  Slot: ₹293,055  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   1.961    11,174.8    24,456.1    +118.8% 
+  METALIETF     3      01-Sep-20   1.597    2,496.8     3,254.6     +30.4%  
+  JUNIORBEES    4      02-Nov-20   1.407    4,716.7     5,872.3     +24.5%  
+  SETFNN50      5      01-Dec-16   1.210    219.2       338.4       +54.3%  
+  MID150BEES    8      01-Jul-20   0.923    55.8        80.4        +43.9%  
+
+  AFTER: Invested ₹1,465,276 | Cash ₹0 | Total ₹1,465,276 | Positions 5/5 | Slot ₹293,055
+
+========================================================================
+  REBALANCE #62  —  01 Feb 2021
+  NAV: ₹1,495,277  |  Slot: ₹299,055  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   1.870    11,174.8    24,922.7    +123.0% 
+  JUNIORBEES    2      02-Nov-20   1.752    4,716.7     6,279.1     +33.1%  
+  METALIETF     4      01-Sep-20   1.177    2,496.8     3,227.2     +29.3%  
+  SETFNN50      6      01-Dec-16   1.015    219.2       337.8       +54.1%  
+  MID150BEES    9      01-Jul-20   0.953    55.8        82.0        +46.9%  
+
+  AFTER: Invested ₹1,495,277 | Cash ₹0 | Total ₹1,495,277 | Positions 5/5 | Slot ₹299,055
+
+========================================================================
+  REBALANCE #63  —  01 Mar 2021
+  NAV: ₹1,604,074  |  Slot: ₹320,815  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  METALIETF     1      01-Sep-20   1.992    2,496.8     3,896.9     +56.1%  
+  JUNIORBEES    2      02-Nov-20   1.870    4,716.7     6,913.6     +46.6%  
+  ITBEES        3      01-Jan-16   1.507    11,174.8    24,556.3    +119.7% 
+  SETFNN50      7      01-Dec-16   1.020    219.2       358.2       +63.4%  
+  MID150BEES    8      01-Jul-20   0.994    55.8        90.4        +61.9%  
+
+  AFTER: Invested ₹1,604,074 | Cash ₹0 | Total ₹1,604,074 | Positions 5/5 | Slot ₹320,815
+
+========================================================================
+  REBALANCE #64  —  01 Apr 2021
+  NAV: ₹1,654,650  |  Slot: ₹330,930  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  JUNIORBEES    1      02-Nov-20   2.259    4,716.7     6,917.0     +46.7%  
+  METALIETF     2      01-Sep-20   2.258    2,496.8     4,189.1     +67.8%  
+  MID150BEES    3      01-Jul-20   1.977    55.8        92.5        +65.7%  
+  ITBEES        4      01-Jan-16   1.299    11,174.8    25,980.4    +132.5% 
+  SETFNN50      6      01-Dec-16   1.131    219.2       358.5       +63.5%  
+
+  AFTER: Invested ₹1,654,650 | Cash ₹0 | Total ₹1,654,650 | Positions 5/5 | Slot ₹330,930
+
+========================================================================
+  REBALANCE #65  —  03 May 2021
+  NAV: ₹1,691,237  |  Slot: ₹338,247  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  METALIETF     1      01-Sep-20   3.240    2,496.8     4,952.5     +98.4%  
+  MID150BEES    2      01-Jul-20   1.953    55.8        92.4        +65.5%  
+  JUNIORBEES    3      02-Nov-20   1.438    4,716.7     6,687.2     +41.8%  
+  SETFNN50      4      01-Dec-16   1.164    219.2       363.7       +65.9%  
+  ITBEES        5      01-Jan-16   1.096    11,174.8    25,676.1    +129.8% 
+
+  AFTER: Invested ₹1,691,237 | Cash ₹0 | Total ₹1,691,237 | Positions 5/5 | Slot ₹338,247
+
+========================================================================
+  REBALANCE #66  —  01 Jun 2021
+  NAV: ₹1,791,436  |  Slot: ₹358,287  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  METALIETF     1      01-Sep-20   3.214    2,496.8     5,121.6     +105.1% 
+  MID150BEES    2      01-Jul-20   1.850    55.8        98.1        +75.7%  
+  ITBEES        4      01-Jan-16   1.346    11,174.8    27,144.4    +142.9% 
+  SETFNN50      5      01-Dec-16   1.277    219.2       389.9       +77.8%  
+  JUNIORBEES    6      02-Nov-20   1.101    4,716.7     7,163.6     +51.9%  
+
+  AFTER: Invested ₹1,791,436 | Cash ₹0 | Total ₹1,791,436 | Positions 5/5 | Slot ₹358,287
+
+========================================================================
+  REBALANCE #67  —  01 Jul 2021
+  NAV: ₹1,866,319  |  Slot: ₹373,264  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  METALIETF     1      01-Sep-20   2.840    2,496.8     5,207.4     +108.6% 
+  MID150BEES    2      01-Jul-20   2.037    55.8        103.0       +84.4%  
+  SETFNN50      4      01-Dec-16   1.500    219.2       399.8       +82.3%  
+  ITBEES        5      01-Jan-16   1.461    11,174.8    29,003.1    +159.5% 
+  JUNIORBEES    6      02-Nov-20   0.994    4,716.7     7,439.2     +57.7%  
+
+  AFTER: Invested ₹1,866,319 | Cash ₹0 | Total ₹1,866,319 | Positions 5/5 | Slot ₹373,264
+
+========================================================================
+  REBALANCE #68  —  02 Aug 2021
+  NAV: ₹1,975,260  |  Slot: ₹395,052  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  METALIETF     1      01-Sep-20   2.295    2,496.8     5,781.3     +131.6% 
+  MID150BEES    3      01-Jul-20   1.946    55.8        107.5       +92.5%  
+  ITBEES        4      01-Jan-16   1.548    11,174.8    30,803.1    +175.6% 
+  SETFNN50      6      01-Dec-16   1.293    219.2       412.0       +87.9%  
+  JUNIORBEES    7      02-Nov-20   1.235    4,716.7     7,778.4     +64.9%  
+
+  AFTER: Invested ₹1,975,260 | Cash ₹0 | Total ₹1,975,260 | Positions 5/5 | Slot ₹395,052
+
+========================================================================
+  REBALANCE #69  —  01 Sep 2021
+  NAV: ₹2,040,593  |  Slot: ₹408,119  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.480    11,174.8    34,110.5    +205.2% 
+  MID150BEES    4      01-Jul-20   1.594    55.8        109.3       +95.8%  
+  METALIETF     6      01-Sep-20   1.383    2,496.8     5,612.5     +124.8% 
+  SETFNN50      7      01-Dec-16   1.332    219.2       434.4       +98.1%  
+  JUNIORBEES    10     02-Nov-20   0.731    4,716.7     7,584.8     +60.8%  
+
+  AFTER: Invested ₹2,040,593 | Cash ₹0 | Total ₹2,040,593 | Positions 5/5 | Slot ₹408,119
+
+========================================================================
+  REBALANCE #70  —  01 Oct 2021
+  NAV: ₹2,107,760  |  Slot: ₹421,552  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  METALIETF     01-Sep-20   2,496.8     5,638.8     ₹+199,036     +125.8%   395d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  KOTAKLOWV     1      1.889    0.60   +52.0%    +11.3%    14.4        ₹+357,196   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  MID150BEES    2      01-Jul-20   1.795    55.8        115.1       +106.2% 
+  ITBEES        3      01-Jan-16   1.776    11,174.8    34,780.6    +211.2% 
+  SETFNN50      5      01-Dec-16   1.426    219.2       439.7       +100.5% 
+  JUNIORBEES    8      02-Nov-20   1.009    4,716.7     8,261.3     +75.2%  
+
+  AFTER: Invested ₹2,107,760 | Cash ₹0 | Total ₹2,107,760 | Positions 5/5 | Slot ₹421,552
+
+========================================================================
+  REBALANCE #71  —  01 Nov 2021
+  NAV: ₹2,136,339  |  Slot: ₹427,268  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  MID150BEES    2      01-Jul-20   1.738    55.8        116.8       +109.2% 
+  ITBEES        3      01-Jan-16   1.410    11,174.8    35,290.0    +215.8% 
+  KOTAKLOWV     4      01-Oct-21   1.393    14.4        14.1        -2.1%   
+  SETFNN50      5      01-Dec-16   1.387    219.2       442.4       +101.8% 
+  JUNIORBEES    6      02-Nov-20   1.332    4,716.7     8,679.8     +84.0%  
+
+  AFTER: Invested ₹2,136,339 | Cash ₹0 | Total ₹2,136,339 | Positions 5/5 | Slot ₹427,268
+
+========================================================================
+  REBALANCE #72  —  01 Dec 2021
+  NAV: ₹2,097,599  |  Slot: ₹419,520  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  MID150BEES    3      01-Jul-20   1.820    55.8        114.3       +104.7% 
+  JUNIORBEES    4      02-Nov-20   1.652    4,716.7     8,302.4     +76.0%  
+  ITBEES        5      01-Jan-16   1.254    11,174.8    35,429.0    +217.0% 
+  SETFNN50      6      01-Dec-16   0.968    219.2       435.4       +98.6%  
+  KOTAKLOWV     9      01-Oct-21   0.641    14.4        13.7        -4.9%   
+
+  AFTER: Invested ₹2,097,599 | Cash ₹0 | Total ₹2,097,599 | Positions 5/5 | Slot ₹419,520
+
+========================================================================
+  REBALANCE #73  —  03 Jan 2022
+  NAV: ₹2,204,230  |  Slot: ₹440,846  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        1      01-Jan-16   2.816    11,174.8    39,123.8    +250.1% 
+  MID150BEES    2      01-Jul-20   1.779    55.8        118.6       +112.4% 
+  JUNIORBEES    3      02-Nov-20   1.213    4,716.7     8,523.9     +80.7%  
+  SETFNN50      5      01-Dec-16   0.989    219.2       443.1       +102.1% 
+  KOTAKLOWV     9      01-Oct-21   0.635    14.4        14.2        -1.9%   
+
+  AFTER: Invested ₹2,204,230 | Cash ₹0 | Total ₹2,204,230 | Positions 5/5 | Slot ₹440,846
+
+========================================================================
+  REBALANCE #74  —  01 Feb 2022
+  NAV: ₹2,117,747  |  Slot: ₹423,549  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  MID150BEES    2      01-Jul-20   1.853    55.8        117.6       +110.6% 
+  ITBEES        3      01-Jan-16   1.207    11,174.8    35,371.6    +216.5% 
+  SETFNN50      5      01-Dec-16   0.830    219.2       434.8       +98.3%  
+  JUNIORBEES    6      02-Nov-20   0.806    4,716.7     8,471.9     +79.6%  
+  KOTAKLOWV     8      01-Oct-21   0.729    14.4        13.9        -3.7%   
+
+  AFTER: Invested ₹2,117,747 | Cash ₹0 | Total ₹2,117,747 | Positions 5/5 | Slot ₹423,549
+
+========================================================================
+  REBALANCE #75  —  02 Mar 2022
+  NAV: ₹1,994,851  |  Slot: ₹398,970  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        3      01-Jan-16   1.421    11,174.8    33,720.0    +201.7% 
+  MID150BEES    5      01-Jul-20   0.956    55.8        108.0       +93.4%  
+  SETFNN50      6      01-Dec-16   0.804    219.2       417.7       +90.5%  
+  KOTAKLOWV     7      01-Oct-21   0.770    14.4        13.2        -8.6%   
+  JUNIORBEES    10     02-Nov-20   0.627    4,716.7     7,792.8     +65.2%  
+
+  AFTER: Invested ₹1,994,851 | Cash ₹0 | Total ₹1,994,851 | Positions 5/5 | Slot ₹398,970
+
+========================================================================
+  REBALANCE #76  —  01 Apr 2022
+  NAV: ₹2,107,725  |  Slot: ₹421,545  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ITBEES        4      01-Jan-16   1.095    11,174.8    36,343.4    +225.2% 
+  SETFNN50      5      01-Dec-16   0.938    219.2       433.0       +97.5%  
+  MID150BEES    6      01-Jul-20   0.924    55.8        114.0       +104.1% 
+  JUNIORBEES    8      02-Nov-20   0.770    4,716.7     8,308.3     +76.1%  
+  KOTAKLOWV     9      01-Oct-21   0.680    14.4        13.6        -5.8%   
+
+  AFTER: Invested ₹2,107,725 | Cash ₹0 | Total ₹2,107,725 | Positions 5/5 | Slot ₹421,545
+
+========================================================================
+  REBALANCE #77  —  02 May 2022
+  NAV: ₹2,016,476  |  Slot: ₹403,295  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  ITBEES        01-Jan-16   11,174.8    31,138.8    ₹+357,301     +178.7%   2313d 
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  CPSEETF       1      3.059    0.59   +58.5%    +11.8%    35.6        ₹+403,295   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SETFNN50      4      01-Dec-16   1.434    219.2       442.0       +101.6% 
+  MID150BEES    6      01-Jul-20   1.163    55.8        114.2       +104.5% 
+  KOTAKLOWV     9      01-Oct-21   0.854    14.4        13.7        -5.3%   
+  JUNIORBEES    10     02-Nov-20   0.694    4,716.7     8,119.7     +72.2%  
+
+  AFTER: Invested ₹1,862,470 | Cash ₹154,006 | Total ₹2,016,476 | Positions 5/5 | Slot ₹403,295
+
+========================================================================
+  REBALANCE #78  —  01 Jun 2022
+  NAV: ₹1,937,199  |  Slot: ₹387,440  |  Cash: ₹154,006
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      02-May-22   3.328    35.6        35.1        -1.5%   
+  MID150BEES    4      01-Jul-20   1.438    55.8        108.3       +94.0%  
+  KOTAKLOWV     6      01-Oct-21   1.113    14.4        13.5        -6.6%   
+  JUNIORBEES    7      02-Nov-20   0.820    4,716.7     7,797.3     +65.3%  
+  SETFNN50      10     01-Dec-16   0.575    219.2       402.6       +83.6%  
+
+  AFTER: Invested ₹1,783,192 | Cash ₹154,006 | Total ₹1,937,199 | Positions 5/5 | Slot ₹387,440
+
+========================================================================
+  REBALANCE #79  —  01 Jul 2022
+  NAV: ₹1,832,068  |  Slot: ₹366,414  |  Cash: ₹154,006
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       3      02-May-22   2.062    35.6        31.6        -11.3%  
+  KOTAKLOWV     5      01-Oct-21   0.860    14.4        13.0        -10.2%  
+  MID150BEES    7      01-Jul-20   0.737    55.8        102.7       +83.8%  
+  JUNIORBEES    8      02-Nov-20   0.663    4,716.7     7,355.2     +55.9%  
+  SETFNN50      10     01-Dec-16   0.562    219.2       385.7       +75.9%  
+
+  AFTER: Invested ₹1,678,062 | Cash ₹154,006 | Total ₹1,832,068 | Positions 5/5 | Slot ₹366,414
+
+========================================================================
+  REBALANCE #80  —  01 Aug 2022
+  NAV: ₹2,016,936  |  Slot: ₹403,387  |  Cash: ₹154,006
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  SETFNN50      01-Dec-16   219.2       433.0       ₹+196,962     +97.5%    2069d 
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  AUTOBEES      1      2.896    1.02   +29.5%    +21.5%    12,953.7    ₹+403,387   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       3      02-May-22   1.468    35.6        34.7        -2.6%   
+  MID150BEES    5      01-Jul-20   0.930    55.8        115.8       +107.3% 
+  KOTAKLOWV     6      01-Oct-21   0.884    14.4        13.9        -3.5%   
+  JUNIORBEES    7      02-Nov-20   0.874    4,716.7     8,300.1     +76.0%  
+
+  AFTER: Invested ₹1,867,316 | Cash ₹149,620 | Total ₹2,016,936 | Positions 5/5 | Slot ₹403,387
+
+========================================================================
+  REBALANCE #81  —  01 Sep 2022
+  NAV: ₹2,087,112  |  Slot: ₹417,422  |  Cash: ₹149,620
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  AUTOBEES      2      01-Aug-22   1.915    12,953.7    13,266.2    +2.4%   
+  CPSEETF       3      02-May-22   1.624    35.6        36.8        +3.2%   
+  MID150BEES    4      01-Jul-20   1.502    55.8        121.2       +117.1% 
+  JUNIORBEES    6      02-Nov-20   1.150    4,716.7     8,598.6     +82.3%  
+  KOTAKLOWV     10     01-Oct-21   0.717    14.4        14.2        -1.6%   
+
+  AFTER: Invested ₹1,937,492 | Cash ₹149,620 | Total ₹2,087,112 | Positions 5/5 | Slot ₹417,422
+
+========================================================================
+  REBALANCE #82  —  03 Oct 2022
+  NAV: ₹1,999,897  |  Slot: ₹399,979  |  Cash: ₹149,620
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  KOTAKLOWV     01-Oct-21   14.4        13.7        ₹-18,785      -5.3%     367d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  CONSUMBEES    1      1.931    0.66   +6.4%     +13.8%    84.3        ₹+399,979   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       2      02-May-22   1.838    35.6        35.0        -1.5%   
+  MID150BEES    3      01-Jul-20   1.509    55.8        117.2       +110.0% 
+  AUTOBEES      4      01-Aug-22   1.333    12,953.7    12,441.0    -4.0%   
+  JUNIORBEES    8      02-Nov-20   1.091    4,716.7     8,225.5     +74.4%  
+
+  AFTER: Invested ₹1,911,846 | Cash ₹88,051 | Total ₹1,999,897 | Positions 5/5 | Slot ₹399,979
+
+========================================================================
+  REBALANCE #83  —  01 Nov 2022
+  NAV: ₹2,125,312  |  Slot: ₹425,062  |  Cash: ₹88,051
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      02-May-22   2.888    35.6        38.8        +8.9%   
+  CONSUMBEES    2      03-Oct-22   1.851    84.3        87.1        +3.3%   
+  AUTOBEES      3      01-Aug-22   1.486    12,953.7    13,416.9    +3.6%   
+  MID150BEES    5      01-Jul-20   1.167    55.8        122.2       +118.9% 
+  JUNIORBEES    9      02-Nov-20   0.826    4,716.7     8,762.0     +85.8%  
+
+  AFTER: Invested ₹2,037,261 | Cash ₹88,051 | Total ₹2,125,312 | Positions 5/5 | Slot ₹425,062
+
+========================================================================
+  REBALANCE #84  —  01 Dec 2022
+  NAV: ₹2,127,378  |  Slot: ₹425,476  |  Cash: ₹88,051
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  CONSUMBEES    03-Oct-22   84.3        86.3        ₹+9,249       +2.3%     59d   
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  BANKBEES      1      2.097    1.09   +20.1%    +9.4%     43,260.1    ₹+425,476   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       2      02-May-22   1.927    35.6        38.6        +8.5%   
+  AUTOBEES      8      01-Aug-22   0.781    12,953.7    13,191.8    +1.8%   
+  JUNIORBEES    9      02-Nov-20   0.760    4,716.7     8,931.7     +89.4%  
+  MID150BEES    10     01-Jul-20   0.665    55.8        124.5       +122.9% 
+
+  AFTER: Invested ₹2,055,574 | Cash ₹71,804 | Total ₹2,127,378 | Positions 5/5 | Slot ₹425,476
+
+========================================================================
+  REBALANCE #85  —  02 Jan 2023
+  NAV: ₹2,096,085  |  Slot: ₹419,217  |  Cash: ₹71,804
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       2      02-May-22   2.115    35.6        38.5        +8.1%   
+  BANKBEES      3      01-Dec-22   1.948    43,260.1    43,203.1    -0.1%   
+  JUNIORBEES    6      02-Nov-20   1.048    4,716.7     8,821.8     +87.0%  
+  AUTOBEES      7      01-Aug-22   0.919    12,953.7    12,667.8    -2.2%   
+  MID150BEES    8      01-Jul-20   0.741    55.8        121.9       +118.3% 
+
+  AFTER: Invested ₹2,024,281 | Cash ₹71,804 | Total ₹2,096,085 | Positions 5/5 | Slot ₹419,217
+
+========================================================================
+  REBALANCE #86  —  01 Feb 2023
+  NAV: ₹2,052,111  |  Slot: ₹410,422  |  Cash: ₹71,804
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       2      02-May-22   1.493    35.6        37.6        +5.7%   
+  AUTOBEES      3      01-Aug-22   1.351    12,953.7    13,206.8    +2.0%   
+  BANKBEES      4      01-Dec-22   0.987    43,260.1    40,513.0    -6.4%   
+  JUNIORBEES    6      02-Nov-20   0.846    4,716.7     8,554.7     +81.4%  
+  MID150BEES    8      01-Jul-20   0.775    55.8        117.7       +110.8% 
+
+  AFTER: Invested ₹1,980,307 | Cash ₹71,804 | Total ₹2,052,111 | Positions 5/5 | Slot ₹410,422
+
+========================================================================
+  REBALANCE #87  —  01 Mar 2023
+  NAV: ₹2,066,367  |  Slot: ₹413,273  |  Cash: ₹71,804
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      02-May-22   2.834    35.6        39.5        +11.0%  
+  AUTOBEES      3      01-Aug-22   1.455    12,953.7    12,849.3    -0.8%   
+  BANKBEES      4      01-Dec-22   1.356    43,260.1    40,698.1    -5.9%   
+  JUNIORBEES    5      02-Nov-20   1.186    4,716.7     8,567.7     +81.6%  
+  MID150BEES    6      01-Jul-20   1.081    55.8        118.3       +111.9% 
+
+  AFTER: Invested ₹1,994,563 | Cash ₹71,804 | Total ₹2,066,367 | Positions 5/5 | Slot ₹413,273
+
+========================================================================
+  REBALANCE #88  —  03 Apr 2023
+  NAV: ₹2,050,375  |  Slot: ₹410,075  |  Cash: ₹71,804
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  MID150BEES    01-Jul-20   55.8        116.1       ₹+174,836     +107.8%   1006d 
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  GOLDBEES      1      3.194    0.08   +15.0%    +8.6%     50.8        ₹+408,760   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       2      02-May-22   2.225    35.6        40.0        +12.4%  
+  AUTOBEES      3      01-Aug-22   1.685    12,953.7    12,425.8    -4.1%   
+  BANKBEES      5      01-Dec-22   1.145    43,260.1    40,813.1    -5.7%   
+  JUNIORBEES    7      02-Nov-20   0.980    4,716.7     8,497.8     +80.2%  
+
+  AFTER: Invested ₹2,050,375 | Cash ₹0 | Total ₹2,050,375 | Positions 5/5 | Slot ₹410,075
+
+========================================================================
+  REBALANCE #89  —  02 May 2023
+  NAV: ₹2,157,286  |  Slot: ₹431,457  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      03-Apr-23   2.396    50.8        51.3        +1.0%   
+  CPSEETF       2      02-May-22   2.201    35.6        42.2        +18.5%  
+  AUTOBEES      4      01-Aug-22   1.601    12,953.7    13,283.2    +2.5%   
+  BANKBEES      5      01-Dec-22   1.527    43,260.1    43,352.1    +0.2%   
+  JUNIORBEES    7      02-Nov-20   1.216    4,716.7     9,062.2     +92.1%  
+
+  AFTER: Invested ₹2,157,286 | Cash ₹0 | Total ₹2,157,286 | Positions 5/5 | Slot ₹431,457
+
+========================================================================
+  REBALANCE #90  —  01 Jun 2023
+  NAV: ₹2,207,304  |  Slot: ₹441,461  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  CPSEETF       02-May-22   35.6        41.7        ₹+69,331      +17.2%    395d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  MOREALTY      2      1.913    1.11   +27.1%    +27.2%    484.0       ₹+441,461   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  JUNIORBEES    1      02-Nov-20   2.000    4,716.7     9,559.5     +102.7% 
+  AUTOBEES      5      01-Aug-22   1.560    12,953.7    14,257.0    +10.1%  
+  BANKBEES      7      01-Dec-22   1.245    43,260.1    43,790.2    +1.2%   
+  GOLDBEES      9      03-Apr-23   1.047    50.8        51.0        +0.4%   
+
+  AFTER: Invested ₹2,176,139 | Cash ₹31,165 | Total ₹2,207,304 | Positions 5/5 | Slot ₹441,461
+
+========================================================================
+  REBALANCE #91  —  03 Jul 2023
+  NAV: ₹2,299,558  |  Slot: ₹459,912  |  Cash: ₹31,165
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  GOLDBEES      03-Apr-23   50.8        49.6        ₹-9,978       -2.4%     91d   
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  MID150BEES    2      1.742    0.81   +36.1%    +18.3%    136.7       ₹+429,947   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  JUNIORBEES    1      02-Nov-20   2.023    4,716.7     10,143.0    +115.0% 
+  AUTOBEES      5      01-Aug-22   1.622    12,953.7    15,106.8    +16.6%  
+  MOREALTY      6      01-Jun-23   1.550    484.0       523.9       +8.2%   
+  BANKBEES      10     01-Dec-22   1.053    43,260.1    45,158.1    +4.4%   
+
+  AFTER: Invested ₹2,299,558 | Cash ₹0 | Total ₹2,299,558 | Positions 5/5 | Slot ₹459,912
+
+========================================================================
+  REBALANCE #92  —  01 Aug 2023
+  NAV: ₹2,402,027  |  Slot: ₹480,405  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  BANKBEES      01-Dec-22   43,260.1    45,592.5    ₹+22,939      +5.4%     243d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  CPSEETF       2      1.890    0.67   +44.9%    +13.2%    48.0        ₹+448,415   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  MID150BEES    1      03-Jul-23   2.358    136.7       142.9       +4.5%   
+  JUNIORBEES    3      02-Nov-20   1.795    4,716.7     10,794.0    +128.8% 
+  AUTOBEES      9      01-Aug-22   1.057    12,953.7    15,688.7    +21.1%  
+  MOREALTY      10     01-Jun-23   0.834    484.0       556.7       +15.0%  
+
+  AFTER: Invested ₹2,402,027 | Cash ₹0 | Total ₹2,402,027 | Positions 5/5 | Slot ₹480,405
+
+========================================================================
+  REBALANCE #93  —  01 Sep 2023
+  NAV: ₹2,477,544  |  Slot: ₹495,509  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  MID150BEES    1      03-Jul-23   2.907    136.7       151.2       +10.6%  
+  CPSEETF       2      01-Aug-23   2.432    48.0        49.4        +3.0%   
+  JUNIORBEES    3      02-Nov-20   2.401    4,716.7     11,260.6    +138.7% 
+  AUTOBEES      4      01-Aug-22   1.253    12,953.7    15,928.3    +23.0%  
+  MOREALTY      9      01-Jun-23   0.837    484.0       563.7       +16.5%  
+
+  AFTER: Invested ₹2,477,544 | Cash ₹0 | Total ₹2,477,544 | Positions 5/5 | Slot ₹495,509
+
+========================================================================
+  REBALANCE #94  —  03 Oct 2023
+  NAV: ₹2,553,449  |  Slot: ₹510,690  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Aug-23   3.253    48.0        52.9        +10.3%  
+  JUNIORBEES    2      02-Nov-20   2.397    4,716.7     11,607.6    +146.1% 
+  MID150BEES    3      03-Jul-23   2.179    136.7       154.9       +13.4%  
+  MOREALTY      6      01-Jun-23   1.004    484.0       578.3       +19.5%  
+  AUTOBEES      8      01-Aug-22   0.891    12,953.7    15,990.6    +23.4%  
+
+  AFTER: Invested ₹2,553,449 | Cash ₹0 | Total ₹2,553,449 | Positions 5/5 | Slot ₹510,690
+
+========================================================================
+  REBALANCE #95  —  01 Nov 2023
+  NAV: ₹2,533,160  |  Slot: ₹506,632  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Aug-23   2.986    48.0        52.7        +9.9%   
+  MID150BEES    2      03-Jul-23   2.119    136.7       149.0       +9.0%   
+  MOREALTY      3      01-Jun-23   1.995    484.0       612.3       +26.5%  
+  JUNIORBEES    4      02-Nov-20   1.733    4,716.7     11,049.0    +134.3% 
+  AUTOBEES      6      01-Aug-22   1.204    12,953.7    15,835.7    +22.2%  
+
+  AFTER: Invested ₹2,533,160 | Cash ₹0 | Total ₹2,533,160 | Positions 5/5 | Slot ₹506,632
+
+========================================================================
+  REBALANCE #96  —  01 Dec 2023
+  NAV: ₹2,856,089  |  Slot: ₹571,218  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Aug-23   2.568    48.0        59.1        +23.2%  
+  MOREALTY      2      01-Jun-23   2.390    484.0       723.0       +49.4%  
+  JUNIORBEES    4      02-Nov-20   1.618    4,716.7     12,334.5    +161.5% 
+  AUTOBEES      5      01-Aug-22   1.462    12,953.7    17,489.1    +35.0%  
+  MID150BEES    6      03-Jul-23   1.438    136.7       165.1       +20.8%  
+
+  AFTER: Invested ₹2,856,089 | Cash ₹0 | Total ₹2,856,089 | Positions 5/5 | Slot ₹571,218
+
+========================================================================
+  REBALANCE #97  —  01 Jan 2024
+  NAV: ₹3,092,727  |  Slot: ₹618,545  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Aug-23   2.669    48.0        67.2        +40.1%  
+  MOREALTY      2      01-Jun-23   2.087    484.0       783.0       +61.8%  
+  JUNIORBEES    6      02-Nov-20   1.254    4,716.7     13,145.0    +178.7% 
+  AUTOBEES      7      01-Aug-22   1.191    12,953.7    18,618.2    +43.7%  
+  MID150BEES    8      03-Jul-23   1.157    136.7       175.5       +28.4%  
+
+  AFTER: Invested ₹3,092,727 | Cash ₹0 | Total ₹3,092,727 | Positions 5/5 | Slot ₹618,545
+
+========================================================================
+  REBALANCE #98  —  01 Feb 2024
+  NAV: ₹3,284,024  |  Slot: ₹656,805  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Aug-23   2.490    48.0        74.8        +55.9%  
+  MOREALTY      4      01-Jun-23   1.725    484.0       848.2       +75.2%  
+  MID150BEES    5      03-Jul-23   1.568    136.7       182.1       +33.2%  
+  JUNIORBEES    6      02-Nov-20   1.413    4,716.7     13,529.3    +186.8% 
+  AUTOBEES      8      01-Aug-22   1.232    12,953.7    19,328.7    +49.2%  
+
+  AFTER: Invested ₹3,284,024 | Cash ₹0 | Total ₹3,284,024 | Positions 5/5 | Slot ₹656,805
+
+========================================================================
+  REBALANCE #99  —  01 Mar 2024
+  NAV: ₹3,482,987  |  Slot: ₹696,597  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  CPSEETF       1      01-Aug-23   2.343    48.0        81.6        +70.1%  
+  MOREALTY      5      01-Jun-23   1.626    484.0       917.1       +89.5%  
+  AUTOBEES      6      01-Aug-22   1.385    12,953.7    20,871.9    +61.1%  
+  JUNIORBEES    9      02-Nov-20   1.158    4,716.7     13,898.1    +194.7% 
+  MID150BEES    10     03-Jul-23   1.145    136.7       184.3       +34.8%  
+
+  AFTER: Invested ₹3,482,987 | Cash ₹0 | Total ₹3,482,987 | Positions 5/5 | Slot ₹696,597
+
+========================================================================
+  REBALANCE #100  —  01 Apr 2024
+  NAV: ₹3,514,417  |  Slot: ₹702,883  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  MOREALTY      01-Jun-23   484.0       939.9       ₹+415,831     +94.2%    305d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  ALPL30IETF    1      2.164    0.83   +61.1%    +14.5%    27.1        ₹+702,883   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  AUTOBEES      2      01-Aug-22   2.137    12,953.7    21,385.2    +65.1%  
+  CPSEETF       5      01-Aug-23   1.823    48.0        81.4        +69.7%  
+  MID150BEES    9      03-Jul-23   0.955    136.7       185.1       +35.4%  
+  JUNIORBEES    10     02-Nov-20   0.906    4,716.7     13,772.6    +192.0% 
+
+  AFTER: Invested ₹3,360,009 | Cash ₹154,408 | Total ₹3,514,417 | Positions 5/5 | Slot ₹702,883
+
+========================================================================
+  REBALANCE #101  —  02 May 2024
+  NAV: ₹3,679,803  |  Slot: ₹735,961  |  Cash: ₹154,408
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  JUNIORBEES    02-Nov-20   4,716.7     14,243.6    ₹+448,194     +202.0%   1277d 
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  SETFNN50      1      2.100    0.88   +72.2%    +21.8%    695.3       ₹+735,961   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  AUTOBEES      2      01-Aug-22   2.071    12,953.7    22,733.5    +75.5%  
+  CPSEETF       3      01-Aug-23   1.753    48.0        88.1        +83.8%  
+  ALPL30IETF    5      01-Apr-24   1.525    27.1        27.4        +1.1%   
+  MID150BEES    9      03-Jul-23   1.152    136.7       194.8       +42.5%  
+
+  AFTER: Invested ₹3,591,267 | Cash ₹88,536 | Total ₹3,679,803 | Positions 5/5 | Slot ₹735,961
+
+========================================================================
+  REBALANCE #102  —  03 Jun 2024
+  NAV: ₹3,921,106  |  Slot: ₹784,221  |  Cash: ₹88,536
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  CPSEETF       01-Aug-23   48.0        98.7        ₹+474,319     +105.8%   307d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  MOMOMENTUM    3      1.769    0.98   +87.1%    +18.8%    72.6        ₹+784,221   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SETFNN50      1      02-May-24   1.989    695.3       740.9       +6.5%   
+  AUTOBEES      2      01-Aug-22   1.788    12,953.7    23,992.7    +85.2%  
+  MID150BEES    4      03-Jul-23   1.510    136.7       206.8       +51.3%  
+  ALPL30IETF    7      01-Apr-24   1.189    27.1        28.0        +3.6%   
+
+  AFTER: Invested ₹3,694,057 | Cash ₹227,049 | Total ₹3,921,106 | Positions 5/5 | Slot ₹784,221
+
+========================================================================
+  REBALANCE #103  —  01 Jul 2024
+  NAV: ₹4,027,409  |  Slot: ₹805,482  |  Cash: ₹227,049
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SETFNN50      1      02-May-24   2.046    695.3       758.4       +9.1%   
+  AUTOBEES      3      01-Aug-22   1.966    12,953.7    25,323.8    +95.5%  
+  MID150BEES    4      03-Jul-23   1.920    136.7       216.0       +58.1%  
+  MOMOMENTUM    6      03-Jun-24   1.301    72.6        72.1        -0.6%   
+  ALPL30IETF    8      01-Apr-24   1.038    27.1        28.9        +6.7%   
+
+  AFTER: Invested ₹3,800,360 | Cash ₹227,049 | Total ₹4,027,409 | Positions 5/5 | Slot ₹805,482
+
+========================================================================
+  REBALANCE #104  —  01 Aug 2024
+  NAV: ₹4,186,810  |  Slot: ₹837,362  |  Cash: ₹227,049
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ALPL30IETF    2      01-Apr-24   1.853    27.1        30.8        +13.8%  
+  AUTOBEES      4      01-Aug-22   1.695    12,953.7    26,487.4    +104.5% 
+  SETFNN50      5      02-May-24   1.621    695.3       784.3       +12.8%  
+  MID150BEES    6      03-Jul-23   1.495    136.7       223.2       +63.3%  
+  MOMOMENTUM    8      03-Jun-24   1.125    72.6        74.4        +2.4%   
+
+  AFTER: Invested ₹3,959,761 | Cash ₹227,049 | Total ₹4,186,810 | Positions 5/5 | Slot ₹837,362
+
+========================================================================
+  REBALANCE #105  —  02 Sep 2024
+  NAV: ₹4,207,009  |  Slot: ₹841,402  |  Cash: ₹227,049
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ALPL30IETF    2      01-Apr-24   2.016    27.1        31.2        +15.4%  
+  SETFNN50      4      02-May-24   1.451    695.3       796.2       +14.5%  
+  AUTOBEES      7      01-Aug-22   1.233    12,953.7    26,071.4    +101.3% 
+  MID150BEES    9      03-Jul-23   1.161    136.7       224.3       +64.1%  
+  MOMOMENTUM    10     03-Jun-24   0.930    72.6        74.9        +3.1%   
+
+  AFTER: Invested ₹3,979,959 | Cash ₹227,049 | Total ₹4,207,009 | Positions 5/5 | Slot ₹841,402
+
+========================================================================
+  REBALANCE #106  —  01 Oct 2024
+  NAV: ₹4,320,050  |  Slot: ₹864,010  |  Cash: ₹227,049
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  ALPL30IETF    2      01-Apr-24   2.118    27.1        32.1        +18.4%  
+  SETFNN50      4      02-May-24   1.520    695.3       816.7       +17.5%  
+  AUTOBEES      5      01-Aug-22   1.119    12,953.7    27,083.4    +109.1% 
+  MID150BEES    8      03-Jul-23   0.866    136.7       230.2       +68.5%  
+  MOMOMENTUM    9      03-Jun-24   0.866    72.6        76.7        +5.6%   
+
+  AFTER: Invested ₹4,093,001 | Cash ₹227,049 | Total ₹4,320,050 | Positions 5/5 | Slot ₹864,010
+
+========================================================================
+  REBALANCE #107  —  01 Nov 2024
+  NAV: ₹3,979,406  |  Slot: ₹795,881  |  Cash: ₹227,049
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  AUTOBEES      01-Aug-22   12,953.7    23,805.6    ₹+337,939     +83.8%    823d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  GOLDBEES      1      2.385    0.10   +29.8%    +12.2%    66.9        ₹+795,881   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SETFNN50      2      02-May-24   1.542    695.3       739.4       +6.3%   
+  ALPL30IETF    4      01-Apr-24   1.383    27.1        29.5        +9.1%   
+  MOMOMENTUM    8      03-Jun-24   0.971    72.6        71.8        -1.1%   
+  MID150BEES    10     03-Jul-23   0.852    136.7       218.0       +59.5%  
+
+  AFTER: Invested ₹3,806,912 | Cash ₹172,494 | Total ₹3,979,406 | Positions 5/5 | Slot ₹795,881
+
+========================================================================
+  REBALANCE #108  —  02 Dec 2024
+  NAV: ₹3,912,698  |  Slot: ₹782,540  |  Cash: ₹172,494
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   1.817    66.9        63.8        -4.7%   
+  SETFNN50      2      02-May-24   1.632    695.3       751.2       +8.0%   
+  MID150BEES    5      03-Jul-23   1.180    136.7       217.0       +58.8%  
+  ALPL30IETF    8      01-Apr-24   0.885    27.1        28.8        +6.4%   
+  MOMOMENTUM    9      03-Jun-24   0.875    72.6        70.0        -3.6%   
+
+  AFTER: Invested ₹3,740,205 | Cash ₹172,494 | Total ₹3,912,698 | Positions 5/5 | Slot ₹782,540
+
+========================================================================
+  REBALANCE #109  —  01 Jan 2025
+  NAV: ₹3,839,125  |  Slot: ₹767,825  |  Cash: ₹172,494
+========================================================================
+
+  EXITS (2)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  ALPL30IETF    01-Apr-24   27.1        28.1        ₹+26,842      +3.8%     275d  
+  MOMOMENTUM    03-Jun-24   72.6        66.8        ₹-62,651      -8.0%     212d  
+
+  ENTRIES (2)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  HEALTHIETF    1      3.146    0.46   +45.7%    +2.4%     152.9       ₹+767,825   
+  HDFCSMALL     3      1.683    0.66   +31.5%    -2.4%     180.3       ₹+767,825   
+
+  HOLDS (3)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      2      01-Nov-24   1.830    66.9        64.3        -3.8%   
+  MID150BEES    5      03-Jul-23   1.277    136.7       218.5       +59.9%  
+  SETFNN50      6      02-May-24   1.130    695.3       720.6       +3.6%   
+
+  AFTER: Invested ₹3,750,986 | Cash ₹88,139 | Total ₹3,839,125 | Positions 5/5 | Slot ₹767,825
+
+========================================================================
+  REBALANCE #110  —  01 Feb 2025
+  NAV: ₹3,650,630  |  Slot: ₹730,126  |  Cash: ₹88,139
+========================================================================
+
+  EXITS (2)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  SETFNN50      02-May-24   695.3       673.4       ₹-23,200      -3.2%     275d  
+  HDFCSMALL     01-Jan-25   180.3       160.5       ₹-84,439      -11.0%    31d   
+
+  ENTRIES (2)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  CONSUMBEES    2      1.996    0.60   +19.7%    -0.0%     126.9       ₹+730,126   
+  ITBEES        3      1.816    0.72   +15.0%    +5.6%     42,662.8    ₹+730,126   
+
+  HOLDS (3)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   3.273    66.9        68.9        +3.0%   
+  HEALTHIETF    4      01-Jan-25   1.657    152.9       140.5       -8.1%   
+  MID150BEES    10     03-Jul-23   0.738    136.7       203.6       +49.0%  
+
+  AFTER: Invested ₹3,626,596 | Cash ₹24,034 | Total ₹3,650,630 | Positions 5/5 | Slot ₹730,126
+
+========================================================================
+  REBALANCE #111  —  03 Mar 2025
+  NAV: ₹3,395,235  |  Slot: ₹679,047  |  Cash: ₹24,034
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  MID150BEES    03-Jul-23   136.7       183.0       ₹+145,801     +33.9%    609d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  SILVERBEES    2      2.623    0.26   +32.9%    +4.3%     91.4        ₹+599,782   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   4.122    66.9        71.4        +6.6%   
+  HEALTHIETF    4      01-Jan-25   1.097    152.9       130.2       -14.9%  
+  CONSUMBEES    6      01-Feb-25   0.912    126.9       112.8       -11.1%  
+  ITBEES        8      01-Feb-25   0.862    42,662.8    37,614.4    -11.8%  
+
+  AFTER: Invested ₹3,395,235 | Cash ₹0 | Total ₹3,395,235 | Positions 5/5 | Slot ₹679,047
+
+========================================================================
+  REBALANCE #112  —  01 Apr 2025
+  NAV: ₹3,528,593  |  Slot: ₹705,719  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  ITBEES        01-Feb-25   42,662.8    35,980.6    ₹-114,357     -15.7%    59d   
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  BANKBEES      3      1.224    1.05   +8.9%     -0.2%     50,827.5    ₹+615,769   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   4.091    66.9        76.7        +14.6%  
+  SILVERBEES    2      03-Mar-25   2.449    91.4        96.7        +5.8%   
+  HEALTHIETF    4      01-Jan-25   1.095    152.9       137.2       -10.3%  
+  CONSUMBEES    5      01-Feb-25   0.973    126.9       117.6       -7.3%   
+
+  AFTER: Invested ₹3,528,593 | Cash ₹0 | Total ₹3,528,593 | Positions 5/5 | Slot ₹705,719
+
+========================================================================
+  REBALANCE #113  —  02 May 2025
+  NAV: ₹3,632,366  |  Slot: ₹726,473  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   3.535    66.9        78.4        +17.1%  
+  BANKBEES      2      01-Apr-25   2.021    50,827.5    55,115.4    +8.4%   
+  HEALTHIETF    3      01-Jan-25   1.600    152.9       142.6       -6.7%   
+  CONSUMBEES    4      01-Feb-25   1.449    126.9       124.3       -2.0%   
+  SILVERBEES    7      03-Mar-25   1.070    91.4        91.5        +0.1%   
+
+  AFTER: Invested ₹3,632,366 | Cash ₹0 | Total ₹3,632,366 | Positions 5/5 | Slot ₹726,473
+
+========================================================================
+  REBALANCE #114  —  02 Jun 2025
+  NAV: ₹3,698,701  |  Slot: ₹739,740  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  SILVERBEES    03-Mar-25   91.4        94.6        ₹+21,062      +3.5%     91d   
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  MID150BEES    3      1.522    0.71   +9.4%     +15.1%    218.7       ₹+620,845   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   2.801    66.9        80.5        +20.3%  
+  BANKBEES      2      01-Apr-25   1.839    50,827.5    55,903.4    +10.0%  
+  CONSUMBEES    6      01-Feb-25   1.297    126.9       126.9       +0.0%   
+  HEALTHIETF    9      01-Jan-25   1.137    152.9       141.9       -7.2%   
+
+  AFTER: Invested ₹3,698,701 | Cash ₹0 | Total ₹3,698,701 | Positions 5/5 | Slot ₹739,740
+
+========================================================================
+  REBALANCE #115  —  01 Jul 2025
+  NAV: ₹3,796,450  |  Slot: ₹759,290  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  HEALTHIETF    01-Jan-25   152.9       147.7       ₹-25,964      -3.4%     181d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  JUNIORBEES    4      1.451    1.11   +7.3%     +15.5%    16,851.6    ₹+741,861   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   2.714    66.9        81.1        +21.1%  
+  BANKBEES      2      01-Apr-25   1.602    50,827.5    57,459.4    +13.0%  
+  MID150BEES    3      02-Jun-25   1.457    218.7       226.0       +3.3%   
+  CONSUMBEES    6      01-Feb-25   1.358    126.9       130.8       +3.1%   
+
+  AFTER: Invested ₹3,796,450 | Cash ₹0 | Total ₹3,796,450 | Positions 5/5 | Slot ₹759,290
+
+========================================================================
+  REBALANCE #116  —  01 Aug 2025
+  NAV: ₹3,714,826  |  Slot: ₹742,965  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      2      01-Nov-24   2.017    66.9        81.9        +22.5%  
+  MID150BEES    4      02-Jun-25   1.580    218.7       217.7       -0.4%   
+  BANKBEES      7      01-Apr-25   1.220    50,827.5    55,617.6    +9.4%   
+  JUNIORBEES    9      01-Jul-25   1.143    16,851.6    15,963.2    -5.3%   
+  CONSUMBEES    10     01-Feb-25   1.055    126.9       129.5       +2.1%   
+
+  AFTER: Invested ₹3,714,826 | Cash ₹0 | Total ₹3,714,826 | Positions 5/5 | Slot ₹742,965
+
+========================================================================
+  REBALANCE #117  —  01 Sep 2025
+  NAV: ₹3,790,833  |  Slot: ₹758,167  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      2      01-Nov-24   3.169    66.9        86.6        +29.4%  
+  CONSUMBEES    3      01-Feb-25   1.680    126.9       135.8       +7.1%   
+  MID150BEES    7      02-Jun-25   0.779    218.7       218.0       -0.3%   
+  JUNIORBEES    8      01-Jul-25   0.775    16,851.6    16,033.5    -4.9%   
+  BANKBEES      9      01-Apr-25   0.757    50,827.5    54,002.4    +6.2%   
+
+  AFTER: Invested ₹3,790,833 | Cash ₹0 | Total ₹3,790,833 | Positions 5/5 | Slot ₹758,167
+
+========================================================================
+  REBALANCE #118  —  01 Oct 2025
+  NAV: ₹3,938,279  |  Slot: ₹787,656  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  MID150BEES    02-Jun-25   218.7       219.0       ₹+852         +0.1%     121d  
+  JUNIORBEES    01-Jul-25   16,851.6    16,084.0    ₹-33,788      -4.6%     92d   
+
+  ENTRIES (2)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  SILVERBEES    2      3.594    0.25   +57.2%    +36.2%    139.9       ₹+787,656   
+  PSUBNKBEES    3      1.360    1.11   +10.4%    +4.2%     7,499.2     ₹+542,114   
+
+  HOLDS (3)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   3.822    66.9        97.6        +45.9%  
+  CONSUMBEES    4      01-Feb-25   1.007    126.9       135.0       +6.4%   
+  BANKBEES      7      01-Apr-25   0.877    50,827.5    55,347.9    +8.9%   
+
+  AFTER: Invested ₹3,938,279 | Cash ₹0 | Total ₹3,938,279 | Positions 5/5 | Slot ₹787,656
+
+========================================================================
+  REBALANCE #119  —  03 Nov 2025
+  NAV: ₹4,093,032  |  Slot: ₹818,606  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   3.809    66.9        100.1       +49.5%  
+  SILVERBEES    2      01-Oct-25   2.845    139.9       142.5       +1.9%   
+  PSUBNKBEES    3      01-Oct-25   2.275    7,499.2     8,341.3     +11.2%  
+  BANKBEES      5      01-Apr-25   1.144    50,827.5    58,101.4    +14.3%  
+  CONSUMBEES    6      01-Feb-25   1.069    126.9       137.9       +8.7%   
+
+  AFTER: Invested ₹4,093,032 | Cash ₹0 | Total ₹4,093,032 | Positions 5/5 | Slot ₹818,606
+
+========================================================================
+  REBALANCE #120  —  01 Dec 2025
+  NAV: ₹4,340,790  |  Slot: ₹868,158  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  CONSUMBEES    01-Feb-25   126.9       138.2       ₹+65,381      +9.0%     303d  
+
+  ENTRIES (1)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  AUTOBEES      5      1.248    1.17   +18.8%    +12.1%    27,993.0    ₹+795,507   
+
+  HOLDS (4)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   3.652    66.9        106.7       +59.5%  
+  SILVERBEES    2      01-Oct-25   3.463    139.9       166.2       +18.8%  
+  PSUBNKBEES    3      01-Oct-25   2.099    7,499.2     8,535.7     +13.8%  
+  BANKBEES      4      01-Apr-25   1.561    50,827.5    59,681.4    +17.4%  
+
+  AFTER: Invested ₹4,340,790 | Cash ₹0 | Total ₹4,340,790 | Positions 5/5 | Slot ₹868,158
+
+========================================================================
+  REBALANCE #121  —  01 Jan 2026
+  NAV: ₹4,666,224  |  Slot: ₹933,245  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SILVERBEES    1      01-Oct-25   4.258    139.9       214.9       +53.7%  
+  GOLDBEES      2      01-Nov-24   2.698    66.9        110.5       +65.2%  
+  BANKBEES      3      01-Apr-25   1.538    50,827.5    59,711.6    +17.5%  
+  PSUBNKBEES    4      01-Oct-25   1.495    7,499.2     8,533.2     +13.8%  
+  AUTOBEES      7      01-Dec-25   1.081    27,993.0    28,189.6    +0.7%   
+
+  AFTER: Invested ₹4,666,224 | Cash ₹0 | Total ₹4,666,224 | Positions 5/5 | Slot ₹933,245
+
+========================================================================
+  REBALANCE #122  —  02 Feb 2026
+  NAV: ₹4,741,314  |  Slot: ₹948,263  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SILVERBEES    1      01-Oct-25   3.754    139.9       219.9       +57.2%  
+  GOLDBEES      2      01-Nov-24   2.982    66.9        118.7       +77.3%  
+  PSUBNKBEES    3      01-Oct-25   1.974    7,499.2     8,591.7     +14.6%  
+  BANKBEES      4      01-Apr-25   1.708    50,827.5    58,619.0    +15.3%  
+  AUTOBEES      5      01-Dec-25   1.235    27,993.0    26,749.2    -4.4%   
+
+  AFTER: Invested ₹4,741,314 | Cash ₹0 | Total ₹4,741,314 | Positions 5/5 | Slot ₹948,263
+
+========================================================================
+  REBALANCE #123  —  02 Mar 2026
+  NAV: ₹5,396,102  |  Slot: ₹1,079,220  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  SILVERBEES    1      01-Oct-25   3.447    139.9       274.6       +96.4%  
+  GOLDBEES      2      01-Nov-24   3.021    66.9        138.3       +106.7% 
+  PSUBNKBEES    3      01-Oct-25   2.532    7,499.2     9,639.3     +28.5%  
+  BANKBEES      6      01-Apr-25   1.339    50,827.5    59,839.6    +17.7%  
+  AUTOBEES      7      01-Dec-25   1.182    27,993.0    27,540.1    -1.6%   
+
+  AFTER: Invested ₹5,396,102 | Cash ₹0 | Total ₹5,396,102 | Positions 5/5 | Slot ₹1,079,220
+
+========================================================================
+  REBALANCE #124  —  01 Apr 2026
+  NAV: ₹4,635,570  |  Slot: ₹927,114  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  ETF           Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold  
+  ────────────  ──────────  ──────────  ──────────  ────────────  ────────  ──────
+  BANKBEES      01-Apr-25   50,827.5    51,448.6    ₹+7,525       +1.2%     365d  
+  AUTOBEES      01-Dec-25   27,993.0    24,238.8    ₹-106,686     -13.4%    121d  
+
+  ENTRIES (2)
+  ETF           Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Capital     
+  ────────────  ─────  ───────  ─────  ────────  ────────  ──────────  ────────────
+  CPSEETF       3      2.775    0.79   +17.5%    +12.5%    101.5       ₹+927,114   
+  MODEFENCE     5      1.749    1.07   +22.9%    -1.3%     84.2        ₹+385,002   
+
+  HOLDS (3)
+  ETF           Rank   Since       Score    Entry₹      Now₹        P&L%    
+  ────────────  ─────  ──────────  ───────  ──────────  ──────────  ────────
+  GOLDBEES      1      01-Nov-24   2.925    66.9        123.4       +84.4%  
+  SILVERBEES    2      01-Oct-25   2.867    139.9       224.8       +60.7%  
+  PSUBNKBEES    4      01-Oct-25   2.148    7,499.2     8,164.8     +8.9%   
+
+  AFTER: Invested ₹4,635,570 | Cash ₹0 | Total ₹4,635,570 | Positions 5/5 | Slot ₹927,114
 
 ========================================================================
   ETF MOM Z-SCORE  |  Monthly  |  β≤1.2  |  5 slots
@@ -194,27 +2827,27 @@ Rebal                  NAV  Port
   Initial capital: ₹10.0L  (5 slots × ₹2.0L)
 
   2016:   +1.0%  (NAV ₹10.10L)
-  2017:  +17.2%  (NAV ₹11.83L)
+  2017:  +17.2%  (NAV ₹11.84L)
   2018:   -1.4%  (NAV ₹11.67L) ◄ NEG
-  2019:   +6.2%  (NAV ₹12.40L)
-  2020:  +13.3%  (NAV ₹14.05L)
-  2021:  +60.8%  (NAV ₹22.59L)
-  2022:   +2.0%  (NAV ₹23.03L)
-  2023:  +34.6%  (NAV ₹31.01L)
-  2024:  +38.2%  (NAV ₹42.84L)
-  2025:  +12.1%  (NAV ₹48.03L)
-  2026:   +5.9%  (NAV ₹50.85L)
+  2019:   +5.9%  (NAV ₹12.36L)
+  2020:  +10.3%  (NAV ₹13.62L)
+  2021:  +54.0%  (NAV ₹20.98L)
+  2022:   +1.4%  (NAV ₹21.27L)
+  2023:  +34.3%  (NAV ₹28.56L)
+  2024:  +37.0%  (NAV ₹39.13L)
+  2025:  +10.9%  (NAV ₹43.41L)
+  2026:   +6.8%  (NAV ₹46.36L)
 
-  Total Return  : +408.5%
-  CAGR          : +17.1%
+  Total Return  : +363.6%
+  CAGR          : +16.0%
   Neg years     : 1
 
   Closed Trades : 33  |  Open: 5
   Win Rate      : 63.6%  (21W / 12L)
-  Profit Factor : 4.93
+  Profit Factor : 4.82
   Avg hold      : 540 days
-  Total charges : ₹51,298
+  Total charges : ₹43,986
   LIQUIDBEES    : ₹0  (6.5% p.a. on idle slots)
-  Net P&L       : ₹+4,033,847
-  Final NAV     : ₹5,085,145  (₹50.85L)
+  Net P&L       : ₹+3,591,584
+  Final NAV     : ₹4,635,570  (₹46.36L)
 
