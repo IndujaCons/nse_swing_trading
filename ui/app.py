@@ -2100,13 +2100,14 @@ def _etf_signal_scheduler():
         return candidate  # fallback
 
     print("[ETF scheduler] Started — scanning every hour during Indian (09–16 IST) "
-          "and US (19–02 IST) market windows")
+          "and US (19–02 IST) market windows; guaranteed RS63 scan at 15:15 IST")
 
     last_etf_key          = None   # dedup for ETF Core
     last_rs63_key         = None   # dedup for RS63 entries
     last_rs63_exit_key    = None   # dedup for RS63 exits
     startup_scan_done     = False  # one-time ETF scan on startup regardless of window
     startup_scan_done_rs63 = False  # one-time RS63 scan on startup regardless of window
+    last_eod_scan_date    = None   # date of last 15:15 EOD scan
 
     while True:
         now_ist = datetime.now(IST)
@@ -2230,7 +2231,26 @@ def _etf_signal_scheduler():
                 except Exception:
                     pass
 
-        time.sleep(SCAN_INTERVAL)
+        # Sleep until next scan — but always wake at 15:15 IST on Indian market days
+        now_ist = datetime.now(IST)
+        eod_target = now_ist.replace(hour=15, minute=15, second=0, microsecond=0)
+        eod_today = now_ist.date()
+        needs_eod = (
+            now_ist.weekday() < 5                  # weekday
+            and now_ist < eod_target               # not yet 15:15
+            and last_eod_scan_date != eod_today    # not already done today
+        )
+        if needs_eod:
+            secs_to_eod = (eod_target - now_ist).total_seconds()
+            sleep_secs = min(SCAN_INTERVAL, secs_to_eod)
+        else:
+            sleep_secs = SCAN_INTERVAL
+        time.sleep(max(sleep_secs, 30))
+
+        # If we just crossed 15:15, mark EOD scan done after the upcoming loop iteration
+        now_ist = datetime.now(IST)
+        if now_ist.weekday() < 5 and now_ist >= now_ist.replace(hour=15, minute=15, second=0, microsecond=0):
+            last_eod_scan_date = now_ist.date()
 
 
 # ============ Run Server ============
