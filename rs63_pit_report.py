@@ -212,13 +212,18 @@ def run(refresh=False, end_date=None, max_daily_entries=None):
 
     # Try to load from the rs55 shared cache (4-tuple format) first
     RS55_CACHE = os.path.join(BASE_DIR, 'data', 'cache', 'rs63_4015d_pit_20260406.pkl')
+    loaded_from_cache = False
     if not refresh and os.path.exists(RS55_CACHE):
         print(f"Loading shared rs55 cache: {os.path.basename(RS55_CACHE)}...")
-        with open(RS55_CACHE, 'rb') as f:
-            stock_data, bench_raw, _, _ = pickle.load(f)
-        bench_raw.index = bench_raw.index.tz_localize(None) if bench_raw.index.tzinfo else bench_raw.index
-        print(f"  {len(stock_data)} stocks, {len(bench_raw)} bench bars")
-    else:
+        try:
+            with open(RS55_CACHE, 'rb') as f:
+                stock_data, bench_raw, _, _ = pickle.load(f)
+            bench_raw.index = bench_raw.index.tz_localize(None) if bench_raw.index.tzinfo else bench_raw.index
+            print(f"  {len(stock_data)} stocks, {len(bench_raw)} bench bars")
+            loaded_from_cache = True
+        except Exception as e:
+            print(f"  Frozen cache incompatible ({e.__class__.__name__}), falling back to live cache...")
+    if not loaded_from_cache:
         stock_data = load_or_fetch(all_tickers, fetch_start, fetch_end, refresh)
         print("Fetching Nifty 200 benchmark...")
         bench_raw = fetch_with_retry("^CNX200", fetch_start, fetch_end, "Nifty200")
