@@ -171,6 +171,33 @@ def format_rs63_exit_alert(exit_signals: list) -> str | None:
     return "\n".join(lines)
 
 
+def format_mom20_alert(scan_result: dict) -> str | None:
+    """Format Mom20 top-20 momentum ranking as a Telegram message.
+    Sends once daily when signals change. Returns None if no signals."""
+    signals = scan_result.get("mom20_signals", [])
+    if not signals:
+        return None
+
+    from datetime import datetime, timezone, timedelta
+    ist = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%d %b %H:%M")
+    regime = scan_result.get("mom20_regime", "—")
+    regime_tag = "🟢 ON" if regime == "ON" else "🔴 OFF"
+
+    lines = [f"<b>📊 Mom20 Top 20</b> | Regime {regime_tag} | {ist}", "<code>"]
+    lines.append(f"{'#':<3} {'Ticker':<10} {'Close':>7} {'12m':>6} {'3m':>6} {'Score':>5}")
+    lines.append("─" * 42)
+    for s in signals[:20]:
+        rank  = s.get("rank", "?")
+        tick  = s["ticker"][:10]
+        px    = f"{s['price']:,.0f}"
+        r12   = f"{s['ret_12m']:+.0f}%"
+        r3    = f"{s.get('ret_3m', s.get('ret_6m', 0)):+.0f}%"
+        sc    = f"{s['momentum_score']:.2f}"
+        lines.append(f"{rank:<3} {tick:<10} {px:>7} {r12:>6} {r3:>6} {sc:>5}")
+    lines.append("</code>")
+    return "\n".join(lines)
+
+
 def get_chat_id() -> str | None:
     """Helper to fetch your chat_id from getUpdates (call once after messaging the bot)."""
     token = _token()

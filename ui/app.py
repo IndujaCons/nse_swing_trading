@@ -2126,10 +2126,10 @@ def _etf_signal_scheduler():
     print("[ETF scheduler] Started — RS63 scans at :15 past each hour 09:15–15:15 IST")
 
     last_etf_key          = None   # dedup for ETF Core
-    last_rs63_key         = None   # dedup for RS63 entries
+    last_mom20_key        = None   # dedup for Mom20 ranking
     last_rs63_exit_key    = None   # dedup for RS63 exits
     startup_scan_done     = False  # one-time ETF scan on startup regardless of window
-    startup_scan_done_rs63 = False  # one-time RS63 scan on startup regardless of window
+    startup_scan_done_mom20 = False  # one-time Mom20 scan on startup regardless of window
 
     while True:
         now_ist = datetime.now(IST)
@@ -2171,82 +2171,29 @@ def _etf_signal_scheduler():
             except Exception:
                 pass
 
-        # ── RS63 scan (Indian market hours only — NSE stocks) ────────────────
-        if _in_indian_window(now_ist) or not startup_scan_done_rs63:
-            startup_scan_done_rs63 = True
+        # ── Mom20 scan (Indian market hours — send once daily when ranking changes) ──
+        if _in_indian_window(now_ist) or not startup_scan_done_mom20:
+            startup_scan_done_mom20 = True
             try:
-                import json as _json
-                from pathlib import Path as _Path
-                from data.notifier import format_rs63_alert, format_rs63_exit_alert
+                from data.notifier import format_mom20_alert
 
-                from data.live_signals_engine import (NIFTY_50_TICKERS, NIFTY_NEXT50_TICKERS,
-                                                      NIFTY_200_NEXT100_TICKERS)
-                from config.settings import load_config as _load_config
-                _config = _load_config()
-                _universe = _config.get("live_signals_universe", 50)
-                if _universe <= 50:
-                    _scan_tickers = NIFTY_50_TICKERS
-                elif _universe <= 100:
-                    _scan_tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
-                else:
-                    _scan_tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
-                _ltp_map = _fetch_zerodha_ltp(_scan_tickers)
+                mom20_result = live_signals_scanner.scan_entry_signals(force_refresh=True)
 
-                rs63_result = live_signals_scanner.scan_entry_signals(force_refresh=True, ltp_map=_ltp_map)
-
-                # Load / update signal duration tracker
-                _tracker_file = _Path("data_store/rs63_signal_tracker.json")
-                _tracker = _json.loads(_tracker_file.read_text()) if _tracker_file.exists() else {}
-                _now_iso = now_ist.isoformat()
-                _current = {s["ticker"] for s in rs63_result.get("rs63_signals", [])}
-                _tracker = {t: _tracker.get(t, _now_iso) for t in _current}  # keep existing, drop gone
-                _tracker_file.write_text(_json.dumps(_tracker))
-
-                # Build duration map: ticker → hours present
-                _dur = {}
-                for _t, _first in _tracker.items():
-                    try:
-                        _first_dt = datetime.fromisoformat(_first)
-                        _dur[_t] = (now_ist - _first_dt).total_seconds() / 3600
-                    except Exception:
-                        _dur[_t] = 0.0
-
-                # Entry signals
-                rs63_msg = format_rs63_alert(rs63_result, duration_map=_dur)
-                if rs63_msg:
-                    rs63_tickers = tuple(s["ticker"] for s in rs63_result.get("rs63_signals", []))
-                    if rs63_tickers != last_rs63_key:
-                        print(f"[ETF scheduler] RS63 new entry signals — alerting")
-                        send_message(rs63_msg)
-                        last_rs63_key = rs63_tickers
+                mom20_msg = format_mom20_alert(mom20_result)
+                if mom20_msg:
+                    mom20_key = tuple(s["ticker"] for s in mom20_result.get("mom20_signals", []))
+                    if mom20_key != last_mom20_key:
+                        print(f"[ETF scheduler] Mom20 ranking changed — alerting")
+                        send_message(mom20_msg)
+                        last_mom20_key = mom20_key
                     else:
-                        print(f"[ETF scheduler] RS63 entry signals unchanged — skipping")
+                        print(f"[ETF scheduler] Mom20 ranking unchanged — skipping")
                 else:
-                    print(f"[ETF scheduler] RS63 no entry signals")
-                    last_rs63_key = None
-
-                # Exit signals — check all user engines
-                all_exits = []
-                for engine in user_engines.values():
-                    try:
-                        exits = engine.check_exit_signals()
-                        all_exits.extend(exits)
-                    except Exception:
-                        pass
-                exit_msg = format_rs63_exit_alert(all_exits)
-                if exit_msg:
-                    exit_key = tuple(e["ticker"] + e.get("reason", "") for e in all_exits if e.get("strategy") == "RS63")
-                    if exit_key != last_rs63_exit_key:
-                        print(f"[ETF scheduler] RS63 exit signals — alerting")
-                        send_message(exit_msg)
-                        last_rs63_exit_key = exit_key
-                    else:
-                        print(f"[ETF scheduler] RS63 exit signals unchanged — skipping")
-                else:
-                    last_rs63_exit_key = None
+                    print(f"[ETF scheduler] Mom20 no signals")
+                    last_mom20_key = None
 
             except Exception as e:
-                err = f"⚠️ RS63 scan error: {e}"
+                err = f"⚠️ Mom20 scan error: {e}"
                 print(f"[ETF scheduler] {err}")
                 try:
                     send_message(err)
