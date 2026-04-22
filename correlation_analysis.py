@@ -105,22 +105,35 @@ ann_stats(combined["ETF"],         "ETF Core Z-Score")
 ann_stats(combined["Mom20"],       "Mom20")
 ann_stats(combined["Portfolio_5050"], "50/50 portfolio")
 
-# ── Per-year returns ──────────────────────────────────────────────────────────
-print("\nPer-year returns:")
+# ── Per-year returns (last NAV of year / last NAV of prior year) ───────────────
+def yearly_from_nav(df, col):
+    s = df[col]
+    last = s.groupby(s.index.year).last()
+    return last.pct_change().dropna()
+
+etf_raw  = pd.read_csv(etf_path, parse_dates=["Date"]).set_index("Date")["NAV"]
+mom_raw  = pd.read_csv(mom_path, parse_dates=["date"]).set_index("date")["nav"]
+etf_raw  = etf_raw.loc[COMMON_START:COMMON_END]
+mom_raw  = mom_raw.loc[COMMON_START:COMMON_END]
+
+etf_yr_s = etf_raw.groupby(etf_raw.index.year).last().pct_change().dropna()
+mom_yr_s = mom_raw.groupby(mom_raw.index.year).last().pct_change().dropna()
+
+all_years = sorted(set(etf_yr_s.index) | set(mom_yr_s.index))
+
+print("\nPer-year returns (NAV-based):")
 print(f"  {'Year':<6}  {'ETF Core':>9}  {'Mom20':>9}  {'50/50':>9}  {'Winner':<10}  Diversified?")
 print(f"  {'─'*6}  {'─'*9}  {'─'*9}  {'─'*9}  {'─'*10}  {'─'*12}")
-combined["Year"] = combined.index.year
-for yr, grp in combined.groupby("Year"):
-    etf_yr  = (1 + grp["ETF"]).prod() - 1
-    mom_yr  = (1 + grp["Mom20"]).prod() - 1
-    p50_yr  = (1 + grp["Portfolio_5050"]).prod() - 1
+for yr in all_years:
+    etf_yr = etf_yr_s.get(yr, float("nan"))
+    mom_yr = mom_yr_s.get(yr, float("nan"))
+    if np.isnan(etf_yr) or np.isnan(mom_yr):
+        continue
+    p50_yr  = 0.5 * etf_yr + 0.5 * mom_yr
     winner  = "ETF" if etf_yr > mom_yr else "Mom20"
     gap     = abs(etf_yr - mom_yr)
     diversified = "YES ✓" if gap > 0.10 else ("slight" if gap > 0.05 else "—")
-    etf_s   = f"{etf_yr*100:+.1f}%"
-    mom_s   = f"{mom_yr*100:+.1f}%"
-    p50_s   = f"{p50_yr*100:+.1f}%"
-    print(f"  {yr:<6}  {etf_s:>9}  {mom_s:>9}  {p50_s:>9}  {winner:<10}  {diversified}")
+    print(f"  {yr:<6}  {etf_yr*100:>+8.1f}%  {mom_yr*100:>+8.1f}%  {p50_yr*100:>+8.1f}%  {winner:<10}  {diversified}")
 
 # ── Diversification verdict ───────────────────────────────────────────────────
 print("\n── Diversification Verdict ──")
