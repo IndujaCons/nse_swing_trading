@@ -303,7 +303,7 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False, mom20=False, use_regime=True):
+def run(refresh=False, mom20=False, use_regime=True, beta_cap_override=None):
     # Override constants for Mom20 variant
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP
     if mom20:
@@ -311,6 +311,9 @@ def run(refresh=False, mom20=False, use_regime=True):
         label = "Mom20 — Monthly Rebalance, β≤1.2"
     else:
         label = "Mom15 — Bi-monthly Rebalance, β≤1.0"
+    if beta_cap_override is not None:
+        BETA_CAP = beta_cap_override
+        label = label.split("β≤")[0] + f"β≤{beta_cap_override}"
     regime_label = "Regime ON" if use_regime else "Regime OFF"
     print(f"=== {label} | {regime_label} ===")
 
@@ -725,5 +728,8 @@ if __name__ == "__main__":
                         help="Run Mom20 variant (top 20, monthly rebalance, β≤1.2)")
     parser.add_argument("--no-regime", action="store_true",
                         help="Disable regime filter (allow entries even when Nifty200 < SMA200)")
+    parser.add_argument("--beta-cap", type=float, default=None,
+                        help="Override beta cap (e.g. 1.35)")
     args = parser.parse_args()
-    run(refresh=args.refresh, mom20=args.mom20, use_regime=not args.no_regime)
+    run(refresh=args.refresh, mom20=args.mom20, use_regime=not args.no_regime,
+        beta_cap_override=args.beta_cap)
