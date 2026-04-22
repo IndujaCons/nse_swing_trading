@@ -1664,7 +1664,8 @@
 
                 <div class="panel ls-mom20-signals">
                     <div class="panel-header">
-                        <span class="panel-title" style="color:#ff6b35;">Mom20 — Nifty200 Momentum (Quarterly Rebalance)</span>
+                        <span class="panel-title" style="color:#ff6b35;">Mom20 — Nifty200 Momentum (Monthly Rebalance)</span>
+                        <span id="ls-mom20-regime-badge" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);margin-left:8px;">Regime: —</span>
                         <span class="panel-count" id="ls-mom20-count">0</span>
                     </div>
                     <div class="panel-body" id="ls-mom20-panel">
@@ -3952,9 +3953,17 @@
             // Mom20 signals panel
             const mom20Panel = document.getElementById('ls-mom20-panel');
             const mom20Signals = data.mom20_signals || [];
+            const mom20Regime = data.mom20_regime || '—';
+            const mom20RegimeBadge = document.getElementById('ls-mom20-regime-badge');
+            if (mom20RegimeBadge) {
+                mom20RegimeBadge.textContent = `Regime: ${mom20Regime}`;
+                mom20RegimeBadge.style.background = mom20Regime === 'ON' ? 'rgba(76,175,80,0.2)' : mom20Regime === 'OFF' ? 'rgba(244,67,54,0.2)' : 'var(--bg-tertiary)';
+                mom20RegimeBadge.style.color = mom20Regime === 'ON' ? 'var(--green)' : mom20Regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
+            }
             document.getElementById('ls-mom20-count').textContent = mom20Signals.length > 0 ? `Top ${mom20Signals.length}` : '0';
+            const mom20RegimeBanner = mom20Regime === 'OFF' ? '<div style="background:rgba(244,67,54,0.12);border:1px solid rgba(244,67,54,0.3);border-radius:4px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--red);font-weight:600;">⚠ Regime OFF — Nifty200 below SMA200. Hold all positions, no new entries or exits.</div>' : '';
             if (mom20Signals.length === 0) {
-                mom20Panel.innerHTML = '<div class="empty-state">No Mom20 signals</div>';
+                mom20Panel.innerHTML = mom20RegimeBanner + '<div class="empty-state">No Mom20 signals</div>';
             } else {
                 const mom20Rows = mom20Signals.map((s, idx) => {
                     const rank = s.rank || (idx + 1);
@@ -3972,7 +3981,7 @@
                         <td style="color:${scoreColor};font-weight:600;">${s.momentum_score.toFixed(2)}</td>
                     </tr>`;
                 }).join('');
-                mom20Panel.innerHTML = `
+                mom20Panel.innerHTML = mom20RegimeBanner + `
                     <table class="stock-table">
                         <thead><tr>
                             <th>#</th><th>Stock</th><th>Close</th>
