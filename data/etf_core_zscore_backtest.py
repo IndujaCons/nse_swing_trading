@@ -73,7 +73,7 @@ UNIVERSE = [
     ("GOLDBEES",    "Gold",                 "GOLDBEES.NS"),
     ("SILVERBEES",  "Silver",               "SILVERBEES.NS"),
     # International (US-listed, priced in USD — yfinance daily data available)
-    ("MON100",      "Nasdaq 100",           "^NDX"),
+    ("QQQ",         "Nasdaq 100",           "QQQ"),
     ("XLE",         "US Energy",            "XLE"),
     ("GDX",         "Gold Miners",          "GDX"),
     ("XME",         "Metals & Mining",      "XME"),
@@ -556,6 +556,12 @@ def run(refresh=False, use_regime=False, start_override=None):
     print(f"  Net P&L       : ₹{total_net:+,.0f}")
     print(f"  Final NAV     : ₹{final_nav:,.0f}  (₹{final_nav/1e5:.2f}L)")
     print()
+
+    # Export rebalance NAV CSV for correlation analysis
+    if rebal_nav:
+        nav_csv = os.path.join(os.path.dirname(BASE_DIR), "etf_zscore_rebal.csv")
+        pd.DataFrame(rebal_nav).rename(columns={"date": "Date", "nav": "NAV"}).to_csv(nav_csv, index=False)
+        print(f"  Rebalance NAV exported → etf_zscore_rebal.csv ({len(rebal_nav)} rows)")
 
 
 if __name__ == "__main__":

@@ -687,24 +687,26 @@ def run(refresh=False, mom20=False, use_regime=True):
     print(f"  Closed net P&L: {inr(closed_pnl)}")
     print(f"  Open unreal   : {inr(open_pnl)}")
 
-    # Per-year returns
+    # Per-year returns — NAV-based (last rebal NAV of year / last rebal NAV of prior year)
     print()
     print("  YEAR-BY-YEAR:")
-    # Build per-year PnL from trades
-    year_pnl = {}
-    for tr in all_trades:
-        y = tr["exit"].year
-        year_pnl[y] = year_pnl.get(y, 0) + tr["net_pnl"]
-    start_val = 20_00_000.0
-    # Approximate per-year capital for % calculation
-    for y in sorted(year_pnl.keys()):
-        pnl_y = year_pnl[y]
-        ret_y = pnl_y / start_val * 100
+    year_last_nav = {}
+    for row in rebal_nav:
+        yr = row["date"].year
+        year_last_nav[yr] = row["nav"]
+    initial_nav = 20_00_000.0
+    prev_nav_yr = initial_nav
+    neg_years = 0
+    for yr in sorted(year_last_nav):
+        end_nav = year_last_nav[yr]
+        ret_y = (end_nav / prev_nav_yr - 1) * 100
+        if ret_y < 0:
+            neg_years += 1
         bar_len = int(abs(ret_y) / 1)
         bar = ("█" * min(bar_len, 40)) if ret_y > 0 else ("░" * min(bar_len, 40))
         sign = "+" if ret_y >= 0 else "-"
-        print(f"  {y}  {sign}{abs(ret_y):5.1f}%  {bar}")
-        start_val += pnl_y
+        print(f"  {yr}  {sign}{abs(ret_y):5.1f}%  {bar}")
+        prev_nav_yr = end_nav
 
     print()
 
