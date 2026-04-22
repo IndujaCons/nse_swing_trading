@@ -979,6 +979,7 @@ class LiveSignalsEngine:
                     "ticker": d["ticker"],
                     "price": d["price"],
                     "ret_12m": round(d["ret_12m"] * 100, 1),
+                    "ret_3m": round(d["ret_3m"] * 100, 1) if d.get("ret_3m") is not None else round(d["ret_6m"] * 100, 1),
                     "ret_6m": round(d["ret_6m"] * 100, 1),
                     "volatility": round(d["sigma"] * 100, 1),
                     "momentum_score": round(d["norm_score"], 3),

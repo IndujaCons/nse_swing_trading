@@ -3968,7 +3968,8 @@
                 const mom20Rows = mom20Signals.map((s, idx) => {
                     const rank = s.rank || (idx + 1);
                     const retColor12 = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
-                    const retColor6 = s.ret_6m > 0 ? 'var(--green)' : 'var(--red)';
+                    const ret3m = s.ret_3m !== undefined ? s.ret_3m : s.ret_6m;
+                    const retColor3 = ret3m > 0 ? 'var(--green)' : 'var(--red)';
                     const scoreColor = s.momentum_score > 1.5 ? 'var(--green)' : s.momentum_score > 1.0 ? 'var(--text)' : 'var(--text-muted)';
                     return `
                     <tr>
@@ -3976,7 +3977,7 @@
                         <td class="ticker">${s.ticker}</td>
                         <td class="price">${s.price.toLocaleString()}</td>
                         <td style="color:${retColor12};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
-                        <td style="color:${retColor6};">${s.ret_6m > 0 ? '+' : ''}${s.ret_6m}%</td>
+                        <td style="color:${retColor3};">${ret3m > 0 ? '+' : ''}${ret3m}%</td>
                         <td>${s.volatility}%</td>
                         <td style="color:${scoreColor};font-weight:600;">${s.momentum_score.toFixed(2)}</td>
                     </tr>`;
@@ -3985,7 +3986,7 @@
                     <table class="stock-table">
                         <thead><tr>
                             <th>#</th><th>Stock</th><th>Close</th>
-                            <th>12m Ret</th><th>6m Ret</th><th>Vol</th><th>Mom Score</th>
+                            <th>12m Ret</th><th>3m Ret</th><th>Vol</th><th>Mom Score</th>
                         </tr></thead>
                         <tbody>${mom20Rows}</tbody>
                     </table>
