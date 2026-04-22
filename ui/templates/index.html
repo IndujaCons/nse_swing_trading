@@ -3961,9 +3961,8 @@
                 mom20RegimeBadge.style.color = mom20Regime === 'ON' ? 'var(--green)' : mom20Regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
             }
             document.getElementById('ls-mom20-count').textContent = mom20Signals.length > 0 ? `Top ${mom20Signals.length}` : '0';
-            const mom20RegimeBanner = mom20Regime === 'OFF' ? '<div style="background:rgba(244,67,54,0.12);border:1px solid rgba(244,67,54,0.3);border-radius:4px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--red);font-weight:600;">⚠ Regime OFF — Nifty200 below SMA200. Hold all positions, no new entries or exits.</div>' : '';
             if (mom20Signals.length === 0) {
-                mom20Panel.innerHTML = mom20RegimeBanner + '<div class="empty-state">No Mom20 signals</div>';
+                mom20Panel.innerHTML = '<div class="empty-state">No Mom20 signals</div>';
             } else {
                 const mom20Rows = mom20Signals.map((s, idx) => {
                     const rank = s.rank || (idx + 1);
@@ -3982,7 +3981,7 @@
                         <td style="color:${scoreColor};font-weight:600;">${s.momentum_score.toFixed(2)}</td>
                     </tr>`;
                 }).join('');
-                mom20Panel.innerHTML = mom20RegimeBanner + `
+                mom20Panel.innerHTML = `
                     <table class="stock-table">
                         <thead><tr>
                             <th>#</th><th>Stock</th><th>Close</th>
