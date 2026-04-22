@@ -43,12 +43,14 @@ BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
 CACHE_FILE = os.path.join(BASE_DIR, 'cache', 'etf_zscore_daily.pkl')
 
 # ── ETF UNIVERSE ──────────────────────────────────────────────────────────────
-# (sym, name, yf_ticker) — same as etf_core_backtest.py, Indian-listed only
-# International ETFs excluded from monthly rebalance (no intraday pricing in INR)
 UNIVERSE = [
+    # Indian broad
     ("JUNIORBEES",  "Nifty Next 50",        "^NSEMDCP50"),
     ("MID150BEES",  "Nifty Midcap 150",     "MID150BEES.NS"),
     ("HDFCSMALL",   "Nifty Smallcap 250",   "HDFCSML250.NS"),
+    ("SETFNN50",    "Nifty Next 50 ETF",    "SETFNN50.NS"),
+    ("MONIFTY500",  "Nifty 500",            "MONIFTY500.NS"),
+    # Indian sectoral
     ("BANKBEES",    "Nifty Bank",           "^NSEBANK"),
     ("PSUBNKBEES",  "Nifty PSU Bank",       "^CNXPSUBANK"),
     ("ITBEES",      "Nifty IT",             "^CNXIT"),
@@ -60,16 +62,34 @@ UNIVERSE = [
     ("OILIETF",     "Nifty Oil & Gas",      "OILIETF.NS"),
     ("MOREALTY",    "Nifty Realty",         "^CNXREALTY"),
     ("CPSEETF",     "Nifty CPSE",           "CPSEETF.NS"),
+    ("MODEFENCE",   "Nifty India Defence",  "MODEFENCE.NS"),
+    # Indian factor/thematic
     ("SETFMOMET",   "Nifty200 Mom30",       "MOM30IETF.NS"),
     ("QUAL30IETF",  "Nifty100 Quality30",   "QUAL30IETF.NS"),
     ("KOTAKLOWV",   "Nifty100 LowVol30",    "LOWVOLIETF.NS"),
     ("ALPL30IETF",  "Nifty Alpha LowVol30", "ALPL30IETF.NS"),
-    ("MODEFENCE",   "Nifty India Defence",  "MODEFENCE.NS"),
     ("MOMOMENTUM",  "Nifty500 Mom50",       "MOMOMENTUM.NS"),
-    ("MONIFTY500",  "Nifty 500",            "MONIFTY500.NS"),
+    # Commodities
     ("GOLDBEES",    "Gold",                 "GOLDBEES.NS"),
     ("SILVERBEES",  "Silver",               "SILVERBEES.NS"),
-    ("SETFNN50",    "Nifty Next 50 ETF",    "SETFNN50.NS"),
+    # International (US-listed, priced in USD — yfinance daily data available)
+    ("MON100",      "Nasdaq 100",           "^NDX"),
+    ("XLE",         "US Energy",            "XLE"),
+    ("GDX",         "Gold Miners",          "GDX"),
+    ("XME",         "Metals & Mining",      "XME"),
+    ("VGK",         "Europe (broad)",       "VGK"),
+    ("SOXX",        "Semiconductors",       "SOXX"),
+    ("BOTZ",        "Robotics / AI",        "BOTZ"),
+    ("EWY",         "South Korea",          "EWY"),
+    ("EMXC",        "EM ex-China",          "EMXC"),
+    ("AVDV",        "Intl SmallCap Value",  "AVDV"),
+    ("ILF",         "Latin America 40",     "ILF"),
+    ("FRDM",        "Freedom 100 EM",       "FRDM"),
+    ("XLK",         "US Technology",        "XLK"),
+    ("XLP",         "US Cons Staples",      "XLP"),
+    ("TLT",         "US LT Treasuries",     "TLT"),
+    ("XLV",         "US Healthcare",        "XLV"),
+    ("ITA",         "US Aerospace/Defence", "ITA"),
 ]
 
 BENCH_SYM = "^NSEI"   # Nifty 50 for beta computation
