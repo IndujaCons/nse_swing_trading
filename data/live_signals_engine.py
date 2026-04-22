@@ -959,17 +959,22 @@ class LiveSignalsEngine:
         # Mom20: Z-score momentum ratios and pick top 20
         mom20_signals = []
         if len(mom20_raw) >= 5:
-            mr_12_arr = np.array([d["mr_12"] for d in mom20_raw])
-            mr_6_arr = np.array([d["mr_6"] for d in mom20_raw])
+            # Filter beta ≤ 1.2 (frozen Mom20 spec)
+            mom20_eligible = [d for d in mom20_raw if d.get("beta") is None or abs(d["beta"]) <= 1.2]
+            if len(mom20_eligible) < 5:
+                mom20_eligible = mom20_raw  # fallback if too few pass
+            # Scoring: 50% Z_12 + 50% Z_3 (frozen spec — NOT z_6)
+            mr_12_arr = np.array([d["mr_12"] for d in mom20_eligible])
+            mr_3_arr  = np.array([d["mr_3"]  if d.get("mr_3") is not None else d["mr_6"] for d in mom20_eligible])
             z_12 = (mr_12_arr - mr_12_arr.mean()) / mr_12_arr.std() if mr_12_arr.std() > 0 else np.zeros_like(mr_12_arr)
-            z_6 = (mr_6_arr - mr_6_arr.mean()) / mr_6_arr.std() if mr_6_arr.std() > 0 else np.zeros_like(mr_6_arr)
-            weighted_z = 0.5 * z_12 + 0.5 * z_6
-            for idx_m, d in enumerate(mom20_raw):
+            z_3  = (mr_3_arr  - mr_3_arr.mean())  / mr_3_arr.std()  if mr_3_arr.std()  > 0 else np.zeros_like(mr_3_arr)
+            weighted_z = 0.5 * z_12 + 0.5 * z_3
+            for idx_m, d in enumerate(mom20_eligible):
                 z = weighted_z[idx_m]
                 norm_score = (1 + z) if z >= 0 else 1 / (1 - z)
                 d["norm_score"] = norm_score
-            mom20_raw.sort(key=lambda d: -d["norm_score"])
-            for rank_i, d in enumerate(mom20_raw[:20]):
+            mom20_eligible.sort(key=lambda d: -d["norm_score"])
+            for rank_i, d in enumerate(mom20_eligible[:20]):
                 mom20_signals.append({
                     "ticker": d["ticker"],
                     "price": d["price"],
