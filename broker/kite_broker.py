@@ -345,9 +345,12 @@ class KiteBroker:
 
         if price is not None:
             order_params["order_type"] = self._kite.ORDER_TYPE_LIMIT
-            order_params["price"] = price
+            order_params["price"] = round(price, 1)
         else:
-            order_params["order_type"] = self._kite.ORDER_TYPE_MARKET
+            # Market orders blocked by API — use limit at LTP+1% to guarantee fill
+            ltp = self._kite.ltp(f"NSE:{ticker}").get(f"NSE:{ticker}", {}).get("last_price", 0)
+            order_params["order_type"] = self._kite.ORDER_TYPE_LIMIT
+            order_params["price"] = round(ltp * 1.01, 1) if ltp else 0
 
         order_id = self._kite.place_order(**order_params)
         return {"order_id": order_id, "status": "PLACED"}
@@ -381,9 +384,12 @@ class KiteBroker:
 
         if price is not None:
             order_params["order_type"] = self._kite.ORDER_TYPE_LIMIT
-            order_params["price"] = price
+            order_params["price"] = round(price, 1)
         else:
-            order_params["order_type"] = self._kite.ORDER_TYPE_MARKET
+            # Market orders blocked by API — use limit at LTP-1% to guarantee fill
+            ltp = self._kite.ltp(f"NSE:{ticker}").get(f"NSE:{ticker}", {}).get("last_price", 0)
+            order_params["order_type"] = self._kite.ORDER_TYPE_LIMIT
+            order_params["price"] = round(ltp * 0.99, 1) if ltp else 0
 
         order_id = self._kite.place_order(**order_params)
         return {"order_id": order_id, "status": "PLACED"}
