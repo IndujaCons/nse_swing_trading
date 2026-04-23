@@ -974,7 +974,7 @@ class LiveSignalsEngine:
                 norm_score = (1 + z) if z >= 0 else 1 / (1 - z)
                 d["norm_score"] = norm_score
             mom20_eligible.sort(key=lambda d: -d["norm_score"])
-            for rank_i, d in enumerate(mom20_eligible[:20]):
+            for rank_i, d in enumerate(mom20_eligible[:40]):
                 mom20_signals.append({
                     "ticker": d["ticker"],
                     "price": d["price"],

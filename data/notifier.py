@@ -198,7 +198,7 @@ def format_etf_zscore_alert(ranked: list) -> str | None:
 
 
 def format_mom20_alert(scan_result: dict) -> str | None:
-    """Format Mom20 top-20 momentum ranking as a Telegram message.
+    """Format Mom20 top-40 momentum ranking as a Telegram message.
     Sends once daily when signals change. Returns None if no signals."""
     signals = scan_result.get("mom20_signals", [])
     if not signals:
@@ -209,10 +209,10 @@ def format_mom20_alert(scan_result: dict) -> str | None:
     regime = scan_result.get("mom20_regime", "—")
     regime_tag = "🟢 ON" if regime == "ON" else "🔴 OFF"
 
-    lines = [f"<b>📊 Mom20 Top 20</b> | Regime {regime_tag} | {ist}", "<code>"]
+    lines = [f"<b>📊 Mom20 Top 40</b> | Regime {regime_tag} | {ist}", "<code>"]
     lines.append(f"{'#':<3} {'Ticker':<10} {'Close':>7} {'12m':>6} {'3m':>6} {'Score':>5}")
     lines.append("─" * 42)
-    for s in signals[:20]:
+    for s in signals[:40]:
         rank  = s.get("rank", "?")
         tick  = s["ticker"][:10]
         px    = f"{s['price']:,.0f}"
