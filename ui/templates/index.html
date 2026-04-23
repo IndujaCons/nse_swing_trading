@@ -3960,7 +3960,7 @@
                 mom20RegimeBadge.style.background = mom20Regime === 'ON' ? 'rgba(76,175,80,0.2)' : mom20Regime === 'OFF' ? 'rgba(244,67,54,0.2)' : 'var(--bg-tertiary)';
                 mom20RegimeBadge.style.color = mom20Regime === 'ON' ? 'var(--green)' : mom20Regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
             }
-            document.getElementById('ls-mom20-count').textContent = mom20Signals.length > 0 ? `Top ${mom20Signals.length} (hold≤40)` : '0';
+            document.getElementById('ls-mom20-count').textContent = mom20Signals.length > 0 ? `Top ${mom20Signals.length} | entry≤20 hold≤40` : '0';
             if (mom20Signals.length === 0) {
                 mom20Panel.innerHTML = '<div class="empty-state">No Mom20 signals</div>';
             } else {

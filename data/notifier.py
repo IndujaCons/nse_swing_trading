@@ -219,8 +219,10 @@ def format_mom20_alert(scan_result: dict) -> str | None:
         r12   = f"{s['ret_12m']:+.0f}%"
         r3    = f"{s.get('ret_3m', s.get('ret_6m', 0)):+.0f}%"
         sc    = f"{s['momentum_score']:.2f}"
-        lines.append(f"{rank:<3} {tick:<10} {px:>7} {r12:>6} {r3:>6} {sc:>5}")
+        tag   = "★" if rank <= 20 else "◀"
+        lines.append(f"{rank:<3} {tick:<10} {px:>7} {r12:>6} {r3:>6} {sc:>5} {tag}")
     lines.append("</code>")
+    lines.append("★ entry (rank≤20)  ◀ hold buffer (21–40)")
     return "\n".join(lines)
 
 
