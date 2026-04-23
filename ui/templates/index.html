@@ -1980,96 +1980,6 @@
                     </div>
                 </div>
 
-                <!-- Mom20 Portfolio Builder -->
-                <div class="panel" id="mom20-portfolio-panel" style="grid-column: 1 / -1; margin-top:12px;">
-                    <div class="panel-header" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                        <span class="panel-title" style="color:#ff6b35;">📦 Mom20 Portfolio Builder</span>
-                        <span id="mom20-port-regime-badge" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">Regime: —</span>
-                        <span id="mom20-port-rebal-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;">Next rebalance: —</span>
-                        <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 20</button>
-                        <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
-                    </div>
-                    <div class="panel-body" style="padding:12px;">
-
-                        <!-- Performance card (shown when portfolio has tracking data) -->
-                        <div id="mom20-perf-card" style="display:none;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:14px;"></div>
-
-                        <div style="display:grid;grid-template-columns:1fr 230px;gap:16px;align-items:start;">
-
-                        <!-- LEFT: search + stock table -->
-                        <div>
-                            <!-- Search row -->
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative;">
-                                <div style="position:relative;flex:1;">
-                                    <input id="mom20-search-input" type="text" placeholder="🔍 Search by ticker (e.g. TITAN, SBIN)"
-                                        oninput="mom20SearchSuggest(this.value)"
-                                        onkeydown="if(event.key==='Enter')mom20AddStock()"
-                                        style="width:100%;padding:6px 10px;font-size:13px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
-                                    <div id="mom20-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:0 0 6px 6px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
-                                </div>
-                                <button onclick="mom20AddStock()" style="padding:6px 16px;font-size:13px;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;white-space:nowrap;">+ Add</button>
-                                <span id="mom20-total-weight-badge" style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--bg-tertiary);color:var(--text-muted);white-space:nowrap;">Total: 0%</span>
-                            </div>
-
-                            <!-- Stock table -->
-                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                                <thead>
-                                    <tr style="font-size:11px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
-                                        <th style="text-align:left;padding:4px 8px;">Stock</th>
-                                        <th style="text-align:right;padding:4px 8px;">Price (₹)</th>
-                                        <th style="text-align:center;padding:4px 24px;">Weights</th>
-                                        <th style="text-align:right;padding:4px 8px;">Shares | Weight%</th>
-                                        <th style="width:20px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="mom20-basket-tbody">
-                                    <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 20"</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- RIGHT: sidebar -->
-                        <div style="background:var(--bg-secondary);border-radius:8px;padding:16px;border:1px solid var(--border-color);">
-                            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Investment Amount</div>
-                            <div style="position:relative;margin-bottom:4px;">
-                                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;">₹</span>
-                                <input id="mom20-capital-input" type="number" step="100000" min="100000" value="2000000"
-                                    oninput="mom20RenderBasket()"
-                                    style="width:100%;padding:8px 8px 8px 26px;font-size:14px;font-weight:700;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
-                            </div>
-                            <div id="mom20-min-investment" style="font-size:10px;color:var(--text-muted);margin-bottom:14px;">Min Investment: —</div>
-
-                            <div style="border-top:1px solid var(--border-color);padding-top:12px;margin-bottom:12px;">
-                                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
-                                    <span>Stocks</span><span id="mom20-sb-count">0</span>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
-                                    <span>Total weight</span><span id="mom20-sb-weight">0%</span>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
-                                    <span>Est. charges</span><span id="mom20-sb-charges">—</span>
-                                </div>
-                            </div>
-
-                            <button onclick="mom20SavePortfolio()" style="width:100%;padding:9px;margin-bottom:8px;font-size:13px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">💾 Save Portfolio</button>
-                            <button onclick="mom20PlaceAllOrders()" style="width:100%;padding:9px;font-size:13px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⚡ Invest Now</button>
-
-                            <!-- Order status + Confirm Investment -->
-                            <div id="mom20-order-status-wrap" style="display:none;margin-top:12px;border-top:1px solid var(--border-color);padding-top:10px;">
-                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                                    <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">ORDER STATUS</span>
-                                    <button onclick="mom20PollOrders()" style="padding:2px 8px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺</button>
-                                </div>
-                                <div id="mom20-order-status-body" style="display:flex;flex-direction:column;gap:4px;font-size:11px;"></div>
-                                <button onclick="mom20ConfirmInvestment()" style="width:100%;margin-top:10px;padding:8px;font-size:12px;font-weight:700;background:#ff6b35;color:white;border:none;border-radius:6px;cursor:pointer;">✓ Confirm Investment</button>
-                                <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;">Switches tracking to actual avg prices</div>
-                            </div>
-                        </div>
-
-                        </div><!-- end grid -->
-                    </div>
-                </div>
-
             </div>
 
             <!-- Batch Backtest Results -->
@@ -6219,14 +6129,10 @@
         let mom20Basket = [];   // [{ticker, price, weight}]
         let _mom20SearchTimer = null;
 
-        // sfx = '' (Live Signals panel) or '2' (Mom20 tab); '' is legacy, '2' is primary
-        const _mom20Sfxs = ['', '2'];
+        const _mom20Sfxs = ['2'];  // only Mom20 tab panel
 
         function mom20GetCapital(sfx) {
-            // If sfx given, read that input; else prefer the visible tab
-            const s = sfx !== undefined ? sfx
-                : (!document.getElementById('mom20-portfolio-panels').classList.contains('hidden') ? '2' : '');
-            return parseInt(document.getElementById(`mom20-capital-input${s}`).value) || 2000000;
+            return parseInt(document.getElementById(`mom20-capital-input${sfx || '2'}`).value) || 2000000;
         }
         function mom20TotalWeight() {
             return mom20Basket.reduce((s, b) => s + b.weight, 0);
@@ -6414,15 +6320,6 @@
                     const rebalEl = document.getElementById(`mom20-port-rebal-badge${s || '2'}`);
                     if (rebalEl) rebalEl.textContent = `Next rebalance: ${d.next_rebalance} (${d.days_to_rebalance}d)`;
                 });
-                // Also update the legacy (non-suffixed) badge in Live Signals panel if it exists
-                const rbLegacy = document.getElementById('mom20-port-regime-badge');
-                if (rbLegacy) {
-                    rbLegacy.textContent = `Regime: ${d.regime}`;
-                    rbLegacy.style.background = d.regime === 'ON' ? 'rgba(76,175,80,0.2)' : d.regime === 'OFF' ? 'rgba(244,67,54,0.2)' : 'var(--bg-tertiary)';
-                    rbLegacy.style.color = d.regime === 'ON' ? 'var(--green)' : d.regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
-                }
-                const rebalLegacy = document.getElementById('mom20-port-rebal-badge');
-                if (rebalLegacy) rebalLegacy.textContent = `Next rebalance: ${d.next_rebalance} (${d.days_to_rebalance}d)`;
                 _mom20RenderPerfCard(d);
                 if (d.basket && d.basket.length) {
                     mom20Basket = d.basket.map(s => {
