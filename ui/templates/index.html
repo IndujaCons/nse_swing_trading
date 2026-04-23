@@ -1558,7 +1558,6 @@
                         <option value="IBD">IBD RS (Frozen)</option>
                         <option value="MOM15">Mom15 (2-Monthly Rebal)</option>
                         <option value="MOM20">Mom20 (Quarterly Rebal)</option>
-                        <option value="ALPHA20">Alpha20 (CAPM Alpha)</option>
                     </select>
                     <select class="backtest-select" id="portfolio-entries-per-day">
                         <option value="1">1 trade / day</option>
@@ -1875,15 +1874,6 @@
                     </div>
                 </div>
 
-                <div class="panel ls-alpha20-signals">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color:#9c27b0;">Alpha20 — CAPM Jensen's Alpha (Quarterly Rebalance)</span>
-                        <span class="panel-count" id="ls-alpha20-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-alpha20-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
 
                 </div><!-- end ls-signals-left -->
 
@@ -3963,7 +3953,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -4049,7 +4039,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -4327,36 +4317,6 @@
                 `;
             }
 
-            // Alpha20 signals panel
-            const alpha20Panel = document.getElementById('ls-alpha20-panel');
-            const alpha20Signals = data.alpha20_signals || [];
-            document.getElementById('ls-alpha20-count').textContent = alpha20Signals.length > 0 ? `Top ${alpha20Signals.length}` : '0';
-            if (alpha20Signals.length === 0) {
-                alpha20Panel.innerHTML = '<div class="empty-state">No Alpha20 signals</div>';
-            } else {
-                const alpha20Rows = alpha20Signals.map((s, idx) => {
-                    const rank = s.rank || (idx + 1);
-                    const alphaColor = s.alpha > 20 ? 'var(--green)' : s.alpha > 0 ? '#9c27b0' : 'var(--red)';
-                    const betaColor = s.beta < 0.8 ? 'var(--green)' : s.beta > 1.2 ? 'var(--red)' : 'var(--text)';
-                    return `
-                    <tr>
-                        <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td style="color:${alphaColor};font-weight:600;">${s.alpha > 0 ? '+' : ''}${s.alpha}%</td>
-                        <td style="color:${betaColor};">${s.beta.toFixed(2)}</td>
-                    </tr>`;
-                }).join('');
-                alpha20Panel.innerHTML = `
-                    <table class="stock-table">
-                        <thead><tr>
-                            <th>#</th><th>Stock</th><th>Close</th>
-                            <th>Alpha %</th><th>Beta</th>
-                        </tr></thead>
-                        <tbody>${alpha20Rows}</tbody>
-                    </table>
-                `;
-            }
 
             // WT signals panel
             const wtPanel = document.getElementById('ls-wt-panel');
@@ -4861,7 +4821,7 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-alpha20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
