@@ -535,23 +535,6 @@
             color: var(--red);
         }
 
-        .sector-heatmap-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .sector-pill {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 600;
-            min-width: 80px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
 
         .sector-pill .sec-name {
             font-size: 9px;
@@ -1925,24 +1908,6 @@
                 </div><!-- end ls-chart-right -->
                 </div><!-- end flex container -->
 
-                <div class="panel ls-sector-heatmap" style="grid-column: 1 / -1;">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color: var(--orange, #ff9800);">Sector Momentum Heatmap</span>
-                        <span style="cursor:pointer;margin-left:6px;font-size:12px;color:var(--text-muted);border:1px solid var(--text-muted);border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;opacity:0.7;" onclick="document.getElementById('ls-heatmap-info').classList.toggle('hidden')">i</span>
-                    </div>
-                    <div id="ls-heatmap-info" class="hidden" style="padding:10px 14px;font-size:11px;line-height:1.6;color:var(--text-muted);background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);">
-                        <b style="color:var(--orange,#ff9800);">How to read the heatmap:</b><br>
-                        Each pill shows 3 lines — <b>Sector Name</b>, <b>RS %</b>, and <b>Momentum Score</b>.<br>
-                        <b>RS %</b> (middle) — Sector's 20-day return minus Nifty's 20-day return. <span style="color:var(--green);">Green = outperforming Nifty</span>, <span style="color:var(--red);">Red = underperforming</span>.<br>
-                        <b>Momentum</b> (bottom) — How fast the RS is changing. <span style="color:var(--green);">&#9650;&#9650; positive</span> = sector RS is rising (getting stronger). <span style="color:var(--red);">&#9660;&#9660; negative</span> = sector RS is falling (weakening).<br>
-                        <b>Key insight:</b> A sector at <span style="color:var(--red);">-11%</span> RS but <span style="color:var(--green);">&#9650;&#9650; +27</span> momentum means it was deeply weak but is now recovering fast — <em>early reversal catch</em>. This often scores higher than a sector sitting flat at +4%.<br>
-                        <b>Background:</b> Green tint = momentum positive (sector strengthening). Red tint = momentum negative (sector weakening).<br>
-                        Sorted left-to-right by momentum score (strongest rising first). Hover any pill for full 5d/10d/20d delta breakdown.
-                    </div>
-                    <div class="panel-body" id="ls-sector-heatmap" style="padding:8px;">
-                        <div class="empty-state" style="font-size:11px;">Scan to load sector data</div>
-                    </div>
-                </div>
 
                 <!-- Top Picks removed -->
                 <div class="hidden"><div id="ls-picks-panel"></div><div id="ls-picks-count"></div></div>
@@ -4141,35 +4106,6 @@
         function renderEntrySignals(data, isHistorical) {
             isHistorical = isHistorical || false;
 
-            // ===== Sector Heatmap =====
-            const sectorMomentum = data.sector_momentum || {};
-            const heatmapPanel = document.getElementById('ls-sector-heatmap');
-            const sectorEntries = Object.entries(sectorMomentum)
-                .sort((a, b) => b[1].momentum - a[1].momentum);
-
-            if (sectorEntries.length > 0) {
-                const pills = sectorEntries.map(([name, d]) => {
-                    const rs = d.rs || 0;
-                    const mom = d.momentum || 0;
-                    const d5 = d.delta_5d || 0;
-                    const d10 = d.delta_10d || 0;
-                    const d20 = d.delta_20d || 0;
-                    // Color: green if momentum positive (RS rising), red if falling
-                    const bgColor = mom > 2 ? 'rgba(76,175,80,0.2)' : mom > 0 ? 'rgba(76,175,80,0.08)' : mom > -2 ? 'rgba(255,152,0,0.08)' : 'rgba(244,67,54,0.15)';
-                    const rsColor = rs > 0 ? 'var(--green)' : 'var(--red)';
-                    const momColor = mom > 0 ? 'var(--green)' : mom < 0 ? 'var(--red)' : 'var(--text-muted)';
-                    const arrow = mom > 1 ? '&uarr;&uarr;' : mom > 0 ? '&uarr;' : mom > -1 ? '&darr;' : '&darr;&darr;';
-                    const shortName = name.replace('NIFTY ', '');
-                    return `<div class="sector-pill" style="background:${bgColor};" title="RS: ${rs.toFixed(1)}% | 5d: ${d5>0?'+':''}${d5.toFixed(1)} | 10d: ${d10>0?'+':''}${d10.toFixed(1)} | 20d: ${d20>0?'+':''}${d20.toFixed(1)}">
-                        <span class="sec-name">${shortName}</span>
-                        <span class="sec-rs" style="color:${rsColor};">${rs>0?'+':''}${rs.toFixed(1)}%</span>
-                        <span class="sec-delta" style="color:${momColor};">${arrow} ${mom>0?'+':''}${mom.toFixed(1)}</span>
-                    </div>`;
-                }).join('');
-                heatmapPanel.innerHTML = `<div class="sector-heatmap-grid">${pills}</div>`;
-            } else {
-                heatmapPanel.innerHTML = '<div class="empty-state" style="font-size:11px;">No sector data</div>';
-            }
 
             // J signals
             const jPanel = document.getElementById('ls-j-panel');
