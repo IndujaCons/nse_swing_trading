@@ -1761,47 +1761,83 @@
                     </div>
                 </div>
 
-                <!-- Mom20 Portfolio Manager -->
+                <!-- Mom20 Portfolio Builder -->
                 <div class="panel" id="mom20-portfolio-panel" style="grid-column: 1 / -1; margin-top:12px;">
                     <div class="panel-header" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                        <span class="panel-title" style="color:#ff6b35;">📦 Mom20 Portfolio Manager</span>
+                        <span class="panel-title" style="color:#ff6b35;">📦 Mom20 Portfolio Builder</span>
                         <span id="mom20-port-regime-badge" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">Regime: —</span>
-                        <span id="mom20-port-rebal-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;margin-left:4px;">Next rebalance: —</span>
-                        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-                            <label style="font-size:11px;color:var(--text-muted);">Capital ₹</label>
-                            <input id="mom20-capital-input" type="number" step="100000" min="100000"
-                                value="2000000"
-                                style="width:110px;padding:3px 6px;font-size:12px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;">
-                            <button onclick="mom20SaveCapital()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Save</button>
-                            <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--green);color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700;">Refresh</button>
-                        </div>
+                        <span id="mom20-port-rebal-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;">Next rebalance: —</span>
+                        <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 15</button>
+                        <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
                     </div>
-                    <div class="panel-body" style="padding:10px;">
+                    <div class="panel-body" style="padding:12px;display:grid;grid-template-columns:1fr 230px;gap:16px;align-items:start;">
 
-                        <!-- Holdings table -->
-                        <div id="mom20-holdings-wrap">
-                            <div class="empty-state">Click Refresh to load portfolio</div>
+                        <!-- LEFT: search + stock table -->
+                        <div>
+                            <!-- Search row -->
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative;">
+                                <div style="position:relative;flex:1;">
+                                    <input id="mom20-search-input" type="text" placeholder="🔍 Search by ticker (e.g. TITAN, SBIN)"
+                                        oninput="mom20SearchSuggest(this.value)"
+                                        onkeydown="if(event.key==='Enter')mom20AddStock()"
+                                        style="width:100%;padding:6px 10px;font-size:13px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
+                                    <div id="mom20-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:0 0 6px 6px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
+                                </div>
+                                <button onclick="mom20AddStock()" style="padding:6px 16px;font-size:13px;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;white-space:nowrap;">+ Add</button>
+                                <span id="mom20-total-weight-badge" style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--bg-tertiary);color:var(--text-muted);white-space:nowrap;">Total: 0%</span>
+                            </div>
+
+                            <!-- Stock table -->
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                                <thead>
+                                    <tr style="font-size:11px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
+                                        <th style="text-align:left;padding:4px 8px;">Stock</th>
+                                        <th style="text-align:right;padding:4px 8px;">Price (₹)</th>
+                                        <th style="text-align:center;padding:4px 24px;">Weights</th>
+                                        <th style="text-align:right;padding:4px 8px;">Shares | Weight%</th>
+                                        <th style="width:20px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mom20-basket-tbody">
+                                    <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 15"</td></tr>
+                                </tbody>
+                            </table>
                         </div>
 
-                        <!-- Rebalance section -->
-                        <div id="mom20-rebalance-wrap" style="margin-top:14px;">
-                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                                <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">REBALANCE DIFF</span>
-                                <button onclick="mom20CalcRebalance()" style="padding:4px 14px;font-size:12px;background:var(--orange,#ff9800);color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700;">Calculate</button>
-                                <button id="mom20-place-orders-btn" onclick="mom20PlaceOrders()" style="display:none;padding:4px 14px;font-size:12px;background:#e53935;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700;">⚡ Place All Orders</button>
-                                <button id="mom20-confirm-rebal-btn" onclick="mom20ConfirmRebalance()" style="display:none;padding:4px 14px;font-size:12px;background:var(--green);color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700;">✓ Confirm Rebalance</button>
-                                <span id="mom20-charges-badge" style="display:none;font-size:11px;color:var(--text-muted);padding:2px 8px;background:var(--bg-tertiary);border-radius:3px;"></span>
+                        <!-- RIGHT: sidebar -->
+                        <div style="background:var(--bg-secondary);border-radius:8px;padding:16px;border:1px solid var(--border-color);">
+                            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Investment Amount</div>
+                            <div style="position:relative;margin-bottom:4px;">
+                                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;">₹</span>
+                                <input id="mom20-capital-input" type="number" step="100000" min="100000" value="2000000"
+                                    oninput="mom20RenderBasket()"
+                                    style="width:100%;padding:8px 8px 8px 26px;font-size:14px;font-weight:700;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
                             </div>
-                            <div id="mom20-diff-body"></div>
-                        </div>
+                            <div id="mom20-min-investment" style="font-size:10px;color:var(--text-muted);margin-bottom:14px;">Min Investment: —</div>
 
-                        <!-- Order status -->
-                        <div id="mom20-order-status-wrap" style="display:none;margin-top:12px;">
-                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                                <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">ORDER STATUS</span>
-                                <button onclick="mom20PollOrders()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Refresh</button>
+                            <div style="border-top:1px solid var(--border-color);padding-top:12px;margin-bottom:12px;">
+                                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
+                                    <span>Stocks</span><span id="mom20-sb-count">0</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
+                                    <span>Total weight</span><span id="mom20-sb-weight">0%</span>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
+                                    <span>Est. charges</span><span id="mom20-sb-charges">—</span>
+                                </div>
                             </div>
-                            <div id="mom20-order-status-body" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+
+                            <button onclick="mom20SavePortfolio()" style="width:100%;padding:9px;margin-bottom:8px;font-size:13px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">💾 Save Portfolio</button>
+                            <button onclick="mom20PlaceAllOrders()" style="width:100%;padding:9px;font-size:13px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⚡ Invest Now</button>
+
+                            <!-- Order status -->
+                            <div id="mom20-order-status-wrap" style="display:none;margin-top:12px;border-top:1px solid var(--border-color);padding-top:10px;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                    <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">ORDER STATUS</span>
+                                    <button onclick="mom20PollOrders()" style="padding:2px 8px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺</button>
+                                </div>
+                                <div id="mom20-order-status-body" style="display:flex;flex-direction:column;gap:4px;font-size:11px;"></div>
+                            </div>
                         </div>
 
                     </div>
@@ -5772,154 +5808,227 @@
             }
         }
 
-        // ===== Mom20 Portfolio Manager =====
+        // ===== Mom20 Portfolio Builder =====
 
-        let _mom20Diff = null;  // cached last rebalance diff
+        let mom20Basket = [];   // [{ticker, price, weight}]
+        let _mom20SearchTimer = null;
+
+        function mom20GetCapital() {
+            return parseInt(document.getElementById('mom20-capital-input').value) || 2000000;
+        }
+        function mom20TotalWeight() {
+            return mom20Basket.reduce((s, b) => s + b.weight, 0);
+        }
+        function mom20CalcShares(price, weight) {
+            const cap = mom20GetCapital();
+            return price > 0 ? Math.floor(cap * (weight / 100) / price) : 0;
+        }
+        function mom20CalcMinInvestment() {
+            if (!mom20Basket.length) return 0;
+            return Math.ceil(Math.max(...mom20Basket.map(s => s.price / (s.weight / 100))));
+        }
+        function mom20CalcCharges() {
+            const cap = mom20GetCapital();
+            const buyTv = mom20Basket.reduce((s, b) => {
+                const shares = mom20CalcShares(b.price, b.weight);
+                return s + shares * b.price;
+            }, 0);
+            if (!buyTv) return 0;
+            const stt = 0.001 * buyTv;
+            const exchange = 0.0000307 * buyTv;
+            const sebi = 0.000001 * buyTv;
+            const stamp = 0.00015 * buyTv;
+            const gst = 0.18 * (exchange + sebi);
+            return Math.round(stt + exchange + sebi + stamp + gst);
+        }
+
+        function mom20RenderBasket() {
+            const tbody = document.getElementById('mom20-basket-tbody');
+            const totalW = mom20TotalWeight();
+            const wBadge = document.getElementById('mom20-total-weight-badge');
+            wBadge.textContent = `Total: ${totalW}%`;
+            wBadge.style.background = Math.abs(totalW - 100) <= 1 ? 'rgba(76,175,80,0.15)' : totalW > 100 ? 'rgba(244,67,54,0.15)' : 'var(--bg-tertiary)';
+            wBadge.style.color = Math.abs(totalW - 100) <= 1 ? 'var(--green)' : totalW > 100 ? 'var(--red)' : 'var(--text-muted)';
+
+            document.getElementById('mom20-sb-count').textContent = mom20Basket.length;
+            document.getElementById('mom20-sb-weight').textContent = totalW + '%';
+            const charges = mom20CalcCharges();
+            document.getElementById('mom20-sb-charges').textContent = charges ? '₹' + charges.toLocaleString('en-IN') : '—';
+            const minInv = mom20CalcMinInvestment();
+            document.getElementById('mom20-min-investment').textContent = minInv ? `Min Investment: ₹${minInv.toLocaleString('en-IN')}` : 'Min Investment: —';
+
+            if (!mom20Basket.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 15"</td></tr>';
+                return;
+            }
+            tbody.innerHTML = mom20Basket.map((s, i) => {
+                const shares = mom20CalcShares(s.price, s.weight);
+                const actualWt = mom20GetCapital() > 0 ? (shares * s.price / mom20GetCapital() * 100).toFixed(2) : '0.00';
+                return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <td style="padding:8px 8px;font-weight:700;color:var(--text-primary);">${s.ticker}</td>
+                    <td style="text-align:right;padding:8px;color:var(--text-secondary);">${s.price.toLocaleString('en-IN', {maximumFractionDigits:2})}</td>
+                    <td style="text-align:center;padding:8px 4px;">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+                            <button onclick="mom20ChangeWeight(${i},-1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:14px;line-height:1;">−</button>
+                            <span style="min-width:28px;text-align:center;font-weight:700;font-size:14px;">${s.weight}</span>
+                            <button onclick="mom20ChangeWeight(${i},+1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:14px;line-height:1;">+</button>
+                        </div>
+                    </td>
+                    <td style="text-align:right;padding:8px;color:var(--text-muted);font-size:12px;">${shares} | ${actualWt}%</td>
+                    <td style="padding:4px 6px;text-align:center;">
+                        <button onclick="mom20RemoveStock(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;" title="Remove">×</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function mom20ChangeWeight(idx, delta) {
+            const newW = Math.max(1, Math.min(50, mom20Basket[idx].weight + delta));
+            mom20Basket[idx].weight = newW;
+            mom20RenderBasket();
+        }
+        function mom20RemoveStock(idx) {
+            mom20Basket.splice(idx, 1);
+            mom20RenderBasket();
+        }
+
+        async function mom20SearchSuggest(q) {
+            clearTimeout(_mom20SearchTimer);
+            const dd = document.getElementById('mom20-suggest-dropdown');
+            if (q.length < 2) { dd.style.display = 'none'; return; }
+            _mom20SearchTimer = setTimeout(async () => {
+                try {
+                    const r = await fetch(`/api/mom20-portfolio/search?q=${encodeURIComponent(q.toUpperCase())}`);
+                    const d = await r.json();
+                    if (!d.results || !d.results.length) { dd.style.display = 'none'; return; }
+                    dd.innerHTML = d.results.map(res =>
+                        `<div onclick="mom20SelectSuggest('${res.ticker}',${res.price})"
+                            style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);"
+                            onmouseover="this.style.background='rgba(255,255,255,0.07)'"
+                            onmouseout="this.style.background=''">
+                            <span style="font-weight:700;">${res.ticker}</span>
+                            <span style="float:right;color:var(--text-muted);">₹${res.price.toLocaleString('en-IN',{maximumFractionDigits:2})}</span>
+                            ${res.rank ? `<span style="font-size:10px;color:var(--green);margin-left:6px;">★#${res.rank}</span>` : ''}
+                        </div>`
+                    ).join('');
+                    dd.style.display = '';
+                } catch(e) {}
+            }, 300);
+        }
+
+        function mom20SelectSuggest(ticker, price) {
+            document.getElementById('mom20-search-input').value = ticker;
+            document.getElementById('mom20-suggest-dropdown').style.display = 'none';
+            mom20AddStockDirect(ticker, price);
+        }
+
+        async function mom20AddStock() {
+            const inp = document.getElementById('mom20-search-input');
+            const q = inp.value.trim().toUpperCase();
+            if (!q) return;
+            document.getElementById('mom20-suggest-dropdown').style.display = 'none';
+            // Check if already in basket
+            if (mom20Basket.find(s => s.ticker === q)) { showToast(`${q} already in basket`, 'error'); return; }
+            inp.disabled = true;
+            try {
+                const r = await fetch(`/api/mom20-portfolio/search?q=${encodeURIComponent(q)}`);
+                const d = await r.json();
+                if (d.results && d.results.length) {
+                    const res = d.results.find(x => x.ticker === q) || d.results[0];
+                    mom20AddStockDirect(res.ticker, res.price);
+                } else {
+                    showToast(`${q} not found — check ticker`, 'error');
+                }
+            } catch(e) { showToast(e.message, 'error'); }
+            inp.disabled = false;
+            inp.value = '';
+            inp.focus();
+        }
+
+        function mom20AddStockDirect(ticker, price) {
+            if (mom20Basket.find(s => s.ticker === ticker)) return;
+            // Default weight: 5, or distribute evenly
+            const defaultW = mom20Basket.length < 20 ? 5 : 1;
+            mom20Basket.push({ticker, price, weight: defaultW});
+            mom20RenderBasket();
+            document.getElementById('mom20-search-input').value = '';
+        }
+
+        async function mom20ImportSignals() {
+            try {
+                const r = await fetch('/api/mom20-portfolio/search?q=__import__');
+                const d = await r.json();
+                if (d.signals && d.signals.length) {
+                    mom20Basket = [];
+                    const w = Math.round(100 / d.signals.length) || 5;
+                    d.signals.forEach(s => mom20Basket.push({ticker: s.ticker, price: s.price, weight: w}));
+                    // Fix rounding so total = 100
+                    const diff = 100 - mom20TotalWeight();
+                    if (diff !== 0 && mom20Basket.length) mom20Basket[0].weight += diff;
+                    mom20RenderBasket();
+                    showToast(`Imported ${mom20Basket.length} stocks from Mom20 signals`, 'success');
+                } else showToast('No Mom20 signals — refresh live signals first', 'error');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
 
         async function mom20LoadPortfolio() {
-            const wrap = document.getElementById('mom20-holdings-wrap');
-            wrap.innerHTML = '<div class="empty-state">Loading...</div>';
+            // Load saved portfolio into basket
             try {
                 const r = await fetch('/api/mom20-portfolio');
                 const d = await r.json();
                 document.getElementById('mom20-capital-input').value = d.capital;
-                // regime badge
                 const rb = document.getElementById('mom20-port-regime-badge');
                 rb.textContent = `Regime: ${d.regime}`;
                 rb.style.background = d.regime === 'ON' ? 'rgba(76,175,80,0.2)' : d.regime === 'OFF' ? 'rgba(244,67,54,0.2)' : 'var(--bg-tertiary)';
                 rb.style.color = d.regime === 'ON' ? 'var(--green)' : d.regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
-                // rebalance badge
-                const days = d.days_to_rebalance;
                 document.getElementById('mom20-port-rebal-badge').textContent =
-                    `Next rebalance: ${d.next_rebalance} (${days}d)`;
-                // holdings
-                if (!d.holdings || d.holdings.length === 0) {
-                    wrap.innerHTML = '<div class="empty-state">No holdings — use Calculate Rebalance to set up</div>';
+                    `Next rebalance: ${d.next_rebalance} (${d.days_to_rebalance}d)`;
+                if (d.holdings && d.holdings.length) {
+                    mom20Basket = d.holdings.map(h => ({
+                        ticker: h.ticker,
+                        price: h.cmp || h.entry_price || 0,
+                        weight: h.weight_pct || 5,
+                    }));
+                    mom20RenderBasket();
+                    showToast(`Loaded ${d.holdings.length} stocks from saved portfolio`, 'success');
                 } else {
-                    const pnlColor = d.total_pnl_pct >= 0 ? 'var(--green)' : 'var(--red)';
-                    const rows = d.holdings.map((h, i) => {
-                        const pc = h.pnl_pct >= 0 ? 'var(--green)' : 'var(--red)';
-                        const rankTag = h.rank ? (h.rank <= 15 ? `<span style="color:var(--green);font-size:10px;">★${h.rank}</span>` : `<span style="color:var(--text-muted);font-size:10px;">#${h.rank}</span>`) : `<span style="color:var(--red);font-size:10px;">out</span>`;
-                        return `<tr>
-                            <td style="color:var(--text-muted);font-size:11px;">${i+1}</td>
-                            <td style="font-weight:700;">${h.ticker}</td>
-                            <td style="text-align:right;">${h.shares}</td>
-                            <td style="text-align:right;">₹${(h.entry_price||0).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
-                            <td style="text-align:right;">₹${(h.cmp||0).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
-                            <td style="text-align:right;color:${pc};">${h.pnl_pct >= 0 ? '+' : ''}${h.pnl_pct}%</td>
-                            <td style="text-align:right;color:${pc};">₹${(h.pnl_amt||0).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
-                            <td style="text-align:center;">${rankTag}</td>
-                        </tr>`;
-                    }).join('');
-                    wrap.innerHTML = `
-                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">
-                            ${d.holdings.length} stocks | Total ₹${d.total_value.toLocaleString('en-IN')}
-                            | P&L <span style="color:${pnlColor};font-weight:700;">${d.total_pnl_pct >= 0 ? '+' : ''}${d.total_pnl_pct}%</span>
-                            | Last rebalance: ${d.last_rebalance_date || '—'}
-                        </div>
-                        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                            <thead><tr style="color:var(--text-muted);font-size:10px;border-bottom:1px solid var(--border-color);">
-                                <th>#</th><th>Ticker</th><th style="text-align:right;">Shares</th>
-                                <th style="text-align:right;">Entry</th><th style="text-align:right;">CMP</th>
-                                <th style="text-align:right;">P&L%</th><th style="text-align:right;">P&L ₹</th>
-                                <th style="text-align:center;">Rank</th>
-                            </tr></thead>
-                            <tbody>${rows}</tbody>
-                        </table>`;
+                    showToast('No saved portfolio — add stocks manually or Import Mom20', 'error');
                 }
-                // restore pending orders if any
-                if (d.pending_orders && d.pending_orders.length > 0) {
-                    _renderOrderStatus(d.pending_orders);
-                }
-            } catch(e) {
-                wrap.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
-            }
+                if (d.pending_orders && d.pending_orders.length) _renderOrderStatus(d.pending_orders);
+            } catch(e) { showToast(e.message, 'error'); }
         }
 
-        async function mom20SaveCapital() {
-            const capital = parseInt(document.getElementById('mom20-capital-input').value);
+        async function mom20SavePortfolio() {
+            if (!mom20Basket.length) { showToast('Basket is empty', 'error'); return; }
+            const capital = mom20GetCapital();
             try {
                 const r = await fetch('/api/mom20-portfolio/settings', {
                     method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({capital})
+                    body: JSON.stringify({capital, basket: mom20Basket})
                 });
                 const d = await r.json();
-                if (d.success) showToast(`Capital saved: ₹${capital.toLocaleString('en-IN')}`, 'success');
+                if (d.success) showToast('Portfolio saved', 'success');
                 else showToast(d.error, 'error');
             } catch(e) { showToast(e.message, 'error'); }
         }
 
-        async function mom20CalcRebalance() {
-            const diffBody = document.getElementById('mom20-diff-body');
-            diffBody.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">Calculating...</div>';
-            document.getElementById('mom20-place-orders-btn').style.display = 'none';
-            document.getElementById('mom20-confirm-rebal-btn').style.display = 'none';
-            try {
-                const r = await fetch('/api/mom20-portfolio/rebalance-diff');
-                const d = await r.json();
-                if (!d.success) { diffBody.innerHTML = `<div class="empty-state">Error: ${d.error}</div>`; return; }
-                _mom20Diff = d;
-                const chargesBadge = document.getElementById('mom20-charges-badge');
-                chargesBadge.style.display = '';
-                chargesBadge.textContent = `Est. charges: ₹${d.est_charges.toLocaleString('en-IN')}`;
-
-                let html = '<div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:12px;font-size:12px;">';
-
-                // SELL
-                html += '<div>';
-                html += `<div style="font-weight:700;color:var(--red);margin-bottom:4px;">SELL (${d.sell.length})</div>`;
-                if (d.sell.length === 0) html += '<div style="color:var(--text-muted);">None</div>';
-                d.sell.forEach(s => {
-                    html += `<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
-                        <span style="font-weight:700;">${s.ticker}</span>
-                        <span style="color:var(--text-muted);float:right;">${s.shares}sh ₹${Math.round(s.amount/1000)}K</span>
-                        <div style="font-size:10px;color:${s.pnl_pct>=0?'var(--green)':'var(--red)'};">${s.pnl_pct>=0?'+':''}${s.pnl_pct}%</div>
-                    </div>`;
-                });
-                html += '</div>';
-
-                // BUY
-                html += '<div>';
-                html += `<div style="font-weight:700;color:var(--green);margin-bottom:4px;">BUY (${d.buy.length})</div>`;
-                if (!d.regime_on) html += '<div style="color:var(--red);font-size:11px;">Regime OFF — entries blocked</div>';
-                else if (d.buy.length === 0) html += '<div style="color:var(--text-muted);">None — all slots filled</div>';
-                d.buy.forEach(b => {
-                    html += `<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
-                        <span style="font-weight:700;">${b.ticker}</span>
-                        <span style="color:var(--text-muted);font-size:10px;"> #${b.rank}</span>
-                        <span style="color:var(--text-muted);float:right;">${b.shares}sh ₹${Math.round(b.amount/1000)}K</span>
-                    </div>`;
-                });
-                html += '</div>';
-
-                // HOLD
-                html += '<div>';
-                html += `<div style="font-weight:700;color:var(--text-secondary);margin-bottom:4px;">HOLD (${d.hold.length})</div>`;
-                const holdRows = d.hold.map(h =>
-                    `<span style="display:inline-block;margin:2px 4px 2px 0;padding:1px 6px;background:rgba(255,255,255,0.06);border-radius:3px;font-size:11px;">${h.ticker} <span style="color:${h.pnl_pct>=0?'var(--green)':'var(--red)'};">${h.pnl_pct>=0?'+':''}${h.pnl_pct}%</span></span>`
-                ).join('');
-                html += holdRows || '<div style="color:var(--text-muted);">None</div>';
-                html += '</div>';
-
-                html += '</div>';
-                diffBody.innerHTML = html;
-
-                if (d.sell.length > 0 || d.buy.length > 0) {
-                    document.getElementById('mom20-place-orders-btn').style.display = '';
-                }
-            } catch(e) { diffBody.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`; }
-        }
-
-        async function mom20PlaceOrders() {
-            if (!_mom20Diff) return;
+        async function mom20PlaceAllOrders() {
+            if (!mom20Basket.length) { showToast('Basket is empty', 'error'); return; }
+            const totalW = mom20TotalWeight();
+            if (Math.abs(totalW - 100) > 2) {
+                showToast(`Total weight is ${totalW}% — adjust to ~100% before placing orders`, 'error'); return;
+            }
             const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
             if (!userId) { showToast('Kite login required', 'error'); return; }
 
-            const orders = [
-                ..._mom20Diff.sell.map(s => ({ticker: s.ticker, side: 'SELL', shares: s.shares, price: s.price})),
-                ..._mom20Diff.buy.map(b  => ({ticker: b.ticker, side: 'BUY',  shares: b.shares, price: b.price})),
-            ];
-            if (!confirm(`Place ${orders.length} orders (${_mom20Diff.sell.length} SELL + ${_mom20Diff.buy.length} BUY) via Kite?`)) return;
+            const orders = mom20Basket.map(s => ({
+                ticker: s.ticker, side: 'BUY',
+                shares: mom20CalcShares(s.price, s.weight),
+                price: s.price,
+            })).filter(o => o.shares > 0);
+
+            if (!orders.length) { showToast('No valid orders (check capital/prices)', 'error'); return; }
+            if (!confirm(`Place ${orders.length} BUY orders via Kite?\nTotal ≈ ₹${orders.reduce((s,o)=>s+o.shares*o.price,0).toLocaleString('en-IN',{maximumFractionDigits:0})}`)) return;
 
             try {
                 const r = await fetch('/api/mom20-portfolio/place-orders', {
@@ -5929,8 +6038,6 @@
                 const d = await r.json();
                 if (d.success) {
                     _renderOrderStatus(d.orders);
-                    document.getElementById('mom20-place-orders-btn').style.display = 'none';
-                    document.getElementById('mom20-confirm-rebal-btn').style.display = '';
                     showToast(`${d.orders.length} orders placed`, 'success');
                 } else showToast(d.error, 'error');
             } catch(e) { showToast(e.message, 'error'); }
@@ -5954,35 +6061,10 @@
                 const st = (o.status || '').toUpperCase();
                 const col = st === 'COMPLETE' ? 'var(--green)' : st === 'REJECTED' || st === 'ERROR' ? 'var(--red)' : 'var(--orange,#ff9800)';
                 const icon = st === 'COMPLETE' ? '✓' : st === 'REJECTED' || st === 'ERROR' ? '✗' : '⏳';
-                return `<span style="padding:3px 8px;border-radius:3px;background:rgba(255,255,255,0.06);font-size:11px;color:${col};">
-                    ${icon} ${o.side} ${o.ticker} ${o.shares}sh ${o.avg_price ? '@ ₹'+o.avg_price : ''}
-                </span>`;
+                return `<div style="padding:3px 0;color:${col};">
+                    ${icon} ${o.side} <b>${o.ticker}</b> ${o.shares}sh ${o.avg_price ? '@ ₹'+o.avg_price : ''}
+                </div>`;
             }).join('');
-        }
-
-        async function mom20ConfirmRebalance() {
-            if (!_mom20Diff) return;
-            const today = new Date().toISOString().slice(0,10);
-            const payload = {
-                sell: _mom20Diff.sell.map(s => s.ticker),
-                buy:  _mom20Diff.buy.map(b  => ({ticker: b.ticker, shares: b.shares, price: b.price})),
-                date: today,
-            };
-            try {
-                const r = await fetch('/api/mom20-portfolio/confirm-rebalance', {
-                    method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify(payload)
-                });
-                const d = await r.json();
-                if (d.success) {
-                    showToast(`Rebalance confirmed — ${d.holdings_count} stocks in portfolio`, 'success');
-                    document.getElementById('mom20-confirm-rebal-btn').style.display = 'none';
-                    document.getElementById('mom20-diff-body').innerHTML = '';
-                    document.getElementById('mom20-charges-badge').style.display = 'none';
-                    _mom20Diff = null;
-                    mom20LoadPortfolio();
-                } else showToast(d.error, 'error');
-            } catch(e) { showToast(e.message, 'error'); }
         }
 
     </script>

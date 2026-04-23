@@ -2286,15 +2286,65 @@ def mom20_portfolio_state():
 
 @app.route("/api/mom20-portfolio/settings", methods=["POST"])
 def mom20_portfolio_settings():
-    """Update capital setting."""
+    """Update capital and optionally basket weights."""
     data = request.get_json() or {}
     capital = int(data.get("capital", 2000000))
     if capital < 100000 or capital > 100000000:
         return jsonify({"success": False, "error": "Capital must be between ₹1L and ₹10Cr"}), 400
     portfolio = load_portfolio()
     portfolio["capital"] = capital
+    # If basket provided, save as holdings with weight info
+    basket = data.get("basket")
+    if basket:
+        import math as _math
+        portfolio["holdings"] = [
+            {
+                "ticker": s["ticker"],
+                "shares": int(_math.floor(capital * (s["weight"] / 100) / s["price"])) if s.get("price", 0) > 0 else 0,
+                "entry_price": s.get("price", 0),
+                "entry_date": __import__('datetime').date.today().isoformat(),
+                "weight_pct": s["weight"],
+            }
+            for s in basket
+        ]
     save_portfolio(portfolio)
     return jsonify({"success": True, "capital": capital})
+
+
+@app.route("/api/mom20-portfolio/search", methods=["GET"])
+def mom20_portfolio_search():
+    """Search tickers for basket builder. __import__ returns current Mom20 signals."""
+    q = request.args.get("q", "").upper().strip()
+    # Special key: return current Mom20 signals for import
+    if q == "__IMPORT__":
+        try:
+            result = live_signals_scanner.scan_entry_signals()
+            signals = result.get("mom20_signals", [])[:15]
+            return jsonify({"success": True, "signals": [{"ticker": s["ticker"], "price": s["price"], "rank": s["rank"]} for s in signals]})
+        except Exception as e:
+            return jsonify({"success": False, "signals": [], "error": str(e)})
+    if len(q) < 2:
+        return jsonify({"success": True, "results": []})
+    # Check live signals cache first
+    try:
+        result = live_signals_scanner.scan_entry_signals()
+        all_sigs = result.get("mom20_signals", []) + result.get("mom20_overflow", [])
+        matches = [{"ticker": s["ticker"], "price": s["price"], "rank": s.get("rank")}
+                   for s in all_sigs if q in s["ticker"]]
+        if matches:
+            return jsonify({"success": True, "results": matches[:6]})
+    except Exception:
+        pass
+    # Fallback: yfinance quick price lookup
+    try:
+        import yfinance as yf
+        t = yf.Ticker(f"{q}.NS")
+        price = getattr(t.fast_info, 'last_price', None)
+        if price:
+            return jsonify({"success": True, "results": [{"ticker": q, "price": round(float(price), 2)}]})
+    except Exception:
+        pass
+    return jsonify({"success": True, "results": []})
 
 
 @app.route("/api/mom20-portfolio/rebalance-diff", methods=["GET"])
