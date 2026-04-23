@@ -2054,7 +2054,7 @@ def _etf_signal_scheduler():
     """
     import time
     from datetime import timezone, timedelta
-    from data.notifier import send_message, format_etf_alert
+    from data.notifier import send_message
 
     IST = timezone(timedelta(hours=5, minutes=30))
     SCAN_INTERVAL = 3600  # 1 hour
@@ -2145,26 +2145,25 @@ def _etf_signal_scheduler():
         startup_scan_done = True
         print(f"[ETF scheduler] Scanning at {now_ist.strftime('%Y-%m-%d %H:%M IST')}")
 
-        # ── ETF Core scan ────────────────────────────────────────────────────
+        # ── ETF Z-Score scan ─────────────────────────────────────────────────
         try:
-            etf_result = etf_engine.scan()
-            etf_msg = format_etf_alert(etf_result)
+            from data.etf_core_zscore_backtest import score_live
+            from data.notifier import format_etf_zscore_alert
+            etf_ranked = score_live()
+            etf_msg = format_etf_zscore_alert(etf_ranked)
             if etf_msg:
-                entry_syms = tuple(s["symbol"] for s in etf_result.get("entry_signals", []))
-                exit_syms  = tuple(s["symbol"] for s in etf_result.get("exit_signals", []))
-                re_syms    = tuple(s["symbol"] for s in etf_result.get("reentry_signals", []))
-                etf_key = (entry_syms, exit_syms, re_syms)
+                etf_key = tuple(s["symbol"] for s in etf_ranked[:5])
                 if etf_key != last_etf_key:
-                    print(f"[ETF scheduler] ETF new signals — alerting")
+                    print(f"[ETF scheduler] ETF Z-Score top-5 changed — alerting")
                     send_message(etf_msg)
                     last_etf_key = etf_key
                 else:
-                    print(f"[ETF scheduler] ETF signals unchanged — skipping")
+                    print(f"[ETF scheduler] ETF Z-Score unchanged — skipping")
             else:
-                print(f"[ETF scheduler] ETF no signals")
+                print(f"[ETF scheduler] ETF Z-Score no signals")
                 last_etf_key = None
         except Exception as e:
-            err = f"⚠️ ETF Core scan error: {e}"
+            err = f"⚠️ ETF Z-Score scan error: {e}"
             print(f"[ETF scheduler] {err}")
             try:
                 send_message(err)

@@ -171,6 +171,32 @@ def format_rs63_exit_alert(exit_signals: list) -> str | None:
     return "\n".join(lines)
 
 
+def format_etf_zscore_alert(ranked: list) -> str | None:
+    """Format ETF Z-Score top-10 ranking as a Telegram message.
+    ranked: output of etf_core_zscore_backtest.score_live()
+    Entry if rank≤5, hold if rank≤10 (frozen config)."""
+    if not ranked:
+        return None
+
+    from datetime import datetime, timezone, timedelta
+    ist = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%d %b %H:%M")
+    ENTRY_THRESH, HOLD_THRESH = 5, 10
+
+    lines = [f"<b>🌐 ETF Z-Score Top 10</b> | {ist}", "<code>"]
+    lines.append(f"{'#':<3} {'ETF':<12} {'Close':>7} {'12m':>6} {'3m':>6} {'Score':>5}")
+    lines.append("─" * 44)
+    for s in ranked[:10]:
+        tag = "★" if s["rank"] <= ENTRY_THRESH else "◀"
+        lines.append(
+            f"{s['rank']:<3} {s['symbol']:<12} {s['price']:>7,.0f}"
+            f" {s['ret_12m']:>+5.0f}% {s['ret_3m']:>+5.0f}%"
+            f" {s['score']:>5.2f} {tag}"
+        )
+    lines.append("</code>")
+    lines.append(f"★ entry (rank≤{ENTRY_THRESH})  ◀ hold (rank≤{HOLD_THRESH})")
+    return "\n".join(lines)
+
+
 def format_mom20_alert(scan_result: dict) -> str | None:
     """Format Mom20 top-20 momentum ranking as a Telegram message.
     Sends once daily when signals change. Returns None if no signals."""

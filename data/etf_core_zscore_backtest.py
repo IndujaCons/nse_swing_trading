@@ -564,6 +564,79 @@ def run(refresh=False, use_regime=False, start_override=None):
         print(f"  Rebalance NAV exported → etf_zscore_rebal.csv ({len(rebal_nav)} rows)")
 
 
+def score_live() -> list[dict]:
+    """Return current ETF Z-Score ranking for live signals / Telegram alerts.
+    Uses cached price data. Returns list of dicts sorted by rank."""
+    try:
+        closes, bench = fetch_all(refresh=False)
+    except Exception:
+        return []
+
+    today = pd.Timestamp.today().normalize()
+    all_syms = [sym for sym, _, _ in UNIVERSE if sym in closes and len(closes[sym]) >= LONG_PD + 10]
+
+    score_data = {}
+    bench_ret = bench.pct_change()
+
+    for sym in all_syms:
+        s = closes[sym]
+        if len(s) < LONG_PD + 10:
+            continue
+        try:
+            idx = s.index.searchsorted(today)
+            if idx >= len(s): idx = len(s) - 1
+            px   = float(s.iloc[idx])
+            r12  = float(s.iloc[idx] / s.iloc[max(0, idx - LONG_PD)] - 1)  if idx >= LONG_PD  else None
+            r3   = float(s.iloc[idx] / s.iloc[max(0, idx - SHORT_PD)] - 1) if idx >= SHORT_PD else None
+            dr   = s.pct_change()
+            v    = float(dr.iloc[max(0, idx - LONG_PD):idx + 1].std() * (LONG_PD ** 0.5))
+            if None in (r12, r3) or v == 0: continue
+
+            # Rolling beta vs Nifty 50
+            ba   = bench_ret.reindex(s.index, method='ffill').fillna(0)
+            cov_ = dr.iloc[max(0, idx - LONG_PD):idx + 1].cov(ba.iloc[max(0, idx - LONG_PD):idx + 1])
+            var_ = ba.iloc[max(0, idx - LONG_PD):idx + 1].var()
+            beta = float(cov_ / var_) if var_ > 1e-10 else 0.0
+            if abs(beta) > BETA_CAP: continue
+
+            score_data[sym] = {"px": px, "r12": r12, "r3": r3, "v": v, "beta": beta,
+                               "mr12": r12 / v, "mr3": r3 / v}
+        except Exception:
+            continue
+
+    if len(score_data) < 3:
+        return []
+
+    eligible = list(score_data.keys())
+    arr12 = np.array([score_data[s]["mr12"] for s in eligible])
+    arr3  = np.array([score_data[s]["mr3"]  for s in eligible])
+
+    def _z(a):
+        mu, sd = a.mean(), a.std()
+        return (a - mu) / sd if sd > 0 else np.zeros_like(a)
+
+    waz = W12 * _z(arr12) + W3 * _z(arr3)
+    sc  = np.where(waz >= 0, 1 + waz, 1.0 / (1 - waz))
+
+    results = []
+    for i, sym in enumerate(eligible):
+        d = score_data[sym]
+        results.append({
+            "symbol": sym,
+            "score":  round(float(sc[i]), 3),
+            "price":  round(d["px"], 2),
+            "ret_12m": round(d["r12"] * 100, 1),
+            "ret_3m":  round(d["r3"]  * 100, 1),
+            "beta":    round(d["beta"], 2),
+        })
+
+    results.sort(key=lambda x: -x["score"])
+    for i, r in enumerate(results):
+        r["rank"] = i + 1
+
+    return results
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--refresh",    action="store_true", help="Re-download data")
