@@ -1337,6 +1337,7 @@
                 <button class="strategy-tab active" onclick="switchStrategy('rs')">Screener</button>
                 <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
                 <button class="strategy-tab" onclick="switchStrategy('etf_core')">ETF Core</button>
+                <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2304,6 +2305,93 @@
 
             </div><!-- end #etf-core-panels -->
 
+            <!-- Mom20 Portfolio Builder Tab -->
+            <div id="mom20-portfolio-panels" class="hidden" style="padding:16px;">
+
+                <!-- Header row -->
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+                    <span style="font-size:14px;font-weight:700;color:#ff6b35;letter-spacing:0.5px;">MOM20 PORTFOLIO BUILDER</span>
+                    <span id="mom20-port-regime-badge2" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">Regime: —</span>
+                    <span id="mom20-port-rebal-badge2" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;">Next rebalance: —</span>
+                    <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 15</button>
+                    <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
+                </div>
+
+                <!-- Performance card (shown when portfolio has tracking data) -->
+                <div id="mom20-perf-card2" style="display:none;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:14px;"></div>
+
+                <div style="display:grid;grid-template-columns:1fr 240px;gap:16px;align-items:start;">
+
+                    <!-- LEFT: search + stock table -->
+                    <div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative;">
+                            <div style="position:relative;flex:1;">
+                                <input id="mom20-search-input2" type="text" placeholder="🔍 Search by ticker (e.g. TITAN, SBIN)"
+                                    oninput="mom20SearchSuggest(this.value, '2')"
+                                    onkeydown="if(event.key==='Enter')mom20AddStock('2')"
+                                    style="width:100%;padding:8px 12px;font-size:13px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
+                                <div id="mom20-suggest-dropdown2" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:0 0 6px 6px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
+                            </div>
+                            <button onclick="mom20AddStock('2')" style="padding:7px 18px;font-size:13px;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;white-space:nowrap;">+ Add</button>
+                            <span id="mom20-total-weight-badge2" style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--bg-tertiary);color:var(--text-muted);white-space:nowrap;">Total: 0%</span>
+                        </div>
+
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                            <thead>
+                                <tr style="font-size:11px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
+                                    <th style="text-align:left;padding:4px 8px;">Stock</th>
+                                    <th style="text-align:right;padding:4px 8px;">Price (₹)</th>
+                                    <th style="text-align:center;padding:4px 24px;">Weights</th>
+                                    <th style="text-align:right;padding:4px 8px;">Shares | Weight%</th>
+                                    <th style="width:20px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="mom20-basket-tbody2">
+                                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 15"</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- RIGHT: sidebar -->
+                    <div style="background:var(--bg-secondary);border-radius:8px;padding:16px;border:1px solid var(--border-color);">
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Investment Amount</div>
+                        <div style="position:relative;margin-bottom:4px;">
+                            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;">₹</span>
+                            <input id="mom20-capital-input2" type="number" step="100000" min="100000" value="2000000"
+                                oninput="mom20RenderBasket('2')"
+                                style="width:100%;padding:8px 8px 8px 26px;font-size:14px;font-weight:700;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
+                        </div>
+                        <div id="mom20-min-investment2" style="font-size:10px;color:var(--text-muted);margin-bottom:14px;">Min Investment: —</div>
+
+                        <div style="border-top:1px solid var(--border-color);padding-top:12px;margin-bottom:12px;">
+                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
+                                <span>Stocks</span><span id="mom20-sb-count2">0</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
+                                <span>Total weight</span><span id="mom20-sb-weight2">0%</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
+                                <span>Est. charges</span><span id="mom20-sb-charges2">—</span>
+                            </div>
+                        </div>
+
+                        <button onclick="mom20SavePortfolio('2')" style="width:100%;padding:9px;margin-bottom:8px;font-size:13px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">💾 Save Portfolio</button>
+                        <button onclick="mom20PlaceAllOrders('2')" style="width:100%;padding:9px;font-size:13px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⚡ Invest Now</button>
+
+                        <div id="mom20-order-status-wrap2" style="display:none;margin-top:12px;border-top:1px solid var(--border-color);padding-top:10px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">ORDER STATUS</span>
+                                <button onclick="mom20PollOrders('2')" style="padding:2px 8px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺</button>
+                            </div>
+                            <div id="mom20-order-status-body2" style="display:flex;flex-direction:column;gap:4px;font-size:11px;"></div>
+                            <button onclick="mom20ConfirmInvestment('2')" style="width:100%;margin-top:10px;padding:8px;font-size:12px;font-weight:700;background:#ff6b35;color:white;border:none;border-radius:6px;cursor:pointer;">✓ Confirm Investment</button>
+                            <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;">Switches tracking to actual avg prices</div>
+                        </div>
+                    </div>
+
+                </div><!-- end grid -->
+            </div><!-- end #mom20-portfolio-panels -->
+
         </main>
     </div>
 
@@ -3214,6 +3302,7 @@
             else if (strategy === 'rs') tabs[1].classList.add('active');
             else if (strategy === 'live_signals') tabs[2].classList.add('active');
             else if (strategy === 'etf_core') tabs[3].classList.add('active');
+            else if (strategy === 'mom20_portfolio') tabs[4].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -3222,6 +3311,7 @@
             document.getElementById('rs-panels').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-panels').classList.toggle('hidden', strategy !== 'live_signals');
             document.getElementById('etf-core-panels').classList.toggle('hidden', strategy !== 'etf_core');
+            document.getElementById('mom20-portfolio-panels').classList.toggle('hidden', strategy !== 'mom20_portfolio');
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
@@ -3240,6 +3330,9 @@
             }
             if (strategy === 'etf_core') {
                 initEtfCore();
+            }
+            if (strategy === 'mom20_portfolio') {
+                mom20LoadPortfolio();
             }
         }
 
@@ -6126,24 +6219,30 @@
         let mom20Basket = [];   // [{ticker, price, weight}]
         let _mom20SearchTimer = null;
 
-        function mom20GetCapital() {
-            return parseInt(document.getElementById('mom20-capital-input').value) || 2000000;
+        // sfx = '' (Live Signals panel) or '2' (Mom20 tab); '' is legacy, '2' is primary
+        const _mom20Sfxs = ['', '2'];
+
+        function mom20GetCapital(sfx) {
+            // If sfx given, read that input; else prefer the visible tab
+            const s = sfx !== undefined ? sfx
+                : (!document.getElementById('mom20-portfolio-panels').classList.contains('hidden') ? '2' : '');
+            return parseInt(document.getElementById(`mom20-capital-input${s}`).value) || 2000000;
         }
         function mom20TotalWeight() {
             return mom20Basket.reduce((s, b) => s + b.weight, 0);
         }
-        function mom20CalcShares(price, weight) {
-            const cap = mom20GetCapital();
+        function mom20CalcShares(price, weight, sfx) {
+            const cap = mom20GetCapital(sfx);
             return price > 0 ? Math.floor(cap * (weight / 100) / price) : 0;
         }
         function mom20CalcMinInvestment() {
             if (!mom20Basket.length) return 0;
             return Math.ceil(Math.max(...mom20Basket.map(s => s.price / (s.weight / 100))));
         }
-        function mom20CalcCharges() {
-            const cap = mom20GetCapital();
+        function mom20CalcCharges(sfx) {
+            const cap = mom20GetCapital(sfx);
             const buyTv = mom20Basket.reduce((s, b) => {
-                const shares = mom20CalcShares(b.price, b.weight);
+                const shares = b.price > 0 ? Math.floor(cap * (b.weight / 100) / b.price) : 0;
                 return s + shares * b.price;
             }, 0);
             if (!buyTv) return 0;
@@ -6155,44 +6254,55 @@
             return Math.round(stt + exchange + sebi + stamp + gst);
         }
 
-        function mom20RenderBasket() {
-            const tbody = document.getElementById('mom20-basket-tbody');
-            const totalW = mom20TotalWeight();
-            const wBadge = document.getElementById('mom20-total-weight-badge');
-            wBadge.textContent = `Total: ${totalW}%`;
-            wBadge.style.background = Math.abs(totalW - 100) <= 1 ? 'rgba(76,175,80,0.15)' : totalW > 100 ? 'rgba(244,67,54,0.15)' : 'var(--bg-tertiary)';
-            wBadge.style.color = Math.abs(totalW - 100) <= 1 ? 'var(--green)' : totalW > 100 ? 'var(--red)' : 'var(--text-muted)';
+        function mom20RenderBasket(sfx) {
+            // Render to all panels (or just the given sfx panel)
+            const targets = sfx !== undefined ? [sfx] : _mom20Sfxs;
+            targets.forEach(s => {
+                const tbody = document.getElementById(`mom20-basket-tbody${s}`);
+                if (!tbody) return;
+                const cap = parseInt(document.getElementById(`mom20-capital-input${s}`)?.value) || 2000000;
+                const totalW = mom20TotalWeight();
+                const wBadge = document.getElementById(`mom20-total-weight-badge${s}`);
+                if (wBadge) {
+                    wBadge.textContent = `Total: ${totalW}%`;
+                    wBadge.style.background = Math.abs(totalW - 100) <= 1 ? 'rgba(76,175,80,0.15)' : totalW > 100 ? 'rgba(244,67,54,0.15)' : 'var(--bg-tertiary)';
+                    wBadge.style.color = Math.abs(totalW - 100) <= 1 ? 'var(--green)' : totalW > 100 ? 'var(--red)' : 'var(--text-muted)';
+                }
+                const sbCount = document.getElementById(`mom20-sb-count${s}`);
+                const sbWeight = document.getElementById(`mom20-sb-weight${s}`);
+                const sbCharges = document.getElementById(`mom20-sb-charges${s}`);
+                const minInvEl = document.getElementById(`mom20-min-investment${s}`);
+                if (sbCount) sbCount.textContent = mom20Basket.length;
+                if (sbWeight) sbWeight.textContent = totalW + '%';
+                const charges = mom20CalcCharges(s);
+                if (sbCharges) sbCharges.textContent = charges ? '₹' + charges.toLocaleString('en-IN') : '—';
+                const minInv = mom20CalcMinInvestment();
+                if (minInvEl) minInvEl.textContent = minInv ? `Min Investment: ₹${minInv.toLocaleString('en-IN')}` : 'Min Investment: —';
 
-            document.getElementById('mom20-sb-count').textContent = mom20Basket.length;
-            document.getElementById('mom20-sb-weight').textContent = totalW + '%';
-            const charges = mom20CalcCharges();
-            document.getElementById('mom20-sb-charges').textContent = charges ? '₹' + charges.toLocaleString('en-IN') : '—';
-            const minInv = mom20CalcMinInvestment();
-            document.getElementById('mom20-min-investment').textContent = minInv ? `Min Investment: ₹${minInv.toLocaleString('en-IN')}` : 'Min Investment: —';
-
-            if (!mom20Basket.length) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 15"</td></tr>';
-                return;
-            }
-            tbody.innerHTML = mom20Basket.map((s, i) => {
-                const shares = mom20CalcShares(s.price, s.weight);
-                const actualWt = mom20GetCapital() > 0 ? (shares * s.price / mom20GetCapital() * 100).toFixed(2) : '0.00';
-                return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <td style="padding:8px 8px;font-weight:700;color:var(--text-primary);">${s.ticker}</td>
-                    <td style="text-align:right;padding:8px;color:var(--text-secondary);">${s.price.toLocaleString('en-IN', {maximumFractionDigits:2})}</td>
-                    <td style="text-align:center;padding:8px 4px;">
-                        <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
-                            <button onclick="mom20ChangeWeight(${i},-1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:14px;line-height:1;">−</button>
-                            <span style="min-width:28px;text-align:center;font-weight:700;font-size:14px;">${s.weight}</span>
-                            <button onclick="mom20ChangeWeight(${i},+1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:14px;line-height:1;">+</button>
-                        </div>
-                    </td>
-                    <td style="text-align:right;padding:8px;color:var(--text-muted);font-size:12px;">${shares} | ${actualWt}%</td>
-                    <td style="padding:4px 6px;text-align:center;">
-                        <button onclick="mom20RemoveStock(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;" title="Remove">×</button>
-                    </td>
-                </tr>`;
-            }).join('');
+                if (!mom20Basket.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 15"</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = mom20Basket.map((b, i) => {
+                    const shares = b.price > 0 ? Math.floor(cap * (b.weight / 100) / b.price) : 0;
+                    const actualWt = cap > 0 ? (shares * b.price / cap * 100).toFixed(2) : '0.00';
+                    return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <td style="padding:8px 8px;font-weight:700;color:var(--text-primary);">${b.ticker}</td>
+                        <td style="text-align:right;padding:8px;color:var(--text-secondary);">${b.price.toLocaleString('en-IN', {maximumFractionDigits:2})}</td>
+                        <td style="text-align:center;padding:8px 4px;">
+                            <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+                                <button onclick="mom20ChangeWeight(${i},-1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:14px;line-height:1;">−</button>
+                                <span style="min-width:28px;text-align:center;font-weight:700;font-size:14px;">${b.weight}</span>
+                                <button onclick="mom20ChangeWeight(${i},+1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:14px;line-height:1;">+</button>
+                            </div>
+                        </td>
+                        <td style="text-align:right;padding:8px;color:var(--text-muted);font-size:12px;">${shares} | ${actualWt}%</td>
+                        <td style="padding:4px 6px;text-align:center;">
+                            <button onclick="mom20RemoveStock(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;" title="Remove">×</button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            });
         }
 
         function mom20ChangeWeight(idx, delta) {
@@ -6205,9 +6315,10 @@
             mom20RenderBasket();
         }
 
-        async function mom20SearchSuggest(q) {
+        async function mom20SearchSuggest(q, sfx) {
+            sfx = sfx || '';
             clearTimeout(_mom20SearchTimer);
-            const dd = document.getElementById('mom20-suggest-dropdown');
+            const dd = document.getElementById(`mom20-suggest-dropdown${sfx}`);
             if (q.length < 2) { dd.style.display = 'none'; return; }
             _mom20SearchTimer = setTimeout(async () => {
                 try {
@@ -6215,7 +6326,7 @@
                     const d = await r.json();
                     if (!d.results || !d.results.length) { dd.style.display = 'none'; return; }
                     dd.innerHTML = d.results.map(res =>
-                        `<div onclick="mom20SelectSuggest('${res.ticker}',${res.price})"
+                        `<div onclick="mom20SelectSuggest('${res.ticker}',${res.price},'${sfx}')"
                             style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);"
                             onmouseover="this.style.background='rgba(255,255,255,0.07)'"
                             onmouseout="this.style.background=''">
@@ -6229,18 +6340,19 @@
             }, 300);
         }
 
-        function mom20SelectSuggest(ticker, price) {
-            document.getElementById('mom20-search-input').value = ticker;
-            document.getElementById('mom20-suggest-dropdown').style.display = 'none';
-            mom20AddStockDirect(ticker, price);
+        function mom20SelectSuggest(ticker, price, sfx) {
+            sfx = sfx || '';
+            document.getElementById(`mom20-search-input${sfx}`).value = ticker;
+            document.getElementById(`mom20-suggest-dropdown${sfx}`).style.display = 'none';
+            mom20AddStockDirect(ticker, price, sfx);
         }
 
-        async function mom20AddStock() {
-            const inp = document.getElementById('mom20-search-input');
+        async function mom20AddStock(sfx) {
+            sfx = sfx || '';
+            const inp = document.getElementById(`mom20-search-input${sfx}`);
             const q = inp.value.trim().toUpperCase();
             if (!q) return;
-            document.getElementById('mom20-suggest-dropdown').style.display = 'none';
-            // Check if already in basket
+            document.getElementById(`mom20-suggest-dropdown${sfx}`).style.display = 'none';
             if (mom20Basket.find(s => s.ticker === q)) { showToast(`${q} already in basket`, 'error'); return; }
             inp.disabled = true;
             try {
@@ -6248,7 +6360,7 @@
                 const d = await r.json();
                 if (d.results && d.results.length) {
                     const res = d.results.find(x => x.ticker === q) || d.results[0];
-                    mom20AddStockDirect(res.ticker, res.price);
+                    mom20AddStockDirect(res.ticker, res.price, sfx);
                 } else {
                     showToast(`${q} not found — check ticker`, 'error');
                 }
@@ -6258,13 +6370,14 @@
             inp.focus();
         }
 
-        function mom20AddStockDirect(ticker, price) {
+        function mom20AddStockDirect(ticker, price, sfx) {
+            sfx = sfx || '';
             if (mom20Basket.find(s => s.ticker === ticker)) return;
-            // Default weight: 5, or distribute evenly
             const defaultW = mom20Basket.length < 20 ? 5 : 1;
             mom20Basket.push({ticker, price, weight: defaultW});
             mom20RenderBasket();
-            document.getElementById('mom20-search-input').value = '';
+            const inp = document.getElementById(`mom20-search-input${sfx}`);
+            if (inp) inp.value = '';
         }
 
         async function mom20ImportSignals() {
@@ -6288,16 +6401,29 @@
             try {
                 const r = await fetch('/api/mom20-portfolio');
                 const d = await r.json();
-                document.getElementById('mom20-capital-input').value = d.capital;
-                const rb = document.getElementById('mom20-port-regime-badge');
-                rb.textContent = `Regime: ${d.regime}`;
-                rb.style.background = d.regime === 'ON' ? 'rgba(76,175,80,0.2)' : d.regime === 'OFF' ? 'rgba(244,67,54,0.2)' : 'var(--bg-tertiary)';
-                rb.style.color = d.regime === 'ON' ? 'var(--green)' : d.regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
-                document.getElementById('mom20-port-rebal-badge').textContent =
-                    `Next rebalance: ${d.next_rebalance} (${d.days_to_rebalance}d)`;
-                // Render performance card
+                // Update both panels
+                _mom20Sfxs.forEach(s => {
+                    const capEl = document.getElementById(`mom20-capital-input${s}`);
+                    if (capEl) capEl.value = d.capital;
+                    const rb = document.getElementById(`mom20-port-regime-badge${s || '2'}`);
+                    if (rb) {
+                        rb.textContent = `Regime: ${d.regime}`;
+                        rb.style.background = d.regime === 'ON' ? 'rgba(76,175,80,0.2)' : d.regime === 'OFF' ? 'rgba(244,67,54,0.2)' : 'var(--bg-tertiary)';
+                        rb.style.color = d.regime === 'ON' ? 'var(--green)' : d.regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
+                    }
+                    const rebalEl = document.getElementById(`mom20-port-rebal-badge${s || '2'}`);
+                    if (rebalEl) rebalEl.textContent = `Next rebalance: ${d.next_rebalance} (${d.days_to_rebalance}d)`;
+                });
+                // Also update the legacy (non-suffixed) badge in Live Signals panel if it exists
+                const rbLegacy = document.getElementById('mom20-port-regime-badge');
+                if (rbLegacy) {
+                    rbLegacy.textContent = `Regime: ${d.regime}`;
+                    rbLegacy.style.background = d.regime === 'ON' ? 'rgba(76,175,80,0.2)' : d.regime === 'OFF' ? 'rgba(244,67,54,0.2)' : 'var(--bg-tertiary)';
+                    rbLegacy.style.color = d.regime === 'ON' ? 'var(--green)' : d.regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
+                }
+                const rebalLegacy = document.getElementById('mom20-port-rebal-badge');
+                if (rebalLegacy) rebalLegacy.textContent = `Next rebalance: ${d.next_rebalance} (${d.days_to_rebalance}d)`;
                 _mom20RenderPerfCard(d);
-                // Restore basket
                 if (d.basket && d.basket.length) {
                     mom20Basket = d.basket.map(s => {
                         const stock = (d.stocks || []).find(x => x.ticker === s.ticker);
@@ -6311,44 +6437,38 @@
         }
 
         function _mom20RenderPerfCard(d) {
-            const card = document.getElementById('mom20-perf-card');
-            if (!card) return;
             const status = d.status || 'empty';
-            if (status === 'empty' || !d.tracking_since) { card.style.display = 'none'; return; }
-            card.style.display = '';
             const statusLabel = status === 'invested' ? '🟢 Invested' : '📋 Paper';
             const retColor = d.return_pct >= 0 ? 'var(--green)' : 'var(--red)';
             const minInv = d.min_investment ? `₹${d.min_investment.toLocaleString('en-IN')}` : '—';
             const since = d.tracking_since ? new Date(d.tracking_since).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
-            card.innerHTML = `
+            const html = (status === 'empty' || !d.tracking_since) ? null : `
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
                     <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">MOM20 b&lt;1.2</span>
                     <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.07);color:var(--text-muted);">${statusLabel}</span>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
-                    <div>
-                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Index Value</div>
-                        <div style="font-size:18px;font-weight:700;">${d.index_value.toFixed(2)}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Returns</div>
-                        <div style="font-size:18px;font-weight:700;color:${retColor};">${d.return_pct >= 0 ? '+' : ''}${d.return_pct}%</div>
-                    </div>
-                    <div>
-                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Tracking Since</div>
-                        <div style="font-size:13px;font-weight:600;">${since}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Min Amount</div>
-                        <div style="font-size:13px;font-weight:600;">${minInv}</div>
-                    </div>
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Index Value</div>
+                        <div style="font-size:18px;font-weight:700;">${d.index_value.toFixed(2)}</div></div>
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Returns</div>
+                        <div style="font-size:18px;font-weight:700;color:${retColor};">${d.return_pct >= 0 ? '+' : ''}${d.return_pct}%</div></div>
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Tracking Since</div>
+                        <div style="font-size:13px;font-weight:600;">${since}</div></div>
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Min Amount</div>
+                        <div style="font-size:13px;font-weight:600;">${minInv}</div></div>
                 </div>`;
+            ['mom20-perf-card', 'mom20-perf-card2'].forEach(id => {
+                const card = document.getElementById(id);
+                if (!card) return;
+                if (!html) { card.style.display = 'none'; return; }
+                card.style.display = '';
+                card.innerHTML = html;
+            });
         }
 
-        async function mom20SavePortfolio() {
+        async function mom20SavePortfolio(sfx) {
             if (!mom20Basket.length) { showToast('Basket is empty', 'error'); return; }
-            const capital = mom20GetCapital();
-            // Snapshot current prices from basket as saved_price
+            const capital = mom20GetCapital(sfx);
             try {
                 const r = await fetch('/api/mom20-portfolio/save', {
                     method: 'POST', headers: {'Content-Type':'application/json'},
@@ -6362,7 +6482,7 @@
             } catch(e) { showToast(e.message, 'error'); }
         }
 
-        async function mom20PlaceAllOrders() {
+        async function mom20PlaceAllOrders(sfx) {
             if (!mom20Basket.length) { showToast('Basket is empty', 'error'); return; }
             const totalW = mom20TotalWeight();
             if (Math.abs(totalW - 100) > 2) {
@@ -6370,16 +6490,14 @@
             }
             const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
             if (!userId) { showToast('Kite login required', 'error'); return; }
-
+            const cap = mom20GetCapital(sfx);
             const orders = mom20Basket.map(s => ({
                 ticker: s.ticker, side: 'BUY',
-                shares: mom20CalcShares(s.price, s.weight),
+                shares: s.price > 0 ? Math.floor(cap * (s.weight / 100) / s.price) : 0,
                 price: s.price,
             })).filter(o => o.shares > 0);
-
             if (!orders.length) { showToast('No valid orders (check capital/prices)', 'error'); return; }
             if (!confirm(`Place ${orders.length} BUY orders via Kite?\nTotal ≈ ₹${orders.reduce((s,o)=>s+o.shares*o.price,0).toLocaleString('en-IN',{maximumFractionDigits:0})}`)) return;
-
             try {
                 const r = await fetch('/api/mom20-portfolio/place-orders', {
                     method: 'POST', headers: {'Content-Type':'application/json'},
@@ -6393,10 +6511,9 @@
             } catch(e) { showToast(e.message, 'error'); }
         }
 
-        async function mom20ConfirmInvestment() {
+        async function mom20ConfirmInvestment(sfx) {
             const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
             if (!userId) { showToast('Kite login required', 'error'); return; }
-            // Poll latest order status first
             try {
                 const sr = await fetch(`/api/mom20-portfolio/order-status?user_id=${userId}`);
                 const sd = await sr.json();
@@ -6410,13 +6527,16 @@
                 const d = await r.json();
                 if (d.success) {
                     showToast(`Investment confirmed — tracking from actual avg prices since ${d.tracking_since}`, 'success');
-                    document.getElementById('mom20-order-status-wrap').style.display = 'none';
+                    _mom20Sfxs.forEach(s => {
+                        const w = document.getElementById(`mom20-order-status-wrap${s}`);
+                        if (w) w.style.display = 'none';
+                    });
                     mom20LoadPortfolio();
                 } else showToast(d.error, 'error');
             } catch(e) { showToast(e.message, 'error'); }
         }
 
-        async function mom20PollOrders() {
+        async function mom20PollOrders(sfx) {
             const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
             if (!userId) return;
             try {
@@ -6427,17 +6547,18 @@
         }
 
         function _renderOrderStatus(orders) {
-            const wrap = document.getElementById('mom20-order-status-wrap');
-            const body = document.getElementById('mom20-order-status-body');
-            wrap.style.display = '';
-            body.innerHTML = orders.map(o => {
+            const rowHtml = orders.map(o => {
                 const st = (o.status || '').toUpperCase();
                 const col = st === 'COMPLETE' ? 'var(--green)' : st === 'REJECTED' || st === 'ERROR' ? 'var(--red)' : 'var(--orange,#ff9800)';
                 const icon = st === 'COMPLETE' ? '✓' : st === 'REJECTED' || st === 'ERROR' ? '✗' : '⏳';
-                return `<div style="padding:3px 0;color:${col};">
-                    ${icon} ${o.side} <b>${o.ticker}</b> ${o.shares}sh ${o.avg_price ? '@ ₹'+o.avg_price : ''}
-                </div>`;
+                return `<div style="padding:3px 0;color:${col};">${icon} ${o.side} <b>${o.ticker}</b> ${o.shares}sh ${o.avg_price ? '@ ₹'+o.avg_price : ''}</div>`;
             }).join('');
+            _mom20Sfxs.forEach(s => {
+                const wrap = document.getElementById(`mom20-order-status-wrap${s}`);
+                const body = document.getElementById(`mom20-order-status-body${s}`);
+                if (wrap) wrap.style.display = '';
+                if (body) body.innerHTML = rowHtml;
+            });
         }
 
     </script>
