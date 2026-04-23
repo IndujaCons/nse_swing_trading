@@ -36,22 +36,27 @@ _DEFAULT = {
 }
 
 
-def load_portfolio() -> dict:
-    if not os.path.exists(PORTFOLIO_FILE):
+OVERFLOW_PORTFOLIO_FILE = os.path.join(_BASE_DIR, "data_store", "overflow_portfolio.json")
+
+
+def load_portfolio(portfolio_file: str = None) -> dict:
+    path = portfolio_file or PORTFOLIO_FILE
+    if not os.path.exists(path):
         return dict(_DEFAULT)
     try:
-        with open(PORTFOLIO_FILE) as f:
+        with open(path) as f:
             data = json.load(f)
         return {**_DEFAULT, **data}
     except Exception:
         return dict(_DEFAULT)
 
 
-def save_portfolio(state: dict):
-    tmp = PORTFOLIO_FILE + ".tmp"
+def save_portfolio(state: dict, portfolio_file: str = None):
+    path = portfolio_file or PORTFOLIO_FILE
+    tmp = path + ".tmp"
     with open(tmp, "w") as f:
         json.dump(state, f, indent=2, default=str)
-    os.replace(tmp, PORTFOLIO_FILE)
+    os.replace(tmp, path)
 
 
 def get_next_rebalance_date() -> date:

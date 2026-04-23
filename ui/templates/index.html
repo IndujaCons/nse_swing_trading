@@ -1321,6 +1321,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
                 <button class="strategy-tab" onclick="switchStrategy('etf_core')">ETF Core</button>
                 <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
+                <button class="strategy-tab" onclick="switchStrategy('overflow_portfolio')">Overflow</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2237,6 +2238,94 @@
                 </div><!-- end grid -->
             </div><!-- end #mom20-portfolio-panels -->
 
+            <!-- ========== OVERFLOW PORTFOLIO BUILDER ========== -->
+            <div id="overflow-portfolio-panels" class="hidden" style="padding:16px;">
+
+                <!-- Header row -->
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+                    <span style="font-size:14px;font-weight:700;color:#f59e0b;letter-spacing:0.5px;">OVERFLOW PORTFOLIO BUILDER</span>
+                    <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(245,158,11,0.15);color:#f59e0b;">β &gt; 1.2</span>
+                    <span id="ov-port-regime-badge" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">Regime: —</span>
+                    <span id="ov-port-rebal-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(245,158,11,0.1);color:#f59e0b;">Next rebalance: —</span>
+                    <button onclick="ovImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Overflow Signals</button>
+                    <button onclick="ovLoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
+                </div>
+
+                <!-- Performance card -->
+                <div id="ov-perf-card" style="display:none;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:14px;"></div>
+
+                <div style="display:grid;grid-template-columns:1fr 240px;gap:16px;align-items:start;">
+
+                    <!-- LEFT: search + stock table -->
+                    <div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative;">
+                            <div style="position:relative;flex:1;">
+                                <input id="ov-search-input" type="text" placeholder="🔍 Search by ticker (e.g. TITAN, SBIN)"
+                                    oninput="ovSearchSuggest(this.value)"
+                                    onkeydown="if(event.key==='Enter')ovAddStock()"
+                                    style="width:100%;padding:8px 12px;font-size:13px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
+                                <div id="ov-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:0 0 6px 6px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
+                            </div>
+                            <button onclick="ovAddStock()" style="padding:7px 18px;font-size:13px;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;white-space:nowrap;">+ Add</button>
+                            <span id="ov-total-weight-badge" style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--bg-tertiary);color:var(--text-muted);white-space:nowrap;">Total: 0%</span>
+                        </div>
+
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                            <thead>
+                                <tr style="font-size:11px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
+                                    <th style="text-align:left;padding:4px 8px;">Stock</th>
+                                    <th style="text-align:right;padding:4px 8px;">Price (₹)</th>
+                                    <th style="text-align:center;padding:4px 24px;">Weights</th>
+                                    <th style="text-align:right;padding:4px 8px;">Shares | Weight%</th>
+                                    <th style="width:20px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="ov-basket-tbody">
+                                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Overflow Signals"</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- RIGHT: sidebar -->
+                    <div style="background:var(--bg-secondary);border-radius:8px;padding:16px;border:1px solid var(--border-color);">
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Investment Amount</div>
+                        <div style="position:relative;margin-bottom:4px;">
+                            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;">₹</span>
+                            <input id="ov-capital-input" type="number" step="100000" min="100000" value="2000000"
+                                oninput="ovRenderBasket()"
+                                style="width:100%;padding:8px 8px 8px 26px;font-size:14px;font-weight:700;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
+                        </div>
+                        <div id="ov-min-investment" style="font-size:10px;color:var(--text-muted);margin-bottom:14px;">Min Investment: —</div>
+
+                        <div style="border-top:1px solid var(--border-color);padding-top:12px;margin-bottom:12px;">
+                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
+                                <span>Stocks</span><span id="ov-sb-count">0</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
+                                <span>Total weight</span><span id="ov-sb-weight">0%</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
+                                <span>Est. charges</span><span id="ov-sb-charges">—</span>
+                            </div>
+                        </div>
+
+                        <button onclick="ovSavePortfolio()" style="width:100%;padding:9px;margin-bottom:8px;font-size:13px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">💾 Save Portfolio</button>
+                        <button onclick="ovPlaceAllOrders()" style="width:100%;padding:9px;font-size:13px;font-weight:700;background:#f59e0b;color:white;border:none;border-radius:6px;cursor:pointer;">⚡ Invest Now</button>
+
+                        <div id="ov-order-status-wrap" style="display:none;margin-top:12px;border-top:1px solid var(--border-color);padding-top:10px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">ORDER STATUS</span>
+                                <button onclick="ovPollOrders()" style="padding:2px 8px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺</button>
+                            </div>
+                            <div id="ov-order-status-body" style="display:flex;flex-direction:column;gap:4px;font-size:11px;"></div>
+                            <button onclick="ovConfirmInvestment()" style="width:100%;margin-top:10px;padding:8px;font-size:12px;font-weight:700;background:#f59e0b;color:white;border:none;border-radius:6px;cursor:pointer;">✓ Confirm Investment</button>
+                            <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;">Switches tracking to actual avg prices</div>
+                        </div>
+                    </div>
+
+                </div><!-- end grid -->
+            </div><!-- end #overflow-portfolio-panels -->
+
         </main>
     </div>
 
@@ -3148,6 +3237,7 @@
             else if (strategy === 'live_signals') tabs[2].classList.add('active');
             else if (strategy === 'etf_core') tabs[3].classList.add('active');
             else if (strategy === 'mom20_portfolio') tabs[4].classList.add('active');
+            else if (strategy === 'overflow_portfolio') tabs[5].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -3157,6 +3247,7 @@
             document.getElementById('live-signals-panels').classList.toggle('hidden', strategy !== 'live_signals');
             document.getElementById('etf-core-panels').classList.toggle('hidden', strategy !== 'etf_core');
             document.getElementById('mom20-portfolio-panels').classList.toggle('hidden', strategy !== 'mom20_portfolio');
+            document.getElementById('overflow-portfolio-panels').classList.toggle('hidden', strategy !== 'overflow_portfolio');
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
@@ -3178,6 +3269,9 @@
             }
             if (strategy === 'mom20_portfolio') {
                 mom20LoadPortfolio();
+            }
+            if (strategy === 'overflow_portfolio') {
+                ovLoadPortfolio();
             }
         }
 
@@ -6134,6 +6228,310 @@
                 if (wrap) wrap.style.display = '';
                 if (body) body.innerHTML = rowHtml;
             });
+        }
+
+        // ============ Overflow Portfolio Builder ============
+
+        let ovBasket = [];
+        let _ovSearchTimer = null;
+
+        function ovGetCapital() {
+            return parseInt(document.getElementById('ov-capital-input').value) || 2000000;
+        }
+        function ovTotalWeight() {
+            return ovBasket.reduce((s, b) => s + b.weight, 0);
+        }
+        function ovCalcCharges() {
+            const cap = ovGetCapital();
+            const buyTv = ovBasket.reduce((s, b) => {
+                const shares = b.price > 0 ? Math.floor(cap * (b.weight / 100) / b.price) : 0;
+                return s + shares * b.price;
+            }, 0);
+            if (!buyTv) return 0;
+            const stt = 0.001 * buyTv;
+            const exchange = 0.0000307 * buyTv;
+            const sebi = 0.000001 * buyTv;
+            const stamp = 0.00015 * buyTv;
+            const gst = 0.18 * (exchange + sebi);
+            return Math.round(stt + exchange + sebi + stamp + gst);
+        }
+
+        function ovRenderBasket() {
+            const tbody = document.getElementById('ov-basket-tbody');
+            if (!tbody) return;
+            const cap = ovGetCapital();
+            const totalW = ovTotalWeight();
+            const wBadge = document.getElementById('ov-total-weight-badge');
+            if (wBadge) {
+                wBadge.textContent = `Total: ${totalW}%`;
+                wBadge.style.background = Math.abs(totalW - 100) <= 1 ? 'rgba(76,175,80,0.15)' : totalW > 100 ? 'rgba(244,67,54,0.15)' : 'var(--bg-tertiary)';
+                wBadge.style.color = Math.abs(totalW - 100) <= 1 ? 'var(--green)' : totalW > 100 ? 'var(--red)' : 'var(--text-muted)';
+            }
+            const sbCount = document.getElementById('ov-sb-count');
+            const sbWeight = document.getElementById('ov-sb-weight');
+            const sbCharges = document.getElementById('ov-sb-charges');
+            const minInvEl = document.getElementById('ov-min-investment');
+            if (sbCount) sbCount.textContent = ovBasket.length;
+            if (sbWeight) sbWeight.textContent = totalW + '%';
+            const charges = ovCalcCharges();
+            if (sbCharges) sbCharges.textContent = charges ? '₹' + charges.toLocaleString('en-IN') : '—';
+            const minInv = ovBasket.length ? Math.ceil(Math.max(...ovBasket.map(s => s.price / (s.weight / 100)))) : 0;
+            if (minInvEl) minInvEl.textContent = minInv ? `Min Investment: ₹${minInv.toLocaleString('en-IN')}` : 'Min Investment: —';
+
+            if (!ovBasket.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Overflow Signals"</td></tr>';
+                return;
+            }
+            tbody.innerHTML = ovBasket.map((b, i) => {
+                const shares = b.price > 0 ? Math.floor(cap * (b.weight / 100) / b.price) : 0;
+                const actualWt = cap > 0 ? (shares * b.price / cap * 100).toFixed(2) : '0.00';
+                return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <td style="padding:8px 8px;font-weight:700;color:var(--text-primary);">${b.ticker}</td>
+                    <td style="text-align:right;padding:8px;color:var(--text-secondary);">${b.price.toLocaleString('en-IN', {maximumFractionDigits:2})}</td>
+                    <td style="text-align:center;padding:8px 4px;">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+                            <button onclick="ovChangeWeight(${i},-1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:14px;line-height:1;">−</button>
+                            <span style="min-width:28px;text-align:center;font-weight:700;font-size:14px;">${b.weight}</span>
+                            <button onclick="ovChangeWeight(${i},+1)" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:14px;line-height:1;">+</button>
+                        </div>
+                    </td>
+                    <td style="text-align:right;padding:8px;color:var(--text-muted);font-size:12px;">${shares} | ${actualWt}%</td>
+                    <td style="padding:4px 6px;text-align:center;">
+                        <button onclick="ovRemoveStock(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;" title="Remove">×</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function ovChangeWeight(idx, delta) {
+            ovBasket[idx].weight = Math.max(1, Math.min(50, ovBasket[idx].weight + delta));
+            ovRenderBasket();
+        }
+        function ovRemoveStock(idx) {
+            ovBasket.splice(idx, 1);
+            ovRenderBasket();
+        }
+
+        async function ovSearchSuggest(q) {
+            clearTimeout(_ovSearchTimer);
+            const dd = document.getElementById('ov-suggest-dropdown');
+            if (q.length < 2) { dd.style.display = 'none'; return; }
+            _ovSearchTimer = setTimeout(async () => {
+                try {
+                    const r = await fetch(`/api/overflow-portfolio/search?q=${encodeURIComponent(q.toUpperCase())}`);
+                    const d = await r.json();
+                    if (!d.results || !d.results.length) { dd.style.display = 'none'; return; }
+                    dd.innerHTML = d.results.map(res =>
+                        `<div onclick="ovSelectSuggest('${res.ticker}',${res.price})"
+                            style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);"
+                            onmouseover="this.style.background='rgba(255,255,255,0.07)'"
+                            onmouseout="this.style.background=''">
+                            <span style="font-weight:700;">${res.ticker}</span>
+                            <span style="float:right;color:var(--text-muted);">₹${res.price.toLocaleString('en-IN',{maximumFractionDigits:2})}</span>
+                            ${res.rank ? `<span style="font-size:10px;color:#f59e0b;margin-left:6px;">★#${res.rank}</span>` : ''}
+                        </div>`
+                    ).join('');
+                    dd.style.display = '';
+                } catch(e) {}
+            }, 300);
+        }
+
+        function ovSelectSuggest(ticker, price) {
+            document.getElementById('ov-search-input').value = ticker;
+            document.getElementById('ov-suggest-dropdown').style.display = 'none';
+            ovAddStockDirect(ticker, price);
+        }
+
+        async function ovAddStock() {
+            const inp = document.getElementById('ov-search-input');
+            const q = inp.value.trim().toUpperCase();
+            if (!q) return;
+            document.getElementById('ov-suggest-dropdown').style.display = 'none';
+            if (ovBasket.find(s => s.ticker === q)) { showToast(`${q} already in basket`, 'error'); return; }
+            inp.disabled = true;
+            try {
+                const r = await fetch(`/api/overflow-portfolio/search?q=${encodeURIComponent(q)}`);
+                const d = await r.json();
+                if (d.results && d.results.length) {
+                    const res = d.results.find(x => x.ticker === q) || d.results[0];
+                    ovAddStockDirect(res.ticker, res.price);
+                } else {
+                    showToast(`${q} not found — check ticker`, 'error');
+                }
+            } catch(e) { showToast(e.message, 'error'); }
+            inp.disabled = false;
+            inp.value = '';
+            inp.focus();
+        }
+
+        function ovAddStockDirect(ticker, price) {
+            if (ovBasket.find(s => s.ticker === ticker)) return;
+            const defaultW = ovBasket.length < 20 ? 5 : 1;
+            ovBasket.push({ticker, price, weight: defaultW});
+            ovRenderBasket();
+            const inp = document.getElementById('ov-search-input');
+            if (inp) inp.value = '';
+        }
+
+        async function ovImportSignals() {
+            try {
+                const r = await fetch('/api/overflow-portfolio/search?q=__IMPORT__');
+                const d = await r.json();
+                if (d.signals && d.signals.length) {
+                    ovBasket = [];
+                    const w = Math.round(100 / d.signals.length) || 5;
+                    d.signals.forEach(s => ovBasket.push({ticker: s.ticker, price: s.price, weight: w}));
+                    const diff = 100 - ovTotalWeight();
+                    if (diff !== 0 && ovBasket.length) ovBasket[0].weight += diff;
+                    ovRenderBasket();
+                    showToast(`Imported ${ovBasket.length} overflow stocks`, 'success');
+                } else showToast('No overflow signals — refresh live signals first', 'error');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        async function ovLoadPortfolio() {
+            try {
+                const r = await fetch('/api/overflow-portfolio');
+                const d = await r.json();
+                const capEl = document.getElementById('ov-capital-input');
+                if (capEl) capEl.value = d.capital;
+                const rb = document.getElementById('ov-port-regime-badge');
+                if (rb) {
+                    rb.textContent = `Regime: ${d.regime}`;
+                    rb.style.background = d.regime === 'ON' ? 'rgba(76,175,80,0.2)' : d.regime === 'OFF' ? 'rgba(244,67,54,0.2)' : 'var(--bg-tertiary)';
+                    rb.style.color = d.regime === 'ON' ? 'var(--green)' : d.regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
+                }
+                const rebalEl = document.getElementById('ov-port-rebal-badge');
+                if (rebalEl) rebalEl.textContent = `Next rebalance: ${d.next_rebalance} (${d.days_to_rebalance}d)`;
+                _ovRenderPerfCard(d);
+                if (d.basket && d.basket.length) {
+                    ovBasket = d.basket.map(s => {
+                        const stock = (d.stocks || []).find(x => x.ticker === s.ticker);
+                        return {ticker: s.ticker, price: stock ? stock.current : (s.invested_price || s.saved_price || 0), weight: s.weight};
+                    });
+                    ovRenderBasket();
+                    showToast(`Loaded ${d.basket.length} overflow stocks`, 'success');
+                } else showToast('No saved overflow portfolio', 'error');
+                if (d.pending_orders && d.pending_orders.length) _ovRenderOrderStatus(d.pending_orders);
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        function _ovRenderPerfCard(d) {
+            const status = d.status || 'empty';
+            const statusLabel = status === 'invested' ? '🟢 Invested' : '📋 Paper';
+            const retColor = (d.return_pct || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+            const minInv = d.min_investment ? `₹${d.min_investment.toLocaleString('en-IN')}` : '—';
+            const since = d.tracking_since ? new Date(d.tracking_since).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+            const card = document.getElementById('ov-perf-card');
+            if (!card) return;
+            if (!d.tracking_since || status === 'empty') { card.style.display = 'none'; return; }
+            card.style.display = '';
+            card.innerHTML = `
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+                    <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">OVERFLOW β&gt;1.2</span>
+                    <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.07);color:var(--text-muted);">${statusLabel}</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Index Value</div>
+                        <div style="font-size:18px;font-weight:700;">${(d.index_value||100).toFixed(2)}</div></div>
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Returns</div>
+                        <div style="font-size:18px;font-weight:700;color:${retColor};">${(d.return_pct||0) >= 0 ? '+' : ''}${d.return_pct||0}%</div></div>
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Tracking Since</div>
+                        <div style="font-size:13px;font-weight:600;">${since}</div></div>
+                    <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Min Amount</div>
+                        <div style="font-size:13px;font-weight:600;">${minInv}</div></div>
+                </div>`;
+        }
+
+        async function ovSavePortfolio() {
+            if (!ovBasket.length) { showToast('Basket is empty', 'error'); return; }
+            const capital = ovGetCapital();
+            try {
+                const r = await fetch('/api/overflow-portfolio/save', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({capital, basket: ovBasket})
+                });
+                const d = await r.json();
+                if (d.success) {
+                    showToast(`Overflow portfolio saved — paper tracking from ${d.tracking_since}`, 'success');
+                    ovLoadPortfolio();
+                } else showToast(d.error, 'error');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        async function ovPlaceAllOrders() {
+            if (!ovBasket.length) { showToast('Basket is empty', 'error'); return; }
+            const totalW = ovTotalWeight();
+            if (Math.abs(totalW - 100) > 2) {
+                showToast(`Total weight is ${totalW}% — adjust to ~100% before placing orders`, 'error'); return;
+            }
+            const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            if (!userId) { showToast('Kite login required', 'error'); return; }
+            const cap = ovGetCapital();
+            const orders = ovBasket.map(s => ({
+                ticker: s.ticker, side: 'BUY',
+                shares: s.price > 0 ? Math.floor(cap * (s.weight / 100) / s.price) : 0,
+                price: s.price,
+            })).filter(o => o.shares > 0);
+            if (!orders.length) { showToast('No valid orders (check capital/prices)', 'error'); return; }
+            if (!confirm(`Place ${orders.length} BUY orders via Kite?\nTotal ≈ ₹${orders.reduce((s,o)=>s+o.shares*o.price,0).toLocaleString('en-IN',{maximumFractionDigits:0})}`)) return;
+            try {
+                const r = await fetch('/api/overflow-portfolio/place-orders', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({user_id: userId, orders})
+                });
+                const d = await r.json();
+                if (d.success) {
+                    _ovRenderOrderStatus(d.orders);
+                    showToast(`${d.orders.length} orders placed — poll status then Confirm Investment`, 'success');
+                } else showToast(d.error, 'error');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        async function ovConfirmInvestment() {
+            const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            if (!userId) { showToast('Kite login required', 'error'); return; }
+            try {
+                const sr = await fetch(`/api/overflow-portfolio/order-status?user_id=${userId}`);
+                const sd = await sr.json();
+                if (!sd.success) { showToast(sd.error, 'error'); return; }
+                if (!sd.all_complete) { showToast('Some orders are still pending — wait for all to complete', 'error'); return; }
+                const filledOrders = sd.orders.filter(o => o.status && o.status.toUpperCase() === 'COMPLETE' && o.avg_price);
+                const r = await fetch('/api/overflow-portfolio/confirm-investment', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({orders: filledOrders})
+                });
+                const d = await r.json();
+                if (d.success) {
+                    showToast(`Investment confirmed — tracking from actual avg prices since ${d.tracking_since}`, 'success');
+                    document.getElementById('ov-order-status-wrap').style.display = 'none';
+                    ovLoadPortfolio();
+                } else showToast(d.error, 'error');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        async function ovPollOrders() {
+            const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            if (!userId) return;
+            try {
+                const r = await fetch(`/api/overflow-portfolio/order-status?user_id=${userId}`);
+                const d = await r.json();
+                if (d.success) _ovRenderOrderStatus(d.orders);
+            } catch(e) {}
+        }
+
+        function _ovRenderOrderStatus(orders) {
+            const wrap = document.getElementById('ov-order-status-wrap');
+            const body = document.getElementById('ov-order-status-body');
+            if (!wrap || !body) return;
+            const rowHtml = orders.map(o => {
+                const st = (o.status || '').toUpperCase();
+                const col = st === 'COMPLETE' ? 'var(--green)' : st === 'REJECTED' || st === 'ERROR' ? 'var(--red)' : '#f59e0b';
+                const icon = st === 'COMPLETE' ? '✓' : st === 'REJECTED' || st === 'ERROR' ? '✗' : '⏳';
+                return `<div style="padding:3px 0;color:${col};">${icon} ${o.side} <b>${o.ticker}</b> ${o.shares}sh ${o.avg_price ? '@ ₹'+o.avg_price : ''}</div>`;
+            }).join('');
+            wrap.style.display = '';
+            body.innerHTML = rowHtml;
         }
 
     </script>

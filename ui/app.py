@@ -2220,7 +2220,8 @@ def _etf_signal_scheduler():
 
 from data.mom20_portfolio import (
     load_portfolio, save_portfolio, calc_performance,
-    get_next_rebalance_date, days_to_rebalance
+    get_next_rebalance_date, days_to_rebalance,
+    OVERFLOW_PORTFOLIO_FILE,
 )
 import datetime as _dt
 
@@ -2398,6 +2399,166 @@ def mom20_portfolio_confirm_investment():
     portfolio["tracking_since"] = _dt.date.today().isoformat()
     portfolio["pending_orders"] = []
     save_portfolio(portfolio)
+    return jsonify({"success": True, "status": "invested",
+                    "tracking_since": portfolio["tracking_since"]})
+
+
+# ============ Overflow Portfolio Manager ============
+
+def _overflow_live_prices():
+    """Returns (overflow_signals, regime_str, price_map)."""
+    try:
+        result = live_signals_scanner.scan_entry_signals()
+        sigs   = result.get("mom20_overflow", []) + result.get("mom20_signals", [])
+        regime = result.get("mom20_regime", "OFF")
+        prices = {s["ticker"]: s["price"] for s in sigs}
+        return sigs, regime, prices
+    except Exception:
+        return [], "OFF", {}
+
+
+@app.route("/api/overflow-portfolio", methods=["GET"])
+def overflow_portfolio_state():
+    portfolio = load_portfolio(OVERFLOW_PORTFOLIO_FILE)
+    _, regime, prices = _overflow_live_prices()
+    perf = calc_performance(portfolio, prices)
+    return jsonify({
+        **perf,
+        "capital": portfolio.get("capital", 2000000),
+        "next_rebalance": str(get_next_rebalance_date()),
+        "days_to_rebalance": days_to_rebalance(),
+        "regime": regime,
+        "basket": portfolio.get("basket", []),
+        "pending_orders": portfolio.get("pending_orders", []),
+    })
+
+
+@app.route("/api/overflow-portfolio/save", methods=["POST"])
+def overflow_portfolio_save():
+    data = request.get_json() or {}
+    capital = int(data.get("capital", 2000000))
+    basket_in = data.get("basket", [])
+    if not basket_in:
+        return jsonify({"success": False, "error": "Basket is empty"}), 400
+    portfolio = load_portfolio(OVERFLOW_PORTFOLIO_FILE)
+    portfolio["capital"] = capital
+    portfolio["status"] = "paper"
+    portfolio["tracking_since"] = _dt.date.today().isoformat()
+    portfolio["basket"] = [
+        {
+            "ticker": s["ticker"],
+            "weight": s["weight"],
+            "saved_price": s.get("price", 0),
+            "invested_price": None,
+        }
+        for s in basket_in
+    ]
+    portfolio["pending_orders"] = []
+    save_portfolio(portfolio, OVERFLOW_PORTFOLIO_FILE)
+    return jsonify({"success": True, "status": "paper", "tracking_since": portfolio["tracking_since"]})
+
+
+@app.route("/api/overflow-portfolio/search", methods=["GET"])
+def overflow_portfolio_search():
+    """Search tickers. q=__IMPORT__ returns current overflow signals."""
+    q = request.args.get("q", "").upper().strip()
+    if q == "__IMPORT__":
+        try:
+            result = live_signals_scanner.scan_entry_signals()
+            signals = result.get("mom20_overflow", [])[:20]
+            return jsonify({"success": True, "signals": [
+                {"ticker": s["ticker"], "price": s["price"], "rank": s.get("rank")} for s in signals
+            ]})
+        except Exception as e:
+            return jsonify({"success": False, "signals": [], "error": str(e)})
+    if len(q) < 2:
+        return jsonify({"success": True, "results": []})
+    try:
+        result = live_signals_scanner.scan_entry_signals()
+        all_sigs = result.get("mom20_overflow", []) + result.get("mom20_signals", [])
+        matches = [{"ticker": s["ticker"], "price": s["price"], "rank": s.get("rank")}
+                   for s in all_sigs if q in s["ticker"]]
+        if matches:
+            return jsonify({"success": True, "results": matches[:6]})
+    except Exception:
+        pass
+    try:
+        import yfinance as yf
+        t = yf.Ticker(f"{q}.NS")
+        price = getattr(t.fast_info, 'last_price', None)
+        if price:
+            return jsonify({"success": True, "results": [{"ticker": q, "price": round(float(price), 2)}]})
+    except Exception:
+        pass
+    return jsonify({"success": True, "results": []})
+
+
+@app.route("/api/overflow-portfolio/place-orders", methods=["POST"])
+def overflow_portfolio_place_orders():
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    orders_to_place = data.get("orders", [])
+    if not user_id or user_id not in brokers:
+        return jsonify({"success": False, "error": "Kite login required"}), 400
+    broker = brokers[user_id]
+    results = []
+    for o in orders_to_place:
+        ticker = o["ticker"]
+        shares = int(o["shares"])
+        side   = o["side"].upper()
+        try:
+            r = broker.place_sell_order(ticker, shares) if side == "SELL" else broker.place_buy_order(ticker, shares)
+            results.append({"ticker": ticker, "side": side, "shares": shares,
+                            "order_id": r.get("order_id"), "status": "PLACED"})
+        except Exception as e:
+            results.append({"ticker": ticker, "side": side, "shares": shares,
+                            "order_id": None, "status": "ERROR", "error": str(e)})
+    portfolio = load_portfolio(OVERFLOW_PORTFOLIO_FILE)
+    portfolio["pending_orders"] = results
+    save_portfolio(portfolio, OVERFLOW_PORTFOLIO_FILE)
+    return jsonify({"success": True, "orders": results})
+
+
+@app.route("/api/overflow-portfolio/order-status", methods=["GET"])
+def overflow_portfolio_order_status():
+    user_id = request.args.get("user_id")
+    if not user_id or user_id not in brokers:
+        return jsonify({"success": False, "error": "Kite login required"}), 400
+    portfolio = load_portfolio(OVERFLOW_PORTFOLIO_FILE)
+    pending = portfolio.get("pending_orders", [])
+    if not pending:
+        return jsonify({"success": True, "orders": [], "all_complete": True})
+    broker = brokers[user_id]
+    try:
+        kite_orders = broker._kite.orders() if broker._kite else []
+        kite_map = {str(o["order_id"]): o for o in kite_orders}
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+    for o in pending:
+        ko = kite_map.get(str(o.get("order_id", "")))
+        if ko:
+            o["status"]    = ko.get("status", o["status"])
+            o["avg_price"] = ko.get("average_price")
+    portfolio["pending_orders"] = pending
+    save_portfolio(portfolio, OVERFLOW_PORTFOLIO_FILE)
+    all_complete = all(o.get("status", "").upper() in ("COMPLETE", "ERROR", "REJECTED") for o in pending)
+    return jsonify({"success": True, "orders": pending, "all_complete": all_complete})
+
+
+@app.route("/api/overflow-portfolio/confirm-investment", methods=["POST"])
+def overflow_portfolio_confirm_investment():
+    data = request.get_json() or {}
+    filled = {o["ticker"]: float(o["avg_price"]) for o in data.get("orders", []) if o.get("avg_price")}
+    portfolio = load_portfolio(OVERFLOW_PORTFOLIO_FILE)
+    basket = portfolio.get("basket", [])
+    for s in basket:
+        if s["ticker"] in filled:
+            s["invested_price"] = filled[s["ticker"]]
+    portfolio["basket"] = basket
+    portfolio["status"] = "invested"
+    portfolio["tracking_since"] = _dt.date.today().isoformat()
+    portfolio["pending_orders"] = []
+    save_portfolio(portfolio, OVERFLOW_PORTFOLIO_FILE)
     return jsonify({"success": True, "status": "invested",
                     "tracking_since": portfolio["tracking_since"]})
 
