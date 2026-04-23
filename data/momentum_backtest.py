@@ -3405,7 +3405,8 @@ class MomentumBacktester:
     def run_momentum30_backtest(self, period_days=365*11, capital_lakhs=20,
                                  rebalance_months=3, top_n=20, buffer_in=15,
                                  buffer_out=45, end_date=None, regime_200dma=False,
-                                 pit_universe=True, beta_cap=None, fixed_sl=None,
+                                 pit_universe=True, beta_cap=None, beta_min=None,
+                                 fixed_sl=None,
                                  w12=0.5, w6=0.5, min_score=None,
                                  trailing_sl=None, eps_filter=None,
                                  long_period=252, short_period=126, w3=0.0):
@@ -3466,17 +3467,17 @@ class MomentumBacktester:
 
         print(f"  Data loaded: {len(stock_data)} stocks with sufficient history")
 
-        # Fetch Nifty 50 for beta calculation (if beta_cap is set)
+        # Fetch Nifty 50 for beta calculation (if beta_cap or beta_min is set)
         nifty50_data = None
         n50_map = {}
-        if beta_cap is not None:
+        if beta_cap is not None or beta_min is not None:
             try:
                 nifty50_data = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
                 if not nifty50_data.empty:
                     for iloc_idx in range(len(nifty50_data)):
                         dt = nifty50_data.index[iloc_idx].date()
                         n50_map[dt] = iloc_idx
-                    print(f"  Nifty 50 loaded: {len(nifty50_data)} bars (for beta_cap={beta_cap})")
+                    print(f"  Nifty 50 loaded: {len(nifty50_data)} bars (beta_cap={beta_cap}, beta_min={beta_min})")
             except Exception:
                 print("  WARNING: Could not fetch Nifty 50 data for beta filter")
 
@@ -3621,9 +3622,9 @@ class MomentumBacktester:
                 mr_6 = ret_short / sigma
                 mr_3 = (ret_3m / sigma) if ret_3m is not None else None
 
-                # Compute beta if beta_cap is set
+                # Compute beta if beta_cap or beta_min is set
                 beta = None
-                if beta_cap is not None and nifty50_data is not None:
+                if (beta_cap is not None or beta_min is not None) and nifty50_data is not None:
                     n50_ci = n50_map.get(day)
                     if n50_ci is None:
                         for offset in range(1, 6):
@@ -3658,6 +3659,12 @@ class MomentumBacktester:
                 before = len(scores)
                 scores = {t: s for t, s in scores.items() if s.get("beta") is not None and s["beta"] <= beta_cap}
                 print(f"    Beta cap {beta_cap}: {before} → {len(scores)} stocks on {day}")
+
+            # Apply beta_min filter (overflow: high-beta only)
+            if beta_min is not None:
+                before = len(scores)
+                scores = {t: s for t, s in scores.items() if s.get("beta") is not None and s["beta"] >= beta_min}
+                print(f"    Beta min {beta_min}: {before} → {len(scores)} stocks on {day}")
 
             # Apply EPS filter: exclude stocks with TTM EPS growth below threshold
             if eps_db is not None and eps_filter is not None:

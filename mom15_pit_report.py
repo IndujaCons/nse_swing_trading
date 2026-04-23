@@ -28,6 +28,7 @@ MAX_SLOTS    = 15             # Mom15 — always 15 positions
 BUFFER_IN    = 10             # new stock enters if rank ≤ 10
 BUFFER_OUT   = 30             # existing stays if rank ≤ 30
 BETA_CAP     = 1.0
+BETA_MIN     = None           # None = no minimum beta filter (set to 1.2 for overflow)
 W12, W3      = 0.50, 0.50    # 12m + 3m, 6m dropped
 LONG_PD      = 252            # 12m in trading days
 SHORT_PD     = 63             # 3m in trading days
@@ -244,12 +245,15 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
     # Beta filter
     raw = {t: s for t, s in raw.items()
            if s["beta"] is not None and s["beta"] <= BETA_CAP}
+    if BETA_MIN is not None:
+        raw = {t: s for t, s in raw.items() if s["beta"] >= BETA_MIN}
 
     # EPS filter
     if eps_db:
         raw = {t: s for t, s in raw.items() if eps_passes(eps_db, t, day)}
 
-    if len(raw) < 20:
+    min_stocks = 3 if BETA_MIN is not None else 20
+    if len(raw) < min_stocks:
         return {}
 
     # Z-score MR_12 and MR_3
@@ -303,10 +307,15 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False, mom20=False, use_regime=True, beta_cap_override=None):
-    # Override constants for Mom20 variant
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP
-    if mom20:
+def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None):
+    # Override constants for Mom20 / Overflow variants
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN
+    BETA_MIN = None  # reset each run
+    if overflow:
+        MAX_SLOTS, BUFFER_IN, BUFFER_OUT = 5, 3, 8
+        BETA_CAP, BETA_MIN = 99.0, 1.2   # β>1.2 only (99 cap = effectively no upper limit)
+        label = "Overflow — 5-slot β>1.2, Monthly, Rank-exit"
+    elif mom20:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
         label = "Mom20 — Monthly Rebalance, β≤1.2"
     else:
@@ -389,17 +398,19 @@ def run(refresh=False, mom20=False, use_regime=True, beta_cap_override=None):
     trading_days = sorted(d for d, c in day_counts.items() if c >= 50 and d >= START_DATE)
     print(f"  Trading days in backtest: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
 
-    rebal_dates = get_rebal_dates(trading_days, monthly=mom20)
+    rebal_dates = get_rebal_dates(trading_days, monthly=(mom20 or overflow))
     print(f"  Rebalance dates: {len(rebal_dates)}")
 
     # ── Portfolio state ──────────────────────────────────────────────────────
-    cash      = 20_00_000.0   # ₹20L
+    cash      = 10_00_000.0 if overflow else 20_00_000.0
     portfolio = {}            # ticker → {entry_date, entry_price, shares, entry_cost}
     all_trades = []           # closed trades
     total_charges = 0.0
     rebal_nav = []            # rebalance-date NAV snapshots for portfolio correlation analysis
 
-    if mom20:
+    if overflow:
+        banner = f"  OVERFLOW PIT BACKTEST  |  NAV/5 slot  |  Monthly Rebalance  |  Beta>1.2  |  {regime_label}"
+    elif mom20:
         banner = f"  MOM20 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Beta≤1.2  |  {regime_label}"
     else:
         banner = f"  MOM15 PIT BACKTEST  |  NAV/15 slot  |  2-Month Rebalance  |  Beta≤1.0  |  {regime_label}"
@@ -716,7 +727,7 @@ def run(refresh=False, mom20=False, use_regime=True, beta_cap_override=None):
     # Export rebalance-date NAV series for portfolio correlation analysis
     if rebal_nav:
         import os as _os
-        csv_name = "mom20_rebal.csv" if mom20 else "mom15_rebal.csv"
+        csv_name = "overflow_rebal.csv" if overflow else ("mom20_rebal.csv" if mom20 else "mom15_rebal.csv")
         nav_csv = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), csv_name)
         pd.DataFrame(rebal_nav).to_csv(nav_csv, index=False)
         print(f"  Rebalance NAV exported → {csv_name} ({len(rebal_nav)} rows)")
@@ -726,10 +737,12 @@ if __name__ == "__main__":
     parser.add_argument("--refresh", action="store_true", help="Re-download price data")
     parser.add_argument("--mom20", action="store_true",
                         help="Run Mom20 variant (top 20, monthly rebalance, β≤1.2)")
+    parser.add_argument("--overflow", action="store_true",
+                        help="Run Overflow variant (5-slot, β>1.2, monthly rebalance)")
     parser.add_argument("--no-regime", action="store_true",
                         help="Disable regime filter (allow entries even when Nifty200 < SMA200)")
     parser.add_argument("--beta-cap", type=float, default=None,
                         help="Override beta cap (e.g. 1.35)")
     args = parser.parse_args()
-    run(refresh=args.refresh, mom20=args.mom20, use_regime=not args.no_regime,
-        beta_cap_override=args.beta_cap)
+    run(refresh=args.refresh, mom20=args.mom20, overflow=args.overflow,
+        use_regime=not args.no_regime, beta_cap_override=args.beta_cap)
