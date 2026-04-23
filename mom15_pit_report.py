@@ -274,11 +274,22 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
     return raw
 
 # ── REBALANCE DATES ───────────────────────────────────────────────────────────
-def get_rebal_dates(trading_days, monthly=False):
+def get_rebal_dates(trading_days, monthly=False, weekly=False):
     """Return rebalance dates.
+    weekly=True:   every Monday (or first trading day of each week)
     monthly=False: first trading day of Feb/Apr/Jun/Aug/Oct/Dec (Mom15 bi-monthly)
     monthly=True:  first trading day of every month (Mom20 monthly)
     """
+    if weekly:
+        seen = set()
+        result = []
+        for d in trading_days:
+            iso = d.isocalendar()
+            yw = (iso[0], iso[1])  # (year, week)
+            if yw not in seen and d >= START_DATE:
+                seen.add(yw)
+                result.append(d)
+        return result
     rebal_months = set(range(1, 13)) if monthly else {2, 4, 6, 8, 10, 12}
     seen = set()
     result = []
@@ -398,7 +409,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     trading_days = sorted(d for d, c in day_counts.items() if c >= 50 and d >= START_DATE)
     print(f"  Trading days in backtest: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
 
-    rebal_dates = get_rebal_dates(trading_days, monthly=(mom20 or overflow))
+    rebal_dates = get_rebal_dates(trading_days, monthly=mom20, weekly=overflow)
     print(f"  Rebalance dates: {len(rebal_dates)}")
 
     # ── Portfolio state ──────────────────────────────────────────────────────
@@ -409,7 +420,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     rebal_nav = []            # rebalance-date NAV snapshots for portfolio correlation analysis
 
     if overflow:
-        banner = f"  OVERFLOW PIT BACKTEST  |  NAV/5 slot  |  Monthly Rebalance  |  Beta>1.2  |  {regime_label}"
+        banner = f"  OVERFLOW PIT BACKTEST  |  NAV/5 slot  |  Weekly Rebalance  |  Beta>1.2  |  {regime_label}"
     elif mom20:
         banner = f"  MOM20 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Beta≤1.2  |  {regime_label}"
     else:
