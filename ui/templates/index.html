@@ -1115,9 +1115,6 @@
                 <button class="strategy-tab" onclick="switchStrategy('watchlist')">Watchlist</button>
                 <button class="strategy-tab active" onclick="switchStrategy('rs')">Screener</button>
                 <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
-                <button class="strategy-tab" onclick="switchStrategy('momentum')">Backtest</button>
-                <button class="strategy-tab" onclick="switchStrategy('trade_explain')">Trade Explain</button>
-                <button class="strategy-tab" onclick="switchStrategy('goldm')">GOLDM</button>
                 <button class="strategy-tab" onclick="window.location.href='/etf-core'" style="color:#4db8ff;">ETF Core</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
@@ -2894,9 +2891,6 @@
             if (strategy === 'watchlist') tabs[0].classList.add('active');
             else if (strategy === 'rs') tabs[1].classList.add('active');
             else if (strategy === 'live_signals') tabs[2].classList.add('active');
-            else if (strategy === 'momentum') tabs[3].classList.add('active');
-            else if (strategy === 'trade_explain') tabs[4].classList.add('active');
-            else if (strategy === 'goldm') tabs[5].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -2904,27 +2898,11 @@
             wlPanels.style.display = strategy === 'watchlist' ? 'grid' : 'none';
             document.getElementById('rs-panels').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-panels').classList.toggle('hidden', strategy !== 'live_signals');
-            // Preserve backtest/batch results visibility when switching tabs
-            if (strategy !== 'momentum') {
-                document.getElementById('backtest-results').classList.add('hidden');
-                document.getElementById('batch-results').classList.add('hidden');
-            } else {
-                // Restore whichever was visible before
-                if (_lastMomentumPanel === 'backtest') {
-                    document.getElementById('backtest-results').classList.remove('hidden');
-                } else if (_lastMomentumPanel === 'batch') {
-                    document.getElementById('batch-results').classList.remove('hidden');
-                }
-            }
-            document.getElementById('trade-explain-results').classList.toggle('hidden', strategy !== 'trade_explain');
-            document.getElementById('goldm-panels').classList.toggle('hidden', strategy !== 'goldm');
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
             document.getElementById('rs-settings').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-settings').classList.toggle('hidden', strategy !== 'live_signals');
-            document.getElementById('momentum-settings').classList.toggle('hidden', strategy !== 'momentum');
-            document.getElementById('trade-explain-settings').classList.toggle('hidden', strategy !== 'trade_explain');
 
             // Lazy-load data on first switch
             if (strategy === 'watchlist' && !watchlistLoaded) {
