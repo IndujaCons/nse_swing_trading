@@ -325,7 +325,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     if overflow:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT = 5, 3, 8
         BETA_CAP, BETA_MIN = 99.0, 1.2   # β>1.2 only (99 cap = effectively no upper limit)
-        label = "Overflow — 5-slot β>1.2, Monthly, Rank-exit"
+        label = "Overflow — 5-slot β>1.2, Weekly, Rank-exit"
+        use_regime = False  # no regime filter for overflow
     elif mom20:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
         label = "Mom20 — Monthly Rebalance, β≤1.2"
