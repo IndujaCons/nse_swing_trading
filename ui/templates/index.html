@@ -1104,6 +1104,227 @@
         .batch-cell-bad { color: var(--red); }
         .batch-cell-na { color: var(--text-muted); }
 
+        /* ── ETF Core scoped styles ─────────────────────────────────────────── */
+        #etf-core-panels {
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .etf-main-row {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 10px;
+        }
+
+        .etf-signals-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .etf-signal-panel {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .etf-signal-panel-header {
+            padding: 7px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .etf-signal-panel-header.etf-exit    { background: rgba(231,76,60,0.08); }
+        .etf-signal-panel-header.etf-entry   { background: rgba(39,174,96,0.08); }
+        .etf-signal-panel-header.etf-reentry { background: rgba(241,196,15,0.08); }
+
+        .etf-signal-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+        .etf-signal-title.etf-exit    { color: var(--red); }
+        .etf-signal-title.etf-entry   { color: var(--green); }
+        .etf-signal-title.etf-reentry { color: var(--orange); }
+
+        .etf-signal-count {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 1px 7px;
+            border-radius: 10px;
+        }
+
+        .etf-signal-body { padding: 8px 12px; min-height: 36px; }
+
+        #etf-core-panels .etf-signal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+        #etf-core-panels .etf-signal-item:last-child { border-bottom: none; }
+
+        .etf-watchlist-section {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .etf-section-header {
+            padding: 7px 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .etf-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .etf-section-body { overflow-y: auto; max-height: 420px; }
+
+        #etf-core-panels .etf-stock-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #etf-core-panels .etf-stock-table th {
+            text-align: left;
+            padding: 6px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+        }
+        #etf-core-panels .etf-stock-table td {
+            padding: 5px 8px;
+            font-size: 11px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        #etf-core-panels .etf-stock-table tr:last-child td { border-bottom: none; }
+        #etf-core-panels .etf-stock-table tr:hover { background: var(--bg-card); cursor: pointer; }
+        #etf-core-panels .etf-stock-table tr.etf-selected-row { background: var(--blue-light); }
+
+        .etf-rank-badge {
+            display: inline-block;
+            width: 20px; height: 20px; line-height: 20px;
+            text-align: center; border-radius: 50%;
+            font-size: 10px; font-weight: 700;
+        }
+        .etf-rank-badge.etf-top5   { background: var(--green); color: white; }
+        .etf-rank-badge.etf-buffer { background: var(--orange-light); color: var(--orange); border: 1px solid var(--orange); }
+        .etf-rank-badge.etf-low    { background: var(--bg-card); color: var(--text-muted); }
+
+        #etf-core-panels .etf-ticker { font-weight: 700; color: var(--text-primary); }
+
+        .etf-rs-val { font-weight: 600; }
+        .etf-rs-val.pos { color: var(--green); }
+        .etf-rs-val.neg { color: var(--red); }
+
+        .etf-trend-ok { color: var(--green); font-weight: 700; }
+        .etf-trend-no { color: var(--red); font-weight: 700; }
+
+        .etf-signal-badge {
+            display: inline-block;
+            padding: 1px 6px; border-radius: 3px;
+            font-size: 10px; font-weight: 700;
+        }
+        .etf-badge-entry     { background: var(--green-light); color: var(--green); }
+        .etf-badge-exit1,
+        .etf-badge-exit2     { background: var(--red-light); color: var(--red); }
+        .etf-badge-exit3     { background: #3d1a1a; color: #ff6b6b; border: 1px solid #e53935; font-weight:800; }
+        .etf-badge-exit4     { background: #3d2a0a; color: #f97316; border: 1px solid #f97316; font-weight:800; }
+        .etf-badge-hold      { background: var(--blue-light); color: var(--blue); }
+        .etf-badge-buffer    { background: var(--orange-light); color: var(--orange); }
+        .etf-badge-watchlist { background: var(--yellow-light, #fef9e7); color: #b7950b; border: 1px solid var(--yellow, #f1c40f); }
+        .etf-badge-reentry   { background: var(--yellow-light, #fef9e7); color: #7d6608; border: 1px solid #e2b714; font-weight:800; }
+        .etf-badge-ranked    { background: var(--bg-card); color: var(--text-muted); }
+
+        #etf-core-panels .etf-action-btn {
+            padding: 3px 8px; font-family: inherit; font-size: 10px;
+            border-radius: 3px; cursor: pointer; border: 1px solid;
+        }
+        #etf-core-panels .etf-action-btn.buy  { background: var(--green-light); border-color: var(--green); color: var(--green); }
+        #etf-core-panels .etf-action-btn.sell { background: var(--red-light);   border-color: var(--red);   color: var(--red); }
+
+        .etf-chart-section {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .etf-chart-header {
+            padding: 7px 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .etf-chart-title { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+        .etf-period-btns { display: flex; gap: 4px; }
+        .etf-period-btn {
+            padding: 3px 8px; font-family: inherit; font-size: 10px;
+            border: 1px solid var(--border-color); border-radius: 3px;
+            cursor: pointer; background: transparent; color: var(--text-secondary);
+        }
+        .etf-period-btn:hover { background: var(--bg-card); }
+        .etf-period-btn.active { background: var(--green); color: white; border-color: var(--green); font-weight: 700; }
+        .etf-chart-body { flex: 1; min-height: 300px; position: relative; }
+        .etf-chart-placeholder {
+            display: flex; align-items: center; justify-content: center;
+            height: 300px; color: var(--text-muted); font-size: 12px;
+        }
+
+        /* Record Trade Modal */
+        #rt-modal input {
+            background: var(--bg-white);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 14px;
+            font-weight: 600;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+        }
+        #rt-modal input:focus { border-color: var(--blue); }
+        #rt-sym-dropdown {
+            position: absolute;
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 160px;
+            overflow-y: auto;
+            z-index: 10;
+            width: 100%;
+            left: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        #rt-sym-dropdown div {
+            padding: 7px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        #rt-sym-dropdown div:last-child { border-bottom: none; }
+        #rt-sym-dropdown div:hover, #rt-sym-dropdown div.active { background: var(--blue-light); }
+        #rt-sym-dropdown .dd-sym { font-weight: 700; margin-right: 8px; }
+        #rt-sym-dropdown .dd-name { color: var(--text-muted); font-size: 11px; }
+
     </style>
 </head>
 <body>
@@ -1115,7 +1336,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('watchlist')">Watchlist</button>
                 <button class="strategy-tab active" onclick="switchStrategy('rs')">Screener</button>
                 <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
-                <button class="strategy-tab" onclick="window.location.href='/etf-core'" style="color:#4db8ff;">ETF Core</button>
+                <button class="strategy-tab" onclick="switchStrategy('etf_core')">ETF Core</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -1981,6 +2202,107 @@
 
                 </div>
             </div>
+
+            <!-- ETF Core Panels -->
+            <div id="etf-core-panels" class="hidden">
+
+                <!-- Scan header row (scan button + status) -->
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div>
+                        <span style="font-size:13px;font-weight:700;color:var(--text-primary);">ETF CORE — MOMENTUM ROTATION</span>
+                        <div style="font-size:11px;color:var(--text-muted);">49-ETF universe · RS63 vs Nifty 200 · Top 5 · LIQUIDBEES idle</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span class="last-updated" id="etf-last-updated">Not scanned</span>
+                        <span id="etf-vix-badge" style="font-size:11px;"></span>
+                        <button id="etf-scan-btn" onclick="etfScan()"
+                                style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--green);color:white;border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;">
+                            <svg id="etf-scan-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Scan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Row: Watchlist + Chart -->
+                <div class="etf-main-row">
+
+                    <!-- ETF Watchlist Table -->
+                    <div class="etf-watchlist-section">
+                        <div class="etf-section-header">
+                            <span class="etf-section-title">ETF Universe — Ranked</span>
+                            <span style="font-size:10px;color:var(--text-muted);">Click row to load chart</span>
+                        </div>
+                        <div class="etf-section-body" id="etf-watchlist-body">
+                            <div class="empty-state">Press Scan to load rankings</div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Panel -->
+                    <div class="etf-chart-section">
+                        <div class="etf-chart-header">
+                            <span class="etf-chart-title" id="etf-chart-title">Select an ETF</span>
+                            <div class="etf-period-btns">
+                                <button class="etf-period-btn" onclick="switchEtfPeriod('1mo')">1M</button>
+                                <button class="etf-period-btn" onclick="switchEtfPeriod('3mo')">3M</button>
+                                <button class="etf-period-btn active" onclick="switchEtfPeriod('6mo')">6M</button>
+                                <button class="etf-period-btn" onclick="switchEtfPeriod('1y')">1Y</button>
+                            </div>
+                        </div>
+                        <div class="etf-chart-body" id="etf-chart-body">
+                            <div class="etf-chart-placeholder">Click a row in the ETF table to load chart</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Bottom Row: Entered | Exit Signals | Closed Trades -->
+                <div class="etf-signals-row">
+
+                    <!-- Entered (Active Positions) -->
+                    <div class="etf-signal-panel">
+                        <div class="etf-signal-panel-header etf-entry" style="display:flex;align-items:center;justify-content:space-between;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span class="etf-signal-title etf-entry">Entered</span>
+                                <span class="etf-signal-count" id="etf-entered-count">0</span>
+                            </div>
+                            <button onclick="openRecordTrade()" title="Record a manually executed trade"
+                                    style="background:var(--green);color:#fff;border:none;border-radius:5px;
+                                           padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;line-height:1.6;">+ Add</button>
+                        </div>
+                        <div class="etf-signal-body" id="etf-entered-body">
+                            <div class="empty-state" style="padding:10px;">No active positions</div>
+                        </div>
+                    </div>
+
+                    <!-- Exit Signals -->
+                    <div class="etf-signal-panel">
+                        <div class="etf-signal-panel-header etf-exit">
+                            <span class="etf-signal-title etf-exit">Exit Signals</span>
+                            <span class="etf-signal-count" id="etf-exit-count">0</span>
+                        </div>
+                        <div class="etf-signal-body" id="etf-exit-signals-body">
+                            <div class="empty-state" style="padding:10px;">No exit signals</div>
+                        </div>
+                    </div>
+
+                    <!-- Closed Trades -->
+                    <div class="etf-signal-panel">
+                        <div class="etf-signal-panel-header" style="background:rgba(52,152,219,0.08);">
+                            <span class="etf-signal-title" style="color:var(--blue);">Closed Trades</span>
+                            <span class="etf-signal-count" id="etf-history-summary"></span>
+                        </div>
+                        <div class="etf-signal-body" style="padding:0;max-height:220px;overflow-y:auto;" id="etf-history-body">
+                            <div class="empty-state">No trades yet</div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div><!-- end #etf-core-panels -->
 
         </main>
     </div>
@@ -2891,6 +3213,7 @@
             if (strategy === 'watchlist') tabs[0].classList.add('active');
             else if (strategy === 'rs') tabs[1].classList.add('active');
             else if (strategy === 'live_signals') tabs[2].classList.add('active');
+            else if (strategy === 'etf_core') tabs[3].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -2898,6 +3221,7 @@
             wlPanels.style.display = strategy === 'watchlist' ? 'grid' : 'none';
             document.getElementById('rs-panels').classList.toggle('hidden', strategy !== 'rs');
             document.getElementById('live-signals-panels').classList.toggle('hidden', strategy !== 'live_signals');
+            document.getElementById('etf-core-panels').classList.toggle('hidden', strategy !== 'etf_core');
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
@@ -2913,6 +3237,9 @@
                 loadLiveSignalsData();
                 loadLivePositions();
                 loadClosedTrades();
+            }
+            if (strategy === 'etf_core') {
+                initEtfCore();
             }
         }
 
@@ -6166,6 +6493,831 @@
         </div>
     </div>
 </div>
+
+<!-- ── ETF Core: Record Trade Modal ──────────────────────────────────────── -->
+<div id="rt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;align-items:center;justify-content:center;"
+     onclick="if(event.target===this) rtClose()">
+    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:24px 28px;min-width:320px;max-width:400px;width:90%;"
+         onkeydown="if(event.key==='Escape') rtClose()">
+
+        <h3 id="rt-title" style="margin:0 0 4px;font-size:15px;font-weight:700;letter-spacing:0.5px;"></h3>
+        <div id="rt-sym-display" style="font-size:18px;font-weight:800;margin-bottom:8px;color:var(--text-primary);"></div>
+
+        <!-- Symbol input — shown only for manual "+ Add" flow -->
+        <div id="rt-sym-row" style="display:none;margin-bottom:12px;position:relative;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;">Symbol</label>
+            <input id="rt-sym-input" type="text" placeholder="e.g. BANKBEES" autocomplete="off"
+                   oninput="rtSymFilter(this.value)"
+                   onkeydown="rtSymKey(event)">
+            <div id="rt-sym-dropdown" style="display:none;"></div>
+        </div>
+
+        <div id="rt-ref" style="font-size:11px;color:var(--text-muted);margin-bottom:14px;min-height:14px;"></div>
+
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+            <div style="flex:1;">
+                <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;">Executed Price (₹)</label>
+                <input id="rt-price" type="number" min="0.01" step="0.01" placeholder="0.00"
+                       oninput="rtUpdate()"
+                       onkeydown="if(event.key==='Enter') document.getElementById('rt-value').focus()">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;">Value (₹)</label>
+                <input id="rt-value" type="number" min="1" step="1000" placeholder="200000"
+                       oninput="rtUpdate()"
+                       onkeydown="if(event.key==='Enter') rtConfirm()">
+            </div>
+        </div>
+
+        <div style="display:flex;gap:20px;font-size:12px;color:var(--text-muted);margin-bottom:20px;">
+            <span>Qty: <b id="rt-qty" style="color:var(--text-primary);">—</b></span>
+            <span>Actual: <b id="rt-actual" style="color:var(--text-primary);">—</b></span>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+            <button onclick="rtConfirm()"
+                    style="flex:1;padding:9px;border:none;border-radius:6px;
+                           background:var(--green);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+                Record
+            </button>
+            <button onclick="rtClose()"
+                    style="flex:1;padding:9px;border:1px solid var(--border-color);border-radius:6px;
+                           background:transparent;color:var(--text-primary);font-size:13px;cursor:pointer;">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── ETF Core JavaScript ────────────────────────────────────────────────── -->
+<script>
+    // ── ETF State ──────────────────────────────────────────────────────────────
+    let _etfCoreInited = false;
+    let _lastScan = null;
+    let _etfChartTicker = null;
+    let _etfChartPeriod = '6mo';
+    let _rtCtx = {};
+    let _rtDdIdx = -1;
+
+    // ── Lazy init (called on first ETF Core tab switch) ────────────────────────
+    function initEtfCore() {
+        if (_etfCoreInited) return;
+        _etfCoreInited = true;
+        renderStaticWatchlist();
+        loadEtfHistory();
+        fetch('/api/etf/status')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.slots) {
+                    etfRenderEntered(data.slots);
+                    document.getElementById('etf-last-updated').textContent =
+                        data.last_scan ? 'Last: ' + data.last_scan : 'Not scanned';
+                    renderEtfHistory(data.trade_log || []);
+                    if (data.last_scan_result) {
+                        etfRenderWatchlist(data.last_scan_result);
+                    }
+                    const vixBadge = document.getElementById('etf-vix-badge');
+                    if (vixBadge && data.vix != null) {
+                        vixBadge.innerHTML = `<span style="color:#9ca3af;">INIX ${data.vix.toFixed(1)}</span>`;
+                    }
+                }
+            })
+            .catch(() => {});
+    }
+
+    // ── Scan ───────────────────────────────────────────────────────────────────
+    async function etfScan() {
+        const btn = document.getElementById('etf-scan-btn');
+        btn.classList.add('loading');
+        btn.innerHTML = `<svg id="etf-scan-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite">
+            <polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg> Scanning...`;
+
+        try {
+            const res = await fetch('/api/etf/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+            const data = await res.json();
+            if (!data.success) {
+                showToast(data.error || 'Scan failed', 'error');
+                return;
+            }
+            _lastScan = data;
+            etfRenderAll(data);
+            document.getElementById('etf-last-updated').textContent = 'Updated: ' + (data.scan_time || '');
+            const vix = data.vix;
+            const vixBadge = document.getElementById('etf-vix-badge');
+            if (vixBadge) {
+                vixBadge.innerHTML = vix != null
+                    ? `<span style="color:#9ca3af;">INIX ${vix.toFixed(1)}</span>`
+                    : '';
+            }
+        } catch (e) {
+            showToast('Scan error: ' + e.message, 'error');
+        } finally {
+            btn.classList.remove('loading');
+            btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg> Scan`;
+        }
+    }
+
+    // ── Render All ─────────────────────────────────────────────────────────────
+    function etfRenderAll(data) {
+        etfRenderEntered(data.slots || []);
+        etfRenderExitSignals(data.exit_signals || []);
+        etfRenderWatchlist(data.watchlist || []);
+        loadEtfHistory();
+    }
+
+    // ── Entered (Active Positions) ─────────────────────────────────────────────
+    function etfRenderEntered(slots) {
+        const activeSlots = (slots || []).filter(s => s.state === 'ACTIVE' && s.symbol);
+        document.getElementById('etf-entered-count').textContent = activeSlots.length;
+        const body = document.getElementById('etf-entered-body');
+        if (activeSlots.length === 0) {
+            body.innerHTML = '<div class="empty-state" style="padding:10px;">No active positions</div>';
+            return;
+        }
+        body.innerHTML = activeSlots.map(slot => {
+            const pnlPct = slot.pnl_pct;
+            const pnlAbs = slot.pnl_abs;
+            const pnlColor = pnlPct === null || pnlPct === undefined ? 'var(--text-muted)'
+                : (pnlPct >= 0 ? 'var(--green)' : 'var(--red)');
+            const pnlPctStr = pnlPct !== null && pnlPct !== undefined
+                ? `<span style="color:${pnlColor};font-weight:700;">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%</span>`
+                : '';
+            const pnlAbsStr = pnlAbs !== null && pnlAbs !== undefined
+                ? `<span style="color:${pnlColor};font-size:10px;"> (${pnlAbs >= 0 ? '+' : ''}₹${Math.round(Math.abs(pnlAbs)).toLocaleString('en-IN')})</span>`
+                : '';
+            const daysHeld = slot.entry_date
+                ? Math.floor((Date.now() - new Date(slot.entry_date)) / 86400000)
+                : null;
+            const daysStr = daysHeld !== null ? `${daysHeld}d` : '';
+            const cost = slot.entry_price && slot.qty ? Math.round(slot.entry_price * slot.qty) : null;
+            const costStr = cost ? `₹${cost.toLocaleString('en-IN')}` : '';
+            const exitAlerts = slot.exit_alert || [];
+            const x4Warn = slot.x4
+                ? `<div style="font-size:10px;color:var(--orange,#f97316);font-weight:600;">⚠ X4: ${slot.x4}</div>`
+                : '';
+            const alertStr = exitAlerts.length > 0
+                ? `<div style="font-size:10px;color:var(--red);font-weight:600;">EXIT: ${exitAlerts.join(' | ')}</div>`
+                : '';
+            const etfMeta = ETF_UNIVERSE.find(e => e.symbol === slot.symbol);
+            const ticker = etfMeta ? etfMeta.yf : (slot.symbol + '.NS');
+            return `
+            <div class="etf-signal-item" style="align-items:flex-start;">
+                <div style="flex:1;">
+                    <span class="etf-ticker" style="cursor:pointer;text-decoration:underline dotted;"
+                          onclick="loadEtfChart('${ticker}')">${slot.symbol}</span>
+                    <div style="font-size:10px;color:var(--text-muted);">Entry ₹${fmtPrice(slot.entry_price)} × ${fmtQty(slot.qty, slot.symbol)} = ${costStr}
+                        <span style="cursor:pointer;margin-left:5px;opacity:0.6;" title="Edit entry"
+                              onclick="toggleEtfEdit('${slot.symbol}')">✎</span>
+                    </div>
+                    <div id="etf-edit-${slot.symbol}" style="display:none;margin-top:4px;">
+                        <input type="number" id="etf-edit-price-${slot.symbol}" placeholder="Price" step="0.01"
+                               value="${slot.entry_price || ''}"
+                               style="width:75px;padding:2px 4px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);font-size:11px;">
+                        <input type="number" id="etf-edit-qty-${slot.symbol}" placeholder="Qty" step="any"
+                               value="${slot.qty || ''}"
+                               style="width:60px;padding:2px 4px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);font-size:11px;margin-left:3px;">
+                        <button class="etf-action-btn buy" style="padding:2px 7px;margin-left:3px;"
+                                onclick="etfModify('${slot.symbol}')">Save</button>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-muted);">${slot.entry_date || ''} · ${daysStr}</div>
+                    ${x4Warn}${alertStr}
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:11px;">LTP ₹${fmtPrice(slot.current_price || slot.entry_price)}</div>
+                    <div>${pnlPctStr}${pnlAbsStr}</div>
+                    <button class="etf-action-btn sell" style="margin-top:4px;" onclick="etfExit('${slot.symbol}', ${slot.current_price || slot.entry_price || 0})">Exit</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── Exit Signals ───────────────────────────────────────────────────────────
+    function etfRenderExitSignals(exits) {
+        document.getElementById('etf-exit-count').textContent = exits.length;
+        const exitBody = document.getElementById('etf-exit-signals-body');
+        if (exits.length === 0) {
+            exitBody.innerHTML = '<div class="empty-state" style="padding:10px;">No exit signals</div>';
+        } else {
+            exitBody.innerHTML = exits.map(s => `
+                <div class="etf-signal-item">
+                    <div>
+                        <span class="etf-ticker">${s.symbol}</span>
+                        <span style="font-size:10px;color:var(--text-muted);"> Slot ${s.slot_id}</span>
+                        <div style="font-size:10px;color:var(--red);">${(s.reasons || []).join(', ')}</div>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-secondary);">₹${fmtPrice(s.price)}</div>
+                </div>`).join('');
+        }
+    }
+
+    // ── Watchlist Table ────────────────────────────────────────────────────────
+    function etfRenderWatchlist(items) {
+        const body = document.getElementById('etf-watchlist-body');
+        if (!items || items.length === 0) {
+            body.innerHTML = '<div class="empty-state">No data — press Scan</div>';
+            return;
+        }
+
+        const rows = items.map(item => {
+            const rank = item.rank;
+            let rankBadgeClass = 'etf-low';
+            if (rank && rank <= 5) rankBadgeClass = 'etf-top5';
+            else if (rank && rank <= 9) rankBadgeClass = 'etf-buffer';
+
+            const rankStr = rank
+                ? `<span class="etf-rank-badge ${rankBadgeClass}">${rank}</span>`
+                : '<span class="etf-rank-badge etf-low">—</span>';
+
+            const rsStr = item.rs63 !== null && item.rs63 !== undefined
+                ? `<span class="etf-rs-val ${item.rs63 >= 0 ? 'pos' : 'neg'}">${fmtRs(item.rs63)}</span>`
+                : '<span style="color:var(--text-muted);">N/A</span>';
+
+            const trendStr = item.no_data
+                ? '<span style="color:var(--text-muted);">N/A</span>'
+                : item.trend_ok
+                    ? '<span class="etf-trend-ok">▲</span>'
+                    : '<span class="etf-trend-no">▼</span>';
+
+            const sig = item.signal || 'RANKED';
+            let badgeClass = 'etf-badge-ranked';
+            if (sig === 'ENTRY') badgeClass = 'etf-badge-entry';
+            else if (sig === 'EXIT_X1' || sig === 'EXIT_X2') badgeClass = 'etf-badge-exit1';
+            else if (sig === 'EXIT_X3') badgeClass = 'etf-badge-exit3';
+            else if (sig === 'EXIT_X4') badgeClass = 'etf-badge-exit4';
+            else if (sig === 'HOLD') badgeClass = 'etf-badge-hold';
+            else if (sig === 'BUFFER') badgeClass = 'etf-badge-buffer';
+            else if (sig === 'WATCHLIST') badgeClass = 'etf-badge-watchlist';
+            else if (sig === 'RE_ENTRY') badgeClass = 'etf-badge-reentry';
+
+            let sigLabel = sig.replace('_', ' ');
+            const badgeStr = `<span class="etf-signal-badge ${badgeClass}">${sigLabel}</span>`;
+
+            const actionBtn = `
+                <div style="display:flex;gap:4px;align-items:center;" onclick="event.stopPropagation()">
+                    <input type="number" id="etf-amt-${item.symbol}" placeholder="₹ Amt" min="1000" step="1000"
+                           style="width:80px;padding:2px 5px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);font-size:11px;">
+                    <button class="etf-action-btn buy"  onclick="etfLimitOrder('${item.symbol}', ${item.price || 0}, ${item.inav || 0}, 'BUY')">B</button>
+                    <button class="etf-action-btn sell" onclick="etfLimitOrder('${item.symbol}', ${item.price || 0}, ${item.inav || 0}, 'SELL')">S</button>
+                </div>`;
+
+            const nameShort = item.name ? item.name.substring(0, 28) + (item.name.length > 28 ? '…' : '') : '';
+            const priceFmt = item.price ? `₹${fmtPrice(item.price)}` : 'N/A';
+            const sma63Fmt = item.sma63 ? `₹${fmtPrice(item.sma63)}` : 'N/A';
+
+            const inavFmt = item.inav ? `₹${fmtPrice(item.inav)}` : '—';
+            let premFmt = '—';
+            if (item.inav_prem !== null && item.inav_prem !== undefined) {
+                const prem = item.inav_prem;
+                const premColor = prem > 0.5 ? 'var(--red)' : prem < -0.5 ? 'var(--green)' : 'var(--text-muted)';
+                premFmt = `<span style="color:${premColor}">${prem > 0 ? '+' : ''}${prem.toFixed(2)}%</span>`;
+            }
+
+            const inPosIndicator = item.in_position ? ' ●' : '';
+            const inWlIndicator  = item.in_watchlist ? ' ◆' : '';
+
+            const _etfMeta = ETF_UNIVERSE.find(e => e.symbol === item.symbol);
+            const _chartTicker = _etfMeta ? _etfMeta.yf : (item.symbol + '.NS');
+
+            return `
+            <tr onclick="loadEtfChart('${_chartTicker}')" data-sym="${item.symbol}">
+                <td>${rankStr}</td>
+                <td>
+                    <span class="etf-ticker">${item.symbol}${inPosIndicator}${inWlIndicator}</span>
+                    <div style="font-size:10px;color:var(--text-muted);">${nameShort}</div>
+                </td>
+                <td style="font-size:10px;color:var(--text-muted);">${item.category || ''}</td>
+                <td>${priceFmt}</td>
+                <td style="font-size:11px;">${inavFmt}</td>
+                <td style="font-size:11px;">${premFmt}</td>
+                <td>${sma63Fmt}</td>
+                <td>${rsStr}</td>
+                <td>${trendStr}</td>
+                <td>${badgeStr}</td>
+                <td>${actionBtn}</td>
+            </tr>`;
+        }).join('');
+
+        body.innerHTML = `
+        <table class="etf-stock-table">
+            <thead>
+                <tr>
+                    <th>#</th><th>ETF</th><th>Category</th>
+                    <th>Price</th><th>iNAV</th><th>Prem%</th><th>SMA63</th><th>RS63</th>
+                    <th>Trend</th><th>Status</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    // ── Chart ──────────────────────────────────────────────────────────────────
+    async function loadEtfChart(ticker, period) {
+        if (ticker) _etfChartTicker = ticker;
+        if (period) _etfChartPeriod = period;
+        if (!_etfChartTicker) return;
+
+        // Highlight selected row
+        document.querySelectorAll('#etf-watchlist-body tr').forEach(tr => {
+            const sym = _etfChartTicker.replace(/\.(NS|L)$/, '');
+            tr.classList.toggle('etf-selected-row', tr.dataset.sym === sym);
+        });
+
+        // Update period buttons
+        const periodLabels = {'1mo': '1M', '3mo': '3M', '6mo': '6M', '1y': '1Y'};
+        document.querySelectorAll('.etf-period-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.trim() === (periodLabels[_etfChartPeriod] || '6M'));
+        });
+
+        const sym = _etfChartTicker.replace(/\.(NS|L)$/, '');
+        document.getElementById('etf-chart-title').textContent = `${sym} — ${periodLabels[_etfChartPeriod] || '6M'} Price`;
+
+        const body = document.getElementById('etf-chart-body');
+        body.innerHTML = '<div class="etf-chart-placeholder">Loading chart...</div>';
+
+        try {
+            const res = await fetch(`/api/watchlist/chart?ticker=${_etfChartTicker}&period=${_etfChartPeriod}`);
+            const data = await res.json();
+            if (!data.success || !data.prices || data.prices.length < 2) {
+                body.innerHTML = '<div class="etf-chart-placeholder">No chart data available.</div>';
+                return;
+            }
+            drawWatchlistChart(
+                data.dates, data.prices, sym,
+                data.rs, data.rs_label,
+                data.bench, data.bench_label,
+                data.currency || '₹',
+                data.rs_smooth, 'etf-chart-body',
+                data.dma50, data.dma200,
+                data.volumes, data.rsi
+            );
+        } catch (e) {
+            body.innerHTML = `<div class="etf-chart-placeholder" style="color:var(--red);">Failed: ${e.message}</div>`;
+        }
+    }
+
+    function switchEtfPeriod(period) {
+        loadEtfChart(null, period);
+    }
+
+    // ── History ────────────────────────────────────────────────────────────────
+    async function loadEtfHistory() {
+        try {
+            const res = await fetch('/api/etf/positions');
+            const data = await res.json();
+            if (!data.success) return;
+            renderEtfHistory(data.trade_log || []);
+        } catch (e) { /* silently ignore */ }
+    }
+
+    function renderEtfHistory(log) {
+        const body = document.getElementById('etf-history-body');
+        if (!log || log.length === 0) {
+            body.innerHTML = '<div class="empty-state">No trades yet</div>';
+            document.getElementById('etf-history-summary').textContent = '';
+            return;
+        }
+
+        const exits = log.filter(t => t.action === 'EXIT');
+        const totalPnl = exits.reduce((s, t) => s + (t.pnl || 0), 0);
+        const wins = exits.filter(t => (t.pnl || 0) > 0).length;
+        document.getElementById('etf-history-summary').textContent =
+            `${exits.length} closed · W${wins}/L${exits.length - wins} · ${totalPnl >= 0 ? '+' : ''}₹${Math.round(totalPnl).toLocaleString('en-IN')}`;
+
+        const closedRows = exits.slice().reverse().map(t => {
+            const pnlColor = t.pnl === null ? 'var(--text-muted)' : (t.pnl >= 0 ? 'var(--green)' : 'var(--red)');
+            const pnlStr = t.pnl !== null && t.pnl !== undefined
+                ? `<span style="color:${pnlColor};font-weight:700;">${t.pnl >= 0 ? '+' : ''}₹${Math.round(t.pnl).toLocaleString('en-IN')}</span>`
+                : '—';
+            return `
+            <div class="etf-signal-item">
+                <div>
+                    <span class="etf-ticker">${t.symbol}</span>
+                    <div style="font-size:10px;color:var(--text-muted);">${t.date || ''} · ₹${fmtPrice(t.price)} × ${t.qty || 0}</div>
+                    <div style="font-size:10px;color:var(--text-muted);">${t.reason || ''}</div>
+                </div>
+                <div style="text-align:right;">${pnlStr}</div>
+            </div>`;
+        }).join('');
+
+        body.innerHTML = closedRows || '<div class="empty-state">No closed trades</div>';
+    }
+
+    // ── Trade Actions ──────────────────────────────────────────────────────────
+    function isFractionalEtf(symbol) {
+        const meta = ETF_UNIVERSE.find(e => e.symbol === symbol);
+        return meta ? !meta.yf.endsWith('.NS') : false;
+    }
+
+    function fmtQty(qty, symbol) {
+        if (!qty && qty !== 0) return '0';
+        if (isFractionalEtf(symbol)) {
+            return parseFloat(qty.toFixed(6)).toString();
+        }
+        return Math.round(qty).toString();
+    }
+
+    async function etfEnter(symbol, price) {
+        const capital = 200000;
+        const fractional = isFractionalEtf(symbol);
+        const suggestedQty = price > 0
+            ? (fractional ? parseFloat((capital / price).toFixed(6)) : Math.floor(capital / price))
+            : 0;
+
+        const qtyInput = prompt(
+            `BUY ${symbol}\nPrice: ₹${fmtPrice(price)}\nSuggested qty (₹2L): ${suggestedQty}\n\nEnter qty:`,
+            suggestedQty
+        );
+        if (qtyInput === null) return;
+        const qty = parseFloat(qtyInput);
+        if (isNaN(qty) || qty <= 0) { showToast('Invalid quantity', 'error'); return; }
+
+        const ok = confirm(`CONFIRM BUY\n${symbol} × ${qty} @ ₹${fmtPrice(price)}\nTotal: ₹${(qty * price).toLocaleString('en-IN', {maximumFractionDigits:0})}`);
+        if (!ok) return;
+
+        try {
+            const res = await fetch('/api/etf/enter', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ symbol, price, qty, reason: 'ENTRY' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`Entered ${symbol} × ${qty}`, 'success');
+                etfScan();
+            } else {
+                showToast(data.error || 'Entry failed', 'error');
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    function toggleEtfEdit(symbol) {
+        const row = document.getElementById(`etf-edit-${symbol}`);
+        if (!row) return;
+        row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+        row.style.alignItems = 'center';
+        row.style.gap = '2px';
+    }
+
+    async function etfModify(symbol) {
+        const priceEl = document.getElementById(`etf-edit-price-${symbol}`);
+        const qtyEl   = document.getElementById(`etf-edit-qty-${symbol}`);
+        const price = parseFloat(priceEl?.value);
+        const qty   = parseFloat(qtyEl?.value);
+        if (isNaN(price) || price <= 0) { showToast('Invalid price', 'error'); return; }
+        if (isNaN(qty)   || qty   <= 0) { showToast('Invalid qty',   'error'); return; }
+        try {
+            const res = await fetch('/api/etf/modify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ symbol, entry_price: price, qty })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`${symbol} updated`, 'success');
+                etfScan();
+            } else {
+                showToast(data.error || 'Update failed', 'error');
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    async function etfExit(symbol, price) {
+        const priceInput = prompt(
+            `EXIT ${symbol}\nCurrent: ₹${fmtPrice(price)}\n\nEnter exit price:`,
+            price
+        );
+        if (priceInput === null) return;
+        const exitPrice = parseFloat(priceInput);
+        if (isNaN(exitPrice) || exitPrice <= 0) { showToast('Invalid price', 'error'); return; }
+
+        const ok = confirm(`CONFIRM EXIT\n${symbol} @ ₹${fmtPrice(exitPrice)}`);
+        if (!ok) return;
+
+        try {
+            const res = await fetch('/api/etf/exit', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ symbol, exit_price: exitPrice, reason: 'MANUAL' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const pnl = data.trade && data.trade.pnl !== null ? data.trade.pnl : null;
+                const msg = pnl !== null ? `Exited ${symbol}: ₹${Math.round(pnl).toLocaleString('en-IN')}` : `Exited ${symbol}`;
+                showToast(msg, pnl !== null && pnl >= 0 ? 'success' : 'error');
+                etfScan();
+            } else {
+                showToast(data.error || 'Exit failed', 'error');
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    // ── Record Trade Modal ──────────────────────────────────────────────────────
+    function etfLimitOrder(symbol, ltp, inav, side) {
+        _rtCtx = { symbol, ltp, inav, side };
+        const isBuy = side === 'BUY';
+        document.getElementById('rt-title').textContent = isBuy ? 'Record Entry' : 'Record Exit';
+        document.getElementById('rt-title').style.color = isBuy ? 'var(--green)' : 'var(--red)';
+        document.getElementById('rt-sym-row').style.display = 'none';
+        document.getElementById('rt-sym-display').textContent = symbol;
+        document.getElementById('rt-sym-display').style.display = 'block';
+        _rtShowRef(ltp, inav);
+        document.getElementById('rt-price').value = '';
+        document.getElementById('rt-value').value = '';
+        rtUpdate();
+        document.getElementById('rt-modal').style.display = 'flex';
+        document.getElementById('rt-price').focus();
+    }
+
+    function openRecordTrade() {
+        _rtCtx = { symbol: null, ltp: 0, inav: 0, side: 'BUY' };
+        document.getElementById('rt-title').textContent = 'Record Entry';
+        document.getElementById('rt-title').style.color = 'var(--green)';
+        document.getElementById('rt-sym-row').style.display = 'block';
+        document.getElementById('rt-sym-display').style.display = 'none';
+        document.getElementById('rt-sym-input').value = '';
+        document.getElementById('rt-ref').innerHTML = '';
+        document.getElementById('rt-price').value = '';
+        document.getElementById('rt-value').value = '';
+        rtUpdate();
+        document.getElementById('rt-modal').style.display = 'flex';
+        document.getElementById('rt-sym-input').focus();
+    }
+
+    function _rtShowRef(ltp, inav) {
+        const ltpFmt = ltp > 0 ? `₹${fmtPrice(ltp)}` : '—';
+        const inavFmt = inav > 0 ? `₹${fmtPrice(inav)}` : null;
+        let html = `LTP: <b>${ltpFmt}</b>`;
+        if (inavFmt) {
+            let premStr = '';
+            if (ltp > 0) {
+                const prem = ((ltp / inav) - 1) * 100;
+                const color = prem > 0.5 ? 'var(--red)' : prem < -0.5 ? 'var(--green)' : 'var(--text-muted)';
+                premStr = ` <span style="color:${color}">(${prem >= 0 ? '+' : ''}${prem.toFixed(2)}%)</span>`;
+            }
+            html += ` &nbsp;|&nbsp; iNAV: <b>${inavFmt}</b>${premStr}`;
+        }
+        document.getElementById('rt-ref').innerHTML = html;
+    }
+
+    // ── Symbol autocomplete ─────────────────────────────────────────────────────
+    function rtSymFilter(val) {
+        const q = val.toUpperCase().trim();
+        const dd = document.getElementById('rt-sym-dropdown');
+        if (!q) { dd.style.display = 'none'; _rtDdIdx = -1; return; }
+        const matches = ETF_UNIVERSE.filter(e =>
+            e.symbol.includes(q) || e.name.toUpperCase().includes(q)
+        ).slice(0, 8);
+        if (!matches.length) { dd.style.display = 'none'; return; }
+        _rtDdIdx = -1;
+        dd.innerHTML = matches.map(e =>
+            `<div data-sym="${e.symbol}" onclick="rtSymSelect('${e.symbol}')">
+                <span class="dd-sym">${e.symbol}</span><span class="dd-name">${e.name}</span>
+             </div>`
+        ).join('');
+        dd.style.display = 'block';
+    }
+
+    function rtSymSelect(sym) {
+        const input = document.getElementById('rt-sym-input');
+        input.value = sym;
+        document.getElementById('rt-sym-dropdown').style.display = 'none';
+        document.getElementById('rt-price').focus();
+    }
+
+    function rtSymKey(e) {
+        const dd = document.getElementById('rt-sym-dropdown');
+        const items = dd.querySelectorAll('div');
+        if (!items.length || dd.style.display === 'none') {
+            if (e.key === 'Enter') document.getElementById('rt-price').focus();
+            return;
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            _rtDdIdx = Math.min(_rtDdIdx + 1, items.length - 1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            _rtDdIdx = Math.max(_rtDdIdx - 1, 0);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (_rtDdIdx >= 0) rtSymSelect(items[_rtDdIdx].dataset.sym);
+            else if (items.length === 1) rtSymSelect(items[0].dataset.sym);
+            return;
+        } else if (e.key === 'Escape') {
+            dd.style.display = 'none'; return;
+        } else { return; }
+        items.forEach((d, i) => d.classList.toggle('active', i === _rtDdIdx));
+        if (_rtDdIdx >= 0) items[_rtDdIdx].scrollIntoView({ block: 'nearest' });
+    }
+
+    function rtUpdate() {
+        const price = parseFloat(document.getElementById('rt-price').value);
+        const value = parseFloat(document.getElementById('rt-value').value);
+        const sym = _rtCtx?.symbol;
+        const fractional = sym ? isFractionalEtf(sym) : false;
+        const qty = (price > 0 && value > 0)
+            ? (fractional ? parseFloat((value / price).toFixed(6)) : Math.floor(value / price))
+            : 0;
+        const actual = qty > 0 ? qty * price : 0;
+        document.getElementById('rt-qty').textContent = qty > 0 ? fmtQty(qty, sym) : '—';
+        document.getElementById('rt-actual').textContent = actual > 0
+            ? `₹${Math.round(actual).toLocaleString('en-IN')}` : '—';
+    }
+
+    function rtClose() {
+        document.getElementById('rt-modal').style.display = 'none';
+        document.getElementById('rt-sym-dropdown').style.display = 'none';
+    }
+
+    async function rtConfirm() {
+        const price = parseFloat(document.getElementById('rt-price').value);
+        const value = parseFloat(document.getElementById('rt-value').value);
+        if (isNaN(price) || price <= 0) { showToast('Enter executed price', 'error'); return; }
+        if (isNaN(value) || value < 1) { showToast('Enter value ≥ ₹1', 'error'); return; }
+
+        let symbol = _rtCtx.symbol;
+        if (!symbol) {
+            symbol = (document.getElementById('rt-sym-input').value || '').toUpperCase().trim();
+            if (!symbol) { showToast('Enter symbol', 'error'); return; }
+        }
+        const fractional = symbol ? isFractionalEtf(symbol) : false;
+        const qty = fractional
+            ? parseFloat((value / price).toFixed(6))
+            : Math.floor(value / price);
+        if (qty <= 0) { showToast('Value too small', 'error'); return; }
+        if (!fractional && qty < 1) { showToast('Value too small for 1 unit', 'error'); return; }
+        const side = _rtCtx.side;
+
+        rtClose();
+        try {
+            if (side === 'BUY') {
+                const res = await fetch('/api/etf/enter', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ symbol, entry_price: price, qty })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Recorded: ${qty} × ${symbol} @ ₹${fmtPrice(price)}`, 'success');
+                    etfScan();
+                } else {
+                    showToast(data.error || 'Failed to record', 'error');
+                }
+            } else {
+                const res = await fetch('/api/etf/exit', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ symbol, exit_price: price, reason: 'MANUAL' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const pnl = data.trade && data.trade.pnl !== null ? data.trade.pnl : null;
+                    const msg = pnl !== null
+                        ? `Recorded exit ${symbol}: ₹${Math.round(pnl).toLocaleString('en-IN')} P&L`
+                        : `Recorded exit ${symbol}`;
+                    showToast(msg, pnl !== null && pnl >= 0 ? 'success' : 'error');
+                    etfScan();
+                } else {
+                    showToast(data.error || 'Failed to record', 'error');
+                }
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    // ── Formatters ─────────────────────────────────────────────────────────────
+    function fmtPrice(p) {
+        if (p === null || p === undefined) return 'N/A';
+        return parseFloat(p).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function fmtRs(rs) {
+        if (rs === null || rs === undefined) return 'N/A';
+        const v = parseFloat(rs);
+        return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+    }
+
+    // ── Static ETF universe ────────────────────────────────────────────────────
+    const ETF_UNIVERSE = [
+        // ── Indian Broad Market ──
+        {symbol:"JUNIORBEES", name:"Nippon Nifty Next 50",            category:"Large-Mid",       yf:"JUNIORBEES.NS"},
+        {symbol:"MID150BEES", name:"Nippon Nifty Midcap 150",          category:"Midcap",          yf:"MID150BEES.NS"},
+        {symbol:"HDFCSMALL",  name:"HDFC Nifty Smallcap 250",         category:"Smallcap",        yf:"HDFCSMALL.NS"},
+        // ── Indian Sectoral ──
+        {symbol:"BANKBEES",   name:"Nippon Nifty Bank BeES",           category:"Banking",         yf:"BANKBEES.NS"},
+        {symbol:"PSUBNKBEES", name:"Nippon Nifty PSU Bank BeES",       category:"PSU Bank",        yf:"PSUBNKBEES.NS"},
+        {symbol:"ITBEES",     name:"Nippon Nifty IT BeES",             category:"IT/Tech",         yf:"ITBEES.NS"},
+        {symbol:"HEALTHIETF", name:"ICICI Nifty Healthcare ETF",       category:"Healthcare",      yf:"HEALTHIETF.NS"},
+        {symbol:"AUTOBEES",   name:"Nippon Nifty Auto BeES",           category:"Auto",            yf:"AUTOBEES.NS"},
+        {symbol:"METALIETF",  name:"ICICI Nifty Metal ETF",            category:"Metals",          yf:"METALIETF.NS"},
+        {symbol:"CONSUMBEES", name:"Nippon Nifty Consumption BeES",    category:"Consumption",     yf:"CONSUMBEES.NS"},
+        {symbol:"INFRABEES",  name:"ICICI Nifty Infra ETF",            category:"Infrastructure",  yf:"INFRABEES.NS"},
+        {symbol:"OILIETF",    name:"ICICI Nifty Oil & Gas ETF",        category:"Energy",          yf:"OILIETF.NS"},
+        {symbol:"MOREALTY",   name:"Motilal Nifty Realty ETF",         category:"Realty",          yf:"MOREALTY.NS"},
+        // ── Indian Factor / Thematic ──
+        {symbol:"CPSEETF",    name:"CPSE ETF",                         category:"PSU/Govt",        yf:"CPSEETF.NS"},
+        {symbol:"SETFMOMET",  name:"Nippon Nifty200 Momentum30 ETF",   category:"Momentum",        yf:"MOM30IETF.NS"},
+        {symbol:"QUAL30IETF", name:"HDFC Nifty100 Quality30 ETF",      category:"Quality",         yf:"QUAL30IETF.NS"},
+        {symbol:"KOTAKLOWV",  name:"Kotak Nifty100 Low Vol30 ETF",     category:"Low Vol",         yf:"LOWVOLIETF.NS"},
+        {symbol:"ALPL30IETF", name:"ICICI Alpha Low Vol30 ETF",        category:"Alpha/LowVol",    yf:"ALPL30IETF.NS"},
+        {symbol:"MODEFENCE",  name:"Motilal Nifty India Defence ETF",  category:"Defence",         yf:"MODEFENCE.NS"},
+        {symbol:"MOMOMENTUM", name:"Nippon Nifty500 Momentum50 ETF",   category:"Broad Momentum",  yf:"MOMOMENTUM.NS"},
+        {symbol:"MONIFTY500", name:"Motilal Nifty 500 ETF",            category:"Broad 500",       yf:"MONIFTY500.NS"},
+        // ── Indian Commodities ──
+        {symbol:"GOLDBEES",   name:"Nippon Gold BeES",                 category:"Gold",            yf:"GOLDBEES.NS"},
+        {symbol:"SILVERBEES", name:"Nippon Silver BeES",               category:"Silver",          yf:"SILVERBEES.NS"},
+        {symbol:"LIQUIDBEES", name:"Nippon Liquid BeES (Cash proxy)",  category:"Cash",            yf:"LIQUIDBEES.NS"},
+        // ── Global — US & International ──
+        {symbol:"QQQ",        name:"Invesco Nasdaq 100 ETF",           category:"US Tech",         yf:"QQQ"},
+        {symbol:"SETFNN50",   name:"SBI Nifty Next 50 ETF",            category:"Large-Mid",       yf:"SETFNN50.NS"},
+        {symbol:"SOXX",       name:"iShares Semiconductor ETF",        category:"Semiconductors",  yf:"SOXX"},
+        {symbol:"BOTZ",       name:"Global X Robotics & AI ETF",       category:"AI/Robotics",     yf:"BOTZ"},
+        {symbol:"EWY",        name:"iShares MSCI South Korea ETF",     category:"South Korea",     yf:"EWY"},
+        {symbol:"FRDM",       name:"Freedom 100 EM ETF",               category:"EM",              yf:"FRDM"},
+        {symbol:"EMXC",       name:"iShares EM ex-China ETF",          category:"EM ex-China",     yf:"EMXC"},
+        {symbol:"AVDV",       name:"Avantis Intl SmallCap Value",      category:"Intl SmallCap",   yf:"AVDV"},
+        {symbol:"ILF",        name:"iShares Latin America 40",         category:"Latin America",   yf:"ILF"},
+        {symbol:"XLE",        name:"SPDR Energy Select Sector",        category:"US Energy",       yf:"XLE"},
+        {symbol:"XLK",        name:"SPDR Technology Select Sector",    category:"US Tech",         yf:"XLK"},
+        {symbol:"XLP",        name:"SPDR Consumer Staples Select",     category:"US Cons Staples", yf:"XLP"},
+        {symbol:"TLT",        name:"iShares 20+ Year Treasury ETF",    category:"US Treasuries",   yf:"TLT"},
+        {symbol:"XLV",        name:"SPDR Healthcare Select Sector",    category:"US Healthcare",   yf:"XLV"},
+        {symbol:"ITA",        name:"iShares US Aerospace & Defence",   category:"US Defence",      yf:"ITA"},
+        // ── Miners ──
+        {symbol:"GDX",        name:"VanEck Gold Miners ETF",           category:"Gold Miners",     yf:"GDX"},
+        {symbol:"XME",        name:"SPDR Metals & Mining ETF",         category:"Metals/Mining",   yf:"XME"},
+        // ── Europe ──
+        {symbol:"VGK",        name:"Vanguard FTSE Europe ETF",         category:"Europe",          yf:"VGK"},
+        // ── UCITS equivalents (LSE-listed) ──
+        {symbol:"GDGB",       name:"VanEck Gold Miners UCITS [GDX]",  category:"Gold Miners UCITS", yf:"GDGB.L"},
+        {symbol:"VEUR",       name:"Vanguard Europe UCITS [VGK]",     category:"Europe UCITS",    yf:"VEUR.L"},
+        {symbol:"ISF",        name:"iShares FTSE 100 UCITS [EWU]",    category:"UK UCITS",        yf:"ISF.L"},
+        {symbol:"EMXU",       name:"Xtrackers EM ex-China UCITS [EMXC]", category:"EM ex-China UCITS", yf:"EMXU.L"},
+        {symbol:"LTAM",       name:"iShares Latin America UCITS [ILF]",  category:"LatAm UCITS",  yf:"LTAM.L"},
+        {symbol:"IUES",       name:"iShares S&P500 Energy UCITS [XLE]",  category:"US Energy UCITS", yf:"IUES.L"},
+        {symbol:"COPX",       name:"Sprott Copper Miners UCITS [XME≈]",  category:"Mining UCITS", yf:"COPX.L"},
+        {symbol:"WSML",       name:"iShares World SmallCap UCITS [AVDV≈]", category:"SmallCap UCITS", yf:"WSML.L"},
+    ];
+
+    function renderStaticWatchlist() {
+        const body = document.getElementById('etf-watchlist-body');
+        const rows = ETF_UNIVERSE.map(etf => {
+            const nameShort = etf.name.substring(0, 28) + (etf.name.length > 28 ? '…' : '');
+            return `
+            <tr onclick="loadEtfChart('${etf.yf}')" data-sym="${etf.symbol}">
+                <td><span class="etf-rank-badge etf-low">—</span></td>
+                <td>
+                    <span class="etf-ticker">${etf.symbol}</span>
+                    <div style="font-size:10px;color:var(--text-muted);">${nameShort}</div>
+                </td>
+                <td style="font-size:10px;color:var(--text-muted);">${etf.category}</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td style="color:var(--text-muted);">—</td>
+                <td><span class="etf-signal-badge etf-badge-ranked">UNRANKED</span></td>
+                <td>
+                    <div style="display:flex;gap:4px;align-items:center;" onclick="event.stopPropagation()">
+                        <input type="number" id="etf-amt-${etf.symbol}" placeholder="₹ Amt" min="1000" step="1000"
+                               style="width:80px;padding:2px 5px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);font-size:11px;">
+                        <button class="etf-action-btn buy"  onclick="etfLimitOrder('${etf.symbol}', 0, 0, 'BUY')">B</button>
+                        <button class="etf-action-btn sell" onclick="etfLimitOrder('${etf.symbol}', 0, 0, 'SELL')">S</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+        body.innerHTML = `
+        <table class="etf-stock-table">
+            <thead>
+                <tr>
+                    <th>Rank</th><th>Symbol</th><th>Category</th>
+                    <th>Price</th><th>iNAV</th><th>Prem%</th><th>SMA63</th><th>RS63</th><th>Trend</th>
+                    <th>Signal</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+</script>
 
 </body>
 </html>
