@@ -1556,7 +1556,6 @@
                         <option value="MW3">MW Only (3-Stage)</option>
                         <option value="RS3">RS Rotation</option>
                         <option value="IBD">IBD RS (Frozen)</option>
-                        <option value="MOM15">Mom15 (2-Monthly Rebal)</option>
                         <option value="MOM20">Mom20 (Quarterly Rebal)</option>
                     </select>
                     <select class="backtest-select" id="portfolio-entries-per-day">
@@ -1835,22 +1834,6 @@
                 <!-- Left: Signal panels (65%) -->
                 <div id="ls-signals-left" style="flex:0 0 65%; min-width:0; display:flex; flex-direction:column; gap:10px;">
 
-                <div class="panel ls-mom15-signals">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color:#00bcd4;">Mom15 — Nifty200 Momentum (2-Monthly, 50/50 12m+3m, Beta≤1.0)</span>
-                        <label style="margin-left:12px;font-size:11px;cursor:pointer;color:var(--text-muted);">
-                            <input type="checkbox" id="mom15-eps-filter" onchange="renderMom15()" checked>
-                            EPS Filter (TTM&gt;0%)
-                        </label>
-                        <span class="panel-count" id="ls-mom15-count">0</span>
-                        <span style="margin-left:auto;font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">
-                            Rebalance: <b style="color:var(--green);">1 Apr</b> · <b>1 Jun</b> · <b>1 Aug</b> · <b>1 Oct</b> · <b>1 Dec</b> · <b>1 Feb</b>
-                        </span>
-                    </div>
-                    <div class="panel-body" id="ls-mom15-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
 
                 <div class="panel ls-rs63-signals">
                     <div class="panel-header">
@@ -3705,63 +3688,6 @@
             }
         });
 
-        function renderMom15() {
-            const mom15Panel = document.getElementById('ls-mom15-panel');
-            const allSignals = window._mom15AllSignals || [];
-            const epsFilterOn = document.getElementById('mom15-eps-filter').checked;
-
-            // Build display list: top 30 (or all available), mark which are in top 15 selection
-            let displaySignals;
-            if (epsFilterOn) {
-                displaySignals = allSignals.filter(s => s.eps_pass !== false).slice(0, 30);
-            } else {
-                displaySignals = allSignals.slice(0, 30);
-            }
-
-            const selectedCount = Math.min(displaySignals.length, 15);
-            document.getElementById('ls-mom15-count').textContent = displaySignals.length > 0 ? `Top ${selectedCount} (showing ${displaySignals.length})` : '0';
-            if (displaySignals.length === 0) {
-                mom15Panel.innerHTML = '<div class="empty-state">No Mom15 signals</div>';
-            } else {
-                const mom15Rows = displaySignals.map((s, idx) => {
-                    const rank = epsFilterOn ? (idx + 1) : (s.rank || (idx + 1));
-                    const isSelected = idx < 15;
-                    const rowStyle = isSelected ? '' : 'opacity:0.45;';
-                    const rankStyle = isSelected
-                        ? 'font-size:10px;color:var(--text-muted);'
-                        : 'font-size:10px;color:var(--text-muted);font-style:italic;';
-                    const retColor12 = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
-                    const retColor3 = s.ret_3m > 0 ? 'var(--green)' : 'var(--red)';
-                    const scoreColor = s.momentum_score > 1.5 ? 'var(--green)' : s.momentum_score > 1.0 ? 'var(--text)' : 'var(--text-muted)';
-                    const betaColor = s.beta <= 0.8 ? 'var(--green)' : 'var(--text)';
-                    const epsVal = s.ttm_eps_growth;
-                    const epsStr = epsVal !== null && epsVal !== undefined ? `${epsVal > 0 ? '+' : ''}${epsVal}%` : 'N/A';
-                    const epsColor = epsVal === null || epsVal === undefined ? 'var(--text-muted)' : epsVal > 0 ? 'var(--green)' : 'var(--red)';
-                    const separator = idx === 14 ? 'border-bottom:2px solid var(--green);' : '';
-                    return `
-                    <tr style="${rowStyle}${separator}">
-                        <td style="${rankStyle}">#${rank}</td>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td style="color:${retColor12};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
-                        <td style="color:${retColor3};">${s.ret_3m !== null && s.ret_3m !== undefined ? (s.ret_3m > 0 ? '+' : '') + s.ret_3m + '%' : 'N/A'}</td>
-                        <td>${s.volatility}%</td>
-                        <td style="color:${betaColor};">${s.beta}</td>
-                        <td style="color:${scoreColor};font-weight:600;">${s.momentum_score.toFixed(2)}</td>
-                        <td style="color:${epsColor};font-weight:600;">${epsStr}</td>
-                    </tr>`;
-                }).join('');
-                mom15Panel.innerHTML = `
-                    <table class="stock-table">
-                        <thead><tr>
-                            <th>#</th><th>Stock</th><th>Close</th>
-                            <th>12m Ret</th><th>3m Ret</th><th>Vol</th><th>Beta</th><th>Mom Score</th><th>TTM EPS</th>
-                        </tr></thead>
-                        <tbody>${mom15Rows}</tbody>
-                    </table>
-                `;
-            }
-        }
 
         // ── RS63 Manual Entry Modal ───────────────────────────────────────────────
         let _rs63PendingEntry = null;
@@ -3953,7 +3879,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -4039,7 +3965,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -4268,9 +4194,6 @@
                 `;
             }
 
-            // Mom15 signals panel — stored globally for toggle
-            window._mom15AllSignals = data.mom15_signals || [];
-            renderMom15();
 
             // RS63 signals panel
             renderRS63(data);
@@ -4821,7 +4744,7 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom15-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
