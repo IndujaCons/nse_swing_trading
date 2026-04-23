@@ -2378,6 +2378,18 @@ def mom20_portfolio_order_status():
     return jsonify({"success": True, "orders": pending, "all_complete": all_complete})
 
 
+@app.route("/api/mom20-portfolio/reset", methods=["POST"])
+def mom20_portfolio_reset():
+    """Reset portfolio status back to paper (clears pending orders + invested prices)."""
+    portfolio = load_portfolio()
+    for s in portfolio.get("basket", []):
+        s["invested_price"] = None
+    portfolio["status"] = "paper" if portfolio.get("basket") else "empty"
+    portfolio["pending_orders"] = []
+    save_portfolio(portfolio)
+    return jsonify({"success": True, "status": portfolio["status"]})
+
+
 @app.route("/api/mom20-portfolio/confirm-investment", methods=["POST"])
 def mom20_portfolio_confirm_investment():
     """
@@ -2543,6 +2555,18 @@ def overflow_portfolio_order_status():
     save_portfolio(portfolio, OVERFLOW_PORTFOLIO_FILE)
     all_complete = all(o.get("status", "").upper() in ("COMPLETE", "ERROR", "REJECTED") for o in pending)
     return jsonify({"success": True, "orders": pending, "all_complete": all_complete})
+
+
+@app.route("/api/overflow-portfolio/reset", methods=["POST"])
+def overflow_portfolio_reset():
+    """Reset portfolio status back to paper (clears pending orders + invested prices)."""
+    portfolio = load_portfolio(OVERFLOW_PORTFOLIO_FILE)
+    for s in portfolio.get("basket", []):
+        s["invested_price"] = None
+    portfolio["status"] = "paper" if portfolio.get("basket") else "empty"
+    portfolio["pending_orders"] = []
+    save_portfolio(portfolio, OVERFLOW_PORTFOLIO_FILE)
+    return jsonify({"success": True, "status": portfolio["status"]})
 
 
 @app.route("/api/overflow-portfolio/confirm-investment", methods=["POST"])

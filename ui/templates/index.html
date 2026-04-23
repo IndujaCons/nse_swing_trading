@@ -2231,6 +2231,7 @@
                             </div>
                             <div id="mom20-order-status-body2" style="display:flex;flex-direction:column;gap:4px;font-size:11px;"></div>
                             <button onclick="mom20ConfirmInvestment('2')" style="width:100%;margin-top:10px;padding:8px;font-size:12px;font-weight:700;background:#ff6b35;color:white;border:none;border-radius:6px;cursor:pointer;">✓ Confirm Investment</button>
+                            <button onclick="mom20ResetPortfolio()" style="width:100%;margin-top:6px;padding:6px;font-size:11px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">↺ Reset to Paper</button>
                             <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;">Switches tracking to actual avg prices</div>
                         </div>
                     </div>
@@ -2319,6 +2320,7 @@
                             </div>
                             <div id="ov-order-status-body" style="display:flex;flex-direction:column;gap:4px;font-size:11px;"></div>
                             <button onclick="ovConfirmInvestment()" style="width:100%;margin-top:10px;padding:8px;font-size:12px;font-weight:700;background:#f59e0b;color:white;border:none;border-radius:6px;cursor:pointer;">✓ Confirm Investment</button>
+                            <button onclick="ovResetPortfolio()" style="width:100%;margin-top:6px;padding:6px;font-size:11px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">↺ Reset to Paper</button>
                             <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;">Switches tracking to actual avg prices</div>
                         </div>
                     </div>
@@ -6189,6 +6191,7 @@
                 if (!sd.success) { showToast(sd.error, 'error'); return; }
                 if (!sd.all_complete) { showToast('Some orders are still pending — wait for all to complete', 'error'); return; }
                 const filledOrders = sd.orders.filter(o => o.status && o.status.toUpperCase() === 'COMPLETE' && o.avg_price);
+                if (!filledOrders.length) { showToast('No orders were filled in Zerodha — re-login Kite and place orders again', 'error'); return; }
                 const r = await fetch('/api/mom20-portfolio/confirm-investment', {
                     method: 'POST', headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({orders: filledOrders})
@@ -6202,6 +6205,22 @@
                     });
                     mom20LoadPortfolio();
                 } else showToast(d.error, 'error');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        async function mom20ResetPortfolio() {
+            if (!confirm('Reset Mom20 portfolio to Paper tracking? This clears pending orders and invested prices.')) return;
+            try {
+                const r = await fetch('/api/mom20-portfolio/reset', {method: 'POST'});
+                const d = await r.json();
+                if (d.success) {
+                    _mom20Sfxs.forEach(s => {
+                        const w = document.getElementById(`mom20-order-status-wrap${s}`);
+                        if (w) w.style.display = 'none';
+                    });
+                    showToast('Mom20 portfolio reset to paper tracking', 'success');
+                    mom20LoadPortfolio();
+                }
             } catch(e) { showToast(e.message, 'error'); }
         }
 
@@ -6497,6 +6516,7 @@
                 if (!sd.success) { showToast(sd.error, 'error'); return; }
                 if (!sd.all_complete) { showToast('Some orders are still pending — wait for all to complete', 'error'); return; }
                 const filledOrders = sd.orders.filter(o => o.status && o.status.toUpperCase() === 'COMPLETE' && o.avg_price);
+                if (!filledOrders.length) { showToast('No orders were filled in Zerodha — re-login Kite and place orders again', 'error'); return; }
                 const r = await fetch('/api/overflow-portfolio/confirm-investment', {
                     method: 'POST', headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({orders: filledOrders})
@@ -6507,6 +6527,19 @@
                     document.getElementById('ov-order-status-wrap').style.display = 'none';
                     ovLoadPortfolio();
                 } else showToast(d.error, 'error');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        async function ovResetPortfolio() {
+            if (!confirm('Reset portfolio to Paper tracking? This clears pending orders and invested prices.')) return;
+            try {
+                const r = await fetch('/api/overflow-portfolio/reset', {method: 'POST'});
+                const d = await r.json();
+                if (d.success) {
+                    document.getElementById('ov-order-status-wrap').style.display = 'none';
+                    showToast('Portfolio reset to paper tracking — re-login Kite and place orders again', 'success');
+                    ovLoadPortfolio();
+                }
             } catch(e) { showToast(e.message, 'error'); }
         }
 
