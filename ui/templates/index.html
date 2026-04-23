@@ -1835,17 +1835,6 @@
                 <div id="ls-signals-left" style="flex:0 0 65%; min-width:0; display:flex; flex-direction:column; gap:10px;">
 
 
-                <div class="panel ls-rs63-signals">
-                    <div class="panel-header">
-                        <span class="panel-title" style="color:#e91e63;">RS63 — Vivek Bajaj Satellite (Daily Swing)</span>
-                        <input type="hidden" id="rs63-buy-amount" value="200000">
-                        <span class="panel-count" id="ls-rs63-count">0</span>
-                    </div>
-                    <div class="panel-body" id="ls-rs63-panel">
-                        <div class="empty-state">Click Refresh to scan</div>
-                    </div>
-                </div>
-
                 <div class="panel ls-mom20-signals">
                     <div class="panel-header">
                         <span class="panel-title" style="color:#ff6b35;">Mom20 — Nifty200 Momentum (Monthly Rebalance)</span>
@@ -1857,6 +1846,15 @@
                     </div>
                 </div>
 
+                <div class="panel ls-mom20-overflow-signals">
+                    <div class="panel-header">
+                        <span class="panel-title" style="color:#ff9800;">Mom20 Overflow — High Beta RS63 Candidates (β &gt; 1.2)</span>
+                        <span class="panel-count" id="ls-mom20-overflow-count">0</span>
+                    </div>
+                    <div class="panel-body" id="ls-mom20-overflow-panel">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
 
                 </div><!-- end ls-signals-left -->
 
@@ -1890,7 +1888,6 @@
                         <div class="panel-header">
                             <span class="panel-title">Entered Signals</span>
                             <span class="panel-count" id="ls-positions-count">0</span>
-                            <button onclick="rs63AddManual()" style="margin-left:auto;background:var(--green);color:white;border:none;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;">+ Add</button>
                         </div>
                         <div class="panel-body" id="ls-positions-panel">
                             <div class="empty-state">No active positions</div>
@@ -3689,167 +3686,36 @@
         });
 
 
-        // ── RS63 Manual Entry Modal ───────────────────────────────────────────────
-        let _rs63PendingEntry = null;
-
-        async function _loadRS63TickerList() {
-            const dl = document.getElementById('rs63-ticker-datalist');
-            if (dl.children.length > 0) return; // already loaded
-            try {
-                const r = await fetch('/api/watchlist/tickers');
-                const d = await r.json();
-                (d.tickers || []).forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t;
-                    dl.appendChild(opt);
-                });
-            } catch(e) { /* silent */ }
-        }
-
-        function rs63AddManual() {
-            // Open modal with blank ticker field for free-form entry
-            _rs63PendingEntry = { ticker: '', sl: null, btn: null };
-            _loadRS63TickerList();
-            document.getElementById('rs63-entry-ticker-row').style.display = 'table-row';
-            document.getElementById('rs63-entry-ticker').textContent = '';
-            document.getElementById('rs63-entry-ticker-input').value = '';
-            document.getElementById('rs63-entry-sl').textContent = '—';
-            document.getElementById('rs63-entry-price').value = '';
-            document.getElementById('rs63-entry-qty').value = '';
-            document.getElementById('rs63-entry-amount').textContent = '₹0';
-            document.getElementById('rs63-entry-modal').style.display = 'flex';
-            document.getElementById('rs63-entry-ticker-input').focus();
-        }
-
-        function rs63PlaceBuy(btn) {
-            const ticker  = btn.dataset.ticker;
-            const sigPrice = parseFloat(btn.dataset.price);
-            const sl      = parseFloat(btn.dataset.sl);
-            const suggestQty = Math.floor(200000 / sigPrice);
-            document.getElementById('rs63-entry-ticker-row').style.display = 'none';
-
-            if (!selectedTradeUser) {
-                showToast('Select a user first (top-right)', 'error');
+        function renderMom20Overflow(data) {
+            const panel = document.getElementById('ls-mom20-overflow-panel');
+            const sigs = data.mom20_overflow || [];
+            document.getElementById('ls-mom20-overflow-count').textContent = sigs.length || '0';
+            if (sigs.length === 0) {
+                panel.innerHTML = '<div class="empty-state">No overflow signals — all top-20 uncapped stocks are within β≤1.2</div>';
                 return;
             }
-
-            _rs63PendingEntry = { ticker, sl, btn };
-
-            // Pre-fill modal fields
-            document.getElementById('rs63-entry-ticker').textContent  = ticker;
-            document.getElementById('rs63-entry-sl').textContent      = '₹' + sl.toLocaleString('en-IN');
-            document.getElementById('rs63-entry-price').value         = sigPrice;
-            document.getElementById('rs63-entry-qty').value           = suggestQty;
-            rs63UpdateEntryCalc();
-            document.getElementById('rs63-entry-modal').style.display = 'flex';
-            document.getElementById('rs63-entry-price').focus();
-            document.getElementById('rs63-entry-price').select();
-        }
-
-        function rs63UpdateEntryCalc() {
-            const price = parseFloat(document.getElementById('rs63-entry-price').value) || 0;
-            const qty   = parseInt(document.getElementById('rs63-entry-qty').value)    || 0;
-            const amt   = price * qty;
-            document.getElementById('rs63-entry-amount').textContent =
-                '₹' + amt.toLocaleString('en-IN', {maximumFractionDigits: 0});
-        }
-
-        function rs63CloseModal() {
-            document.getElementById('rs63-entry-modal').style.display = 'none';
-            _rs63PendingEntry = null;
-        }
-
-        async function rs63ConfirmEntry() {
-            if (!_rs63PendingEntry) return;
-            // If manual add, read ticker from input field
-            let { ticker, sl, btn } = _rs63PendingEntry;
-            if (!ticker) {
-                ticker = document.getElementById('rs63-entry-ticker-input').value.trim().toUpperCase();
-                if (!ticker) { showToast('Enter a ticker', 'error'); return; }
-            }
-            const price = parseFloat(document.getElementById('rs63-entry-price').value);
-            const qty   = parseInt(document.getElementById('rs63-entry-qty').value);
-
-            if (!price || price <= 0 || !qty || qty <= 0) {
-                showToast('Enter valid price and qty', 'error');
-                return;
-            }
-            if (!selectedTradeUser) {
-                showToast('Select a user first (top-right)', 'error');
-                return;
-            }
-
-            rs63CloseModal();
-            if (btn) { btn.disabled = true; btn.textContent = '...'; }
-
-            try {
-                const res = await fetch('/api/live-signals/manual-entry', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ticker, strategy: 'RS63', price, qty,
-                        user_id: selectedTradeUser,
-                        metadata: { sl_price: sl }
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    const userName = (kiteUsers.find(u => u.config_user_id === selectedTradeUser) || {}).config_name || selectedTradeUser;
-                    showToast(`Recorded ${qty} × ${ticker} @ ₹${price.toLocaleString('en-IN')} [${userName}]`, 'success');
-                    if (btn) { btn.textContent = '✓'; btn.style.background = 'var(--text-muted)'; }
-                    loadLivePositions();
-                } else {
-                    showToast(data.error || 'Failed to record entry', 'error');
-                    if (btn) { btn.textContent = 'RECORD'; btn.disabled = false; }
-                }
-            } catch (e) {
-                showToast('Network error: ' + e.message, 'error');
-                if (btn) { btn.textContent = 'RECORD'; btn.disabled = false; }
-            }
-        }
-
-        function renderRS63(data) {
-            window._rs63LastData = data;
-            const rs63Panel = document.getElementById('ls-rs63-panel');
-            const rs63Signals = data.rs63_signals || [];
-            document.getElementById('ls-rs63-count').textContent = rs63Signals.length > 0 ? `Top ${rs63Signals.length}` : '0';
-            if (rs63Signals.length === 0) {
-                rs63Panel.innerHTML = '<div class="empty-state">No RS63 signals</div>';
-            } else {
-                const rows = rs63Signals.map((s, idx) => {
-                    const rank = s.rank || (idx + 1);
-                    const rs63Color = s.rs63 > 10 ? 'var(--green)' : 'var(--text)';
-                    const rsiColor = s.rsi > 60 ? 'var(--green)' : 'var(--text)';
-                    const rs1h = s.rs63_1h;
-                    const rs1hStr = rs1h != null ? `${rs1h > 0 ? '+' : ''}${rs1h}%` : '—';
-                    const rs1hColor = rs1h == null ? 'var(--text-muted)' : rs1h > 0 ? 'var(--green)' : 'var(--red)';
-                    const vr = s.vol_ratio;
-                    const vrStr = vr != null ? `${vr.toFixed(1)}x` : '—';
-                    const vrColor = vr == null ? 'var(--text-muted)' : vr >= 1.5 ? 'var(--green)' : vr >= 1.0 ? 'var(--text)' : 'var(--text-muted)';
-                    return `
-                    <tr>
-                        <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
-                        <td style="color:${rs63Color};font-weight:600;">+${s.rs63}%</td>
-                        <td style="color:${rs1hColor};font-weight:600;">${rs1hStr}</td>
-                        <td style="color:${rsiColor};">${s.rsi}</td>
-                        <td>${s.ibs}</td>
-                        <td style="color:${vrColor};font-weight:600;">${vrStr}</td>
-                        <td>${s.stop_pct}%</td>
-                        <td style="color:var(--red);">₹${s.sl_price.toLocaleString()}</td>
-                    </tr>`;
-                }).join('');
-                rs63Panel.innerHTML = `
-                    <table class="stock-table">
-                        <thead><tr>
-                            <th>#</th><th>Stock</th><th>Close</th>
-                            <th>RS63D</th><th>RS63 1H</th><th>RSI</th><th>IBS</th><th>Vol/20d</th><th>StopDist</th><th>8% SL</th>
-                        </tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
-            }
+            const rows = sigs.map(s => {
+                const r12Color = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
+                const r3Color  = s.ret_3m  > 0 ? 'var(--green)' : 'var(--red)';
+                const betaColor = s.beta > 1.5 ? 'var(--red)' : 'var(--orange,#ff9800)';
+                return `<tr>
+                    <td style="font-size:10px;color:var(--text-muted);">#${s.rank}</td>
+                    <td class="ticker" style="cursor:pointer;" onclick="lsLoadChart('${s.ticker}')">${s.ticker}</td>
+                    <td class="price">${s.price.toLocaleString('en-IN',{maximumFractionDigits:2})}</td>
+                    <td style="color:${r12Color};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
+                    <td style="color:${r3Color};">${s.ret_3m > 0 ? '+' : ''}${s.ret_3m}%</td>
+                    <td style="color:${betaColor};font-weight:700;">β ${s.beta}</td>
+                    <td style="color:var(--text-muted);">${s.momentum_score.toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+            panel.innerHTML = `
+                <table class="stock-table">
+                    <thead><tr>
+                        <th>#</th><th>Stock</th><th>Close</th>
+                        <th>12m Ret</th><th>3m Ret</th><th>Beta</th><th>Score</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
         }
 
         async function loadLiveSignalsData() {
@@ -3879,7 +3745,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -3965,7 +3831,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -4195,8 +4061,8 @@
             }
 
 
-            // RS63 signals panel
-            renderRS63(data);
+            // Mom20 Overflow panel
+            renderMom20Overflow(data);
 
             // Mom20 signals panel
             const mom20Panel = document.getElementById('ls-mom20-panel');
@@ -4543,12 +4409,6 @@
                         '<span style="color:var(--green);">Stage 2 (2/3 out)</span>',
                     ];
                     stageLabel = stageLabels[Math.min(stage, 2)];
-                } else if (p.strategy === 'RS63') {
-                    // RS63: 8% SL, no stages, no T1/T2
-                    sl = (p.metadata || {}).sl_price || Math.round(ep * 0.92);
-                    t1 = null;
-                    t2 = null;
-                    stageLabel = '<span style="color:var(--text-muted);">--</span>';
                 } else if (p.strategy === 'MOM15') {
                     // MOM15: no SL, no stages, hold until rebalance
                     sl = null;
@@ -4589,7 +4449,6 @@
                     <td>${
                         p.strategy === 'J' ? '<span style="color:var(--green);font-weight:700;">J</span>'
                         : p.strategy === 'R' ? '<span style="color:#ab47bc;font-weight:700;">R</span>'
-                        : p.strategy === 'RS63' ? '<span style="color:#e91e63;font-weight:700;">RS63</span>'
                         : p.strategy === 'MOM15' ? '<span style="color:#00bcd4;font-weight:700;">Mom15</span>'
                         : p.strategy === 'MW' ? '<span style="color:#e67e22;font-weight:700;">MW</span>'
                         : '<span style="color:var(--blue);font-weight:700;">' + p.strategy + '</span>'
@@ -4744,7 +4603,7 @@
         }
 
         function showLiveSignalsError(message) {
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-rs63-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
+            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.innerHTML = `
@@ -6279,57 +6138,6 @@
 
     </script>
 
-<!-- RS63 Manual Entry Modal -->
-<div id="rs63-entry-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center;">
-    <div style="background:var(--bg-white);border-radius:8px;padding:24px 28px;min-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
-        <div style="font-size:15px;font-weight:700;margin-bottom:16px;">
-            Record Entry — <span id="rs63-entry-ticker" style="color:var(--green);"></span>
-        </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">
-            Enter the price and qty you actually bought on Zerodha.<br>
-            8% SL: <span id="rs63-entry-sl" style="color:var(--red);font-weight:600;"></span>
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <tr id="rs63-entry-ticker-row" style="display:none;">
-                <td style="padding:6px 0;color:var(--text-muted);width:100px;">Ticker</td>
-                <td><input id="rs63-entry-ticker-input" type="text" placeholder="e.g. HDFCBANK"
-                    list="rs63-ticker-datalist"
-                    style="width:120px;padding:4px 8px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-secondary);color:var(--text-primary);font-size:13px;text-transform:uppercase;"
-                    oninput="this.value=this.value.toUpperCase()"
-                    onkeydown="if(event.key==='Enter')document.getElementById('rs63-entry-price').focus()">
-                <datalist id="rs63-ticker-datalist"></datalist></td>
-            </tr>
-            <tr>
-                <td style="padding:6px 0;color:var(--text-muted);width:100px;">Entry Price ₹</td>
-                <td><input id="rs63-entry-price" type="number" step="0.05"
-                    style="width:120px;padding:4px 8px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-secondary);color:var(--text-primary);font-size:13px;"
-                    oninput="rs63UpdateEntryCalc()"
-                    onkeydown="if(event.key==='Enter')rs63ConfirmEntry()"></td>
-            </tr>
-            <tr>
-                <td style="padding:6px 0;color:var(--text-muted);">Qty</td>
-                <td><input id="rs63-entry-qty" type="number" min="1"
-                    style="width:120px;padding:4px 8px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-secondary);color:var(--text-primary);font-size:13px;"
-                    oninput="rs63UpdateEntryCalc()"
-                    onkeydown="if(event.key==='Enter')rs63ConfirmEntry()"></td>
-            </tr>
-            <tr>
-                <td style="padding:6px 0;color:var(--text-muted);">Amount</td>
-                <td style="font-weight:600;" id="rs63-entry-amount">₹0</td>
-            </tr>
-        </table>
-        <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
-            <button onclick="rs63CloseModal()"
-                style="padding:7px 18px;border:1px solid var(--border-color);border-radius:4px;background:transparent;color:var(--text);cursor:pointer;font-size:13px;">
-                Cancel
-            </button>
-            <button onclick="rs63ConfirmEntry()"
-                style="padding:7px 18px;border:none;border-radius:4px;background:var(--green);color:white;cursor:pointer;font-size:13px;font-weight:700;">
-                Record Entry
-            </button>
-        </div>
-    </div>
-</div>
 
 <!-- ── ETF Core: Record Trade Modal ──────────────────────────────────────── -->
 <div id="rt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;align-items:center;justify-content:center;"
