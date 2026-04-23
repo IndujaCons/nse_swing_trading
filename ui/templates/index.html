@@ -1770,7 +1770,12 @@
                         <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 15</button>
                         <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
                     </div>
-                    <div class="panel-body" style="padding:12px;display:grid;grid-template-columns:1fr 230px;gap:16px;align-items:start;">
+                    <div class="panel-body" style="padding:12px;">
+
+                        <!-- Performance card (shown when portfolio has tracking data) -->
+                        <div id="mom20-perf-card" style="display:none;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:14px;"></div>
+
+                        <div style="display:grid;grid-template-columns:1fr 230px;gap:16px;align-items:start;">
 
                         <!-- LEFT: search + stock table -->
                         <div>
@@ -1830,16 +1835,19 @@
                             <button onclick="mom20SavePortfolio()" style="width:100%;padding:9px;margin-bottom:8px;font-size:13px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">💾 Save Portfolio</button>
                             <button onclick="mom20PlaceAllOrders()" style="width:100%;padding:9px;font-size:13px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⚡ Invest Now</button>
 
-                            <!-- Order status -->
+                            <!-- Order status + Confirm Investment -->
                             <div id="mom20-order-status-wrap" style="display:none;margin-top:12px;border-top:1px solid var(--border-color);padding-top:10px;">
                                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
                                     <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">ORDER STATUS</span>
                                     <button onclick="mom20PollOrders()" style="padding:2px 8px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺</button>
                                 </div>
                                 <div id="mom20-order-status-body" style="display:flex;flex-direction:column;gap:4px;font-size:11px;"></div>
+                                <button onclick="mom20ConfirmInvestment()" style="width:100%;margin-top:10px;padding:8px;font-size:12px;font-weight:700;background:#ff6b35;color:white;border:none;border-radius:6px;cursor:pointer;">✓ Confirm Investment</button>
+                                <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;">Switches tracking to actual avg prices</div>
                             </div>
                         </div>
 
+                        </div><!-- end grid -->
                     </div>
                 </div>
 
@@ -5972,7 +5980,6 @@
         }
 
         async function mom20LoadPortfolio() {
-            // Load saved portfolio into basket
             try {
                 const r = await fetch('/api/mom20-portfolio');
                 const d = await r.json();
@@ -5983,32 +5990,70 @@
                 rb.style.color = d.regime === 'ON' ? 'var(--green)' : d.regime === 'OFF' ? 'var(--red)' : 'var(--text-muted)';
                 document.getElementById('mom20-port-rebal-badge').textContent =
                     `Next rebalance: ${d.next_rebalance} (${d.days_to_rebalance}d)`;
-                if (d.holdings && d.holdings.length) {
-                    mom20Basket = d.holdings.map(h => ({
-                        ticker: h.ticker,
-                        price: h.cmp || h.entry_price || 0,
-                        weight: h.weight_pct || 5,
-                    }));
+                // Render performance card
+                _mom20RenderPerfCard(d);
+                // Restore basket
+                if (d.basket && d.basket.length) {
+                    mom20Basket = d.basket.map(s => {
+                        const stock = (d.stocks || []).find(x => x.ticker === s.ticker);
+                        return {ticker: s.ticker, price: stock ? stock.current : (s.invested_price || s.saved_price || 0), weight: s.weight};
+                    });
                     mom20RenderBasket();
-                    showToast(`Loaded ${d.holdings.length} stocks from saved portfolio`, 'success');
-                } else {
-                    showToast('No saved portfolio — add stocks manually or Import Mom20', 'error');
-                }
+                    showToast(`Loaded ${d.basket.length} stocks`, 'success');
+                } else showToast('No saved portfolio', 'error');
                 if (d.pending_orders && d.pending_orders.length) _renderOrderStatus(d.pending_orders);
             } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        function _mom20RenderPerfCard(d) {
+            const card = document.getElementById('mom20-perf-card');
+            if (!card) return;
+            const status = d.status || 'empty';
+            if (status === 'empty' || !d.tracking_since) { card.style.display = 'none'; return; }
+            card.style.display = '';
+            const statusLabel = status === 'invested' ? '🟢 Invested' : '📋 Paper';
+            const retColor = d.return_pct >= 0 ? 'var(--green)' : 'var(--red)';
+            const minInv = d.min_investment ? `₹${d.min_investment.toLocaleString('en-IN')}` : '—';
+            const since = d.tracking_since ? new Date(d.tracking_since).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+            card.innerHTML = `
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+                    <span style="font-size:12px;font-weight:700;color:var(--text-secondary);">MOM20 b&lt;1.2</span>
+                    <span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.07);color:var(--text-muted);">${statusLabel}</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                    <div>
+                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Index Value</div>
+                        <div style="font-size:18px;font-weight:700;">${d.index_value.toFixed(2)}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Returns</div>
+                        <div style="font-size:18px;font-weight:700;color:${retColor};">${d.return_pct >= 0 ? '+' : ''}${d.return_pct}%</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Tracking Since</div>
+                        <div style="font-size:13px;font-weight:600;">${since}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Min Amount</div>
+                        <div style="font-size:13px;font-weight:600;">${minInv}</div>
+                    </div>
+                </div>`;
         }
 
         async function mom20SavePortfolio() {
             if (!mom20Basket.length) { showToast('Basket is empty', 'error'); return; }
             const capital = mom20GetCapital();
+            // Snapshot current prices from basket as saved_price
             try {
-                const r = await fetch('/api/mom20-portfolio/settings', {
+                const r = await fetch('/api/mom20-portfolio/save', {
                     method: 'POST', headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({capital, basket: mom20Basket})
                 });
                 const d = await r.json();
-                if (d.success) showToast('Portfolio saved', 'success');
-                else showToast(d.error, 'error');
+                if (d.success) {
+                    showToast(`Portfolio saved — paper tracking from ${d.tracking_since}`, 'success');
+                    mom20LoadPortfolio();
+                } else showToast(d.error, 'error');
             } catch(e) { showToast(e.message, 'error'); }
         }
 
@@ -6038,7 +6083,30 @@
                 const d = await r.json();
                 if (d.success) {
                     _renderOrderStatus(d.orders);
-                    showToast(`${d.orders.length} orders placed`, 'success');
+                    showToast(`${d.orders.length} orders placed — poll status then Confirm Investment`, 'success');
+                } else showToast(d.error, 'error');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        async function mom20ConfirmInvestment() {
+            const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            if (!userId) { showToast('Kite login required', 'error'); return; }
+            // Poll latest order status first
+            try {
+                const sr = await fetch(`/api/mom20-portfolio/order-status?user_id=${userId}`);
+                const sd = await sr.json();
+                if (!sd.success) { showToast(sd.error, 'error'); return; }
+                if (!sd.all_complete) { showToast('Some orders are still pending — wait for all to complete', 'error'); return; }
+                const filledOrders = sd.orders.filter(o => o.status && o.status.toUpperCase() === 'COMPLETE' && o.avg_price);
+                const r = await fetch('/api/mom20-portfolio/confirm-investment', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({orders: filledOrders})
+                });
+                const d = await r.json();
+                if (d.success) {
+                    showToast(`Investment confirmed — tracking from actual avg prices since ${d.tracking_since}`, 'success');
+                    document.getElementById('mom20-order-status-wrap').style.display = 'none';
+                    mom20LoadPortfolio();
                 } else showToast(d.error, 'error');
             } catch(e) { showToast(e.message, 'error'); }
         }

@@ -1,8 +1,22 @@
 """
 Mom20 Portfolio Manager
 =======================
-Tracks the Mom20 equal-weight portfolio state, calculates monthly rebalance
-diffs, and places CNC orders via Kite on demand.
+Tracks the Mom20 basket with two tracking modes:
+  - paper:    tracking from saved prices (not yet invested)
+  - invested: tracking from actual Kite avg prices after investment
+
+Portfolio JSON structure:
+{
+  "capital": 2000000,
+  "status": "empty" | "paper" | "invested",
+  "tracking_since": "2026-04-23",
+  "basket": [
+    {"ticker": "TITAN", "weight": 5,
+     "saved_price": 4441.20,      # price at Save time
+     "invested_price": null}      # avg price from Kite (set after Confirm Investment)
+  ],
+  "pending_orders": []
+}
 """
 
 import os
@@ -15,8 +29,9 @@ PORTFOLIO_FILE = os.path.join(_BASE_DIR, "data_store", "mom20_portfolio.json")
 
 _DEFAULT = {
     "capital": 2000000,
-    "last_rebalance_date": None,
-    "holdings": [],
+    "status": "empty",
+    "tracking_since": None,
+    "basket": [],
     "pending_orders": [],
 }
 
@@ -40,13 +55,9 @@ def save_portfolio(state: dict):
 
 
 def get_next_rebalance_date() -> date:
-    """First weekday of next month (approximate — no NSE holiday calendar)."""
     today = date.today()
-    if today.month == 12:
-        first = date(today.year + 1, 1, 1)
-    else:
-        first = date(today.year, today.month + 1, 1)
-    while first.weekday() >= 5:  # skip Sat/Sun
+    first = date(today.year + 1, 1, 1) if today.month == 12 else date(today.year, today.month + 1, 1)
+    while first.weekday() >= 5:
         first += timedelta(days=1)
     return first
 
@@ -55,93 +66,63 @@ def days_to_rebalance() -> int:
     return (get_next_rebalance_date() - date.today()).days
 
 
-def calc_rebalance_diff(signals: list, portfolio: dict, regime_on: bool) -> dict:
+def calc_performance(portfolio: dict, current_prices: dict) -> dict:
     """
-    signals: mom20_signals from live scan (rank 1..40)
-    portfolio: loaded portfolio dict
-    regime_on: blocks BUY when False
-    Returns: {sell, hold, buy, per_slot, est_charges, regime_on}
+    Compute portfolio performance vs baseline (saved or invested prices).
+    current_prices: {ticker: current_price}
+    Returns: {index_value, return_pct, day_return_pct, tracking_since,
+              status, min_investment, stocks}
     """
+    basket = portfolio.get("basket", [])
+    status = portfolio.get("status", "empty")
     capital = portfolio.get("capital", 2000000)
-    holdings = portfolio.get("holdings", [])
-    per_slot = capital / 20
 
-    rank_map = {s["ticker"]: s for s in signals}
+    if not basket or status == "empty":
+        return {"status": status, "index_value": 100.0, "return_pct": 0.0}
 
-    sell = []
-    hold = []
-    hold_tickers = set()
+    use_invested = (status == "invested")
 
-    for h in holdings:
-        ticker = h["ticker"]
-        sig = rank_map.get(ticker)
-        rank = sig["rank"] if sig else 999
-        price = sig["price"] if sig else h.get("entry_price", 0)
-        entry = h.get("entry_price", 0)
-        pnl = round((price / entry - 1) * 100, 1) if entry else 0
+    total_weight = sum(s["weight"] for s in basket)
+    if total_weight == 0:
+        return {"status": status, "index_value": 100.0, "return_pct": 0.0}
 
-        if rank > 40:
-            sell.append({
-                "ticker": ticker,
-                "shares": h["shares"],
-                "price": price,
-                "amount": round(h["shares"] * price),
-                "entry_price": entry,
-                "pnl_pct": pnl,
-                "rank": rank,
-            })
+    weighted_return = 0.0
+    stocks = []
+    for s in basket:
+        baseline = s.get("invested_price") if use_invested else s.get("saved_price")
+        current  = current_prices.get(s["ticker"], baseline)
+        if not baseline or not current:
+            ret = 0.0
         else:
-            hold.append({
-                "ticker": ticker,
-                "shares": h["shares"],
-                "price": price,
-                "pnl_pct": pnl,
-                "rank": rank,
-            })
-            hold_tickers.add(ticker)
+            ret = current / baseline - 1
+        w_frac = s["weight"] / total_weight
+        weighted_return += w_frac * ret
 
-    free_slots = max(0, 20 - len(hold))
-    buy = []
-    if regime_on and free_slots > 0:
-        for s in signals:
-            if s["rank"] > 15:
-                break
-            if s["ticker"] in hold_tickers:
-                continue
-            shares = int(math.floor(per_slot / s["price"])) if s["price"] > 0 else 0
-            if shares < 1:
-                continue
-            buy.append({
-                "ticker": s["ticker"],
-                "shares": shares,
-                "price": s["price"],
-                "amount": round(shares * s["price"]),
-                "rank": s["rank"],
-            })
-            if len(buy) >= free_slots:
-                break
+        # Min investment: capital such that floor(cap × w% / price) >= 1
+        # => cap >= price / (w/100)
+        min_cap_this = (current / (s["weight"] / 100)) if current and s["weight"] else 0
+        shares = int(math.floor(capital * (s["weight"] / 100) / current)) if current else 0
 
-    # Zerodha charges (CLAUDE.md formula)
-    buy_tv  = sum(b["amount"] for b in buy)
-    sell_tv = sum(s["amount"] for s in sell)
-    total_tv = buy_tv + sell_tv
-    if total_tv > 0:
-        stt      = 0.001    * total_tv
-        exchange = 0.0000307 * total_tv
-        sebi     = 0.000001  * total_tv
-        stamp    = 0.00015   * buy_tv
-        gst      = 0.18 * (exchange + sebi)
-        est_charges = round(stt + exchange + sebi + stamp + gst)
-    else:
-        est_charges = 0
+        stocks.append({
+            "ticker": s["ticker"],
+            "weight": s["weight"],
+            "baseline": round(baseline, 2) if baseline else None,
+            "current": round(current, 2) if current else None,
+            "return_pct": round(ret * 100, 2),
+            "shares": shares,
+            "min_cap": round(min_cap_this),
+        })
+
+    index_value = round(100 * (1 + weighted_return), 2)
+    return_pct  = round(weighted_return * 100, 2)
+    min_investment = max((s["min_cap"] for s in stocks), default=0)
 
     return {
-        "sell": sell,
-        "hold": hold,
-        "buy": buy,
-        "per_slot": round(per_slot),
-        "est_charges": est_charges,
-        "regime_on": regime_on,
-        "next_rebalance": str(get_next_rebalance_date()),
-        "days_to_rebalance": days_to_rebalance(),
+        "status": status,
+        "index_value": index_value,
+        "return_pct": return_pct,
+        "tracking_since": portfolio.get("tracking_since"),
+        "min_investment": min_investment,
+        "capital": capital,
+        "stocks": stocks,
     }

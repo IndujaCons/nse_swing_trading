@@ -2219,113 +2219,83 @@ def _etf_signal_scheduler():
 # ============ Mom20 Portfolio Manager ============
 
 from data.mom20_portfolio import (
-    load_portfolio, save_portfolio, calc_rebalance_diff,
+    load_portfolio, save_portfolio, calc_performance,
     get_next_rebalance_date, days_to_rebalance
 )
+import datetime as _dt
+
+
+def _mom20_live_prices():
+    """Returns (signals_list, regime_str, price_map)."""
+    try:
+        result = live_signals_scanner.scan_entry_signals()
+        sigs   = result.get("mom20_signals", []) + result.get("mom20_overflow", [])
+        regime = result.get("mom20_regime", "OFF")
+        prices = {s["ticker"]: s["price"] for s in sigs}
+        return sigs, regime, prices
+    except Exception:
+        return [], "OFF", {}
 
 
 @app.route("/api/mom20-portfolio", methods=["GET"])
 def mom20_portfolio_state():
-    """Return portfolio holdings enriched with live prices and P&L."""
+    """Return portfolio state + live performance."""
     portfolio = load_portfolio()
-    holdings = portfolio.get("holdings", [])
-
-    # Enrich with live prices from latest signals cache
-    try:
-        result = live_signals_scanner.scan_entry_signals()
-        signals = result.get("mom20_signals", [])
-        regime = result.get("mom20_regime", "OFF")
-    except Exception:
-        signals = []
-        regime = "OFF"
-
-    rank_map = {s["ticker"]: s for s in signals}
-    enriched = []
-    total_value = 0
-    total_cost  = 0
-    for h in holdings:
-        ticker = h["ticker"]
-        sig = rank_map.get(ticker)
-        cmp   = sig["price"] if sig else h.get("entry_price", 0)
-        entry = h.get("entry_price", 0)
-        shares = h.get("shares", 0)
-        value  = cmp * shares
-        cost   = entry * shares
-        pnl_pct = round((cmp / entry - 1) * 100, 1) if entry else 0
-        pnl_amt = round(value - cost)
-        total_value += value
-        total_cost  += cost
-        enriched.append({
-            "ticker": ticker,
-            "shares": shares,
-            "entry_price": entry,
-            "entry_date": h.get("entry_date"),
-            "cmp": cmp,
-            "value": round(value),
-            "pnl_pct": pnl_pct,
-            "pnl_amt": pnl_amt,
-            "rank": sig["rank"] if sig else None,
-        })
-
-    # Sort by rank (held stocks in Mom20 order, unranked at bottom)
-    enriched.sort(key=lambda h: h["rank"] if h["rank"] else 999)
-
+    _, regime, prices = _mom20_live_prices()
+    perf = calc_performance(portfolio, prices)
     return jsonify({
+        **perf,
         "capital": portfolio.get("capital", 2000000),
-        "last_rebalance_date": portfolio.get("last_rebalance_date"),
         "next_rebalance": str(get_next_rebalance_date()),
         "days_to_rebalance": days_to_rebalance(),
         "regime": regime,
-        "holdings": enriched,
-        "total_value": round(total_value),
-        "total_cost": round(total_cost),
-        "total_pnl_pct": round((total_value / total_cost - 1) * 100, 1) if total_cost else 0,
+        "basket": portfolio.get("basket", []),
         "pending_orders": portfolio.get("pending_orders", []),
     })
 
 
-@app.route("/api/mom20-portfolio/settings", methods=["POST"])
-def mom20_portfolio_settings():
-    """Update capital and optionally basket weights."""
+@app.route("/api/mom20-portfolio/save", methods=["POST"])
+def mom20_portfolio_save():
+    """Snapshot basket + current prices → paper tracking begins."""
     data = request.get_json() or {}
     capital = int(data.get("capital", 2000000))
-    if capital < 100000 or capital > 100000000:
-        return jsonify({"success": False, "error": "Capital must be between ₹1L and ₹10Cr"}), 400
+    basket_in = data.get("basket", [])  # [{ticker, weight, price}]
+    if not basket_in:
+        return jsonify({"success": False, "error": "Basket is empty"}), 400
+
     portfolio = load_portfolio()
     portfolio["capital"] = capital
-    # If basket provided, save as holdings with weight info
-    basket = data.get("basket")
-    if basket:
-        import math as _math
-        portfolio["holdings"] = [
-            {
-                "ticker": s["ticker"],
-                "shares": int(_math.floor(capital * (s["weight"] / 100) / s["price"])) if s.get("price", 0) > 0 else 0,
-                "entry_price": s.get("price", 0),
-                "entry_date": __import__('datetime').date.today().isoformat(),
-                "weight_pct": s["weight"],
-            }
-            for s in basket
-        ]
+    portfolio["status"] = "paper"
+    portfolio["tracking_since"] = _dt.date.today().isoformat()
+    portfolio["basket"] = [
+        {
+            "ticker": s["ticker"],
+            "weight": s["weight"],
+            "saved_price": s.get("price", 0),
+            "invested_price": None,
+        }
+        for s in basket_in
+    ]
+    portfolio["pending_orders"] = []
     save_portfolio(portfolio)
-    return jsonify({"success": True, "capital": capital})
+    return jsonify({"success": True, "status": "paper", "tracking_since": portfolio["tracking_since"]})
 
 
 @app.route("/api/mom20-portfolio/search", methods=["GET"])
 def mom20_portfolio_search():
-    """Search tickers for basket builder. __import__ returns current Mom20 signals."""
+    """Search tickers. q=__IMPORT__ returns current Mom20 top-15."""
     q = request.args.get("q", "").upper().strip()
-    # Special key: return current Mom20 signals for import
     if q == "__IMPORT__":
         try:
             result = live_signals_scanner.scan_entry_signals()
             signals = result.get("mom20_signals", [])[:15]
-            return jsonify({"success": True, "signals": [{"ticker": s["ticker"], "price": s["price"], "rank": s["rank"]} for s in signals]})
+            return jsonify({"success": True, "signals": [
+                {"ticker": s["ticker"], "price": s["price"], "rank": s["rank"]} for s in signals
+            ]})
         except Exception as e:
             return jsonify({"success": False, "signals": [], "error": str(e)})
     if len(q) < 2:
         return jsonify({"success": True, "results": []})
-    # Check live signals cache first
     try:
         result = live_signals_scanner.scan_entry_signals()
         all_sigs = result.get("mom20_signals", []) + result.get("mom20_overflow", [])
@@ -2335,7 +2305,6 @@ def mom20_portfolio_search():
             return jsonify({"success": True, "results": matches[:6]})
     except Exception:
         pass
-    # Fallback: yfinance quick price lookup
     try:
         import yfinance as yf
         t = yf.Ticker(f"{q}.NS")
@@ -2347,27 +2316,12 @@ def mom20_portfolio_search():
     return jsonify({"success": True, "results": []})
 
 
-@app.route("/api/mom20-portfolio/rebalance-diff", methods=["GET"])
-def mom20_portfolio_rebalance_diff():
-    """Calculate what to SELL / HOLD / BUY at next rebalance."""
-    portfolio = load_portfolio()
-    try:
-        result = live_signals_scanner.scan_entry_signals(force_refresh=True)
-        signals = result.get("mom20_signals", [])
-        regime_on = result.get("mom20_regime", "OFF") == "ON"
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-    diff = calc_rebalance_diff(signals, portfolio, regime_on)
-    return jsonify({"success": True, **diff})
-
-
 @app.route("/api/mom20-portfolio/place-orders", methods=["POST"])
 def mom20_portfolio_place_orders():
-    """Place CNC market orders for the rebalance diff via Kite."""
+    """Place CNC market orders via Kite."""
     data = request.get_json() or {}
     user_id = data.get("user_id")
-    orders_to_place = data.get("orders", [])  # [{ticker, side, shares}]
+    orders_to_place = data.get("orders", [])
 
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Kite login required"}), 400
@@ -2379,31 +2333,22 @@ def mom20_portfolio_place_orders():
         shares = int(o["shares"])
         side   = o["side"].upper()
         try:
-            if side == "SELL":
-                r = broker.place_sell_order(ticker, shares)
-            else:
-                r = broker.place_buy_order(ticker, shares)
-            results.append({
-                "ticker": ticker, "side": side, "shares": shares,
-                "order_id": r.get("order_id"), "status": "PLACED",
-            })
+            r = broker.place_sell_order(ticker, shares) if side == "SELL" else broker.place_buy_order(ticker, shares)
+            results.append({"ticker": ticker, "side": side, "shares": shares,
+                            "order_id": r.get("order_id"), "status": "PLACED"})
         except Exception as e:
-            results.append({
-                "ticker": ticker, "side": side, "shares": shares,
-                "order_id": None, "status": "ERROR", "error": str(e),
-            })
+            results.append({"ticker": ticker, "side": side, "shares": shares,
+                            "order_id": None, "status": "ERROR", "error": str(e)})
 
-    # Persist pending orders
     portfolio = load_portfolio()
     portfolio["pending_orders"] = results
     save_portfolio(portfolio)
-
     return jsonify({"success": True, "orders": results})
 
 
 @app.route("/api/mom20-portfolio/order-status", methods=["GET"])
 def mom20_portfolio_order_status():
-    """Poll Kite for status of pending orders."""
+    """Poll Kite for pending order statuses."""
     user_id = request.args.get("user_id")
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Kite login required"}), 400
@@ -2411,7 +2356,7 @@ def mom20_portfolio_order_status():
     portfolio = load_portfolio()
     pending = portfolio.get("pending_orders", [])
     if not pending:
-        return jsonify({"success": True, "orders": []})
+        return jsonify({"success": True, "orders": [], "all_complete": True})
 
     broker = brokers[user_id]
     try:
@@ -2420,48 +2365,41 @@ def mom20_portfolio_order_status():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-    updated = []
     for o in pending:
-        oid = str(o.get("order_id", ""))
-        ko  = kite_map.get(oid)
+        ko = kite_map.get(str(o.get("order_id", "")))
         if ko:
-            o["status"] = ko.get("status", o["status"])
+            o["status"]    = ko.get("status", o["status"])
             o["avg_price"] = ko.get("average_price")
-        updated.append(o)
 
-    portfolio["pending_orders"] = updated
+    portfolio["pending_orders"] = pending
     save_portfolio(portfolio)
-    return jsonify({"success": True, "orders": updated})
+    all_complete = all(o.get("status", "").upper() in ("COMPLETE", "ERROR", "REJECTED") for o in pending)
+    return jsonify({"success": True, "orders": pending, "all_complete": all_complete})
 
 
-@app.route("/api/mom20-portfolio/confirm-rebalance", methods=["POST"])
-def mom20_portfolio_confirm_rebalance():
+@app.route("/api/mom20-portfolio/confirm-investment", methods=["POST"])
+def mom20_portfolio_confirm_investment():
     """
-    After orders execute: update holdings to reflect the rebalance.
-    Expects {sell: [ticker], buy: [{ticker, shares, price}], date: 'YYYY-MM-DD'}
+    After all orders complete: set invested_price = avg_price from Kite.
+    Switches tracking mode from 'paper' → 'invested'.
+    Expects {orders: [{ticker, avg_price}]}
     """
     data = request.get_json() or {}
-    sell_tickers = set(data.get("sell", []))
-    buy_list     = data.get("buy", [])   # [{ticker, shares, price}]
-    rebal_date   = data.get("date", str(__import__('datetime').date.today()))
+    filled = {o["ticker"]: float(o["avg_price"]) for o in data.get("orders", []) if o.get("avg_price")}
 
     portfolio = load_portfolio()
-    holdings  = [h for h in portfolio.get("holdings", []) if h["ticker"] not in sell_tickers]
+    basket = portfolio.get("basket", [])
+    for s in basket:
+        if s["ticker"] in filled:
+            s["invested_price"] = filled[s["ticker"]]
 
-    for b in buy_list:
-        holdings.append({
-            "ticker":      b["ticker"],
-            "shares":      int(b["shares"]),
-            "entry_price": float(b["price"]),
-            "entry_date":  rebal_date,
-        })
-
-    portfolio["holdings"] = holdings
-    portfolio["last_rebalance_date"] = rebal_date
+    portfolio["basket"] = basket
+    portfolio["status"] = "invested"
+    portfolio["tracking_since"] = _dt.date.today().isoformat()
     portfolio["pending_orders"] = []
     save_portfolio(portfolio)
-
-    return jsonify({"success": True, "holdings_count": len(holdings)})
+    return jsonify({"success": True, "status": "invested",
+                    "tracking_since": portfolio["tracking_since"]})
 
 
 # ============ Run Server ============
