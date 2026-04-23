@@ -6502,7 +6502,11 @@
                 const d = await r.json();
                 if (d.success) {
                     _ovRenderOrderStatus(d.orders);
-                    showToast(`${d.orders.length} orders placed — poll status then Confirm Investment`, 'success');
+                    const ok = d.orders.filter(o => o.status !== 'ERROR').length;
+                    const fail = d.orders.length - ok;
+                    if (ok > 0 && fail === 0) showToast(`${ok} orders sent to Zerodha — poll status`, 'success');
+                    else if (ok > 0) showToast(`${ok} sent, ${fail} failed — check order status below`, 'error');
+                    // errors shown by _ovRenderOrderStatus
                 } else showToast(d.error, 'error');
             } catch(e) { showToast(e.message, 'error'); }
         }
@@ -6561,10 +6565,13 @@
                 const st = (o.status || '').toUpperCase();
                 const col = st === 'COMPLETE' ? 'var(--green)' : st === 'REJECTED' || st === 'ERROR' ? 'var(--red)' : '#f59e0b';
                 const icon = st === 'COMPLETE' ? '✓' : st === 'REJECTED' || st === 'ERROR' ? '✗' : '⏳';
-                return `<div style="padding:3px 0;color:${col};">${icon} ${o.side} <b>${o.ticker}</b> ${o.shares}sh ${o.avg_price ? '@ ₹'+o.avg_price : ''}</div>`;
+                const errMsg = o.error ? `<div style="font-size:10px;color:var(--red);margin-left:12px;">${o.error}</div>` : '';
+                return `<div style="padding:3px 0;color:${col};">${icon} ${o.side} <b>${o.ticker}</b> ${o.shares}sh ${o.avg_price ? '@ ₹'+o.avg_price : ''}${o.status==='ERROR'?` [${o.status}]`:''}</div>${errMsg}`;
             }).join('');
             wrap.style.display = '';
             body.innerHTML = rowHtml;
+            const errCount = orders.filter(o => ['ERROR','REJECTED'].includes((o.status||'').toUpperCase())).length;
+            if (errCount) showToast(`${errCount} order(s) failed — see error details in Order Status section`, 'error');
         }
 
     </script>
