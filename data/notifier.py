@@ -226,6 +226,36 @@ def format_mom20_alert(scan_result: dict) -> str | None:
     return "\n".join(lines)
 
 
+def format_mom20_overflow_alert(scan_result: dict) -> str | None:
+    """Format Mom20 overflow — high-momentum stocks excluded only by β>1.2 cap.
+    These are RS63 satellite candidates not captured in Mom20 (β≤1.2)."""
+    overflow = scan_result.get("mom20_overflow", [])
+    if not overflow:
+        return None
+
+    from datetime import datetime, timezone, timedelta
+    ist = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%d %b %H:%M")
+    regime = scan_result.get("mom20_regime", "—")
+    regime_tag = "🟢 ON" if regime == "ON" else "🔴 OFF"
+
+    lines = [f"<b>⚡ Mom20 Overflow — RS63 Candidates</b> | Regime {regime_tag} | {ist}",
+             "<i>High-momentum, β&gt;1.2 — not in Mom20 (β≤1.2)</i>", "<code>"]
+    lines.append(f"{'#':<3} {'Ticker':<10} {'Close':>7} {'12m':>6} {'3m':>6} {'Score':>5} {'β':>4}")
+    lines.append("─" * 46)
+    for s in overflow:
+        rank  = s.get("rank", "?")
+        tick  = s["ticker"][:10]
+        px    = f"{s['price']:,.0f}"
+        r12   = f"{s['ret_12m']:+.0f}%"
+        r3    = f"{s['ret_3m']:+.0f}%"
+        sc    = f"{s['momentum_score']:.2f}"
+        beta  = f"{s['beta']:.2f}"
+        lines.append(f"{rank:<3} {tick:<10} {px:>7} {r12:>6} {r3:>6} {sc:>5} {beta:>4}")
+    lines.append("</code>")
+    lines.append("⚡ Consider as RS63 entries when RS63 &gt; 0 + RSI &gt; 50")
+    return "\n".join(lines)
+
+
 def get_chat_id() -> str | None:
     """Helper to fetch your chat_id from getUpdates (call once after messaging the bot)."""
     token = _token()

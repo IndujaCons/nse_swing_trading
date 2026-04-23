@@ -988,6 +988,32 @@ class LiveSignalsEngine:
                     "atr_pct": 0,
                 })
 
+        # Mom20 overflow: top-40 uncapped minus capped — high-beta RS63 candidates
+        mom20_overflow = []
+        if len(mom20_raw) >= 5:
+            capped_tickers = {s["ticker"] for s in mom20_signals}
+            mr_12_uc = np.array([d["mr_12"] for d in mom20_raw])
+            mr_3_uc  = np.array([d["mr_3"] if d.get("mr_3") is not None else d["mr_6"] for d in mom20_raw])
+            z12_uc = (mr_12_uc - mr_12_uc.mean()) / mr_12_uc.std() if mr_12_uc.std() > 0 else np.zeros_like(mr_12_uc)
+            z3_uc  = (mr_3_uc  - mr_3_uc.mean())  / mr_3_uc.std()  if mr_3_uc.std()  > 0 else np.zeros_like(mr_3_uc)
+            wz_uc  = 0.5 * z12_uc + 0.5 * z3_uc
+            for idx_u, d in enumerate(mom20_raw):
+                z = wz_uc[idx_u]
+                d["norm_score_uc"] = (1 + z) if z >= 0 else 1 / (1 - z)
+            ov_rank = 0
+            for d in sorted(mom20_raw, key=lambda d: -d["norm_score_uc"])[:40]:
+                if d["ticker"] not in capped_tickers and d.get("beta") is not None and abs(d["beta"]) > 1.2:
+                    ov_rank += 1
+                    mom20_overflow.append({
+                        "ticker": d["ticker"],
+                        "price": d["price"],
+                        "ret_12m": round(d["ret_12m"] * 100, 1),
+                        "ret_3m": round(d["ret_3m"] * 100, 1) if d.get("ret_3m") is not None else round(d["ret_6m"] * 100, 1),
+                        "momentum_score": round(d["norm_score_uc"], 3),
+                        "beta": round(abs(d["beta"]), 2),
+                        "rank": ov_rank,
+                    })
+
         # Mom15: same scoring as Mom20 but beta cap 1.0, top 15
         # Load EPS data for TTM growth column + filtered view
         eps_db = {}
@@ -1110,6 +1136,7 @@ class LiveSignalsEngine:
             "rs_signals": rs_signals,
             "mom15_signals": mom15_signals,
             "mom20_signals": mom20_signals,
+            "mom20_overflow": mom20_overflow,
             "alpha20_signals": alpha20_signals,
             "rs63_signals": rs63_signals[:25],
             "nifty_regime": "ON" if nifty_regime_on else "OFF",

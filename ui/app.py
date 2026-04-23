@@ -2174,7 +2174,7 @@ def _etf_signal_scheduler():
         if _in_indian_window(now_ist) or not startup_scan_done_mom20:
             startup_scan_done_mom20 = True
             try:
-                from data.notifier import format_mom20_alert
+                from data.notifier import format_mom20_alert, format_mom20_overflow_alert
 
                 mom20_result = live_signals_scanner.scan_entry_signals(force_refresh=True)
 
@@ -2190,6 +2190,15 @@ def _etf_signal_scheduler():
                 else:
                     print(f"[ETF scheduler] Mom20 no signals")
                     last_mom20_key = None
+
+                # Mom20 overflow: always send alongside Mom20 (no dedup)
+                overflow_msg = format_mom20_overflow_alert(mom20_result)
+                if overflow_msg:
+                    n_ov = len(mom20_result.get("mom20_overflow", []))
+                    print(f"[ETF scheduler] Mom20 overflow — {n_ov} RS63 candidates")
+                    send_message(overflow_msg)
+                else:
+                    print(f"[ETF scheduler] Mom20 overflow — none")
 
             except Exception as e:
                 err = f"⚠️ Mom20 scan error: {e}"
