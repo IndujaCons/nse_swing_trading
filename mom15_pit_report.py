@@ -719,7 +719,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     for row in rebal_nav:
         yr = row["date"].year
         year_last_nav[yr] = row["nav"]
-    initial_nav = 20_00_000.0
+    initial_nav = 10_00_000.0 if overflow else 20_00_000.0
     prev_nav_yr = initial_nav
     neg_years = 0
     for yr in sorted(year_last_nav):
