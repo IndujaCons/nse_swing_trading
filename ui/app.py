@@ -2283,12 +2283,12 @@ def mom20_portfolio_save():
 
 @app.route("/api/mom20-portfolio/search", methods=["GET"])
 def mom20_portfolio_search():
-    """Search tickers. q=__IMPORT__ returns current Mom20 top-15."""
+    """Search tickers. q=__IMPORT__ returns current Mom20 top-20."""
     q = request.args.get("q", "").upper().strip()
     if q == "__IMPORT__":
         try:
             result = live_signals_scanner.scan_entry_signals()
-            signals = result.get("mom20_signals", [])[:15]
+            signals = result.get("mom20_signals", [])[:20]
             return jsonify({"success": True, "signals": [
                 {"ticker": s["ticker"], "price": s["price"], "rank": s["rank"]} for s in signals
             ]})

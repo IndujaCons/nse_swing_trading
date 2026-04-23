@@ -1986,7 +1986,7 @@
                         <span class="panel-title" style="color:#ff6b35;">📦 Mom20 Portfolio Builder</span>
                         <span id="mom20-port-regime-badge" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">Regime: —</span>
                         <span id="mom20-port-rebal-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;">Next rebalance: —</span>
-                        <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 15</button>
+                        <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 20</button>
                         <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
                     </div>
                     <div class="panel-body" style="padding:12px;">
@@ -2023,7 +2023,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="mom20-basket-tbody">
-                                    <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 15"</td></tr>
+                                    <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 20"</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2313,7 +2313,7 @@
                     <span style="font-size:14px;font-weight:700;color:#ff6b35;letter-spacing:0.5px;">MOM20 PORTFOLIO BUILDER</span>
                     <span id="mom20-port-regime-badge2" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">Regime: —</span>
                     <span id="mom20-port-rebal-badge2" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;">Next rebalance: —</span>
-                    <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 15</button>
+                    <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 20</button>
                     <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
                 </div>
 
@@ -2347,7 +2347,7 @@
                                 </tr>
                             </thead>
                             <tbody id="mom20-basket-tbody2">
-                                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 15"</td></tr>
+                                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 20"</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -6280,7 +6280,7 @@
                 if (minInvEl) minInvEl.textContent = minInv ? `Min Investment: ₹${minInv.toLocaleString('en-IN')}` : 'Min Investment: —';
 
                 if (!mom20Basket.length) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 15"</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 20"</td></tr>';
                     return;
                 }
                 tbody.innerHTML = mom20Basket.map((b, i) => {
@@ -6392,7 +6392,7 @@
                     const diff = 100 - mom20TotalWeight();
                     if (diff !== 0 && mom20Basket.length) mom20Basket[0].weight += diff;
                     mom20RenderBasket();
-                    showToast(`Imported ${mom20Basket.length} stocks from Mom20 signals`, 'success');
+                    showToast(`Imported ${mom20Basket.length} stocks from Mom20 top-20`, 'success');
                 } else showToast('No Mom20 signals — refresh live signals first', 'error');
             } catch(e) { showToast(e.message, 'error'); }
         }
