@@ -2191,9 +2191,12 @@ def _etf_signal_scheduler():
                     print(f"[ETF scheduler] Mom20 no signals")
                     last_mom20_key = None
 
-                # Mom20 overflow: only send during market hours (scores unreliable pre-market)
+                # Mom20 overflow: only send 09:15–15:15 IST (scores unreliable pre/post market)
                 now_ist = datetime.now(IST)
-                if _in_indian_window(now_ist):
+                _now_mins = now_ist.hour * 60 + now_ist.minute
+                _in_overflow_window = (now_ist.weekday() < 5
+                                       and 9 * 60 + 15 <= _now_mins <= 15 * 60 + 15)
+                if _in_overflow_window:
                     overflow_msg = format_mom20_overflow_alert(mom20_result)
                     if overflow_msg:
                         n_ov = len(mom20_result.get("mom20_overflow", []))
@@ -2202,7 +2205,7 @@ def _etf_signal_scheduler():
                     else:
                         print(f"[ETF scheduler] Mom20 overflow — none")
                 else:
-                    print(f"[ETF scheduler] Mom20 overflow — skipped (pre/post market, scores unreliable)")
+                    print(f"[ETF scheduler] Mom20 overflow — skipped (outside 09:15–15:15 IST)")
 
             except Exception as e:
                 err = f"⚠️ Mom20 scan error: {e}"
