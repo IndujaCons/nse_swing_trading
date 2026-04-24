@@ -60,6 +60,7 @@ UNIVERSE = [
     ("TLT",         "US LT Treasuries",      "TLT"),
     ("XLV",         "US Healthcare",         "XLV"),
     ("ITA",         "US Aerospace/Defence",  "ITA"),
+    ("EWJ",         "Japan",                 "EWJ"),
     # UCITS equivalents (LSE-listed, Irish/Lux domicile — estate-tax friendly)
     ("GDGB",        "Gold Miners UCITS",     "GDGB.L"),   # GDX equiv
     ("VEUR",        "Europe UCITS",          "VEUR.L"),   # VGK equiv
@@ -69,6 +70,7 @@ UNIVERSE = [
     ("IUES",        "US Energy UCITS",       "IUES.L"),   # XLE equiv
     ("COPX",        "Copper Miners UCITS",   "COPX.L"),   # XME approx
     ("WSML",        "World SmCap UCITS",     "WSML.L"),   # AVDV approx
+    ("CJPN",        "Japan UCITS",           "CJPN.L"),   # EWJ equiv
 ]
 
 BENCHMARK_SYM  = "^CNX200"
@@ -88,9 +90,9 @@ INTL_ETFS = {
     "XLE", "GDX", "XME", "VGK",
     "AVDV", "ILF", "FRDM", "EMXC",
     "MON100", "SOXX", "BOTZ", "EWY",
-    "XLK", "XLP", "TLT", "XLV", "ITA",
+    "XLK", "XLP", "TLT", "XLV", "ITA", "EWJ",
     # UCITS (LSE-listed)
-    "GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML",
+    "GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML", "CJPN",
 }
 UCITS_ETFS = {"GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML"}
 
