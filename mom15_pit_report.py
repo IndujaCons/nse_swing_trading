@@ -647,7 +647,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             print("    —")
 
         # ── HOLDS ────────────────────────────────────────────────────────────
-        holds = current_set & new_set
+        # When regime is OFF all exits are blocked — show full portfolio, not just new_set intersection
+        holds = current_set if regime_off else (current_set & new_set)
         hold_rows = []
         warn_syms = []
         for t in sorted(holds, key=lambda t: ticker_rank.get(t, 9999)):
