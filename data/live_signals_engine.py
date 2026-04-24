@@ -1001,10 +1001,8 @@ class LiveSignalsEngine:
                 z = wz_uc[idx_u]
                 d["norm_score_uc"] = (1 + z) if z >= 0 else 1 / (1 - z)
             ov_rank = 0
-            for d in sorted(mom20_raw, key=lambda d: -d["norm_score_uc"]):
-                if (d["ticker"] not in capped_tickers
-                        and d.get("beta") is not None and abs(d["beta"]) > 1.2
-                        and d.get("ret_3m", d.get("ret_6m", 0)) > 0):
+            for d in sorted(mom20_raw, key=lambda d: -d["norm_score_uc"])[:20]:
+                if d["ticker"] not in capped_tickers and d.get("beta") is not None and abs(d["beta"]) > 1.2:
                     ov_rank += 1
                     mom20_overflow.append({
                         "ticker": d["ticker"],
