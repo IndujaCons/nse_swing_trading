@@ -124,19 +124,24 @@ def fetch_all(refresh=False):
     print(f"  Bench: {len(bench)} rows")
 
     closes = {}
+    opens  = {}
     for sym, name, yf_sym in UNIVERSE:
         df = yf.download(yf_sym, start=fetch_start, end=fetch_end,
                          progress=False, auto_adjust=True)
         if df.empty:
             print(f"  WARN: no data for {sym} ({yf_sym})")
             closes[sym] = pd.Series(dtype=float)
+            opens[sym]  = pd.Series(dtype=float)
             continue
-        s = df["Close"].squeeze().dropna()
-        s.index = pd.to_datetime(s.index).tz_localize(None)
-        closes[sym] = s
-        print(f"  {sym:14s} {yf_sym:30s} {len(s)} rows")
+        c = df["Close"].squeeze().dropna()
+        o = df["Open"].squeeze().dropna()
+        c.index = pd.to_datetime(c.index).tz_localize(None)
+        o.index = pd.to_datetime(o.index).tz_localize(None)
+        closes[sym] = c
+        opens[sym]  = o
+        print(f"  {sym:14s} {yf_sym:30s} {len(c)} rows")
 
-    data = (closes, bench)
+    data = (closes, opens, bench)
     with open(CACHE_FILE, 'wb') as f:
         pickle.dump(data, f)
     print(f"Cached to {CACHE_FILE}")
@@ -174,7 +179,7 @@ def run(refresh=False, use_regime=False, start_override=None):
     if start_override:
         START_DATE = date.fromisoformat(start_override)
 
-    closes, bench = fetch_all(refresh=refresh)
+    closes, opens, bench = fetch_all(refresh=refresh)
 
     # Build aligned daily price matrix
     all_syms  = [sym for sym, _, _ in UNIVERSE if sym in closes and len(closes[sym]) >= LONG_PD + 10]
@@ -184,7 +189,8 @@ def run(refresh=False, use_regime=False, start_override=None):
     print(f"Universe: {len(all_syms)} ETFs  |  {all_dates[0].date()} → {all_dates[-1].date()}")
 
     # Pre-compute indicators per symbol
-    price = {}     # sym → pd.Series (full history)
+    price     = {}     # sym → pd.Series close (full history)
+    open_price= {}     # sym → pd.Series open
     ret12 = {}     # 12m return
     ret3  = {}     # 3m return
     vol   = {}     # annualised vol
@@ -195,7 +201,8 @@ def run(refresh=False, use_regime=False, start_override=None):
     for sym in all_syms:
         s = closes[sym]
         dr = s.pct_change()
-        price[sym] = s
+        price[sym]      = s
+        open_price[sym] = opens.get(sym, pd.Series(dtype=float))
         ret12[sym] = s / s.shift(LONG_PD) - 1
         ret3[sym]  = s / s.shift(SHORT_PD) - 1
         ann_vol    = dr.rolling(LONG_PD, min_periods=126).std() * (LONG_PD ** 0.5)
@@ -255,10 +262,19 @@ def run(refresh=False, use_regime=False, start_override=None):
         idx = s.index.searchsorted(day)
         if idx >= len(s):
             idx = len(s) - 1
-        # find closest prior date
         while idx > 0 and s.index[idx] > day:
             idx -= 1
         if idx < 0 or s.index[idx] > day:
+            return fallback
+        return float(s.iloc[idx])
+
+    def _open_on(sym, day, fallback):
+        """Next trading day's open price for execution."""
+        s = open_price.get(sym)
+        if s is None or s.empty:
+            return fallback
+        idx = s.index.searchsorted(day, side='left')
+        if idx >= len(s):
             return fallback
         return float(s.iloc[idx])
 
@@ -276,6 +292,10 @@ def run(refresh=False, use_regime=False, start_override=None):
         return float(s.iloc[idx])
 
     for rebal_idx, rebal_day in enumerate(rebal_dates):
+        # Signal on rebal_day close → execute at next trading day's open
+        next_idx = trading_days.index(rebal_day) + 1 if rebal_day in trading_days else None
+        exec_day = trading_days[next_idx] if next_idx and next_idx < len(trading_days) else rebal_day + pd.Timedelta(days=1)
+
         nav = portfolio_nav(rebal_day)
 
         # Update slot capital: NAV/5 compounding
@@ -357,7 +377,7 @@ def run(refresh=False, use_regime=False, start_override=None):
         exit_rows = []
         for sym in sorted(to_sell):
             pos      = portfolio[sym]
-            ep       = _price_on(sym, rebal_day, pos["entry_price"])
+            ep       = _open_on(sym, exec_day, _price_on(sym, rebal_day, pos["entry_price"]))
             sc_      = pos["slot_capital"]
             sell_val = sc_ * ep / pos["entry_price"]
             gp       = sell_val - sc_
@@ -406,7 +426,7 @@ def run(refresh=False, use_regime=False, start_override=None):
         for sym in sorted(to_buy, key=lambda s: rank_map.get(s, 9999)):
             if slots_free <= 0:
                 break
-            ep = _price_on(sym, rebal_day, None)
+            ep = _open_on(sym, exec_day, _price_on(sym, rebal_day, None))
             if ep is None:
                 continue
             sc_    = min(slot_capital, cash) if cash < slot_capital else slot_capital
@@ -416,7 +436,7 @@ def run(refresh=False, use_regime=False, start_override=None):
             cash  -= sc_
             portfolio[sym] = {
                 "entry_price": ep,
-                "entry_date":  rebal_day.date(),
+                "entry_date":  exec_day.date(),
                 "shares":      shares,
                 "slot_capital": sc_,
             }
