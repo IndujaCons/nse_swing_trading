@@ -409,7 +409,6 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             day_counts[dt] = day_counts.get(dt, 0) + 1
     trading_days = sorted(d for d, c in day_counts.items() if c >= 50 and d >= START_DATE)
     print(f"  Trading days in backtest: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
-    td_index = {d: i for i, d in enumerate(trading_days)}   # fast next-day lookup
 
     rebal_dates = get_rebal_dates(trading_days, monthly=mom20, weekly=overflow)
     print(f"  Rebalance dates: {len(rebal_dates)}")
@@ -433,23 +432,6 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     print("=" * len(banner))
 
     for rebal_idx, rebal_day in enumerate(rebal_dates):
-        # Execution at next trading day open (signal on rebal_day close)
-        td_i = td_index.get(rebal_day)
-        exec_day = trading_days[td_i + 1] if td_i is not None and td_i + 1 < len(trading_days) else rebal_day
-
-        def _exec_price(ticker, fallback):
-            """Next trading day's open price for execution."""
-            idx_map = date_to_iloc.get(ticker, {})
-            ci = idx_map.get(exec_day)
-            if ci is None:
-                for off in range(1, 4):
-                    ci = idx_map.get(exec_day + timedelta(days=off))
-                    if ci is not None:
-                        break
-            if ci is not None and "Open" in stock_data[ticker].columns:
-                return float(stock_data[ticker]["Open"].iloc[ci])
-            return fallback
-
         # Portfolio value on rebal day (MTM)
         port_value = cash
         for t, pos in portfolio.items():
@@ -557,7 +539,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             if regime_off:
                 break
             pos = portfolio[t]
-            ep = _exec_price(t, pos.get("curr_price", pos["entry_price"]))
+            ep = pos.get("curr_price", pos["entry_price"])
             gross_pnl = (ep - pos["entry_price"]) * pos["shares"]
             buy_val   = pos["entry_price"] * pos["shares"]
             sell_val  = ep * pos["shares"]
@@ -606,7 +588,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             if regime_off:
                 break
             s = scores[t]
-            ep = _exec_price(t, s["price"])   # next trading day open
+            ep = s["price"]
 
             # 52-week high filter: skip new entries > 20% below 52w high
             idx_map = date_to_iloc.get(t, {})
@@ -635,7 +617,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             cash -= (cost + chg)
             total_charges += chg
             portfolio[t] = {
-                "entry_date": exec_day,
+                "entry_date": rebal_day,
                 "entry_price": ep,
                 "shares": shares,
             }
