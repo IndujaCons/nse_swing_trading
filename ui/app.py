@@ -2123,11 +2123,10 @@ def _etf_signal_scheduler():
             candidate += timedelta(hours=1)
         return candidate  # fallback
 
-    print("[ETF scheduler] Started — RS63 scans at :15 past each hour 09:15–15:15 IST")
+    print("[ETF scheduler] Started — scans at :15 past each hour 09:15–15:15 IST")
 
     last_etf_key          = None   # dedup for ETF Core
     last_mom20_key        = None   # dedup for Mom20 ranking
-    last_rs63_exit_key    = None   # dedup for RS63 exits
     startup_scan_done     = False  # one-time ETF scan on startup regardless of window
     startup_scan_done_mom20 = False  # one-time Mom20 scan on startup regardless of window
 
