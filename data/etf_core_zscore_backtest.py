@@ -90,6 +90,7 @@ UNIVERSE = [
     ("TLT",         "US LT Treasuries",     "TLT"),
     ("XLV",         "US Healthcare",        "XLV"),
     ("ITA",         "US Aerospace/Defence", "ITA"),
+    ("EWJ",         "Japan",                "EWJ"),
 ]
 
 BENCH_SYM = "^NSEI"   # Nifty 50 for beta computation
