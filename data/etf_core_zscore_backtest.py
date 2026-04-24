@@ -149,19 +149,17 @@ def fetch_all(refresh=False):
 
 # ── REBALANCE DATES ───────────────────────────────────────────────────────────
 def get_rebal_dates(trading_days):
-    """Last trading day of each month (T-1 signal day).
-    Execution happens next trading day (T):
-      - Indian ETFs: T open 9:30 AM IST
-      - Intl ETFs:   T open 9:30 AM EST = 7-8 PM IST
+    """First trading day of each month (signal day).
+    Execution at next trading day open (T+1 open).
     """
     dates = []
     seen_months = set()
-    for d in sorted(trading_days, reverse=True):
+    for d in sorted(trading_days):
         key = (d.year, d.month)
         if key not in seen_months and d >= pd.Timestamp(START_DATE):
             seen_months.add(key)
             dates.append(d)
-    return sorted(dates)
+    return dates
 
 # ── DISPLAY HELPERS ──────────────────────────────────────────────────────────
 def inr(v):
