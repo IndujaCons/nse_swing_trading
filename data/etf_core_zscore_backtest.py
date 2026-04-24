@@ -468,16 +468,21 @@ def run(refresh=False, use_regime=False, start_override=None):
         # ── Holds ─────────────────────────────────────────────────────────────
         holds = current_set - to_sell
         hold_rows = []
+        warn_syms = []
         for sym in sorted(holds, key=lambda s: rank_map.get(s, 9999)):
-            pos = portfolio[sym]
-            cp  = _price_on(sym, rebal_day, pos["entry_price"])
-            gp  = (cp / pos["entry_price"] - 1) * 100
-            sd  = score_data.get(sym, {})
+            pos   = portfolio[sym]
+            cp    = _price_on(sym, rebal_day, pos["entry_price"])
+            gp    = (cp / pos["entry_price"] - 1) * 100
+            sd    = score_data.get(sym, {})
+            score = sd.get("score", 1.0)
+            warn  = " ⚠" if score < 1.0 else ""
+            if score < 1.0:
+                warn_syms.append(sym)
             hold_rows.append((
                 sym,
                 rank_map.get(sym, "—"),
                 pos["entry_date"].strftime("%d-%b-%y"),
-                f"{sd.get('score', 0):.3f}",
+                f"{score:.3f}{warn}",
                 f"{pos['entry_price']:,.1f}",
                 f"{cp:,.1f}",
                 pct(gp),
@@ -488,8 +493,10 @@ def run(refresh=False, use_regime=False, start_override=None):
             print_table(
                 ["ETF", "Rank", "Since", "Score", "Entry₹", "Now₹", "P&L%"],
                 hold_rows,
-                [12, 5, 10, 7, 10, 10, 8],
+                [12, 5, 10, 10, 10, 10, 8],
             )
+            if warn_syms:
+                print(f"  ⚠  WAZ < 0 (momentum below universe mean): {', '.join(warn_syms)}")
         else:
             print("    —")
 
@@ -662,8 +669,8 @@ def score_live() -> list[dict]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--refresh",    action="store_true", help="Re-download data")
-    parser.add_argument("--regime",     action="store_true", help="Enable regime filter (Nifty200 < SMA200 → hold all)")
-    parser.add_argument("--start",      default=None,        help="Override start date (YYYY-MM-DD)")
+    parser.add_argument("--refresh", action="store_true", help="Re-download data")
+    parser.add_argument("--regime",  action="store_true", help="Enable regime filter (Nifty200 < SMA200 → hold all)")
+    parser.add_argument("--start",   default=None,        help="Override start date (YYYY-MM-DD)")
     args = parser.parse_args()
     run(refresh=args.refresh, use_regime=args.regime, start_override=args.start)

@@ -649,11 +649,16 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         # ── HOLDS ────────────────────────────────────────────────────────────
         holds = current_set & new_set
         hold_rows = []
+        warn_syms = []
         for t in sorted(holds, key=lambda t: ticker_rank.get(t, 9999)):
-            pos = portfolio[t]
-            cp  = pos.get("curr_price", pos["entry_price"])
+            pos   = portfolio[t]
+            cp    = pos.get("curr_price", pos["entry_price"])
             unreal = (cp - pos["entry_price"]) * pos["shares"]
-            pp  = (cp / pos["entry_price"] - 1) * 100
+            pp    = (cp / pos["entry_price"] - 1) * 100
+            sc    = scores.get(t, {}).get("norm_score", 1.0)
+            warn  = " ⚠" if sc < 1.0 else ""
+            if sc < 1.0:
+                warn_syms.append(t)
             hold_rows.append((
                 t,
                 ticker_rank.get(t, "—"),
@@ -662,16 +667,18 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 f"{cp:,.1f}",
                 pos["shares"],
                 inr(unreal),
-                pct(pp),
+                f"{pct(pp)}{warn}",
             ))
 
         print(f"\n  HOLDS ({len(hold_rows)})")
         if hold_rows:
             print_table(
                 ["Ticker","Rank","Since","Entry₹","Now₹","Qty","Unreal P&L","P&L%"],
-                sorted(hold_rows, key=lambda r: float(r[7].replace('+','').replace('%','')), reverse=True),
-                [10, 5, 10, 10, 10, 5, 12, 8]
+                sorted(hold_rows, key=lambda r: float(r[7].replace('+','').replace('%','').replace(' ⚠','')), reverse=True),
+                [10, 5, 10, 10, 10, 5, 12, 10]
             )
+            if warn_syms:
+                print(f"  ⚠  WAZ < 0 (momentum below universe mean): {', '.join(warn_syms)}")
         else:
             print("    —")
 
