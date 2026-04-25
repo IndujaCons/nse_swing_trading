@@ -7358,7 +7358,7 @@
     function renderStaticWatchlist() {
         const body = document.getElementById('etf-watchlist-body');
         const rows = ETF_UNIVERSE.map(etf => {
-            const nameShort = etf.name.substring(0, 28) + (etf.name.length > 28 ? '…' : '');
+            const nameShort = etf.name.substring(0, 20) + (etf.name.length > 20 ? '…' : '');
             return `
             <tr onclick="loadEtfChart('${etf.yf}')" data-sym="${etf.symbol}">
                 <td><span class="etf-rank-badge etf-low">—</span></td>
@@ -7372,16 +7372,7 @@
                 <td style="color:var(--text-muted);">—</td>
                 <td style="color:var(--text-muted);">—</td>
                 <td style="color:var(--text-muted);">—</td>
-                <td style="color:var(--text-muted);">—</td>
                 <td><span class="etf-signal-badge etf-badge-ranked">UNRANKED</span></td>
-                <td>
-                    <div style="display:flex;gap:4px;align-items:center;" onclick="event.stopPropagation()">
-                        <input type="number" id="etf-amt-${etf.symbol}" placeholder="₹ Amt" min="1000" step="1000"
-                               style="width:80px;padding:2px 5px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);font-size:11px;">
-                        <button class="etf-action-btn buy"  onclick="etfLimitOrder('${etf.symbol}', 0, 0, 'BUY')">B</button>
-                        <button class="etf-action-btn sell" onclick="etfLimitOrder('${etf.symbol}', 0, 0, 'SELL')">S</button>
-                    </div>
-                </td>
             </tr>`;
         }).join('');
 
@@ -7389,9 +7380,9 @@
         <table class="etf-stock-table">
             <thead>
                 <tr>
-                    <th>Rank</th><th>Symbol</th><th>Category</th>
-                    <th>Price</th><th>iNAV</th><th>Prem%</th><th>SMA63</th><th>RS63</th><th>Trend</th>
-                    <th>Signal</th><th>Action</th>
+                    <th>#</th><th>ETF</th><th>Category</th>
+                    <th>Score</th><th>Beta</th><th>12M</th><th>3M</th>
+                    <th>Trend</th><th>Status</th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
