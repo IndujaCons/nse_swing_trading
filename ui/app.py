@@ -1880,13 +1880,28 @@ def etf_core():
 
 @app.route("/api/etf/scan", methods=["POST"])
 def etf_scan():
-    """Scan all 35 ETFs: compute RS63, SMA63, check entry/exit/reentry signals."""
+    """Scan all ETFs: compute Z-score ranking + entry/exit signals."""
     try:
         broker = _get_connected_broker()
         kite = broker._kite if broker else None
         result = etf_engine.scan(kite=kite)
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]})
+
+        # Merge Z-score fields (score, beta, ret_12m, ret_3m) into watchlist items
+        try:
+            from data.etf_core_zscore_backtest import score_live
+            zscore_list = score_live()
+            zscore_map = {d["symbol"]: d for d in zscore_list}
+            for item in result.get("watchlist", []):
+                zd = zscore_map.get(item["symbol"], {})
+                item["mom_score"] = zd.get("score")
+                item["beta"]      = zd.get("beta")
+                item["ret_12m"]   = zd.get("ret_12m")
+                item["ret_3m"]    = zd.get("ret_3m")
+        except Exception:
+            pass
+
         return jsonify({"success": True, **result})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})

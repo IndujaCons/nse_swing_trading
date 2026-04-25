@@ -28,7 +28,7 @@ warnings.filterwarnings('ignore')
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 START_DATE     = date(2016, 1, 1)
 MAX_SLOTS      = 5
-BUFFER_IN      = 5       # enter if rank ≤ 5
+BUFFER_IN      = 4       # enter if rank ≤ 4
 BUFFER_OUT     = 10      # hold if rank ≤ 10
 BETA_CAP       = 1.2
 W12, W3        = 0.50, 0.50
@@ -398,6 +398,7 @@ def run(refresh=False, use_regime=False, start_override=None):
             sd = score_data.get(sym, {})
             exit_rows.append((
                 sym,
+                rank_map.get(sym, "—"),
                 pos["entry_date"].strftime("%d-%b-%y"),
                 f"{pos['entry_price']:,.1f}",
                 f"{ep:,.1f}",
@@ -410,9 +411,9 @@ def run(refresh=False, use_regime=False, start_override=None):
         print(f"\n  EXITS ({len(exit_rows)})")
         if exit_rows:
             print_table(
-                ["ETF", "Entry", "Entry₹", "Exit₹", "Gross P&L", "P&L%", "Hold"],
-                sorted(exit_rows, key=lambda r: float(r[5].replace('+','').replace('%','')), reverse=True),
-                [12, 10, 10, 10, 12, 8, 6],
+                ["ETF", "Rank", "Entry", "Entry₹", "Exit₹", "Gross P&L", "P&L%", "Hold"],
+                sorted(exit_rows, key=lambda r: float(r[6].replace('+','').replace('%','')), reverse=True),
+                [12, 5, 10, 10, 10, 12, 8, 6],
             )
         else:
             print("    —")

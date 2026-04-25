@@ -90,8 +90,8 @@ ALIASES = {
 }
 
 # ── PIT UNIVERSE ──────────────────────────────────────────────────────────────
-def load_pit():
-    with open(PIT_FILE) as f:
+def load_pit(path=None):
+    with open(path or PIT_FILE) as f:
         raw = json.load(f)
     # raw = {date_str: [tickers], ...}
     parsed = sorted(
@@ -143,11 +143,14 @@ def eps_passes(eps_db, ticker, day):
     return (latest / prev - 1) > 0.0
 
 # ── DATA LOADING ──────────────────────────────────────────────────────────────
-def fetch_ticker(ticker, start, end):
-    sym = ALIASES.get(ticker, f"{ticker}.NS")
+def fetch_ticker(ticker, start, end, us_mode=False):
+    if us_mode:
+        sym = ticker  # US tickers need no suffix
+    else:
+        sym = ALIASES.get(ticker, f"{ticker}.NS")
     try:
         df = yf.Ticker(sym).history(start=start, end=end)
-        if df.empty or len(df) < 200:
+        if not us_mode and (df.empty or len(df) < 200):
             # Try .NS if alias was .BO
             if ".BO" in sym:
                 return pd.DataFrame()
@@ -160,25 +163,26 @@ def fetch_ticker(ticker, start, end):
         df.index = df.index.tz_localize(None) if df.index.tzinfo else df.index
     return df
 
-def load_or_fetch_data(tickers, fetch_start, fetch_end, refresh=False):
-    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
-    if not refresh and os.path.exists(CACHE_FILE):
-        print(f"Loading cached data from {CACHE_FILE}...")
-        with open(CACHE_FILE, 'rb') as f:
+def load_or_fetch_data(tickers, fetch_start, fetch_end, refresh=False, cache_file=None, us_mode=False):
+    cache_file = cache_file or CACHE_FILE
+    os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+    if not refresh and os.path.exists(cache_file):
+        print(f"Loading cached data from {cache_file}...")
+        with open(cache_file, 'rb') as f:
             return pickle.load(f)
 
     print(f"Fetching {len(tickers)} tickers from yfinance (this takes ~5-10 min)...")
     stock_data = {}
     for i, ticker in enumerate(sorted(tickers)):
-        df = fetch_ticker(ticker, fetch_start, fetch_end)
+        df = fetch_ticker(ticker, fetch_start, fetch_end, us_mode=us_mode)
         if not df.empty and len(df) >= 200:
             stock_data[ticker] = df
         if (i + 1) % 25 == 0:
             print(f"  {i+1}/{len(tickers)} done, {len(stock_data)} loaded...")
     print(f"  Done. {len(stock_data)} stocks with sufficient history.")
-    with open(CACHE_FILE, 'wb') as f:
+    with open(cache_file, 'wb') as f:
         pickle.dump(stock_data, f)
-    print(f"  Cached to {CACHE_FILE}")
+    print(f"  Cached to {cache_file}")
     return stock_data
 
 # ── SCORING ───────────────────────────────────────────────────────────────────
@@ -274,12 +278,23 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
     return raw
 
 # ── REBALANCE DATES ───────────────────────────────────────────────────────────
-def get_rebal_dates(trading_days, monthly=False, weekly=False):
+def get_rebal_dates(trading_days, monthly=False, weekly=False, every_n_days=None, quarterly=False):
     """Return rebalance dates.
-    weekly=True:   every Monday (or first trading day of each week)
-    monthly=False: first trading day of Feb/Apr/Jun/Aug/Oct/Dec (Mom15 bi-monthly)
-    monthly=True:  first trading day of every month (Mom20 monthly)
+    weekly=True:      every Monday (or first trading day of each week)
+    monthly=False:    first trading day of Feb/Apr/Jun/Aug/Oct/Dec (Mom15 bi-monthly)
+    monthly=True:     first trading day of every month (Mom20 monthly)
+    every_n_days=N:   every N calendar days from START_DATE
     """
+    if every_n_days:
+        result = []
+        last = None
+        for d in trading_days:
+            if d < START_DATE:
+                continue
+            if last is None or (d - last).days >= every_n_days:
+                result.append(d)
+                last = d
+        return result
     if weekly:
         seen = set()
         result = []
@@ -290,7 +305,7 @@ def get_rebal_dates(trading_days, monthly=False, weekly=False):
                 seen.add(yw)
                 result.append(d)
         return result
-    rebal_months = set(range(1, 13)) if monthly else {2, 4, 6, 8, 10, 12}
+    rebal_months = set(range(1, 13)) if monthly else ({1, 4, 7, 10} if quarterly else {2, 4, 6, 8, 10, 12})
     seen = set()
     result = []
     for d in trading_days:
@@ -318,15 +333,25 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False):
-    # Override constants for Mom20 / Overflow variants
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN
+def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False):
+    # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, W12, W3
     BETA_MIN = None  # reset each run
+    W12, W3 = 0.50, 0.50  # reset each run
     if overflow:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT = 5, 3, 8
         BETA_CAP, BETA_MIN = 99.0, 1.2   # β>1.2 only (99 cap = effectively no upper limit)
         label = "Overflow — 5-slot β>1.2, Weekly, Rank-exit"
         use_regime = False  # no regime filter for overflow
+    elif qqq:
+        MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 10, 7, 20, 99.0  # no beta cap for US
+        label = "MomQQQ — Nasdaq-100 Universe, Top10, Monthly Rebalance, No β filter"
+    elif sp500:
+        MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 99.0  # no beta cap for US
+        label = "MomSP500 — S&P 500 Universe, 2-Month Rebalance, No β filter"
+    elif n500:
+        MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
+        label = "Mom500 — Nifty500 Universe, Monthly Rebalance, β≤1.2"
     elif mom20:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
         label = "Mom20 — Monthly Rebalance, β≤1.2"
@@ -339,8 +364,33 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     print(f"=== {label} | {regime_label} ===")
 
     # Load supporting data
+    if qqq:
+        pit_file     = os.path.join(BASE_DIR, 'nse_const', 'qqq_pit.json')
+        cache_file   = os.path.join(BASE_DIR, 'data', 'cache', 'qqq_daily.pkl')
+        bench_ticker = "QQQ"
+        bench_label  = "QQQ (Nasdaq-100)"
+        beta_bench_ticker = "^NDX"
+    elif sp500:
+        pit_file     = os.path.join(BASE_DIR, 'nse_const', 'sp500_pit.json')
+        cache_file   = os.path.join(BASE_DIR, 'data', 'cache', 'sp500_daily.pkl')
+        bench_ticker = "SPY"
+        bench_label  = "S&P 500 (SPY)"
+        beta_bench_ticker = "^GSPC"
+    elif n500:
+        pit_file     = os.path.join(BASE_DIR, 'nse_const', 'nifty500_pit.json')
+        cache_file   = os.path.join(BASE_DIR, 'data', 'cache', 'mom500_daily.pkl')
+        bench_ticker = "^CRSLDX"
+        bench_label  = "Nifty 500"
+        beta_bench_ticker = "^NSEI"
+    else:
+        pit_file     = PIT_FILE
+        cache_file   = CACHE_FILE
+        bench_ticker = "^CNX200"
+        bench_label  = "Nifty 200"
+        beta_bench_ticker = "^NSEI"
+
     print("Loading PIT universe...")
-    pit_data = load_pit()
+    pit_data = load_pit(pit_file)
     all_tickers = get_all_pit_tickers(pit_data)
     print(f"  {len(all_tickers)} unique PIT tickers across all periods")
 
@@ -356,40 +406,42 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     fetch_end   = date.today()
 
     # Load/fetch stock data
-    stock_data = load_or_fetch_data(all_tickers, fetch_start, fetch_end, refresh)
+    us_mode = qqq or sp500
+    stock_data = load_or_fetch_data(all_tickers, fetch_start, fetch_end, refresh, cache_file=cache_file, us_mode=us_mode)
 
-    # Fetch Nifty 50 for beta (retry up to 3 times on transient yfinance errors)
-    print("Fetching Nifty 50 (beta)...")
+    # Fetch benchmark index for beta (retry up to 3 times on transient yfinance errors)
+    beta_label = "Nasdaq-100 (^NDX)" if qqq else ("S&P 500 (^GSPC)" if sp500 else "Nifty 50")
+    print(f"Fetching {beta_label} (beta)...")
     import time as _time
     n50_raw = pd.DataFrame()
     for _attempt in range(3):
         try:
-            n50_raw = yf.Ticker("^NSEI").history(start=fetch_start, end=fetch_end)
+            n50_raw = yf.Ticker(beta_bench_ticker).history(start=fetch_start, end=fetch_end)
             if not n50_raw.empty:
                 break
         except Exception as e:
             print(f"  Attempt {_attempt+1} failed: {e}")
         _time.sleep(2)
     if n50_raw.empty:
-        print("  ERROR: Could not fetch Nifty 50 — beta filter disabled")
+        print(f"  ERROR: Could not fetch {beta_label} — beta filter disabled")
     else:
         n50_raw.index = n50_raw.index.tz_localize(None) if n50_raw.index.tzinfo else n50_raw.index
         print(f"  {len(n50_raw)} bars")
     n50_iloc = {n50_raw.index[i].date(): i for i in range(len(n50_raw))}
 
-    # Fetch Nifty 200 for regime filter (200-day SMA)
-    print("Fetching Nifty 200 (regime filter)...")
+    # Fetch benchmark index for regime filter (200-day SMA)
+    print(f"Fetching {bench_label} (regime filter)...")
     n200_raw = pd.DataFrame()
     for _attempt in range(3):
         try:
-            n200_raw = yf.Ticker("^CNX200").history(start=fetch_start, end=fetch_end)
+            n200_raw = yf.Ticker(bench_ticker).history(start=fetch_start, end=fetch_end)
             if not n200_raw.empty:
                 break
         except Exception as e:
             print(f"  Attempt {_attempt+1} failed: {e}")
         _time.sleep(2)
     if n200_raw.empty:
-        print("  WARNING: Could not fetch Nifty 200 — regime filter disabled")
+        print(f"  WARNING: Could not fetch {bench_label} — regime filter disabled")
     else:
         n200_raw.index = n200_raw.index.tz_localize(None) if n200_raw.index.tzinfo else n200_raw.index
         n200_raw["sma200"] = n200_raw["Close"].rolling(200).mean()
@@ -410,7 +462,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     trading_days = sorted(d for d, c in day_counts.items() if c >= 50 and d >= START_DATE)
     print(f"  Trading days in backtest: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
 
-    rebal_dates = get_rebal_dates(trading_days, monthly=mom20, weekly=overflow)
+    rebal_dates = get_rebal_dates(trading_days, monthly=(mom20 or n500 or qqq),
+                                  weekly=overflow)
     print(f"  Rebalance dates: {len(rebal_dates)}")
 
     # ── Portfolio state ──────────────────────────────────────────────────────
@@ -422,6 +475,12 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
 
     if overflow:
         banner = f"  OVERFLOW PIT BACKTEST  |  NAV/5 slot  |  Weekly Rebalance  |  Beta>1.2  |  {regime_label}"
+    elif qqq:
+        banner = f"  MOMQQQ PIT BACKTEST  |  NAV/10 slot  |  Monthly Rebalance  |  Nasdaq-100 Universe  |  No Beta Filter  |  {regime_label}"
+    elif sp500:
+        banner = f"  MOMSP500 PIT BACKTEST  |  NAV/20 slot  |  2-Month Rebalance  |  S&P 500 Universe  |  No Beta Filter  |  {regime_label}"
+    elif n500:
+        banner = f"  MOM500 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Nifty500 Universe  |  Beta≤1.2  |  {regime_label}"
     elif mom20:
         banner = f"  MOM20 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Beta≤1.2  |  {regime_label}"
     else:
@@ -530,7 +589,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 n200_sma   = n200_raw["sma200"].iloc[n200_ci]
                 if not pd.isna(n200_sma) and n200_close < float(n200_sma):
                     regime_off = True
-                    print(f"\n  [REGIME OFF] Nifty200 {n200_close:,.1f} < SMA200 {float(n200_sma):,.1f} — holding all, skipping exits & entries")
+                    print(f"\n  [REGIME OFF] {bench_label} {n200_close:,.1f} < SMA200 {float(n200_sma):,.1f} — holding all, skipping exits & entries")
 
         # ── EXITS ────────────────────────────────────────────────────────────
         to_sell = current_set - new_set
@@ -559,6 +618,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             })
             exit_rows.append((
                 t,
+                ticker_rank.get(t, "—"),
                 pos["entry_date"].strftime("%d-%b-%y"),
                 f"{pos['entry_price']:,.1f}",
                 f"{ep:,.1f}",
@@ -572,9 +632,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         print(f"\n  EXITS ({len(exit_rows)})")
         if exit_rows:
             print_table(
-                ["Ticker","Entry","Entry₹","Exit₹","Qty","Gross P&L","P&L%","Hold"],
-                sorted(exit_rows, key=lambda r: float(r[6].replace('+','').replace('%','')), reverse=True),
-                [10, 10, 10, 10, 5, 12, 8, 6]
+                ["Ticker","Rank","Entry","Entry₹","Exit₹","Qty","Gross P&L","P&L%","Hold"],
+                sorted(exit_rows, key=lambda r: float(r[7].replace('+','').replace('%','')), reverse=True),
+                [10, 5, 10, 10, 10, 5, 12, 8, 6]
             )
         else:
             print("    —")
@@ -599,7 +659,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                     if prev in idx_map:
                         ci = idx_map[prev]
                         break
-            if ci is not None and ci >= 252:
+            if not qqq and not sp500 and ci is not None and ci >= 252:
                 high_52w = float(stock_data[t]["High"].iloc[ci-252:ci+1].max())
                 dist_from_high = (ep / high_52w - 1) * 100
                 if ep < high_52w * 0.80:
@@ -765,7 +825,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     # Export rebalance-date NAV series for portfolio correlation analysis
     if rebal_nav:
         import os as _os
-        csv_name = "overflow_rebal.csv" if overflow else ("mom20_rebal.csv" if mom20 else "mom15_rebal.csv")
+        csv_name = "overflow_rebal.csv" if overflow else ("qqq_rebal.csv" if qqq else ("sp500_rebal.csv" if sp500 else ("mom500_rebal.csv" if n500 else ("mom20_rebal.csv" if mom20 else "mom15_rebal.csv"))))
         nav_csv = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), csv_name)
         pd.DataFrame(rebal_nav).to_csv(nav_csv, index=False)
         print(f"  Rebalance NAV exported → {csv_name} ({len(rebal_nav)} rows)")
@@ -783,7 +843,13 @@ if __name__ == "__main__":
                         help="Override beta cap (e.g. 1.35)")
     parser.add_argument("--regime-exit", action="store_true",
                         help="Regime OFF: block entries but still execute exits")
+    parser.add_argument("--n500", action="store_true",
+                        help="Run Mom500 variant (Nifty500 universe, top 20, monthly, β≤1.2, Nifty500 regime)")
+    parser.add_argument("--sp500", action="store_true",
+                        help="Run on S&P 500 PIT universe (monthly, no beta filter)")
+    parser.add_argument("--qqq", action="store_true",
+                        help="Run MomQQQ variant (Nasdaq-100 universe, top 20, monthly, β≤1.2 vs NDX, QQQ regime)")
     args = parser.parse_args()
     run(refresh=args.refresh, mom20=args.mom20, overflow=args.overflow,
         use_regime=not args.no_regime, beta_cap_override=args.beta_cap,
-        regime_exit=args.regime_exit)
+        regime_exit=args.regime_exit, n500=args.n500, qqq=args.qqq, sp500=args.sp500)

@@ -6846,13 +6846,13 @@
 
             const actionBtn = `
                 <div style="display:flex;gap:4px;align-items:center;" onclick="event.stopPropagation()">
-                    <input type="number" id="etf-amt-${item.symbol}" placeholder="₹ Amt" min="1000" step="1000"
-                           style="width:80px;padding:2px 5px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);font-size:11px;">
+                    <input type="number" id="etf-amt-${item.symbol}" placeholder="₹Amt" min="1000" step="1000"
+                           style="width:60px;padding:2px 4px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);font-size:10px;">
                     <button class="etf-action-btn buy"  onclick="etfLimitOrder('${item.symbol}', ${item.price || 0}, ${item.inav || 0}, 'BUY')">B</button>
                     <button class="etf-action-btn sell" onclick="etfLimitOrder('${item.symbol}', ${item.price || 0}, ${item.inav || 0}, 'SELL')">S</button>
                 </div>`;
 
-            const nameShort = item.name ? item.name.substring(0, 28) + (item.name.length > 28 ? '…' : '') : '';
+            const nameShort = item.name ? item.name.substring(0, 20) + (item.name.length > 20 ? '…' : '') : '';
             const priceFmt = item.price ? `₹${fmtPrice(item.price)}` : 'N/A';
             const sma63Fmt = item.sma63 ? `₹${fmtPrice(item.sma63)}` : 'N/A';
 
@@ -6878,14 +6878,12 @@
                     <div style="font-size:10px;color:var(--text-muted);">${nameShort}</div>
                 </td>
                 <td style="font-size:10px;color:var(--text-muted);">${item.category || ''}</td>
-                <td>${priceFmt}</td>
-                <td style="font-size:11px;">${inavFmt}</td>
-                <td style="font-size:11px;">${premFmt}</td>
-                <td>${sma63Fmt}</td>
-                <td>${rsStr}</td>
+                <td>${item.mom_score != null ? item.mom_score.toFixed(3) : '—'}</td>
+                <td>${item.beta != null ? item.beta.toFixed(2) : '—'}</td>
+                <td style="color:${item.ret_12m >= 0 ? 'var(--green)' : 'var(--red)'}">${item.ret_12m != null ? (item.ret_12m > 0 ? '+' : '') + item.ret_12m.toFixed(1) + '%' : '—'}</td>
+                <td style="color:${item.ret_3m >= 0 ? 'var(--green)' : 'var(--red)'}">${item.ret_3m != null ? (item.ret_3m > 0 ? '+' : '') + item.ret_3m.toFixed(1) + '%' : '—'}</td>
                 <td>${trendStr}</td>
                 <td>${badgeStr}</td>
-                <td>${actionBtn}</td>
             </tr>`;
         }).join('');
 
@@ -6894,8 +6892,8 @@
             <thead>
                 <tr>
                     <th>#</th><th>ETF</th><th>Category</th>
-                    <th>Price</th><th>iNAV</th><th>Prem%</th><th>SMA63</th><th>RS63</th>
-                    <th>Trend</th><th>Status</th><th>Action</th>
+                    <th>Score</th><th>Beta</th><th>12M</th><th>3M</th>
+                    <th>Trend</th><th>Status</th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
