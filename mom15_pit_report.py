@@ -318,7 +318,7 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None):
+def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False):
     # Override constants for Mom20 / Overflow variants
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN
     BETA_MIN = None  # reset each run
@@ -536,7 +536,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         to_sell = current_set - new_set
         exit_rows = []
         for t in sorted(to_sell):
-            if regime_off:
+            if regime_off and not regime_exit:
                 break
             pos = portfolio[t]
             ep = pos.get("curr_price", pos["entry_price"])
@@ -647,8 +647,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             print("    —")
 
         # ── HOLDS ────────────────────────────────────────────────────────────
-        # When regime is OFF all exits are blocked — show full portfolio, not just new_set intersection
-        holds = current_set if regime_off else (current_set & new_set)
+        # When regime is OFF and exits blocked — show full portfolio, not just new_set intersection
+        holds = (current_set if (regime_off and not regime_exit) else (current_set & new_set))
         hold_rows = []
         warn_syms = []
         for t in sorted(holds, key=lambda t: ticker_rank.get(t, 9999)):
@@ -781,6 +781,9 @@ if __name__ == "__main__":
                         help="Disable regime filter (allow entries even when Nifty200 < SMA200)")
     parser.add_argument("--beta-cap", type=float, default=None,
                         help="Override beta cap (e.g. 1.35)")
+    parser.add_argument("--regime-exit", action="store_true",
+                        help="Regime OFF: block entries but still execute exits")
     args = parser.parse_args()
     run(refresh=args.refresh, mom20=args.mom20, overflow=args.overflow,
-        use_regime=not args.no_regime, beta_cap_override=args.beta_cap)
+        use_regime=not args.no_regime, beta_cap_override=args.beta_cap,
+        regime_exit=args.regime_exit)
