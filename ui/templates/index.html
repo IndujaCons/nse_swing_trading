@@ -3791,24 +3791,24 @@
                 return;
             }
             const rows = sigs.map(s => {
-                const r12Color = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
-                const r3Color  = s.ret_3m  > 0 ? 'var(--green)' : 'var(--red)';
+                const r12Color  = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
+                const r3Color   = s.ret_3m  > 0 ? 'var(--green)' : 'var(--red)';
                 const betaColor = s.beta > 1.5 ? 'var(--red)' : 'var(--orange,#ff9800)';
                 return `<tr>
                     <td style="font-size:10px;color:var(--text-muted);">#${s.rank}</td>
                     <td class="ticker" style="cursor:pointer;" onclick="lsLoadChart('${s.ticker}')">${s.ticker}</td>
-                    <td class="price">${s.price.toLocaleString('en-IN',{maximumFractionDigits:2})}</td>
+                    <td style="font-weight:600;">${s.momentum_score.toFixed(3)}</td>
+                    <td style="color:${betaColor};font-weight:700;">${s.beta}</td>
                     <td style="color:${r12Color};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
                     <td style="color:${r3Color};">${s.ret_3m > 0 ? '+' : ''}${s.ret_3m}%</td>
-                    <td style="color:${betaColor};font-weight:700;">β ${s.beta}</td>
-                    <td style="color:var(--text-muted);">${s.momentum_score.toFixed(2)}</td>
+                    <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;background:rgba(255,152,0,0.15);color:#ff9800;">HIGH-β</span></td>
                 </tr>`;
             }).join('');
             panel.innerHTML = `
                 <table class="stock-table">
                     <thead><tr>
-                        <th>#</th><th>Stock</th><th>Close</th>
-                        <th>12m Ret</th><th>3m Ret</th><th>Beta</th><th>Score</th>
+                        <th>#</th><th>Stock</th><th>Score</th>
+                        <th>Beta</th><th>12M</th><th>3M</th><th>Status</th>
                     </tr></thead>
                     <tbody>${rows}</tbody>
                 </table>`;
@@ -4179,23 +4179,26 @@
                     const retColor12 = s.ret_12m > 0 ? 'var(--green)' : 'var(--red)';
                     const ret3m = s.ret_3m !== undefined ? s.ret_3m : s.ret_6m;
                     const retColor3 = ret3m > 0 ? 'var(--green)' : 'var(--red)';
-                    const scoreColor = s.momentum_score > 1.5 ? 'var(--green)' : s.momentum_score > 1.0 ? 'var(--text)' : 'var(--text-muted)';
+                    const statusLabel = rank <= 20 ? 'ENTRY' : 'HOLD';
+                    const statusColor = rank <= 20 ? 'rgba(76,175,80,0.2)' : 'var(--bg-tertiary)';
+                    const statusText  = rank <= 20 ? 'var(--green)' : 'var(--text-muted)';
+                    const betaStr = s.beta != null ? s.beta.toFixed(2) : '—';
                     return `
                     <tr>
                         <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
-                        <td class="ticker">${s.ticker}</td>
-                        <td class="price">${s.price.toLocaleString()}</td>
+                        <td class="ticker" style="cursor:pointer;" onclick="lsLoadChart('${s.ticker}')">${s.ticker}</td>
+                        <td style="font-weight:600;">${s.momentum_score.toFixed(3)}</td>
+                        <td>${betaStr}</td>
                         <td style="color:${retColor12};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
                         <td style="color:${retColor3};">${ret3m > 0 ? '+' : ''}${ret3m}%</td>
-                        <td>${s.volatility}%</td>
-                        <td style="color:${scoreColor};font-weight:600;">${s.momentum_score.toFixed(2)}</td>
+                        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;background:${statusColor};color:${statusText};">${statusLabel}</span></td>
                     </tr>`;
                 }).join('');
                 mom20Panel.innerHTML = `
                     <table class="stock-table">
                         <thead><tr>
-                            <th>#</th><th>Stock</th><th>Close</th>
-                            <th>12m Ret</th><th>3m Ret</th><th>Vol</th><th>Mom Score</th>
+                            <th>#</th><th>Stock</th><th>Score</th>
+                            <th>Beta</th><th>12M</th><th>3M</th><th>Status</th>
                         </tr></thead>
                         <tbody>${mom20Rows}</tbody>
                     </table>

@@ -983,6 +983,7 @@ class LiveSignalsEngine:
                     "ret_6m": round(d["ret_6m"] * 100, 1),
                     "volatility": round(d["sigma"] * 100, 1),
                     "momentum_score": round(d["norm_score"], 3),
+                    "beta": round(abs(d["beta"]), 2) if d.get("beta") is not None else None,
                     "rank": rank_i + 1,
                     "stop_pct": 0,
                     "atr_pct": 0,
