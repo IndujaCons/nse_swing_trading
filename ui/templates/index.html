@@ -1317,8 +1317,7 @@
         <div class="header-right">
             <div class="strategy-tabs">
                 <button class="strategy-tab" onclick="switchStrategy('watchlist')">Watchlist</button>
-                <button class="strategy-tab active" onclick="switchStrategy('rs')">Screener</button>
-                <button class="strategy-tab" onclick="switchStrategy('live_signals')">Live Signals</button>
+                <button class="strategy-tab active" onclick="switchStrategy('live_signals')">Live Signals</button>
                 <button class="strategy-tab" onclick="switchStrategy('etf_core')">ETF Core</button>
                 <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
                 <button class="strategy-tab" onclick="switchStrategy('overflow_portfolio')">Overflow</button>
@@ -1767,7 +1766,7 @@
             </div>
 
             <!-- Screener Panels -->
-            <div class="panels" id="rs-panels">
+            <div class="panels hidden" id="rs-panels" style="display:none;">
                 <div class="panel sectoral">
                     <div class="panel-header">
                         <span class="panel-title">Sectoral Indices</span>
@@ -2339,7 +2338,7 @@
         let kiteUsers = [];
         let selectedTradeUser = null;
         let autoRefreshInterval = null;
-        let activeStrategy = 'rs';
+        let activeStrategy = 'live_signals';
         let _lastMomentumPanel = null;  // 'backtest' or 'batch' — tracks which was visible
         let liveSignalsDataLoaded = false;
         let lsScanDate = null;  // tracks selected historical date
@@ -2392,7 +2391,7 @@
 
             loadSettings();
             checkConnection();
-            loadData();
+            switchStrategy('live_signals');
             loadPaperTradesCount();
             startAutoRefresh();
 
@@ -3235,11 +3234,10 @@
             const tabs = document.querySelectorAll('.strategy-tab');
             tabs.forEach(tab => tab.classList.remove('active'));
             if (strategy === 'watchlist') tabs[0].classList.add('active');
-            else if (strategy === 'rs') tabs[1].classList.add('active');
-            else if (strategy === 'live_signals') tabs[2].classList.add('active');
-            else if (strategy === 'etf_core') tabs[3].classList.add('active');
-            else if (strategy === 'mom20_portfolio') tabs[4].classList.add('active');
-            else if (strategy === 'overflow_portfolio') tabs[5].classList.add('active');
+            else if (strategy === 'live_signals') tabs[1].classList.add('active');
+            else if (strategy === 'etf_core') tabs[2].classList.add('active');
+            else if (strategy === 'mom20_portfolio') tabs[3].classList.add('active');
+            else if (strategy === 'overflow_portfolio') tabs[4].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
