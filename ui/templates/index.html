@@ -6986,6 +6986,9 @@
 
             const _etfMeta = ETF_UNIVERSE.find(e => e.symbol === item.symbol);
             const _chartTicker = _etfMeta ? _etfMeta.yf : (item.symbol + '.NS');
+            const _ucitsLine = _etfMeta && _etfMeta.ucits
+                ? `<div style="font-size:9px;color:var(--text-muted);margin-top:2px;cursor:pointer;" onclick="event.stopPropagation();loadEtfChart('${_etfMeta.ucits.yf}')">↳ UCITS: <span style="color:#7a9cc0;">${_etfMeta.ucits.symbol}</span> · ${_etfMeta.ucits.name}</div>`
+                : '';
 
             return `
             <tr onclick="loadEtfChart('${_chartTicker}')" data-sym="${item.symbol}">
@@ -6993,6 +6996,7 @@
                 <td>
                     <span class="etf-ticker">${item.symbol}${inPosIndicator}${inWlIndicator}</span>
                     <div style="font-size:10px;color:var(--text-muted);">${nameShort}</div>
+                    ${_ucitsLine}
                 </td>
                 <td style="font-size:10px;color:var(--text-muted);">${item.category || ''}</td>
                 <td>${item.mom_score != null ? item.mom_score.toFixed(3) : '—'}</td>
@@ -7414,75 +7418,78 @@
     const ETF_UNIVERSE = [
         // ── Indian Broad Market ──
         {symbol:"JUNIORBEES", name:"Nippon Nifty Next 50",            category:"Large-Mid",       yf:"JUNIORBEES.NS"},
-        {symbol:"MID150BEES", name:"Nippon Nifty Midcap 150",          category:"Midcap",          yf:"MID150BEES.NS"},
+        {symbol:"MID150BEES", name:"Nippon Nifty Midcap 150",         category:"Midcap",          yf:"MID150BEES.NS"},
         {symbol:"HDFCSMALL",  name:"HDFC Nifty Smallcap 250",         category:"Smallcap",        yf:"HDFCSMALL.NS"},
         // ── Indian Sectoral ──
-        {symbol:"BANKBEES",   name:"Nippon Nifty Bank BeES",           category:"Banking",         yf:"BANKBEES.NS"},
-        {symbol:"PSUBNKBEES", name:"Nippon Nifty PSU Bank BeES",       category:"PSU Bank",        yf:"PSUBNKBEES.NS"},
-        {symbol:"ITBEES",     name:"Nippon Nifty IT BeES",             category:"IT/Tech",         yf:"ITBEES.NS"},
-        {symbol:"HEALTHIETF", name:"ICICI Nifty Healthcare ETF",       category:"Healthcare",      yf:"HEALTHIETF.NS"},
-        {symbol:"AUTOBEES",   name:"Nippon Nifty Auto BeES",           category:"Auto",            yf:"AUTOBEES.NS"},
-        {symbol:"METALIETF",  name:"ICICI Nifty Metal ETF",            category:"Metals",          yf:"METALIETF.NS"},
-        {symbol:"CONSUMBEES", name:"Nippon Nifty Consumption BeES",    category:"Consumption",     yf:"CONSUMBEES.NS"},
-        {symbol:"INFRABEES",  name:"ICICI Nifty Infra ETF",            category:"Infrastructure",  yf:"INFRABEES.NS"},
-        {symbol:"OILIETF",    name:"ICICI Nifty Oil & Gas ETF",        category:"Energy",          yf:"OILIETF.NS"},
-        {symbol:"MOREALTY",   name:"Motilal Nifty Realty ETF",         category:"Realty",          yf:"MOREALTY.NS"},
+        {symbol:"BANKBEES",   name:"Nippon Nifty Bank BeES",          category:"Banking",         yf:"BANKBEES.NS"},
+        {symbol:"PSUBNKBEES", name:"Nippon Nifty PSU Bank BeES",      category:"PSU Bank",        yf:"PSUBNKBEES.NS"},
+        {symbol:"ITBEES",     name:"Nippon Nifty IT BeES",            category:"IT/Tech",         yf:"ITBEES.NS"},
+        {symbol:"HEALTHIETF", name:"ICICI Nifty Healthcare ETF",      category:"Healthcare",      yf:"HEALTHIETF.NS"},
+        {symbol:"AUTOBEES",   name:"Nippon Nifty Auto BeES",          category:"Auto",            yf:"AUTOBEES.NS"},
+        {symbol:"METALIETF",  name:"ICICI Nifty Metal ETF",           category:"Metals",          yf:"METALIETF.NS"},
+        {symbol:"CONSUMBEES", name:"Nippon Nifty Consumption BeES",   category:"Consumption",     yf:"CONSUMBEES.NS"},
+        {symbol:"INFRABEES",  name:"ICICI Nifty Infra ETF",           category:"Infrastructure",  yf:"INFRABEES.NS"},
+        {symbol:"OILIETF",    name:"ICICI Nifty Oil & Gas ETF",       category:"Energy",          yf:"OILIETF.NS"},
+        {symbol:"MOREALTY",   name:"Motilal Nifty Realty ETF",        category:"Realty",          yf:"MOREALTY.NS"},
         // ── Indian Factor / Thematic ──
-        {symbol:"CPSEETF",    name:"CPSE ETF",                         category:"PSU/Govt",        yf:"CPSEETF.NS"},
-        {symbol:"SETFMOMET",  name:"Nippon Nifty200 Momentum30 ETF",   category:"Momentum",        yf:"MOM30IETF.NS"},
-        {symbol:"QUAL30IETF", name:"HDFC Nifty100 Quality30 ETF",      category:"Quality",         yf:"QUAL30IETF.NS"},
-        {symbol:"KOTAKLOWV",  name:"Kotak Nifty100 Low Vol30 ETF",     category:"Low Vol",         yf:"LOWVOLIETF.NS"},
-        {symbol:"ALPL30IETF", name:"ICICI Alpha Low Vol30 ETF",        category:"Alpha/LowVol",    yf:"ALPL30IETF.NS"},
-        {symbol:"MODEFENCE",  name:"Motilal Nifty India Defence ETF",  category:"Defence",         yf:"MODEFENCE.NS"},
-        {symbol:"MOMOMENTUM", name:"Nippon Nifty500 Momentum50 ETF",   category:"Broad Momentum",  yf:"MOMOMENTUM.NS"},
-        {symbol:"MONIFTY500", name:"Motilal Nifty 500 ETF",            category:"Broad 500",       yf:"MONIFTY500.NS"},
+        {symbol:"CPSEETF",    name:"CPSE ETF",                        category:"PSU/Govt",        yf:"CPSEETF.NS"},
+        {symbol:"SETFMOMET",  name:"Nippon Nifty200 Momentum30 ETF",  category:"Momentum",        yf:"MOM30IETF.NS"},
+        {symbol:"QUAL30IETF", name:"HDFC Nifty100 Quality30 ETF",     category:"Quality",         yf:"QUAL30IETF.NS"},
+        {symbol:"KOTAKLOWV",  name:"Kotak Nifty100 Low Vol30 ETF",    category:"Low Vol",         yf:"LOWVOLIETF.NS"},
+        {symbol:"ALPL30IETF", name:"ICICI Alpha Low Vol30 ETF",       category:"Alpha/LowVol",    yf:"ALPL30IETF.NS"},
+        {symbol:"MODEFENCE",  name:"Motilal Nifty India Defence ETF", category:"Defence",         yf:"MODEFENCE.NS"},
+        {symbol:"MOMOMENTUM", name:"Nippon Nifty500 Momentum50 ETF",  category:"Broad Momentum",  yf:"MOMOMENTUM.NS"},
+        {symbol:"MONIFTY500", name:"Motilal Nifty 500 ETF",           category:"Broad 500",       yf:"MONIFTY500.NS"},
         // ── Indian Commodities ──
-        {symbol:"GOLDBEES",   name:"Nippon Gold BeES",                 category:"Gold",            yf:"GOLDBEES.NS"},
-        {symbol:"SILVERBEES", name:"Nippon Silver BeES",               category:"Silver",          yf:"SILVERBEES.NS"},
-        {symbol:"LIQUIDBEES", name:"Nippon Liquid BeES (Cash proxy)",  category:"Cash",            yf:"LIQUIDBEES.NS"},
-        // ── Global — US & International ──
-        {symbol:"QQQ",        name:"Invesco Nasdaq 100 ETF",           category:"US Tech",         yf:"QQQ"},
-        {symbol:"SETFNN50",   name:"SBI Nifty Next 50 ETF",            category:"Large-Mid",       yf:"SETFNN50.NS"},
-        {symbol:"SOXX",       name:"iShares Semiconductor ETF",        category:"Semiconductors",  yf:"SOXX"},
-        {symbol:"BOTZ",       name:"Global X Robotics & AI ETF",       category:"AI/Robotics",     yf:"BOTZ"},
-        {symbol:"EWY",        name:"iShares MSCI South Korea ETF",     category:"South Korea",     yf:"EWY"},
-        {symbol:"FRDM",       name:"Freedom 100 EM ETF",               category:"EM",              yf:"FRDM"},
-        {symbol:"EMXC",       name:"iShares EM ex-China ETF",          category:"EM ex-China",     yf:"EMXC"},
-        {symbol:"AVDV",       name:"Avantis Intl SmallCap Value",      category:"Intl SmallCap",   yf:"AVDV"},
-        {symbol:"ILF",        name:"iShares Latin America 40",         category:"Latin America",   yf:"ILF"},
-        {symbol:"XLE",        name:"SPDR Energy Select Sector",        category:"US Energy",       yf:"XLE"},
-        {symbol:"XLK",        name:"SPDR Technology Select Sector",    category:"US Tech",         yf:"XLK"},
-        {symbol:"XLP",        name:"SPDR Consumer Staples Select",     category:"US Cons Staples", yf:"XLP"},
-        {symbol:"TLT",        name:"iShares 20+ Year Treasury ETF",    category:"US Treasuries",   yf:"TLT"},
-        {symbol:"XLV",        name:"SPDR Healthcare Select Sector",    category:"US Healthcare",   yf:"XLV"},
-        {symbol:"ITA",        name:"iShares US Aerospace & Defence",   category:"US Defence",      yf:"ITA"},
+        {symbol:"GOLDBEES",   name:"Nippon Gold BeES",                category:"Gold",            yf:"GOLDBEES.NS"},
+        {symbol:"SILVERBEES", name:"Nippon Silver BeES",              category:"Silver",          yf:"SILVERBEES.NS"},
+        {symbol:"LIQUIDBEES", name:"Nippon Liquid BeES (Cash proxy)", category:"Cash",            yf:"LIQUIDBEES.NS"},
+        // ── Global — US & International (with UCITS alternatives where available) ──
+        {symbol:"QQQ",   name:"Invesco Nasdaq 100 ETF",        category:"US Tech",         yf:"QQQ"},
+        {symbol:"SOXX",  name:"iShares Semiconductor ETF",     category:"Semiconductors",  yf:"SOXX"},
+        {symbol:"BOTZ",  name:"Global X Robotics & AI ETF",    category:"AI/Robotics",     yf:"BOTZ"},
+        {symbol:"EWY",   name:"iShares MSCI South Korea ETF",  category:"South Korea",     yf:"EWY"},
+        {symbol:"FRDM",  name:"Freedom 100 EM ETF",            category:"EM",              yf:"FRDM"},
+        {symbol:"EMXC",  name:"iShares EM ex-China ETF",       category:"EM ex-China",     yf:"EMXC",
+            ucits:{symbol:"EMXU", yf:"EMXU.L", name:"Xtrackers EM ex-China UCITS"}},
+        {symbol:"AVDV",  name:"Avantis Intl SmallCap Value",   category:"Intl SmallCap",   yf:"AVDV",
+            ucits:{symbol:"WSML", yf:"WSML.L", name:"iShares World SmallCap UCITS"}},
+        {symbol:"ILF",   name:"iShares Latin America 40",      category:"Latin America",   yf:"ILF",
+            ucits:{symbol:"LTAM", yf:"LTAM.L", name:"iShares Latin America UCITS"}},
+        {symbol:"XLE",   name:"SPDR Energy Select Sector",     category:"US Energy",       yf:"XLE",
+            ucits:{symbol:"IUES", yf:"IUES.L", name:"iShares S&P500 Energy UCITS"}},
+        {symbol:"XLK",   name:"SPDR Technology Select Sector", category:"US Tech",         yf:"XLK"},
+        {symbol:"XLP",   name:"SPDR Consumer Staples Select",  category:"US Cons Staples", yf:"XLP"},
+        {symbol:"TLT",   name:"iShares 20+ Year Treasury ETF", category:"US Treasuries",   yf:"TLT"},
+        {symbol:"XLV",   name:"SPDR Healthcare Select Sector", category:"US Healthcare",   yf:"XLV"},
+        {symbol:"ITA",   name:"iShares US Aerospace & Defence",category:"US Defence",      yf:"ITA"},
         // ── Miners ──
-        {symbol:"GDX",        name:"VanEck Gold Miners ETF",           category:"Gold Miners",     yf:"GDX"},
-        {symbol:"XME",        name:"SPDR Metals & Mining ETF",         category:"Metals/Mining",   yf:"XME"},
+        {symbol:"GDX",   name:"VanEck Gold Miners ETF",        category:"Gold Miners",     yf:"GDX",
+            ucits:{symbol:"GDGB", yf:"GDGB.L", name:"VanEck Gold Miners UCITS"}},
+        {symbol:"XME",   name:"SPDR Metals & Mining ETF",      category:"Metals/Mining",   yf:"XME",
+            ucits:{symbol:"COPX", yf:"COPX.L", name:"Sprott Copper Miners UCITS"}},
         // ── Europe ──
-        {symbol:"VGK",        name:"Vanguard FTSE Europe ETF",         category:"Europe",          yf:"VGK"},
-        // ── UCITS equivalents (LSE-listed) ──
-        {symbol:"GDGB",       name:"VanEck Gold Miners UCITS [GDX]",  category:"Gold Miners UCITS", yf:"GDGB.L"},
-        {symbol:"VEUR",       name:"Vanguard Europe UCITS [VGK]",     category:"Europe UCITS",    yf:"VEUR.L"},
-        {symbol:"ISF",        name:"iShares FTSE 100 UCITS [EWU]",    category:"UK UCITS",        yf:"ISF.L"},
-        {symbol:"EMXU",       name:"Xtrackers EM ex-China UCITS [EMXC]", category:"EM ex-China UCITS", yf:"EMXU.L"},
-        {symbol:"LTAM",       name:"iShares Latin America UCITS [ILF]",  category:"LatAm UCITS",  yf:"LTAM.L"},
-        {symbol:"IUES",       name:"iShares S&P500 Energy UCITS [XLE]",  category:"US Energy UCITS", yf:"IUES.L"},
-        {symbol:"COPX",       name:"Sprott Copper Miners UCITS [XME≈]",  category:"Mining UCITS", yf:"COPX.L"},
-        {symbol:"WSML",       name:"iShares World SmallCap UCITS [AVDV≈]", category:"SmallCap UCITS", yf:"WSML.L"},
-        {symbol:"ISAC",       name:"iShares MSCI ACWI UCITS ETF (USD Acc)", category:"Global All-Cap",  yf:"ISAC.L"},
+        {symbol:"VGK",   name:"Vanguard FTSE Europe ETF",      category:"Europe",          yf:"VGK",
+            ucits:{symbol:"VEUR", yf:"VEUR.L", name:"Vanguard Europe UCITS"}},
+        // ── UCITS-only (no US-listed equivalent in universe) ──
+        {symbol:"ISF",   name:"iShares FTSE 100 (UK)",         category:"UK Large-Cap",    yf:"ISF.L"},
+        {symbol:"ISAC",  name:"iShares MSCI ACWI (Global)",    category:"Global All-Cap",  yf:"ISAC.L"},
     ];
 
     function renderStaticWatchlist() {
         const body = document.getElementById('etf-watchlist-body');
         const rows = ETF_UNIVERSE.map(etf => {
             const nameShort = etf.name.substring(0, 20) + (etf.name.length > 20 ? '…' : '');
+            const ucitsLine = etf.ucits
+                ? `<div style="font-size:9px;color:var(--text-muted);margin-top:2px;cursor:pointer;" onclick="event.stopPropagation();loadEtfChart('${etf.ucits.yf}')">↳ UCITS: <span style="color:#7a9cc0;">${etf.ucits.symbol}</span> · ${etf.ucits.name}</div>`
+                : '';
             return `
             <tr onclick="loadEtfChart('${etf.yf}')" data-sym="${etf.symbol}">
                 <td><span class="etf-rank-badge etf-low">—</span></td>
                 <td>
                     <span class="etf-ticker">${etf.symbol}</span>
                     <div style="font-size:10px;color:var(--text-muted);">${nameShort}</div>
+                    ${ucitsLine}
                 </td>
                 <td style="font-size:10px;color:var(--text-muted);">${etf.category}</td>
                 <td style="color:var(--text-muted);">—</td>
