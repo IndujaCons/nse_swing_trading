@@ -2243,6 +2243,7 @@ from data.mom20_portfolio import (
     load_portfolio, save_portfolio, calc_performance,
     get_next_rebalance_date, days_to_rebalance,
     OVERFLOW_PORTFOLIO_FILE,
+    load_history, save_history, MOM20_HISTORY_FILE,
 )
 import datetime as _dt
 
@@ -2286,19 +2287,75 @@ def mom20_portfolio_save():
         return jsonify({"success": False, "error": "Basket is empty"}), 400
 
     portfolio = load_portfolio()
+    old_basket = {s["ticker"]: s for s in portfolio.get("basket", [])}
+    new_tickers = {s["ticker"] for s in basket_in}
+
+    today_str = _dt.date.today().isoformat()
+    history = load_history()
+    rebal_num = len(history) + 1
+
+    # Exits: in old basket but not in new
+    exits = []
+    for t, s in old_basket.items():
+        if t not in new_tickers:
+            entry_price = s.get("invested_price") or s.get("saved_price") or 0
+            # Use current price from incoming basket prices map (best proxy)
+            price_map = {x["ticker"]: x.get("price", 0) for x in basket_in}
+            exit_price = price_map.get(t, entry_price)
+            entry_date = s.get("entry_date", portfolio.get("tracking_since", today_str))
+            hold_days = ((_dt.date.fromisoformat(today_str) - _dt.date.fromisoformat(entry_date)).days
+                         if entry_date else 0)
+            pnl_pct = round((exit_price / entry_price - 1) * 100, 2) if entry_price else 0
+            exits.append({"ticker": t, "entry_price": entry_price, "exit_price": exit_price,
+                          "pnl_pct": pnl_pct, "hold_days": hold_days})
+
+    # Entries: in new basket but not in old
+    entries = []
+    holds = []
+    for s in basket_in:
+        t = s["ticker"]
+        slot = round(capital * s.get("weight", 5) / 100)
+        base = {"ticker": t, "rank": s.get("rank"), "score": s.get("score"),
+                "beta": s.get("beta"), "ret12m": s.get("ret12m"), "ret3m": s.get("ret3m"),
+                "entry_price": s.get("price", 0), "capital": slot}
+        if t in old_basket:
+            holds.append({"ticker": t, "entry_price": old_basket[t].get("invested_price") or
+                          old_basket[t].get("saved_price") or s.get("price", 0)})
+        else:
+            entries.append(base)
+
+    slot_size = round(capital / max(len(basket_in), 1))
+    pending_rebalance = {
+        "rebalance_num": rebal_num,
+        "date": today_str,
+        "capital": capital,
+        "slot": slot_size,
+        "exits": exits,
+        "entries": entries,
+        "holds": holds,
+        "finalized": False,
+    }
+
     portfolio["capital"] = capital
     portfolio["status"] = "paper"
-    portfolio["tracking_since"] = _dt.date.today().isoformat()
+    portfolio["tracking_since"] = today_str
     portfolio["basket"] = [
         {
             "ticker": s["ticker"],
             "weight": s["weight"],
             "saved_price": s.get("price", 0),
             "invested_price": None,
+            "entry_date": today_str,
+            "rank": s.get("rank"),
+            "score": s.get("score"),
+            "beta": s.get("beta"),
+            "ret12m": s.get("ret12m"),
+            "ret3m": s.get("ret3m"),
         }
         for s in basket_in
     ]
     portfolio["pending_orders"] = []
+    portfolio["pending_rebalance"] = pending_rebalance
     save_portfolio(portfolio)
     return jsonify({"success": True, "status": "paper", "tracking_since": portfolio["tracking_since"]})
 
@@ -2312,7 +2369,11 @@ def mom20_portfolio_search():
             result = live_signals_scanner.scan_entry_signals()
             signals = result.get("mom20_signals", [])[:20]
             return jsonify({"success": True, "signals": [
-                {"ticker": s["ticker"], "price": s["price"], "rank": s["rank"]} for s in signals
+                {
+                    "ticker": s["ticker"], "price": s["price"], "rank": s["rank"],
+                    "score": s.get("momentum_score"), "beta": s.get("beta"),
+                    "ret12m": s.get("ret_12m"), "ret3m": s.get("ret_3m"),
+                } for s in signals
             ]})
         except Exception as e:
             return jsonify({"success": False, "signals": [], "error": str(e)})
@@ -2399,6 +2460,11 @@ def mom20_portfolio_order_status():
     return jsonify({"success": True, "orders": pending, "all_complete": all_complete})
 
 
+@app.route("/api/mom20-portfolio/history", methods=["GET"])
+def mom20_portfolio_history():
+    return jsonify({"success": True, "history": load_history()})
+
+
 @app.route("/api/mom20-portfolio/reset", methods=["POST"])
 def mom20_portfolio_reset():
     """Reset portfolio status back to paper (clears pending orders + invested prices)."""
@@ -2429,8 +2495,37 @@ def mom20_portfolio_confirm_investment():
 
     portfolio["basket"] = basket
     portfolio["status"] = "invested"
-    portfolio["tracking_since"] = _dt.date.today().isoformat()
+    today_str = _dt.date.today().isoformat()
+    portfolio["tracking_since"] = today_str
     portfolio["pending_orders"] = []
+
+    # Finalize and append rebalance history record
+    pending = portfolio.get("pending_rebalance")
+    if pending and not pending.get("finalized"):
+        # Update entry prices to actual fill prices
+        for e in pending.get("entries", []):
+            if e["ticker"] in filled:
+                e["entry_price"] = filled[e["ticker"]]
+        # Compute summary
+        invested = sum(s.get("invested_price", s.get("saved_price", 0)) *
+                       int((portfolio["capital"] * next(
+                           (b["weight"] for b in basket if b["ticker"] == s.get("ticker")), 5
+                       ) / 100) / max(s.get("invested_price", s.get("saved_price", 1)), 1))
+                       for s in basket if s.get("invested_price") or s.get("saved_price"))
+        n_pos = len(basket)
+        pending["summary"] = {
+            "positions": n_pos,
+            "max_slots": 20,
+            "capital": portfolio["capital"],
+            "slot": pending.get("slot", round(portfolio["capital"] / max(n_pos, 1))),
+        }
+        pending["finalized"] = True
+        pending["confirmed_date"] = today_str
+        history = load_history()
+        history.append(pending)
+        save_history(history)
+        portfolio["pending_rebalance"] = None
+
     save_portfolio(portfolio)
     return jsonify({"success": True, "status": "invested",
                     "tracking_since": portfolio["tracking_since"]})

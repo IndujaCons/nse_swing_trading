@@ -25,7 +25,8 @@ import math
 from datetime import date, timedelta
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PORTFOLIO_FILE = os.path.join(_BASE_DIR, "data_store", "mom20_portfolio.json")
+PORTFOLIO_FILE    = os.path.join(_BASE_DIR, "data_store", "mom20_portfolio.json")
+MOM20_HISTORY_FILE = os.path.join(_BASE_DIR, "data_store", "mom20_history.json")
 
 _DEFAULT = {
     "capital": 2000000,
@@ -49,6 +50,25 @@ def load_portfolio(portfolio_file: str = None) -> dict:
         return {**_DEFAULT, **data}
     except Exception:
         return dict(_DEFAULT)
+
+
+def load_history(history_file: str = None) -> list:
+    path = history_file or MOM20_HISTORY_FILE
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def save_history(records: list, history_file: str = None):
+    path = history_file or MOM20_HISTORY_FILE
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(records, f, indent=2, default=str)
+    os.replace(tmp, path)
 
 
 def save_portfolio(state: dict, portfolio_file: str = None):

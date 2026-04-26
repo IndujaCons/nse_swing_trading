@@ -2160,6 +2160,7 @@
                     <span id="mom20-port-rebal-badge2" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;">Next rebalance: —</span>
                     <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 20</button>
                     <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
+                    <button onclick="mom20ToggleHistory()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">📋 History</button>
                 </div>
 
                 <!-- Performance card (shown when portfolio has tracking data) -->
@@ -2236,6 +2237,16 @@
                     </div>
 
                 </div><!-- end grid -->
+
+                <!-- History Panel -->
+                <div id="mom20-history-panel" style="display:none;margin-top:20px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-top:1px solid var(--border-color);padding-top:16px;">
+                        <span style="font-size:13px;font-weight:700;color:var(--text-secondary);letter-spacing:1px;">REBALANCE HISTORY</span>
+                        <span id="mom20-history-count" style="font-size:11px;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">0 rebalances</span>
+                    </div>
+                    <div id="mom20-history-body" style="font-family:monospace;font-size:12px;"></div>
+                </div>
+
             </div><!-- end #mom20-portfolio-panels -->
 
             <!-- ========== OVERFLOW PORTFOLIO BUILDER ========== -->
@@ -6068,7 +6079,11 @@
                 if (d.signals && d.signals.length) {
                     mom20Basket = [];
                     const w = Math.round(100 / d.signals.length) || 5;
-                    d.signals.forEach(s => mom20Basket.push({ticker: s.ticker, price: s.price, weight: w}));
+                    d.signals.forEach(s => mom20Basket.push({
+                        ticker: s.ticker, price: s.price, weight: w,
+                        rank: s.rank, score: s.score, beta: s.beta,
+                        ret12m: s.ret12m, ret3m: s.ret3m
+                    }));
                     // Fix rounding so total = 100
                     const diff = 100 - mom20TotalWeight();
                     if (diff !== 0 && mom20Basket.length) mom20Basket[0].weight += diff;
@@ -6223,6 +6238,107 @@
                     mom20LoadPortfolio();
                 }
             } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        let _mom20HistoryLoaded = false;
+        function mom20ToggleHistory() {
+            const panel = document.getElementById('mom20-history-panel');
+            const visible = panel.style.display !== 'none';
+            panel.style.display = visible ? 'none' : 'block';
+            if (!visible && !_mom20HistoryLoaded) mom20LoadHistory();
+        }
+
+        async function mom20LoadHistory() {
+            const body = document.getElementById('mom20-history-body');
+            body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">Loading…</div>';
+            try {
+                const r = await fetch('/api/mom20-portfolio/history');
+                const d = await r.json();
+                if (!d.success) { body.innerHTML = '<div style="color:var(--red);">Failed to load history</div>'; return; }
+                _mom20HistoryLoaded = true;
+                const history = d.history || [];
+                document.getElementById('mom20-history-count').textContent = `${history.length} rebalance${history.length !== 1 ? 's' : ''}`;
+                if (!history.length) { body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances recorded yet. History is saved when you click Confirm Investment.</div>'; return; }
+                body.innerHTML = history.slice().reverse().map(r => mom20RenderRebalance(r)).join('');
+            } catch(e) { body.innerHTML = `<div style="color:var(--red);">${e.message}</div>`; }
+        }
+
+        function mom20RenderRebalance(rb) {
+            const fmt = n => n != null ? Number(n).toLocaleString('en-IN', {maximumFractionDigits: 0}) : '—';
+            const fmtP = n => n != null ? (n > 0 ? '+' : '') + Number(n).toFixed(1) + '%' : '—';
+            const fmtPnl = n => n != null ? (n > 0 ? '+' : '') + Number(n).toFixed(1) + '%' : '—';
+            const capital = rb.capital || 0;
+            const slot = rb.slot || 0;
+            const color = {g: 'var(--green)', r: 'var(--red)', m: 'var(--text-muted)', t: 'var(--text-primary)'};
+
+            const divider = `<div style="color:#1e4d8c;margin:4px 0;">${'═'.repeat(72)}</div>`;
+
+            // Header
+            const header = `
+                <div style="color:#4a9eff;font-weight:700;">REBALANCE #${String(rb.rebalance_num).padStart(2,'0')} — ${rb.confirmed_date || rb.date}</div>
+                <div style="color:${color.m};">NAV: ₹${fmt(capital)} &nbsp;|&nbsp; Slot: ₹${fmt(slot)} &nbsp;|&nbsp; Positions: ${(rb.holds||[]).length + (rb.entries||[]).length}/${(rb.summary||{}).max_slots || 20}</div>`;
+
+            // Exits
+            const exits = rb.exits || [];
+            const exitsHtml = exits.length === 0
+                ? `<div style="color:${color.m};">| —</div>`
+                : exits.map(e => {
+                    const pnlColor = e.pnl_pct >= 0 ? color.g : color.r;
+                    return `<div style="display:grid;grid-template-columns:120px 80px 80px 70px 50px;gap:4px;">
+                        <span>${e.ticker}</span>
+                        <span style="color:${color.m};">₹${e.entry_price ? Number(e.entry_price).toFixed(1) : '—'}</span>
+                        <span style="color:${color.m};">₹${e.exit_price ? Number(e.exit_price).toFixed(1) : '—'}</span>
+                        <span style="color:${pnlColor};font-weight:600;">${fmtPnl(e.pnl_pct)}</span>
+                        <span style="color:${color.m};">${e.hold_days}d</span>
+                    </div>`;
+                  }).join('');
+            const exitsSection = `
+                <div style="margin-top:10px;color:${color.t};font-weight:700;">EXITS (${exits.length})</div>
+                ${exits.length > 0 ? `<div style="display:grid;grid-template-columns:120px 80px 80px 70px 50px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;"><span>Stock</span><span>Entry₹</span><span>Exit₹</span><span>P&L%</span><span>Hold</span></div>` : ''}
+                ${exitsHtml}`;
+
+            // Entries
+            const entries = rb.entries || [];
+            const entriesHtml = entries.length === 0
+                ? `<div style="color:${color.m};">| —</div>`
+                : entries.map(e => {
+                    const r12 = e.ret12m != null ? (e.ret12m > 0 ? '+' : '') + Number(e.ret12m).toFixed(1) + '%' : '—';
+                    const r3  = e.ret3m  != null ? (e.ret3m  > 0 ? '+' : '') + Number(e.ret3m ).toFixed(1) + '%' : '—';
+                    return `<div style="display:grid;grid-template-columns:120px 40px 60px 50px 65px 60px 70px 90px;gap:4px;">
+                        <span>${e.ticker}</span>
+                        <span style="color:${color.m};">${e.rank != null ? e.rank : '—'}</span>
+                        <span>${e.score != null ? Number(e.score).toFixed(3) : '—'}</span>
+                        <span style="color:${color.m};">${e.beta != null ? Number(e.beta).toFixed(2) : '—'}</span>
+                        <span style="color:${e.ret12m >= 0 ? color.g : color.r};">${r12}</span>
+                        <span style="color:${e.ret3m >= 0 ? color.g : color.r};">${r3}</span>
+                        <span style="color:${color.m};">₹${e.entry_price ? Number(e.entry_price).toFixed(1) : '—'}</span>
+                        <span style="color:${color.g};">₹+${fmt(e.capital)}</span>
+                    </div>`;
+                  }).join('');
+            const entriesSection = `
+                <div style="margin-top:10px;color:${color.t};font-weight:700;">ENTRIES (${entries.length})</div>
+                ${entries.length > 0 ? `<div style="display:grid;grid-template-columns:120px 40px 60px 50px 65px 60px 70px 90px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;"><span>Stock</span><span>Rank</span><span>Score</span><span>Beta</span><span>Ret12m</span><span>Ret3m</span><span>Entry₹</span><span>Capital</span></div>` : ''}
+                ${entriesHtml}`;
+
+            // Holds
+            const holds = rb.holds || [];
+            const holdsHtml = holds.length === 0
+                ? `<div style="color:${color.m};">| —</div>`
+                : holds.map(h => `<span style="margin-right:12px;">${h.ticker}</span>`).join('');
+            const holdsSection = `
+                <div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holds.length})</div>
+                <div style="color:${color.m};padding-left:4px;">${holds.length > 0 ? holdsHtml : '| —'}</div>`;
+
+            return `
+            <div style="margin-bottom:8px;">
+                ${divider}
+                <div style="padding:10px 0 6px 0;">
+                    ${header}
+                    ${exitsSection}
+                    ${entriesSection}
+                    ${holdsSection}
+                </div>
+            </div>`;
         }
 
         async function mom20PollOrders(sfx) {
