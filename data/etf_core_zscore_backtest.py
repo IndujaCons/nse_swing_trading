@@ -91,6 +91,7 @@ UNIVERSE = [
     ("XLV",         "US Healthcare",        "XLV"),
     ("ITA",         "US Aerospace/Defence", "ITA"),
     ("EWJ",         "Japan",                "EWJ"),
+    ("ISAC.L",      "Global All-Cap",       "ISAC.L"),
 ]
 
 BENCH_SYM = "^NSEI"   # Nifty 50 for beta computation
