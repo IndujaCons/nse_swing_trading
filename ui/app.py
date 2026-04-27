@@ -2164,6 +2164,7 @@ def _etf_signal_scheduler():
     last_overflow_key     = None   # dedup for Mom20 overflow
     startup_scan_done     = False  # one-time ETF scan on startup regardless of window
     startup_scan_done_mom20 = False  # one-time Mom20 scan on startup regardless of window
+    _last_session         = None   # "indian" | "us" — reset dedup at each session open
 
     while True:
         now_ist = datetime.now(IST)
@@ -2177,6 +2178,13 @@ def _etf_signal_scheduler():
             continue
 
         startup_scan_done = True
+
+        # Detect session transitions → reset dedup so first scan of each session fires
+        _cur_session = "indian" if _in_indian_window(now_ist) else "us"
+        if _cur_session != _last_session:
+            last_etf_key = None   # force send on session open
+            _last_session = _cur_session
+            print(f"[ETF scheduler] Session transition → {_cur_session}, dedup reset")
         print(f"[ETF scheduler] Scanning at {now_ist.strftime('%Y-%m-%d %H:%M IST')}")
 
         # ── ETF Z-Score scan ─────────────────────────────────────────────────
