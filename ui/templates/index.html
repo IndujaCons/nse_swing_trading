@@ -1275,14 +1275,33 @@
         .basket-table td { padding: 6px 8px; border-bottom: 1px solid var(--border-color); }
         .basket-table tr:last-child td { border-bottom: none; }
         .basket-table tr:hover { background: var(--bg-card); }
-        .basket-cap-bar {
-            display: flex; gap: 20px; flex-wrap: wrap;
+        /* ── Basket header card ─────────────────────────────── */
+        .basket-header {
             background: var(--bg-secondary); border: 1px solid var(--border-color);
-            border-radius: 7px; padding: 10px 16px; margin-bottom: 12px; font-size: 12px;
+            border-radius: 8px; padding: 14px 18px; margin-bottom: 14px;
         }
-        .basket-cap-item { display: flex; flex-direction: column; gap: 2px; }
-        .basket-cap-label { font-size: 10px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; }
-        .basket-cap-value { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .basket-stats-row {
+            display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 12px;
+            margin-bottom: 12px;
+        }
+        .basket-stat { display: flex; flex-direction: column; gap: 3px; }
+        .basket-stat-label { font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
+        .basket-stat-value { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+        .basket-capital-input {
+            font-size: 15px; font-weight: 700; color: var(--text-primary);
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            border-radius: 5px; padding: 2px 8px; width: 130px; font-family: inherit;
+        }
+        .basket-capital-input:focus { outline: none; border-color: var(--green); }
+        .basket-badges { display: flex; gap: 8px; align-items: center; padding-top: 10px; border-top: 1px solid var(--border-color); }
+        .basket-badge {
+            padding: 3px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .basket-badge-exits  { background: rgba(220,53,69,0.12);  color: #dc3545; border: 1px solid rgba(220,53,69,0.3); }
+        .basket-badge-buys   { background: rgba(40,167,69,0.12);  color: var(--green); border: 1px solid rgba(40,167,69,0.3); }
+        .basket-badge-holds  { background: var(--bg-tertiary); color: var(--text-muted); border: 1px solid var(--border-color); }
+        .basket-badge-deploy { margin-left: auto; font-size: 12px; color: var(--text-secondary); background: none; border: none; padding: 0; font-weight: 600; letter-spacing: 0; }
         /* ── Add user modal ────────────────────────────────── */
         #add-user-modal {
             display: none; position: fixed; inset: 0; z-index: 9999;
@@ -2296,41 +2315,64 @@
                         <option value="">— Select User —</option>
                     </select>
                     <button class="add-user-btn" onclick="openAddUserModal()">+ Add User</button>
-                    <span id="mom20-user-capital-pill" class="user-capital-pill" style="display:none;"></span>
                     <button id="mom20-basket-refresh-btn" onclick="mom20LoadBasket()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">↺ Refresh Basket</button>
                     <button id="mom20-delete-user-btn" onclick="deleteSelectedUser('mom20')" style="display:none;padding:4px 10px;font-size:11px;background:rgba(220,53,69,0.12);color:#dc3545;border:1px solid rgba(220,53,69,0.4);border-radius:5px;cursor:pointer;">✕ Delete User</button>
                 </div>
 
                 <!-- Basket preview section -->
                 <div id="mom20-basket-section" style="display:none;margin-bottom:20px;">
-                    <!-- Capital bar -->
-                    <div class="basket-cap-bar" id="mom20-basket-capbar"></div>
 
-                    <!-- Exits -->
-                    <div class="basket-section-title">SELLS — EXIT POSITIONS</div>
-                    <table class="basket-table" style="margin-bottom:14px;">
-                        <thead><tr><th>#</th><th>Ticker</th><th>Qty (held)</th><th>Current Price</th><th>Reason</th></tr></thead>
-                        <tbody id="mom20-basket-exits-body">
-                            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>
-                        </tbody>
-                    </table>
+                    <!-- Stats header card -->
+                    <div class="basket-header">
+                        <div class="basket-stats-row">
+                            <div class="basket-stat">
+                                <div class="basket-stat-label">Capital</div>
+                                <input id="mom20-capital-input" class="basket-capital-input" type="text"
+                                    placeholder="₹20,00,000"
+                                    onkeydown="if(event.key==='Enter')mom20RecalcCapital()"
+                                    onblur="mom20RecalcCapital()">
+                            </div>
+                            <div class="basket-stat">
+                                <div class="basket-stat-label">Per Slot ÷ 20</div>
+                                <div id="basket-per-slot" class="basket-stat-value">—</div>
+                            </div>
+                            <div class="basket-stat">
+                                <div class="basket-stat-label">Min Needed</div>
+                                <div id="basket-min-cap" class="basket-stat-value">—</div>
+                            </div>
+                            <div class="basket-stat">
+                                <div class="basket-stat-label">To Deploy</div>
+                                <div id="basket-to-deploy" class="basket-stat-value">—</div>
+                            </div>
+                        </div>
+                        <div class="basket-badges">
+                            <span id="basket-badge-exits" class="basket-badge basket-badge-exits">0 Exits</span>
+                            <span id="basket-badge-buys"  class="basket-badge basket-badge-buys">0 Buys</span>
+                            <span id="basket-badge-holds" class="basket-badge basket-badge-holds">0 Holds</span>
+                            <div class="basket-badge basket-badge-deploy" id="basket-holds-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Exits (hidden when empty) -->
+                    <div id="mom20-exits-wrap">
+                        <div class="basket-section-title">SELLS — EXIT POSITIONS</div>
+                        <table class="basket-table" style="margin-bottom:14px;">
+                            <thead><tr><th>#</th><th>Ticker</th><th>Qty</th><th>Price</th><th>Reason</th></tr></thead>
+                            <tbody id="mom20-basket-exits-body"></tbody>
+                        </table>
+                    </div>
 
                     <!-- Entries -->
                     <div class="basket-section-title">BUYS — NEW ENTRIES</div>
                     <table class="basket-table" style="margin-bottom:14px;">
                         <thead><tr><th>#</th><th>Ticker</th><th>Rank</th><th>Price</th><th>Qty</th><th>Capital</th><th>Score</th></tr></thead>
-                        <tbody id="mom20-basket-entries-body">
-                            <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>
-                        </tbody>
+                        <tbody id="mom20-basket-entries-body"></tbody>
                     </table>
-
-                    <!-- Holds summary -->
-                    <div id="mom20-basket-holds" style="font-size:11px;color:var(--text-muted);margin-bottom:14px;"></div>
 
                     <!-- Action buttons -->
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                        <button onclick="mom20DownloadBasket()" style="padding:8px 20px;font-size:13px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⬇ Download Basket CSV</button>
-                        <label style="padding:8px 16px;font-size:12px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">
+                        <button onclick="mom20DownloadBasket()" style="padding:7px 18px;font-size:12px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⬇ Download CSV</button>
+                        <label style="padding:7px 14px;font-size:12px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">
                             ⬆ Upload Trade Book
                             <input type="file" accept=".csv" onchange="mom20UploadTradeBook(event)" style="display:none;">
                         </label>
@@ -7779,20 +7821,18 @@ async function deleteSelectedUser(context) {
 function mom20OnUserChange() {
     const uid = document.getElementById('mom20-user-select').value;
     _mom20SelectedUser = _allUsers.find(u => u.id === uid) || null;
-    const capPill = document.getElementById('mom20-user-capital-pill');
     const refreshBtn = document.getElementById('mom20-basket-refresh-btn');
     const section = document.getElementById('mom20-basket-section');
     const delBtn = document.getElementById('mom20-delete-user-btn');
     if (!_mom20SelectedUser) {
-        capPill.style.display = 'none';
         refreshBtn.style.display = 'none';
         if (delBtn) delBtn.style.display = 'none';
         section.style.display = 'none';
         return;
     }
-    const cap = _mom20SelectedUser.strategies?.mom20?.capital || 0;
-    capPill.textContent = `Mom20 Capital: ₹${(cap/100000).toFixed(1)}L`;
-    capPill.style.display = 'inline';
+    // Reset capital input so it picks up from API on load
+    const capInput = document.getElementById('mom20-capital-input');
+    if (capInput) { capInput.value = ''; capInput.dataset.fromApi = 'true'; }
     refreshBtn.style.display = 'inline';
     if (delBtn) delBtn.style.display = 'inline';
     mom20LoadBasket();
@@ -7814,44 +7854,82 @@ async function mom20LoadBasket() {
 }
 
 function _renderMom20Basket(d) {
-    const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+    const fmt  = n => '₹' + Math.round(n).toLocaleString('en-IN');
+    const fmtP = n => '₹' + (n||0).toLocaleString('en-IN', {minimumFractionDigits:0, maximumFractionDigits:2});
 
-    // Capital bar
-    document.getElementById('mom20-basket-capbar').innerHTML = `
-        <div class="basket-cap-item"><div class="basket-cap-label">TOTAL CAPITAL</div><div class="basket-cap-value">${fmt(d.total_capital)}</div></div>
-        <div class="basket-cap-item"><div class="basket-cap-label">PER SLOT (÷20)</div><div class="basket-cap-value">${fmt(d.capital_per_slot)}</div></div>
-        <div class="basket-cap-item"><div class="basket-cap-label">MIN CAPITAL</div><div class="basket-cap-value" style="color:${d.total_capital < d.min_capital ? 'var(--red)' : 'var(--text-primary)'}">${fmt(d.min_capital)}</div></div>
-        <div class="basket-cap-item"><div class="basket-cap-label">TO DEPLOY</div><div class="basket-cap-value">${fmt(d.total_to_deploy)}</div></div>
-        <div class="basket-cap-item"><div class="basket-cap-label">EXITS / ENTRIES / HOLDS</div><div class="basket-cap-value">${d.n_exits} / ${d.n_entries} / ${d.n_holds}</div></div>`;
-
-    // Exits
-    const exitsTbody = document.getElementById('mom20-basket-exits-body');
-    if (!d.exits.length) {
-        exitsTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>';
-    } else {
-        exitsTbody.innerHTML = d.exits.map((e,i) => `
-            <tr><td>${i+1}</td><td style="font-weight:700;color:var(--red)">${e.ticker}</td>
-            <td>${e.qty}</td><td>₹${(e.current_price||0).toLocaleString('en-IN')}</td>
-            <td style="font-size:10px;color:var(--text-muted)">${e.reason}</td></tr>`).join('');
+    // Capital input — prefill from user config if empty
+    const capInput = document.getElementById('mom20-capital-input');
+    if (!capInput.value || capInput.dataset.fromApi === 'true') {
+        capInput.value = Math.round(d.total_capital).toLocaleString('en-IN');
+        capInput.dataset.fromApi = 'true';
     }
+
+    // Stats
+    const ok = d.total_capital >= d.min_capital;
+    document.getElementById('basket-per-slot').textContent  = fmt(d.capital_per_slot);
+    document.getElementById('basket-min-cap').style.color   = ok ? 'var(--text-primary)' : 'var(--red)';
+    document.getElementById('basket-min-cap').textContent   = fmt(d.min_capital);
+    document.getElementById('basket-to-deploy').textContent = fmt(d.total_to_deploy);
+
+    // Badges
+    document.getElementById('basket-badge-exits').textContent  = `${d.n_exits} Exit${d.n_exits!==1?'s':''}`;
+    document.getElementById('basket-badge-buys').textContent   = `${d.n_entries} Buy${d.n_entries!==1?'s':''}`;
+    document.getElementById('basket-badge-holds').textContent  = `${d.n_holds} Hold${d.n_holds!==1?'s':''}`;
+
+    const holds = d.holds || [];
+    document.getElementById('basket-holds-list').textContent =
+        holds.length ? holds.map(h => `${h.ticker} #${h.rank}`).join(' · ') : '';
+
+    // Exits section — hide if none
+    const exitsWrap = document.getElementById('mom20-exits-wrap');
+    exitsWrap.style.display = d.exits.length ? 'block' : 'none';
+    document.getElementById('mom20-basket-exits-body').innerHTML = d.exits.map((e,i) => `
+        <tr><td>${i+1}</td>
+        <td style="font-weight:700;color:var(--red)">${e.ticker}</td>
+        <td>${e.qty}</td>
+        <td>${fmtP(e.current_price)}</td>
+        <td style="font-size:10px;color:var(--text-muted)">${e.reason}</td></tr>`).join('');
 
     // Entries
-    const entriesTbody = document.getElementById('mom20-basket-entries-body');
     if (!d.entries.length) {
-        entriesTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
+        document.getElementById('mom20-basket-entries-body').innerHTML =
+            '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:12px;">No new entries</td></tr>';
     } else {
-        entriesTbody.innerHTML = d.entries.map((e,i) => `
-            <tr><td>${i+1}</td><td style="font-weight:700;color:var(--green)">${e.ticker}</td>
-            <td>#${e.rank}</td><td>₹${(e.price||0).toLocaleString('en-IN')}</td>
+        document.getElementById('mom20-basket-entries-body').innerHTML = d.entries.map((e,i) => `
+            <tr><td>${i+1}</td>
+            <td style="font-weight:700;color:var(--green)">${e.ticker}</td>
+            <td style="color:var(--text-muted)">#${e.rank}</td>
+            <td>${fmtP(e.price)}</td>
             <td style="font-weight:700">${e.qty}</td>
-            <td>₹${(e.capital_allocated||0).toLocaleString('en-IN')}</td>
-            <td style="color:var(--text-muted)">${(e.score||0).toFixed(2)}</td></tr>`).join('');
+            <td>${fmt(e.capital_allocated)}</td>
+            <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td></tr>`).join('');
     }
+}
 
-    // Holds
-    const holds = d.holds || [];
-    document.getElementById('mom20-basket-holds').innerHTML =
-        holds.length ? `<b>HOLDS (${holds.length}):</b> ${holds.map(h => h.ticker + ' #' + h.rank).join(' · ')}` : '';
+function mom20RecalcCapital() {
+    if (!_mom20BasketData) return;
+    const raw = document.getElementById('mom20-capital-input').value.replace(/[₹,\s]/g,'');
+    const newCap = parseInt(raw);
+    if (!newCap || newCap < 1000) return;
+    document.getElementById('mom20-capital-input').dataset.fromApi = 'false';
+
+    const N = 20;
+    const perSlot = newCap / N;
+    const entries = _mom20BasketData.entries.map(e => {
+        const qty = e.price > 0 ? Math.floor(perSlot / e.price) : 0;
+        return {...e, qty, capital_allocated: Math.round(qty * e.price)};
+    });
+    const maxPrice = Math.max(...entries.map(e => e.price || 0), 0);
+    const updated = {
+        ..._mom20BasketData,
+        total_capital: newCap,
+        capital_per_slot: perSlot,
+        min_capital: Math.round(N * maxPrice),
+        total_to_deploy: entries.reduce((s,e) => s + e.capital_allocated, 0),
+        entries,
+    };
+    _mom20BasketData = updated;
+    _renderMom20Basket(updated);
 }
 
 async function mom20DownloadBasket() {
