@@ -1251,6 +1251,7 @@
             background: var(--bg-tertiary); color: var(--text-primary);
             border: 1px solid var(--border-color); border-radius: 5px;
             padding: 4px 10px; font-size: 12px; font-family: inherit; cursor: pointer;
+            color-scheme: light;
         }
         .user-bar .add-user-btn {
             padding: 4px 12px; font-size: 11px; font-weight: 700;
@@ -7743,11 +7744,11 @@ async function submitAddUser() {
         });
         const d = await r.json();
         if (!d.success) { alert(d.error || 'Failed'); return; }
-        await loadUsers();
+        // Add to local list and repopulate with new user pre-selected
+        _allUsers.push(d.user);
+        _populateUserDropdown('mom20-user-select', d.user.id);
+        _populateUserDropdown('etf-user-select',   d.user.id);
         closeAddUserModal();
-        // Auto-select the new user in whichever tab triggered the modal
-        _selectUserInDropdown('mom20-user-select', d.user.id);
-        _selectUserInDropdown('etf-user-select',   d.user.id);
         mom20OnUserChange(); etfOnUserChange();
     } finally { btn.disabled = false; btn.textContent = 'Add User'; }
 }
