@@ -2205,55 +2205,58 @@ def _etf_signal_scheduler():
             except Exception:
                 pass
 
-        # ── Mom20 + Overflow scan (hourly, same cadence as ETF) ─────────────────
+        # ── Mom20 + Overflow scan (Indian trading hours only) ───────────────────
         startup_scan_done_mom20 = True
-        try:
-            from data.notifier import format_mom20_alert, format_mom20_overflow_alert
-
-            mom20_result = live_signals_scanner.scan_entry_signals(force_refresh=True)
-
-            # Mom20 top-40 — dedup by ticker+score (rounded 1dp)
-            mom20_msg = format_mom20_alert(mom20_result)
-            if mom20_msg:
-                mom20_key = tuple(
-                    (s["ticker"], round(s.get("momentum_score", 0), 1))
-                    for s in mom20_result.get("mom20_signals", [])
-                )
-                if mom20_key != last_mom20_key:
-                    print(f"[ETF scheduler] Mom20 ranking changed — alerting")
-                    send_message(mom20_msg)
-                    last_mom20_key = mom20_key
-                else:
-                    print(f"[ETF scheduler] Mom20 ranking unchanged — skipping")
-            else:
-                print(f"[ETF scheduler] Mom20 no signals")
-                last_mom20_key = None
-
-            # Mom20 overflow — dedup by ticker+score (rounded 1dp)
-            overflow_msg = format_mom20_overflow_alert(mom20_result)
-            if overflow_msg:
-                overflow_key = tuple(
-                    (s["ticker"], round(s.get("momentum_score", 0), 1))
-                    for s in mom20_result.get("mom20_overflow", [])
-                )
-                if overflow_key != last_overflow_key:
-                    n_ov = len(mom20_result.get("mom20_overflow", []))
-                    print(f"[ETF scheduler] Mom20 overflow changed — {n_ov} candidates — alerting")
-                    send_message(overflow_msg)
-                    last_overflow_key = overflow_key
-                else:
-                    print(f"[ETF scheduler] Mom20 overflow unchanged — skipping")
-            else:
-                print(f"[ETF scheduler] Mom20 overflow — none")
-                last_overflow_key = None
-
-        except Exception as e:
-            err = f"⚠️ Mom20 scan error: {e}"
-            print(f"[ETF scheduler] {err}")
+        if not _in_indian_window(now_ist):
+            print(f"[ETF scheduler] Mom20 — skipped (outside Indian hours 09:00–16:00 IST)")
+        else:
             try:
-                send_message(err)
-            except Exception:
-                pass
+                from data.notifier import format_mom20_alert, format_mom20_overflow_alert
+
+                mom20_result = live_signals_scanner.scan_entry_signals(force_refresh=True)
+
+                # Mom20 top-40 — dedup by ticker+score (rounded 1dp)
+                mom20_msg = format_mom20_alert(mom20_result)
+                if mom20_msg:
+                    mom20_key = tuple(
+                        (s["ticker"], round(s.get("momentum_score", 0), 1))
+                        for s in mom20_result.get("mom20_signals", [])
+                    )
+                    if mom20_key != last_mom20_key:
+                        print(f"[ETF scheduler] Mom20 ranking changed — alerting")
+                        send_message(mom20_msg)
+                        last_mom20_key = mom20_key
+                    else:
+                        print(f"[ETF scheduler] Mom20 ranking unchanged — skipping")
+                else:
+                    print(f"[ETF scheduler] Mom20 no signals")
+                    last_mom20_key = None
+
+                # Mom20 overflow — dedup by ticker+score (rounded 1dp)
+                overflow_msg = format_mom20_overflow_alert(mom20_result)
+                if overflow_msg:
+                    overflow_key = tuple(
+                        (s["ticker"], round(s.get("momentum_score", 0), 1))
+                        for s in mom20_result.get("mom20_overflow", [])
+                    )
+                    if overflow_key != last_overflow_key:
+                        n_ov = len(mom20_result.get("mom20_overflow", []))
+                        print(f"[ETF scheduler] Mom20 overflow changed — {n_ov} candidates — alerting")
+                        send_message(overflow_msg)
+                        last_overflow_key = overflow_key
+                    else:
+                        print(f"[ETF scheduler] Mom20 overflow unchanged — skipping")
+                else:
+                    print(f"[ETF scheduler] Mom20 overflow — none")
+                    last_overflow_key = None
+
+            except Exception as e:
+                err = f"⚠️ Mom20 scan error: {e}"
+                print(f"[ETF scheduler] {err}")
+                try:
+                    send_message(err)
+                except Exception:
+                    pass
 
         # Sleep until next :15-past-the-hour scan (or next window open)
         now_ist = datetime.now(IST)
