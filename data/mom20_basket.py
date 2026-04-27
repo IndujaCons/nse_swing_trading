@@ -95,15 +95,17 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict) -> dict:
 
     entries.sort(key=lambda x: x["rank"])
 
-    min_capital = sum(e["price"] for e in entries if e["price"] > 0)
-    total_deployed = sum(e["capital_allocated"] for e in entries)
+    # Min capital = need at least 1 share per slot for the most expensive entry
+    max_entry_price = max((e["price"] for e in entries if e["price"] > 0), default=0)
+    min_capital = round(N_SLOTS * max_entry_price, 2)
+    total_to_deploy = sum(e["capital_allocated"] for e in entries)
 
     return {
         "basket_date":     date.today().isoformat(),
         "total_capital":   total_capital,
         "capital_per_slot": round(capital_per_slot, 2),
-        "min_capital":     round(min_capital, 2),
-        "total_deployed":  round(total_deployed, 2),
+        "min_capital":     min_capital,
+        "total_to_deploy": round(total_to_deploy, 2),
         "n_exits":         len(exits),
         "n_entries":       len(entries),
         "n_holds":         len(holds),

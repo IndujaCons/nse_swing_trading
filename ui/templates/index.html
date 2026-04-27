@@ -7821,7 +7821,7 @@ function _renderMom20Basket(d) {
         <div class="basket-cap-item"><div class="basket-cap-label">TOTAL CAPITAL</div><div class="basket-cap-value">${fmt(d.total_capital)}</div></div>
         <div class="basket-cap-item"><div class="basket-cap-label">PER SLOT (÷20)</div><div class="basket-cap-value">${fmt(d.capital_per_slot)}</div></div>
         <div class="basket-cap-item"><div class="basket-cap-label">MIN CAPITAL</div><div class="basket-cap-value" style="color:${d.total_capital < d.min_capital ? 'var(--red)' : 'var(--text-primary)'}">${fmt(d.min_capital)}</div></div>
-        <div class="basket-cap-item"><div class="basket-cap-label">DEPLOYED</div><div class="basket-cap-value">${fmt(d.total_deployed)}</div></div>
+        <div class="basket-cap-item"><div class="basket-cap-label">TO DEPLOY</div><div class="basket-cap-value">${fmt(d.total_to_deploy)}</div></div>
         <div class="basket-cap-item"><div class="basket-cap-label">EXITS / ENTRIES / HOLDS</div><div class="basket-cap-value">${d.n_exits} / ${d.n_entries} / ${d.n_holds}</div></div>`;
 
     // Exits
