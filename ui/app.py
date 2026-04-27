@@ -2166,9 +2166,10 @@ def _etf_signal_scheduler():
             etf_ranked = score_live()
             etf_msg = format_etf_zscore_alert(etf_ranked)
             if etf_msg:
-                etf_key = tuple(s["symbol"] for s in etf_ranked[:5])
+                # Dedup: fire when top-5 symbols OR scores change (rounded to 1dp)
+                etf_key = tuple((s["symbol"], round(s["score"], 1)) for s in etf_ranked[:5])
                 if etf_key != last_etf_key:
-                    print(f"[ETF scheduler] ETF Z-Score top-5 changed — alerting")
+                    print(f"[ETF scheduler] ETF Z-Score changed — alerting")
                     send_message(etf_msg)
                     last_etf_key = etf_key
                 else:
