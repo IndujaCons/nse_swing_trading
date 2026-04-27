@@ -1063,7 +1063,7 @@ def run_portfolio_backtest():
                 rebalance_months=3,
                 top_n=20,
                 buffer_in=15,
-                buffer_out=45,
+                buffer_out=40,
                 end_date=end_date,
             )
             if "error" in result:
