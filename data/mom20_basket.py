@@ -55,8 +55,9 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict) -> dict:
     current_qty_map = {item["ticker"]: item.get("qty", 0)
                        for item in current_portfolio.get("basket", [])}
 
-    # Top-15 entry universe (buffer_in=15), hold if rank <= 40
-    top15 = {s["ticker"] for s in signals if s["rank"] <= 15}
+    # Entry universe: top-N_SLOTS if fresh (no positions), else buffer_in=15 for new adds
+    BUFFER_IN = N_SLOTS if not current_tickers else 15
+    entry_universe = {s["ticker"] for s in signals if s["rank"] <= BUFFER_IN}
     hold_set = {s["ticker"] for s in signals if s["rank"] <= BUFFER_OUT}
 
     exits  = []
@@ -79,8 +80,8 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict) -> dict:
         else:
             holds.append({"ticker": ticker, "rank": rank, "price": price})
 
-    # Entries: top-15 not already held
-    for ticker in top15:
+    # Entries: entry universe not already held
+    for ticker in entry_universe:
         if ticker not in current_tickers:
             price = price_map.get(ticker, 0)
             qty = int(math.floor(capital_per_slot / price)) if price > 0 else 0
