@@ -3654,17 +3654,8 @@ class MomentumBacktester:
                     "beta": beta,
                 }
 
-            # Apply beta_cap filter before Z-scoring
-            if beta_cap is not None:
-                before = len(scores)
-                scores = {t: s for t, s in scores.items() if s.get("beta") is not None and s["beta"] <= beta_cap}
-                print(f"    Beta cap {beta_cap}: {before} → {len(scores)} stocks on {day}")
-
-            # Apply beta_min filter (overflow: high-beta only)
-            if beta_min is not None:
-                before = len(scores)
-                scores = {t: s for t, s in scores.items() if s.get("beta") is not None and s["beta"] >= beta_min}
-                print(f"    Beta min {beta_min}: {before} → {len(scores)} stocks on {day}")
+            # Beta filters are applied in the rebalance loop (entry-only)
+            # Do NOT filter here — held stocks should exit only by momentum rank
 
             # Apply EPS filter: exclude stocks with TTM EPS growth below threshold
             if eps_db is not None and eps_filter is not None:
@@ -3896,8 +3887,21 @@ class MomentumBacktester:
             if min_score is not None:
                 scores = {t: s for t, s in scores.items() if s["norm_score"] >= min_score}
 
-            # Rank by Normalized Momentum Score
-            ranked = sorted(scores.items(), key=lambda x: -x[1]["norm_score"])
+            # Unfiltered rank (for exit decisions on held stocks — beta is entry-only filter)
+            ranked_unfiltered = sorted(scores.items(), key=lambda x: -x[1]["norm_score"])
+            ticker_rank_unfiltered = {t: rank + 1 for rank, (t, _) in enumerate(ranked_unfiltered)}
+
+            # Apply beta/EPS filters for new entries only
+            scores_entry = dict(scores)
+            if beta_cap is not None:
+                scores_entry = {t: s for t, s in scores_entry.items()
+                                if s.get("beta") is not None and s["beta"] <= beta_cap}
+            if beta_min is not None:
+                scores_entry = {t: s for t, s in scores_entry.items()
+                                if s.get("beta") is not None and s["beta"] >= beta_min}
+
+            # Rank by Normalized Momentum Score (entry-eligible universe only)
+            ranked = sorted(scores_entry.items(), key=lambda x: -x[1]["norm_score"])
 
             # Current portfolio tickers and their ranks
             current_tickers = set(portfolio.keys())
@@ -3906,9 +3910,10 @@ class MomentumBacktester:
             # Apply buffer rule
             new_portfolio_tickers = set()
 
-            # Existing stocks: keep if rank <= buffer_out (45)
+            # Existing stocks: keep if unfiltered rank <= buffer_out
+            # Beta is entry-only — held stocks exit only by momentum rank, not beta breach
             for t in current_tickers:
-                rank = ticker_rank.get(t, 999)
+                rank = ticker_rank_unfiltered.get(t, 999)
                 if rank <= buffer_out:
                     new_portfolio_tickers.add(t)
 
@@ -3923,11 +3928,10 @@ class MomentumBacktester:
                     break
                 new_portfolio_tickers.add(t)
 
-            # Cap at top_n
+            # Cap at top_n — use unfiltered rank for held stocks, entry rank for new
             if len(new_portfolio_tickers) > top_n:
-                # Keep the highest-ranked ones
                 ranked_new = sorted(new_portfolio_tickers,
-                                     key=lambda t: ticker_rank.get(t, 999))
+                                     key=lambda t: ticker_rank_unfiltered.get(t, ticker_rank.get(t, 999)))
                 new_portfolio_tickers = set(ranked_new[:top_n])
 
             # --- Execute rebalance ---
