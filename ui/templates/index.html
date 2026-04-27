@@ -2228,6 +2228,7 @@
                         </select>
                         <button class="add-user-btn" onclick="openAddUserModal()">+ Add User</button>
                         <span id="etf-user-capital-pill" class="user-capital-pill" style="display:none;"></span>
+                        <button id="etf-delete-user-btn" onclick="deleteSelectedUser('etf')" style="display:none;padding:4px 10px;font-size:11px;background:rgba(220,53,69,0.12);color:#dc3545;border:1px solid rgba(220,53,69,0.4);border-radius:5px;cursor:pointer;">✕ Delete User</button>
                     </div>
 
                     <div id="etf-user-content" style="display:none;">
@@ -2297,6 +2298,7 @@
                     <button class="add-user-btn" onclick="openAddUserModal()">+ Add User</button>
                     <span id="mom20-user-capital-pill" class="user-capital-pill" style="display:none;"></span>
                     <button id="mom20-basket-refresh-btn" onclick="mom20LoadBasket()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">↺ Refresh Basket</button>
+                    <button id="mom20-delete-user-btn" onclick="deleteSelectedUser('mom20')" style="display:none;padding:4px 10px;font-size:11px;background:rgba(220,53,69,0.12);color:#dc3545;border:1px solid rgba(220,53,69,0.4);border-radius:5px;cursor:pointer;">✕ Delete User</button>
                 </div>
 
                 <!-- Basket preview section -->
@@ -7697,7 +7699,7 @@ let _mom20BasketData   = null;  // last fetched basket preview
 
 async function loadUsers() {
     try {
-        const r = await fetch('/api/users');
+        const r = await fetch('/api/portfolio-users');
         const d = await r.json();
         if (d.success) _allUsers = d.users || [];
     } catch(e) { _allUsers = []; }
@@ -7736,7 +7738,7 @@ async function submitAddUser() {
     const btn = document.getElementById('aum-submit-btn');
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
-        const r = await fetch('/api/users', {
+        const r = await fetch('/api/portfolio-users', {
             method: 'POST', headers: {'Content-Type':'application/json'},
             body: JSON.stringify({name, mom20_capital: mom20, etf_capital: etf})
         });
@@ -7755,6 +7757,24 @@ function _selectUserInDropdown(selectId, userId) {
     if (sel) sel.value = userId;
 }
 
+async function deleteSelectedUser(context) {
+    // context = 'mom20' or 'etf'
+    const user = context === 'mom20' ? _mom20SelectedUser : _etfSelectedUser;
+    if (!user) return;
+    if (!confirm(`Delete user "${user.name}"?\n\nTheir data will be archived (not permanently erased).`)) return;
+    try {
+        const r = await fetch(`/api/portfolio-users/${user.id}`, {method: 'DELETE'});
+        const d = await r.json();
+        if (!d.success) { alert(d.error || 'Delete failed'); return; }
+        _allUsers = _allUsers.filter(u => u.id !== user.id);
+        if (context === 'mom20') { _mom20SelectedUser = null; }
+        else                     { _etfSelectedUser   = null; }
+        _populateUserDropdown('mom20-user-select', null);
+        _populateUserDropdown('etf-user-select',   null);
+        mom20OnUserChange(); etfOnUserChange();
+    } catch(e) { alert('Error: ' + e); }
+}
+
 // ── Mom20 user change ──────────────────────────────────
 function mom20OnUserChange() {
     const uid = document.getElementById('mom20-user-select').value;
@@ -7762,9 +7782,11 @@ function mom20OnUserChange() {
     const capPill = document.getElementById('mom20-user-capital-pill');
     const refreshBtn = document.getElementById('mom20-basket-refresh-btn');
     const section = document.getElementById('mom20-basket-section');
+    const delBtn = document.getElementById('mom20-delete-user-btn');
     if (!_mom20SelectedUser) {
         capPill.style.display = 'none';
         refreshBtn.style.display = 'none';
+        if (delBtn) delBtn.style.display = 'none';
         section.style.display = 'none';
         return;
     }
@@ -7772,6 +7794,7 @@ function mom20OnUserChange() {
     capPill.textContent = `Mom20 Capital: ₹${(cap/100000).toFixed(1)}L`;
     capPill.style.display = 'inline';
     refreshBtn.style.display = 'inline';
+    if (delBtn) delBtn.style.display = 'inline';
     mom20LoadBasket();
 }
 
@@ -7782,7 +7805,7 @@ async function mom20LoadBasket() {
     section.style.display = 'block';
     document.getElementById('mom20-basket-capbar').innerHTML = '<span style="color:var(--text-muted);font-size:11px;">Loading…</span>';
     try {
-        const r = await fetch(`/api/users/${uid}/mom20-basket`);
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-basket`);
         const d = await r.json();
         if (!d.success) { alert(d.error); return; }
         _mom20BasketData = d;
@@ -7834,7 +7857,7 @@ function _renderMom20Basket(d) {
 async function mom20DownloadBasket() {
     const uid = _mom20SelectedUser?.id;
     if (!uid) { alert('Select a user first'); return; }
-    window.location.href = `/api/users/${uid}/mom20-basket/download`;
+    window.location.href = `/api/portfolio-users/${uid}/mom20-basket/download`;
 }
 
 async function mom20UploadTradeBook(event) {
@@ -7847,7 +7870,7 @@ async function mom20UploadTradeBook(event) {
     const fd = new FormData();
     fd.append('file', file);
     try {
-        const r = await fetch(`/api/users/${uid}/mom20-tradebook`, {method:'POST', body:fd});
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-tradebook`, {method:'POST', body:fd});
         const d = await r.json();
         if (d.success) {
             status.textContent = `✓ Synced ${d.trades_synced} trades — portfolio: ${d.portfolio_size} stocks`;
@@ -7870,14 +7893,17 @@ function etfOnUserChange() {
     _etfSelectedUser = _allUsers.find(u => u.id === uid) || null;
     const capPill = document.getElementById('etf-user-capital-pill');
     const content  = document.getElementById('etf-user-content');
+    const delBtn   = document.getElementById('etf-delete-user-btn');
     if (!_etfSelectedUser) {
         capPill.style.display = 'none';
         content.style.display = 'none';
+        if (delBtn) delBtn.style.display = 'none';
         return;
     }
     const cap = _etfSelectedUser.strategies?.etf?.capital || 0;
     capPill.textContent = `ETF Capital: ₹${(cap/100000).toFixed(1)}L`;
     capPill.style.display = 'inline';
+    if (delBtn) delBtn.style.display = 'inline';
     content.style.display = 'block';
     // Set today as default date
     const dateInput = document.getElementById('etf-pos-date');
@@ -7889,7 +7915,7 @@ async function etfLoadPositions() {
     const uid = _etfSelectedUser?.id;
     if (!uid) return;
     try {
-        const r = await fetch(`/api/users/${uid}/etf-positions`);
+        const r = await fetch(`/api/portfolio-users/${uid}/etf-positions`);
         const d = await r.json();
         if (!d.success) return;
         _renderEtfPositions(d.positions || [], d.history || []);
@@ -7963,7 +7989,7 @@ async function etfAddPosition() {
     const scanRow = document.querySelector(`#etf-watchlist-body [data-symbol="${ticker}"]`);
     const zRank  = scanRow ? parseInt(scanRow.dataset.rank) || null : null;
 
-    const r = await fetch(`/api/users/${uid}/etf-positions`, {
+    const r = await fetch(`/api/portfolio-users/${uid}/etf-positions`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ticker, name, qty, entry_price: price, entry_date: date, z_score_rank: zRank})
     });
@@ -7981,7 +8007,7 @@ async function etfExitPosition(posId) {
     if (!uid) return;
     const exitPrice = parseFloat(prompt('Exit price:'));
     if (!exitPrice || exitPrice <= 0) return;
-    const r = await fetch(`/api/users/${uid}/etf-positions/${posId}/exit`, {
+    const r = await fetch(`/api/portfolio-users/${uid}/etf-positions/${posId}/exit`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({exit_price: exitPrice})
     });

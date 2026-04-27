@@ -2269,7 +2269,7 @@ def _etf_signal_scheduler():
 # ============ User Registry ============
 
 from data.user_registry import (
-    load_users, add_user, get_user, update_user, ensure_all_dirs,
+    load_users, add_user, get_user, update_user, delete_user, ensure_all_dirs,
     mom20_portfolio_path, mom20_history_path,
     etf_positions_path, etf_history_path,
     baskets_dir, trade_books_dir,
@@ -2279,12 +2279,12 @@ from data.mom20_basket import generate_basket, to_zerodha_csv, parse_trade_book,
 ensure_all_dirs()
 
 
-@app.route("/api/users", methods=["GET"])
+@app.route("/api/portfolio-users", methods=["GET"])
 def api_get_users():
     return jsonify({"success": True, "users": load_users()})
 
 
-@app.route("/api/users", methods=["POST"])
+@app.route("/api/portfolio-users", methods=["POST"])
 def api_add_user():
     data = request.get_json() or {}
     name = (data.get("name") or "").strip()
@@ -2296,7 +2296,7 @@ def api_add_user():
     return jsonify({"success": True, "user": user})
 
 
-@app.route("/api/users/<user_id>", methods=["PATCH"])
+@app.route("/api/portfolio-users/<user_id>", methods=["PATCH"])
 def api_update_user(user_id):
     data = request.get_json() or {}
     mom20_cap = data.get("mom20_capital")
@@ -2309,9 +2309,17 @@ def api_update_user(user_id):
     return jsonify({"success": True, "user": user})
 
 
+@app.route("/api/portfolio-users/<user_id>", methods=["DELETE"])
+def api_delete_user(user_id):
+    ok = delete_user(user_id)
+    if not ok:
+        return jsonify({"success": False, "error": "user not found"})
+    return jsonify({"success": True})
+
+
 # ── Mom20 basket (per user) ────────────────────────────────────────────────────
 
-@app.route("/api/users/<user_id>/mom20-basket", methods=["GET"])
+@app.route("/api/portfolio-users/<user_id>/mom20-basket", methods=["GET"])
 def api_mom20_basket_preview(user_id):
     """Preview basket: exits, entries, quantities for this user's capital."""
     user = get_user(user_id)
@@ -2337,7 +2345,7 @@ def api_mom20_basket_preview(user_id):
     return jsonify({"success": True, **basket_data})
 
 
-@app.route("/api/users/<user_id>/mom20-basket/download", methods=["GET"])
+@app.route("/api/portfolio-users/<user_id>/mom20-basket/download", methods=["GET"])
 def api_mom20_basket_download(user_id):
     """Generate and download Zerodha basket CSV for this user."""
     import flask
@@ -2376,7 +2384,7 @@ def api_mom20_basket_download(user_id):
     )
 
 
-@app.route("/api/users/<user_id>/mom20-tradebook", methods=["POST"])
+@app.route("/api/portfolio-users/<user_id>/mom20-tradebook", methods=["POST"])
 def api_mom20_tradebook_upload(user_id):
     """Upload Zerodha trade book CSV → sync user's Mom20 portfolio."""
     user = get_user(user_id)
@@ -2445,7 +2453,7 @@ def api_mom20_tradebook_upload(user_id):
 
 # ── ETF positions (per user, manual entry) ────────────────────────────────────
 
-@app.route("/api/users/<user_id>/etf-positions", methods=["GET"])
+@app.route("/api/portfolio-users/<user_id>/etf-positions", methods=["GET"])
 def api_etf_positions_get(user_id):
     if not get_user(user_id):
         return jsonify({"success": False, "error": "user not found"})
@@ -2462,7 +2470,7 @@ def api_etf_positions_get(user_id):
     return jsonify({"success": True, "positions": positions, "history": history})
 
 
-@app.route("/api/users/<user_id>/etf-positions", methods=["POST"])
+@app.route("/api/portfolio-users/<user_id>/etf-positions", methods=["POST"])
 def api_etf_position_add(user_id):
     """Manually record a new ETF position entry."""
     if not get_user(user_id):
@@ -2496,7 +2504,7 @@ def api_etf_position_add(user_id):
     return jsonify({"success": True, "position": pos})
 
 
-@app.route("/api/users/<user_id>/etf-positions/<pos_id>/exit", methods=["POST"])
+@app.route("/api/portfolio-users/<user_id>/etf-positions/<pos_id>/exit", methods=["POST"])
 def api_etf_position_exit(user_id, pos_id):
     """Record ETF exit, move to history."""
     if not get_user(user_id):

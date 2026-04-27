@@ -88,6 +88,26 @@ def update_user(user_id: str, mom20_capital: int = None, etf_capital: int = None
     return None
 
 
+def delete_user(user_id: str) -> bool:
+    """Remove user from registry. Renames data dir to {id}_deleted for safety."""
+    import shutil
+    from datetime import date as _date
+    users = load_users()
+    remaining = [u for u in users if u["id"] != user_id]
+    if len(remaining) == len(users):
+        return False  # not found
+    save_users(remaining)
+    d = user_dir(user_id)
+    if os.path.exists(d):
+        archive = d + "_deleted_" + _date.today().isoformat()
+        # avoid collision if archived twice same day
+        suffix, i = archive, 2
+        while os.path.exists(suffix):
+            suffix = f"{archive}_{i}"; i += 1
+        shutil.move(d, suffix)
+    return True
+
+
 # ── Per-user file paths ────────────────────────────────────────────────────────
 
 def user_dir(user_id: str) -> str:
