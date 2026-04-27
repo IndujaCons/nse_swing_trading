@@ -2159,12 +2159,10 @@ def _etf_signal_scheduler():
 
     print("[ETF scheduler] Started — scans at :15 past each hour 09:15–15:15 IST")
 
-    last_etf_key          = None   # dedup for ETF Core
     last_mom20_key        = None   # dedup for Mom20 ranking
     last_overflow_key     = None   # dedup for Mom20 overflow
     startup_scan_done     = False  # one-time ETF scan on startup regardless of window
     startup_scan_done_mom20 = False  # one-time Mom20 scan on startup regardless of window
-    _last_session         = None   # "indian" | "us" — reset dedup at each session open
 
     while True:
         now_ist = datetime.now(IST)
@@ -2179,12 +2177,7 @@ def _etf_signal_scheduler():
 
         startup_scan_done = True
 
-        # Detect session transitions → reset dedup so first scan of each session fires
-        _cur_session = "indian" if _in_indian_window(now_ist) else "us"
-        if _cur_session != _last_session:
-            last_etf_key = None   # force send on session open
-            _last_session = _cur_session
-            print(f"[ETF scheduler] Session transition → {_cur_session}, dedup reset")
+
         print(f"[ETF scheduler] Scanning at {now_ist.strftime('%Y-%m-%d %H:%M IST')}")
 
         # ── ETF Z-Score scan ─────────────────────────────────────────────────
@@ -2195,13 +2188,8 @@ def _etf_signal_scheduler():
             etf_msg = format_etf_zscore_alert(etf_ranked)
             if etf_msg:
                 # Dedup: fire when top-5 symbols OR scores change (rounded to 1dp)
-                etf_key = tuple((s["symbol"], round(s["score"], 1)) for s in etf_ranked[:5])
-                if etf_key != last_etf_key:
-                    print(f"[ETF scheduler] ETF Z-Score changed — alerting")
-                    send_message(etf_msg)
-                    last_etf_key = etf_key
-                else:
-                    print(f"[ETF scheduler] ETF Z-Score unchanged — skipping")
+                print(f"[ETF scheduler] ETF Z-Score — alerting")
+                send_message(etf_msg)
             else:
                 print(f"[ETF scheduler] ETF Z-Score no signals")
                 last_etf_key = None
