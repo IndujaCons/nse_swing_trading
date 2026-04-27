@@ -1,0 +1,16 @@
+{
+  "status": "empty",
+  "capital": 0,
+  "last_synced": null,
+  "basket": [
+    {
+      "ticker": "TITAN",
+      "qty": 12,
+      "entry_price": 3200.50,
+      "entry_date": "2026-05-01",
+      "weight": 5.0,
+      "rank_at_entry": 3,
+      "score_at_entry": 2.41
+    }
+  ]
+}

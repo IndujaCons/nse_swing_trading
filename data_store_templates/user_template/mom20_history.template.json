@@ -1,0 +1,12 @@
+[
+  {
+    "rebalance_date": "2026-05-01",
+    "basket_generated": "2026-04-30T15:45:00",
+    "trade_book_uploaded": "2026-05-01T10:30:00",
+    "exits":   [{"ticker": "CGPOWER",    "qty": 25, "fill_price": 823.0}],
+    "entries": [{"ticker": "BHARATFORG", "qty": 12, "fill_price": 1910.0}],
+    "holds":   ["ADANIENSOL", "BHEL"],
+    "capital_deployed": 498500,
+    "status": "synced"
+  }
+]

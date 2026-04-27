@@ -1,0 +1,16 @@
+[
+  {
+    "id": "uuid-here",
+    "ticker": "EWY",
+    "name": "iShares MSCI South Korea",
+    "qty": 15,
+    "entry_price": 148.50,
+    "entry_date": "2026-04-01",
+    "exit_price": 156.20,
+    "exit_date": "2026-05-12",
+    "z_score_rank_entry": 1,
+    "pnl_pct": 5.18,
+    "pnl_abs": 1155.0,
+    "hold_days": 41
+  }
+]

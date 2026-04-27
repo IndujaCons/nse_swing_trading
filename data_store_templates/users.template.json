@@ -1,0 +1,11 @@
+[
+  {
+    "id": "user_id_slug",
+    "name": "Full Name",
+    "created": "2026-01-01",
+    "strategies": {
+      "mom20": {"active": true,  "capital": 1000000},
+      "etf":   {"active": true,  "capital": 200000}
+    }
+  }
+]

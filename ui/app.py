@@ -2266,6 +2266,290 @@ def _etf_signal_scheduler():
         time.sleep(max(sleep_secs, 30))
 
 
+# ============ User Registry ============
+
+from data.user_registry import (
+    load_users, add_user, get_user, update_user, ensure_all_dirs,
+    mom20_portfolio_path, mom20_history_path,
+    etf_positions_path, etf_history_path,
+    baskets_dir, trade_books_dir,
+)
+from data.mom20_basket import generate_basket, to_zerodha_csv, parse_trade_book, sync_portfolio_from_trades
+
+ensure_all_dirs()
+
+
+@app.route("/api/users", methods=["GET"])
+def api_get_users():
+    return jsonify({"success": True, "users": load_users()})
+
+
+@app.route("/api/users", methods=["POST"])
+def api_add_user():
+    data = request.get_json() or {}
+    name = (data.get("name") or "").strip()
+    if not name:
+        return jsonify({"success": False, "error": "name required"})
+    mom20_cap = int(data.get("mom20_capital") or 0)
+    etf_cap   = int(data.get("etf_capital")   or 0)
+    user = add_user(name, mom20_capital=mom20_cap, etf_capital=etf_cap)
+    return jsonify({"success": True, "user": user})
+
+
+@app.route("/api/users/<user_id>", methods=["PATCH"])
+def api_update_user(user_id):
+    data = request.get_json() or {}
+    mom20_cap = data.get("mom20_capital")
+    etf_cap   = data.get("etf_capital")
+    user = update_user(user_id,
+                       mom20_capital=int(mom20_cap) if mom20_cap is not None else None,
+                       etf_capital=int(etf_cap)     if etf_cap   is not None else None)
+    if not user:
+        return jsonify({"success": False, "error": "user not found"})
+    return jsonify({"success": True, "user": user})
+
+
+# ── Mom20 basket (per user) ────────────────────────────────────────────────────
+
+@app.route("/api/users/<user_id>/mom20-basket", methods=["GET"])
+def api_mom20_basket_preview(user_id):
+    """Preview basket: exits, entries, quantities for this user's capital."""
+    user = get_user(user_id)
+    if not user:
+        return jsonify({"success": False, "error": "user not found"})
+
+    # Get current Mom20 signals
+    try:
+        result = live_signals_scanner.scan_entry_signals(force_refresh=False)
+        signals = result.get("mom20_signals", [])
+    except Exception as e:
+        return jsonify({"success": False, "error": f"signals unavailable: {e}"})
+
+    # Load user's current portfolio
+    pf_path = mom20_portfolio_path(user_id)
+    try:
+        with open(pf_path) as f:
+            portfolio = json.load(f)
+    except Exception:
+        portfolio = {"status": "empty", "basket": []}
+
+    basket_data = generate_basket(user, signals, portfolio)
+    return jsonify({"success": True, **basket_data})
+
+
+@app.route("/api/users/<user_id>/mom20-basket/download", methods=["GET"])
+def api_mom20_basket_download(user_id):
+    """Generate and download Zerodha basket CSV for this user."""
+    import flask
+    user = get_user(user_id)
+    if not user:
+        return jsonify({"success": False, "error": "user not found"})
+
+    try:
+        result = live_signals_scanner.scan_entry_signals(force_refresh=False)
+        signals = result.get("mom20_signals", [])
+    except Exception as e:
+        return jsonify({"success": False, "error": f"signals unavailable: {e}"})
+
+    pf_path = mom20_portfolio_path(user_id)
+    try:
+        with open(pf_path) as f:
+            portfolio = json.load(f)
+    except Exception:
+        portfolio = {"status": "empty", "basket": []}
+
+    basket_data = generate_basket(user, signals, portfolio)
+    csv_content = to_zerodha_csv(basket_data)
+
+    # Save a copy locally
+    import datetime
+    fname = f"mom20_{datetime.date.today().isoformat()}.csv"
+    save_path = os.path.join(baskets_dir(user_id), fname)
+    os.makedirs(baskets_dir(user_id), exist_ok=True)
+    with open(save_path, "w") as f:
+        f.write(csv_content)
+
+    return flask.Response(
+        csv_content,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={fname}"}
+    )
+
+
+@app.route("/api/users/<user_id>/mom20-tradebook", methods=["POST"])
+def api_mom20_tradebook_upload(user_id):
+    """Upload Zerodha trade book CSV → sync user's Mom20 portfolio."""
+    user = get_user(user_id)
+    if not user:
+        return jsonify({"success": False, "error": "user not found"})
+
+    if "file" not in request.files:
+        return jsonify({"success": False, "error": "no file uploaded"})
+
+    csv_content = request.files["file"].read().decode("utf-8", errors="replace")
+    trades = parse_trade_book(csv_content)
+    if not trades:
+        return jsonify({"success": False, "error": "no valid trades found in CSV"})
+
+    # Load last basket data for entry context
+    import glob as _glob
+    bdir = baskets_dir(user_id)
+    basket_files = sorted(_glob.glob(os.path.join(bdir, "mom20_*.csv")))
+    basket_data = {}  # fallback if no basket saved
+
+    pf_path = mom20_portfolio_path(user_id)
+    try:
+        with open(pf_path) as f:
+            portfolio = json.load(f)
+    except Exception:
+        portfolio = {"status": "empty", "basket": []}
+
+    updated = sync_portfolio_from_trades(portfolio, trades, basket_data)
+
+    # Save updated portfolio
+    tmp = pf_path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(updated, f, indent=2)
+    os.replace(tmp, pf_path)
+
+    # Save trade book file
+    import datetime
+    tb_fname = f"zerodha_{datetime.date.today().isoformat()}.csv"
+    tb_path = os.path.join(trade_books_dir(user_id), tb_fname)
+    os.makedirs(trade_books_dir(user_id), exist_ok=True)
+    with open(tb_path, "w") as f:
+        f.write(csv_content)
+
+    # Append to history
+    hist_path = mom20_history_path(user_id)
+    try:
+        with open(hist_path) as f:
+            history = json.load(f)
+    except Exception:
+        history = []
+
+    history.append({
+        "rebalance_date":    datetime.date.today().isoformat(),
+        "trade_book_uploaded": datetime.datetime.now().isoformat(),
+        "trades_parsed":     len(trades),
+        "buys":  [t for t in trades if t["action"] == "BUY"],
+        "sells": [t for t in trades if t["action"] == "SELL"],
+        "status": "synced",
+    })
+    with open(hist_path, "w") as f:
+        json.dump(history, f, indent=2)
+
+    return jsonify({"success": True, "trades_synced": len(trades),
+                    "portfolio_size": len(updated.get("basket", []))})
+
+
+# ── ETF positions (per user, manual entry) ────────────────────────────────────
+
+@app.route("/api/users/<user_id>/etf-positions", methods=["GET"])
+def api_etf_positions_get(user_id):
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(etf_positions_path(user_id)) as f:
+            positions = json.load(f)
+    except Exception:
+        positions = []
+    try:
+        with open(etf_history_path(user_id)) as f:
+            history = json.load(f)
+    except Exception:
+        history = []
+    return jsonify({"success": True, "positions": positions, "history": history})
+
+
+@app.route("/api/users/<user_id>/etf-positions", methods=["POST"])
+def api_etf_position_add(user_id):
+    """Manually record a new ETF position entry."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    data = request.get_json() or {}
+    import uuid, datetime
+
+    pos = {
+        "id":          str(uuid.uuid4())[:8],
+        "ticker":      (data.get("ticker") or "").upper().strip(),
+        "name":        data.get("name", ""),
+        "qty":         int(data.get("qty") or 0),
+        "entry_price": float(data.get("entry_price") or 0),
+        "entry_date":  data.get("entry_date") or datetime.date.today().isoformat(),
+        "z_score_rank": data.get("z_score_rank"),
+        "z_score":      data.get("z_score"),
+        "status":      "open",
+    }
+    if not pos["ticker"] or pos["qty"] <= 0 or pos["entry_price"] <= 0:
+        return jsonify({"success": False, "error": "ticker, qty, entry_price required"})
+
+    path = etf_positions_path(user_id)
+    try:
+        with open(path) as f:
+            positions = json.load(f)
+    except Exception:
+        positions = []
+    positions.append(pos)
+    with open(path, "w") as f:
+        json.dump(positions, f, indent=2)
+    return jsonify({"success": True, "position": pos})
+
+
+@app.route("/api/users/<user_id>/etf-positions/<pos_id>/exit", methods=["POST"])
+def api_etf_position_exit(user_id, pos_id):
+    """Record ETF exit, move to history."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    data = request.get_json() or {}
+    import datetime
+
+    pos_path  = etf_positions_path(user_id)
+    hist_path = etf_history_path(user_id)
+
+    try:
+        with open(pos_path) as f:
+            positions = json.load(f)
+    except Exception:
+        positions = []
+
+    pos = next((p for p in positions if p["id"] == pos_id), None)
+    if not pos:
+        return jsonify({"success": False, "error": "position not found"})
+
+    exit_price = float(data.get("exit_price") or 0)
+    exit_date  = data.get("exit_date") or datetime.date.today().isoformat()
+    if exit_price <= 0:
+        return jsonify({"success": False, "error": "exit_price required"})
+
+    pnl_abs = round((exit_price - pos["entry_price"]) * pos["qty"], 2)
+    pnl_pct = round((exit_price / pos["entry_price"] - 1) * 100, 2)
+    from datetime import date as _date
+    try:
+        hold_days = (_date.fromisoformat(exit_date) - _date.fromisoformat(pos["entry_date"])).days
+    except Exception:
+        hold_days = None
+
+    record = {**pos, "exit_price": exit_price, "exit_date": exit_date,
+              "pnl_abs": pnl_abs, "pnl_pct": pnl_pct, "hold_days": hold_days,
+              "status": "closed"}
+
+    try:
+        with open(hist_path) as f:
+            history = json.load(f)
+    except Exception:
+        history = []
+    history.append(record)
+    with open(hist_path, "w") as f:
+        json.dump(history, f, indent=2)
+
+    positions = [p for p in positions if p["id"] != pos_id]
+    with open(pos_path, "w") as f:
+        json.dump(positions, f, indent=2)
+
+    return jsonify({"success": True, "record": record})
+
+
 # ============ Mom20 Portfolio Manager ============
 
 from data.mom20_portfolio import (

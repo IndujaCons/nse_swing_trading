@@ -1,8 +1,22 @@
+# Secrets
 .env
+
+# Python
 venv/
 __pycache__/
 *.pyc
 .DS_Store
-*.csv
-data_store/
 *.app
+
+# Data store — never commit actual user data
+data_store/
+
+# Cache & downloads
+data/cache/
+*.crdownload
+
+# Log files
+logs/
+*.log
+
+# Templates ARE committed (see data_store_templates/)
