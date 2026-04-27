@@ -1888,17 +1888,31 @@ def etf_scan():
         if "error" in result:
             return jsonify({"success": False, "error": result["error"]})
 
-        # Merge Z-score fields (score, beta, ret_12m, ret_3m) into watchlist items
+        # Merge Z-score fields and re-rank by Z-score (authoritative strategy ranking)
         try:
             from data.etf_core_zscore_backtest import score_live
             zscore_list = score_live()
             zscore_map = {d["symbol"]: d for d in zscore_list}
-            for item in result.get("watchlist", []):
+            watchlist = result.get("watchlist", [])
+            for item in watchlist:
                 zd = zscore_map.get(item["symbol"], {})
                 item["mom_score"] = zd.get("score")
                 item["beta"]      = zd.get("beta")
                 item["ret_12m"]   = zd.get("ret_12m")
                 item["ret_3m"]    = zd.get("ret_3m")
+
+            # Re-sort by Z-score rank so UI matches Telegram (strategy uses Z-score)
+            scored   = [x for x in watchlist if x.get("mom_score") is not None]
+            unscored = [x for x in watchlist if x.get("mom_score") is None]
+            scored.sort(key=lambda x: -x["mom_score"])
+            for i, item in enumerate(scored):
+                item["rank"] = i + 1
+                # Recompute signal for non-position items based on Z-score rank
+                if not item.get("in_position") and not item.get("in_watchlist"):
+                    item["signal"] = "ENTRY" if item["rank"] <= 5 else "RANKED"
+            for item in unscored:
+                item["rank"] = None
+            result["watchlist"] = scored + unscored
         except Exception:
             pass
 
