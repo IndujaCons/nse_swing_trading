@@ -1241,6 +1241,78 @@
         #etf-core-panels .etf-action-btn.buy  { background: var(--green-light); border-color: var(--green); color: var(--green); }
         #etf-core-panels .etf-action-btn.sell { background: var(--red-light);   border-color: var(--red);   color: var(--red); }
 
+        /* ── User selector bar ─────────────────────────────── */
+        .user-bar {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 7px; padding: 8px 14px; margin-bottom: 14px;
+        }
+        .user-bar select {
+            background: var(--bg-tertiary); color: var(--text-primary);
+            border: 1px solid var(--border-color); border-radius: 5px;
+            padding: 4px 10px; font-size: 12px; font-family: inherit; cursor: pointer;
+        }
+        .user-bar .add-user-btn {
+            padding: 4px 12px; font-size: 11px; font-weight: 700;
+            background: rgba(255,107,53,0.15); color: #ff6b35;
+            border: 1px solid rgba(255,107,53,0.4); border-radius: 5px; cursor: pointer;
+        }
+        .user-capital-pill {
+            font-size: 11px; padding: 3px 9px; border-radius: 12px;
+            background: var(--bg-tertiary); color: var(--text-muted);
+        }
+        /* ── Basket preview tables ─────────────────────────── */
+        .basket-section { margin-bottom: 20px; }
+        .basket-section-title {
+            font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            color: var(--text-muted); margin: 14px 0 6px;
+        }
+        .basket-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .basket-table th {
+            text-align: left; padding: 5px 8px; font-size: 10px; font-weight: 600;
+            color: var(--text-muted); letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .basket-table td { padding: 6px 8px; border-bottom: 1px solid var(--border-color); }
+        .basket-table tr:last-child td { border-bottom: none; }
+        .basket-table tr:hover { background: var(--bg-card); }
+        .basket-cap-bar {
+            display: flex; gap: 20px; flex-wrap: wrap;
+            background: var(--bg-secondary); border: 1px solid var(--border-color);
+            border-radius: 7px; padding: 10px 16px; margin-bottom: 12px; font-size: 12px;
+        }
+        .basket-cap-item { display: flex; flex-direction: column; gap: 2px; }
+        .basket-cap-label { font-size: 10px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; }
+        .basket-cap-value { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        /* ── Add user modal ────────────────────────────────── */
+        #add-user-modal {
+            display: none; position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
+        }
+        #add-user-modal.open { display: flex; }
+        #add-user-modal .modal-box {
+            background: var(--bg-white); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 24px; min-width: 320px; max-width: 400px;
+        }
+        #add-user-modal .modal-title {
+            font-size: 14px; font-weight: 700; color: var(--text-primary);
+            margin-bottom: 18px; letter-spacing: 0.5px;
+        }
+        #add-user-modal label {
+            display: block; font-size: 11px; color: var(--text-muted);
+            font-weight: 600; margin-bottom: 4px; letter-spacing: 0.3px;
+        }
+        #add-user-modal input {
+            width: 100%; box-sizing: border-box; background: var(--bg-tertiary);
+            border: 1px solid var(--border-color); border-radius: 5px;
+            color: var(--text-primary); padding: 7px 10px; font-size: 13px;
+            font-family: inherit; margin-bottom: 12px;
+        }
+        /* ── ETF user position tables ──────────────────────── */
+        .etf-user-section {
+            border-top: 1px solid var(--border-color); margin-top: 18px; padding-top: 16px;
+        }
+
         .etf-chart-section {
             background: var(--bg-white);
             border: 1px solid var(--border-color);
@@ -2148,19 +2220,121 @@
 
                 </div>
 
+                <!-- ETF User Position Tracking -->
+                <div class="etf-user-section">
+                    <div class="user-bar">
+                        <span style="font-size:11px;font-weight:700;color:var(--text-muted);">USER:</span>
+                        <select id="etf-user-select" onchange="etfOnUserChange()" style="min-width:140px;">
+                            <option value="">— Select User —</option>
+                        </select>
+                        <button class="add-user-btn" onclick="openAddUserModal()">+ Add User</button>
+                        <span id="etf-user-capital-pill" class="user-capital-pill" style="display:none;"></span>
+                    </div>
+
+                    <div id="etf-user-content" style="display:none;">
+                        <!-- Add position form -->
+                        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:7px;padding:12px 16px;margin-bottom:14px;">
+                            <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;margin-bottom:10px;">RECORD ETF ENTRY</div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+                                <div><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">TICKER</label>
+                                    <input id="etf-pos-ticker" type="text" placeholder="EWY" style="width:80px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);padding:5px 8px;font-size:12px;font-family:inherit;text-transform:uppercase;"></div>
+                                <div><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">QTY</label>
+                                    <input id="etf-pos-qty" type="number" placeholder="10" style="width:70px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);padding:5px 8px;font-size:12px;font-family:inherit;"></div>
+                                <div><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">ENTRY PRICE</label>
+                                    <input id="etf-pos-price" type="number" step="0.01" placeholder="148.50" style="width:100px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);padding:5px 8px;font-size:12px;font-family:inherit;"></div>
+                                <div><label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px;">DATE</label>
+                                    <input id="etf-pos-date" type="date" style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);padding:5px 8px;font-size:12px;font-family:inherit;"></div>
+                                <button onclick="etfAddPosition()" style="padding:6px 16px;background:var(--green);color:white;border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;">+ Record</button>
+                            </div>
+                        </div>
+
+                        <!-- Open positions -->
+                        <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;margin-bottom:6px;">OPEN POSITIONS</div>
+                        <table class="basket-table" style="margin-bottom:18px;">
+                            <thead><tr>
+                                <th>Ticker</th><th>Qty</th><th>Entry</th><th>Entry Date</th>
+                                <th>Current</th><th>P&amp;L%</th><th>P&amp;L ₹</th><th>Action</th>
+                            </tr></thead>
+                            <tbody id="etf-user-positions-body">
+                                <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">No open positions</td></tr>
+                            </tbody>
+                        </table>
+
+                        <!-- History -->
+                        <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;margin-bottom:6px;">TRADE HISTORY</div>
+                        <table class="basket-table">
+                            <thead><tr>
+                                <th>Ticker</th><th>Qty</th><th>Entry</th><th>Exit</th>
+                                <th>Hold</th><th>P&amp;L%</th><th>P&amp;L ₹</th>
+                            </tr></thead>
+                            <tbody id="etf-user-history-body">
+                                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">No history yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div><!-- end #etf-core-panels -->
 
             <!-- Mom20 Portfolio Builder Tab -->
             <div id="mom20-portfolio-panels" class="hidden" style="padding:16px;">
 
                 <!-- Header row -->
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
                     <span style="font-size:14px;font-weight:700;color:#ff6b35;letter-spacing:0.5px;">MOM20 PORTFOLIO BUILDER</span>
                     <span id="mom20-port-regime-badge2" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">Regime: —</span>
                     <span id="mom20-port-rebal-badge2" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;">Next rebalance: —</span>
                     <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 20</button>
                     <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
                     <button onclick="mom20ToggleHistory()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">📋 History</button>
+                </div>
+
+                <!-- User selector + Basket section -->
+                <div class="user-bar">
+                    <span style="font-size:11px;font-weight:700;color:var(--text-muted);">USER:</span>
+                    <select id="mom20-user-select" onchange="mom20OnUserChange()" style="min-width:140px;">
+                        <option value="">— Select User —</option>
+                    </select>
+                    <button class="add-user-btn" onclick="openAddUserModal()">+ Add User</button>
+                    <span id="mom20-user-capital-pill" class="user-capital-pill" style="display:none;"></span>
+                    <button id="mom20-basket-refresh-btn" onclick="mom20LoadBasket()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">↺ Refresh Basket</button>
+                </div>
+
+                <!-- Basket preview section -->
+                <div id="mom20-basket-section" style="display:none;margin-bottom:20px;">
+                    <!-- Capital bar -->
+                    <div class="basket-cap-bar" id="mom20-basket-capbar"></div>
+
+                    <!-- Exits -->
+                    <div class="basket-section-title">SELLS — EXIT POSITIONS</div>
+                    <table class="basket-table" style="margin-bottom:14px;">
+                        <thead><tr><th>#</th><th>Ticker</th><th>Qty (held)</th><th>Current Price</th><th>Reason</th></tr></thead>
+                        <tbody id="mom20-basket-exits-body">
+                            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Entries -->
+                    <div class="basket-section-title">BUYS — NEW ENTRIES</div>
+                    <table class="basket-table" style="margin-bottom:14px;">
+                        <thead><tr><th>#</th><th>Ticker</th><th>Rank</th><th>Price</th><th>Qty</th><th>Capital</th><th>Score</th></tr></thead>
+                        <tbody id="mom20-basket-entries-body">
+                            <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Holds summary -->
+                    <div id="mom20-basket-holds" style="font-size:11px;color:var(--text-muted);margin-bottom:14px;"></div>
+
+                    <!-- Action buttons -->
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                        <button onclick="mom20DownloadBasket()" style="padding:8px 20px;font-size:13px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⬇ Download Basket CSV</button>
+                        <label style="padding:8px 16px;font-size:12px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">
+                            ⬆ Upload Trade Book
+                            <input type="file" accept=".csv" onchange="mom20UploadTradeBook(event)" style="display:none;">
+                        </label>
+                        <span id="mom20-upload-status" style="font-size:11px;color:var(--text-muted);"></span>
+                    </div>
                 </div>
 
                 <!-- Performance card (shown when portfolio has tracking data) -->
@@ -7513,7 +7687,337 @@
         </table>`;
     }
 
+
+// ═══════════════════════════════════════════════════════
+// USER REGISTRY — shared state
+// ═══════════════════════════════════════════════════════
+let _allUsers = [];
+let _mom20SelectedUser = null;
+let _etfSelectedUser   = null;
+let _mom20BasketData   = null;  // last fetched basket preview
+
+async function loadUsers() {
+    try {
+        const r = await fetch('/api/users');
+        const d = await r.json();
+        if (d.success) _allUsers = d.users || [];
+    } catch(e) { _allUsers = []; }
+    _populateUserDropdown('mom20-user-select', _mom20SelectedUser?.id);
+    _populateUserDropdown('etf-user-select',   _etfSelectedUser?.id);
+}
+
+function _populateUserDropdown(selectId, selectedId) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    const prev = selectedId || sel.value;
+    sel.innerHTML = '<option value="">— Select User —</option>';
+    _allUsers.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.id; opt.textContent = u.name;
+        if (u.id === prev) opt.selected = true;
+        sel.appendChild(opt);
+    });
+}
+
+function openAddUserModal() {
+    document.getElementById('add-user-modal').classList.add('open');
+    document.getElementById('aum-name').value  = '';
+    document.getElementById('aum-mom20').value = '';
+    document.getElementById('aum-etf').value   = '';
+    setTimeout(() => document.getElementById('aum-name').focus(), 100);
+}
+function closeAddUserModal() {
+    document.getElementById('add-user-modal').classList.remove('open');
+}
+async function submitAddUser() {
+    const name  = document.getElementById('aum-name').value.trim();
+    const mom20 = parseInt(document.getElementById('aum-mom20').value) || 0;
+    const etf   = parseInt(document.getElementById('aum-etf').value)   || 0;
+    if (!name) { alert('Name is required'); return; }
+    const btn = document.getElementById('aum-submit-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+        const r = await fetch('/api/users', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({name, mom20_capital: mom20, etf_capital: etf})
+        });
+        const d = await r.json();
+        if (!d.success) { alert(d.error || 'Failed'); return; }
+        await loadUsers();
+        closeAddUserModal();
+        // Auto-select the new user in whichever tab triggered the modal
+        _selectUserInDropdown('mom20-user-select', d.user.id);
+        _selectUserInDropdown('etf-user-select',   d.user.id);
+        mom20OnUserChange(); etfOnUserChange();
+    } finally { btn.disabled = false; btn.textContent = 'Add User'; }
+}
+function _selectUserInDropdown(selectId, userId) {
+    const sel = document.getElementById(selectId);
+    if (sel) sel.value = userId;
+}
+
+// ── Mom20 user change ──────────────────────────────────
+function mom20OnUserChange() {
+    const uid = document.getElementById('mom20-user-select').value;
+    _mom20SelectedUser = _allUsers.find(u => u.id === uid) || null;
+    const capPill = document.getElementById('mom20-user-capital-pill');
+    const refreshBtn = document.getElementById('mom20-basket-refresh-btn');
+    const section = document.getElementById('mom20-basket-section');
+    if (!_mom20SelectedUser) {
+        capPill.style.display = 'none';
+        refreshBtn.style.display = 'none';
+        section.style.display = 'none';
+        return;
+    }
+    const cap = _mom20SelectedUser.strategies?.mom20?.capital || 0;
+    capPill.textContent = `Mom20 Capital: ₹${(cap/100000).toFixed(1)}L`;
+    capPill.style.display = 'inline';
+    refreshBtn.style.display = 'inline';
+    mom20LoadBasket();
+}
+
+async function mom20LoadBasket() {
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) return;
+    const section = document.getElementById('mom20-basket-section');
+    section.style.display = 'block';
+    document.getElementById('mom20-basket-capbar').innerHTML = '<span style="color:var(--text-muted);font-size:11px;">Loading…</span>';
+    try {
+        const r = await fetch(`/api/users/${uid}/mom20-basket`);
+        const d = await r.json();
+        if (!d.success) { alert(d.error); return; }
+        _mom20BasketData = d;
+        _renderMom20Basket(d);
+    } catch(e) { alert('Failed to load basket: ' + e); }
+}
+
+function _renderMom20Basket(d) {
+    const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    // Capital bar
+    document.getElementById('mom20-basket-capbar').innerHTML = `
+        <div class="basket-cap-item"><div class="basket-cap-label">TOTAL CAPITAL</div><div class="basket-cap-value">${fmt(d.total_capital)}</div></div>
+        <div class="basket-cap-item"><div class="basket-cap-label">PER SLOT (÷20)</div><div class="basket-cap-value">${fmt(d.capital_per_slot)}</div></div>
+        <div class="basket-cap-item"><div class="basket-cap-label">MIN CAPITAL</div><div class="basket-cap-value" style="color:${d.total_capital < d.min_capital ? 'var(--red)' : 'var(--text-primary)'}">${fmt(d.min_capital)}</div></div>
+        <div class="basket-cap-item"><div class="basket-cap-label">DEPLOYED</div><div class="basket-cap-value">${fmt(d.total_deployed)}</div></div>
+        <div class="basket-cap-item"><div class="basket-cap-label">EXITS / ENTRIES / HOLDS</div><div class="basket-cap-value">${d.n_exits} / ${d.n_entries} / ${d.n_holds}</div></div>`;
+
+    // Exits
+    const exitsTbody = document.getElementById('mom20-basket-exits-body');
+    if (!d.exits.length) {
+        exitsTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>';
+    } else {
+        exitsTbody.innerHTML = d.exits.map((e,i) => `
+            <tr><td>${i+1}</td><td style="font-weight:700;color:var(--red)">${e.ticker}</td>
+            <td>${e.qty}</td><td>₹${(e.current_price||0).toLocaleString('en-IN')}</td>
+            <td style="font-size:10px;color:var(--text-muted)">${e.reason}</td></tr>`).join('');
+    }
+
+    // Entries
+    const entriesTbody = document.getElementById('mom20-basket-entries-body');
+    if (!d.entries.length) {
+        entriesTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
+    } else {
+        entriesTbody.innerHTML = d.entries.map((e,i) => `
+            <tr><td>${i+1}</td><td style="font-weight:700;color:var(--green)">${e.ticker}</td>
+            <td>#${e.rank}</td><td>₹${(e.price||0).toLocaleString('en-IN')}</td>
+            <td style="font-weight:700">${e.qty}</td>
+            <td>₹${(e.capital_allocated||0).toLocaleString('en-IN')}</td>
+            <td style="color:var(--text-muted)">${(e.score||0).toFixed(2)}</td></tr>`).join('');
+    }
+
+    // Holds
+    const holds = d.holds || [];
+    document.getElementById('mom20-basket-holds').innerHTML =
+        holds.length ? `<b>HOLDS (${holds.length}):</b> ${holds.map(h => h.ticker + ' #' + h.rank).join(' · ')}` : '';
+}
+
+async function mom20DownloadBasket() {
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) { alert('Select a user first'); return; }
+    window.location.href = `/api/users/${uid}/mom20-basket/download`;
+}
+
+async function mom20UploadTradeBook(event) {
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) { alert('Select a user first'); return; }
+    const file = event.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('mom20-upload-status');
+    status.textContent = 'Uploading…';
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const r = await fetch(`/api/users/${uid}/mom20-tradebook`, {method:'POST', body:fd});
+        const d = await r.json();
+        if (d.success) {
+            status.textContent = `✓ Synced ${d.trades_synced} trades — portfolio: ${d.portfolio_size} stocks`;
+            status.style.color = 'var(--green)';
+            mom20LoadBasket(); // refresh
+        } else {
+            status.textContent = '✗ ' + (d.error || 'Upload failed');
+            status.style.color = 'var(--red)';
+        }
+    } catch(e) {
+        status.textContent = '✗ Error: ' + e;
+        status.style.color = 'var(--red)';
+    }
+    event.target.value = ''; // reset file input
+}
+
+// ── ETF user change ────────────────────────────────────
+function etfOnUserChange() {
+    const uid = document.getElementById('etf-user-select').value;
+    _etfSelectedUser = _allUsers.find(u => u.id === uid) || null;
+    const capPill = document.getElementById('etf-user-capital-pill');
+    const content  = document.getElementById('etf-user-content');
+    if (!_etfSelectedUser) {
+        capPill.style.display = 'none';
+        content.style.display = 'none';
+        return;
+    }
+    const cap = _etfSelectedUser.strategies?.etf?.capital || 0;
+    capPill.textContent = `ETF Capital: ₹${(cap/100000).toFixed(1)}L`;
+    capPill.style.display = 'inline';
+    content.style.display = 'block';
+    // Set today as default date
+    const dateInput = document.getElementById('etf-pos-date');
+    if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+    etfLoadPositions();
+}
+
+async function etfLoadPositions() {
+    const uid = _etfSelectedUser?.id;
+    if (!uid) return;
+    try {
+        const r = await fetch(`/api/users/${uid}/etf-positions`);
+        const d = await r.json();
+        if (!d.success) return;
+        _renderEtfPositions(d.positions || [], d.history || []);
+    } catch(e) {}
+}
+
+function _renderEtfPositions(positions, history) {
+    // Get current prices from scan if available
+    const priceMap = {};
+    document.querySelectorAll('#etf-watchlist-body tr').forEach(tr => {
+        const sym = tr.dataset.symbol;
+        const priceEl = tr.querySelector('.etf-price');
+        if (sym && priceEl) priceMap[sym] = parseFloat(priceEl.textContent.replace(/,/g,'')) || 0;
+    });
+
+    const posTbody = document.getElementById('etf-user-positions-body');
+    if (!positions.length) {
+        posTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:14px;">No open positions</td></tr>';
+    } else {
+        posTbody.innerHTML = positions.map(p => {
+            const curr = priceMap[p.ticker] || 0;
+            const pnlPct = curr > 0 ? ((curr - p.entry_price) / p.entry_price * 100).toFixed(1) : '—';
+            const pnlAbs = curr > 0 ? Math.round((curr - p.entry_price) * p.qty) : '—';
+            const pnlColor = curr > 0 ? (curr >= p.entry_price ? 'var(--green)' : 'var(--red)') : 'var(--text-muted)';
+            return `<tr>
+                <td style="font-weight:700">${p.ticker}</td>
+                <td>${p.qty}</td>
+                <td>₹${p.entry_price.toLocaleString('en-IN')}</td>
+                <td style="font-size:11px;color:var(--text-muted)">${p.entry_date}</td>
+                <td>${curr > 0 ? '₹'+curr.toLocaleString('en-IN') : '—'}</td>
+                <td style="font-weight:700;color:${pnlColor}">${curr > 0 ? pnlPct+'%' : '—'}</td>
+                <td style="color:${pnlColor}">${curr > 0 ? '₹'+pnlAbs.toLocaleString('en-IN') : '—'}</td>
+                <td><button onclick="etfExitPosition('${p.id}')" style="padding:2px 8px;font-size:10px;background:var(--red-light);color:var(--red);border:1px solid var(--red);border-radius:4px;cursor:pointer;">Exit</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    const histTbody = document.getElementById('etf-user-history-body');
+    if (!history.length) {
+        histTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px;">No history yet</td></tr>';
+    } else {
+        histTbody.innerHTML = [...history].reverse().map(h => {
+            const pnlColor = h.pnl_pct >= 0 ? 'var(--green)' : 'var(--red)';
+            return `<tr>
+                <td style="font-weight:700">${h.ticker}</td>
+                <td>${h.qty}</td>
+                <td>₹${h.entry_price.toLocaleString('en-IN')}</td>
+                <td>₹${h.exit_price.toLocaleString('en-IN')}</td>
+                <td style="color:var(--text-muted)">${h.hold_days ?? '—'}d</td>
+                <td style="font-weight:700;color:${pnlColor}">${h.pnl_pct >= 0 ? '+' : ''}${h.pnl_pct}%</td>
+                <td style="color:${pnlColor}">₹${Math.round(h.pnl_abs).toLocaleString('en-IN')}</td>
+            </tr>`;
+        }).join('');
+    }
+}
+
+async function etfAddPosition() {
+    const uid = _etfSelectedUser?.id;
+    if (!uid) { alert('Select a user first'); return; }
+    const ticker = document.getElementById('etf-pos-ticker').value.trim().toUpperCase();
+    const qty    = parseInt(document.getElementById('etf-pos-qty').value) || 0;
+    const price  = parseFloat(document.getElementById('etf-pos-price').value) || 0;
+    const date   = document.getElementById('etf-pos-date').value;
+    if (!ticker || qty <= 0 || price <= 0) { alert('Ticker, qty, and entry price are required'); return; }
+
+    // Try to get ETF name from universe
+    const etfMeta = (typeof ETF_UNIVERSE !== 'undefined') ? ETF_UNIVERSE.find(e => e.symbol === ticker) : null;
+    const name = etfMeta?.name || ticker;
+
+    // Try to get current z-score rank from scan
+    const scanRow = document.querySelector(`#etf-watchlist-body [data-symbol="${ticker}"]`);
+    const zRank  = scanRow ? parseInt(scanRow.dataset.rank) || null : null;
+
+    const r = await fetch(`/api/users/${uid}/etf-positions`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ticker, name, qty, entry_price: price, entry_date: date, z_score_rank: zRank})
+    });
+    const d = await r.json();
+    if (d.success) {
+        document.getElementById('etf-pos-ticker').value = '';
+        document.getElementById('etf-pos-qty').value    = '';
+        document.getElementById('etf-pos-price').value  = '';
+        etfLoadPositions();
+    } else { alert(d.error || 'Failed'); }
+}
+
+async function etfExitPosition(posId) {
+    const uid = _etfSelectedUser?.id;
+    if (!uid) return;
+    const exitPrice = parseFloat(prompt('Exit price:'));
+    if (!exitPrice || exitPrice <= 0) return;
+    const r = await fetch(`/api/users/${uid}/etf-positions/${posId}/exit`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({exit_price: exitPrice})
+    });
+    const d = await r.json();
+    if (d.success) etfLoadPositions();
+    else alert(d.error || 'Exit failed');
+}
+
+// Load users on page load
+loadUsers();
+
 </script>
+
+<!-- Add User Modal -->
+<div id="add-user-modal" onclick="if(event.target===this)closeAddUserModal()">
+    <div class="modal-box">
+        <div class="modal-title">➕ ADD NEW USER</div>
+        <label>NAME *</label>
+        <input id="aum-name" type="text" placeholder="e.g. Rakesh Raman">
+        <label>MOM20 CAPITAL (₹)</label>
+        <input id="aum-mom20" type="number" step="100000" placeholder="e.g. 1000000">
+        <label>ETF CAPITAL (₹)</label>
+        <input id="aum-etf" type="number" step="100000" placeholder="e.g. 200000">
+        <div style="display:flex;gap:10px;margin-top:6px;">
+            <button id="aum-submit-btn" onclick="submitAddUser()"
+                style="flex:1;padding:9px;font-size:13px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">
+                Add User
+            </button>
+            <button onclick="closeAddUserModal()"
+                style="padding:9px 18px;font-size:13px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
