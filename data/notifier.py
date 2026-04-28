@@ -182,7 +182,7 @@ def format_etf_zscore_alert(ranked: list) -> str | None:
     ist = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%d %b %H:%M")
     ENTRY_THRESH, HOLD_THRESH = 5, 10
 
-    UCITS_SUBS = {"SOXX": "SEMI.L", "EWY": "CSKR.L", "EMXC": "EMXC.L"}
+    UCITS_SUBS = {"SOXX": "SEMI.L", "EWY": "CSKR.L", "EMXC": "EMXC.L", "XLK": "XLKQ.L"}
     ucits_syms = set(UCITS_SUBS.values())
 
     lines = [f"<b>🌐 ETF Z-Score Top 10</b> | {ist}", "<code>"]
