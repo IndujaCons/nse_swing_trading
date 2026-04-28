@@ -599,6 +599,32 @@ def run(refresh=False, use_regime=False, start_override=None):
         print(f"  Rebalance NAV exported → etf_zscore_rebal.csv ({len(rebal_nav)} rows)")
 
 
+def _fetch_intraday_spot(yf_syms: list) -> dict:
+    """Batch-fetch latest intraday price for a list of yfinance symbols (5-min bars, today only).
+    Returns {yf_sym: price}. Falls back gracefully — missing symbols just won't be updated."""
+    if not yf_syms:
+        return {}
+    try:
+        df = yf.download(yf_syms, period="1d", interval="5m",
+                         progress=False, auto_adjust=True, timeout=20)
+        prices = {}
+        if len(yf_syms) == 1:
+            s = df["Close"].squeeze().dropna()
+            if not s.empty:
+                prices[yf_syms[0]] = float(s.iloc[-1])
+        else:
+            for sym in yf_syms:
+                try:
+                    s = df["Close"][sym].dropna()
+                    if not s.empty:
+                        prices[sym] = float(s.iloc[-1])
+                except Exception:
+                    pass
+        return prices
+    except Exception:
+        return {}
+
+
 def _fetch_live_prices() -> tuple:
     """Fast fetch — only last 400 days, enough for 252-day lookback + buffer."""
     start = (pd.Timestamp.today() - pd.Timedelta(days=400)).strftime('%Y-%m-%d')
@@ -698,6 +724,19 @@ def score_live() -> list[dict]:
     results.sort(key=lambda x: -x["score"])
     for i, r in enumerate(results):
         r["rank"] = i + 1
+
+    # Refresh display prices with live intraday data for non-Indian ETFs
+    yf_map = {sym: yf_sym for sym, _, yf_sym in UNIVERSE}
+    global_etfs = [(r["symbol"], yf_map.get(r["symbol"], r["symbol"]))
+                   for r in results
+                   if not yf_map.get(r["symbol"], "").endswith(".NS")]
+    if global_etfs:
+        spot = _fetch_intraday_spot([yf_sym for _, yf_sym in global_etfs])
+        sym_to_yf = dict(global_etfs)
+        for r in results:
+            yf_sym = sym_to_yf.get(r["symbol"])
+            if yf_sym and yf_sym in spot and spot[yf_sym] > 0:
+                r["price"] = round(spot[yf_sym], 2)
 
     return results
 
