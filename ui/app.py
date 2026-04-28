@@ -2183,17 +2183,21 @@ def _etf_signal_scheduler():
 
         # ── ETF Z-Score scan ─────────────────────────────────────────────────
         try:
+            from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutTimeout
             from data.etf_core_zscore_backtest import score_live
             from data.notifier import format_etf_zscore_alert
-            etf_ranked = score_live()
+            with ThreadPoolExecutor(max_workers=1) as _ex:
+                _fut = _ex.submit(score_live)
+                try:
+                    etf_ranked = _fut.result(timeout=180)   # 3-min hard cap
+                except _FutTimeout:
+                    raise RuntimeError("score_live() timed out after 3 minutes")
             etf_msg = format_etf_zscore_alert(etf_ranked)
             if etf_msg:
-                # Dedup: fire when top-5 symbols OR scores change (rounded to 1dp)
                 print(f"[ETF scheduler] ETF Z-Score — alerting")
                 send_message(etf_msg)
             else:
                 print(f"[ETF scheduler] ETF Z-Score no signals")
-                last_etf_key = None
         except Exception as e:
             err = f"⚠️ ETF Z-Score scan error: {e}"
             print(f"[ETF scheduler] {err}")
@@ -2208,8 +2212,12 @@ def _etf_signal_scheduler():
         else:
             try:
                 from data.notifier import format_mom20_alert, format_mom20_overflow_alert
-
-                mom20_result = live_signals_scanner.scan_entry_signals(force_refresh=True)
+                with ThreadPoolExecutor(max_workers=1) as _ex:
+                    _fut = _ex.submit(live_signals_scanner.scan_entry_signals, True)
+                    try:
+                        mom20_result = _fut.result(timeout=180)
+                    except _FutTimeout:
+                        raise RuntimeError("scan_entry_signals() timed out after 3 minutes")
 
                 # Mom20 top-40 — dedup by ticker+score (rounded 1dp)
                 mom20_msg = format_mom20_alert(mom20_result)

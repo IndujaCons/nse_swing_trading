@@ -596,11 +596,35 @@ def run(refresh=False, use_regime=False, start_override=None):
         print(f"  Rebalance NAV exported → etf_zscore_rebal.csv ({len(rebal_nav)} rows)")
 
 
+def _fetch_live_prices() -> tuple:
+    """Fast fetch — only last 400 days, enough for 252-day lookback + buffer."""
+    start = (pd.Timestamp.today() - pd.Timedelta(days=400)).strftime('%Y-%m-%d')
+    end   = date.today().isoformat()
+    bench_df = yf.download(BENCH_SYM, start=start, end=end,
+                           progress=False, auto_adjust=True, timeout=30)
+    bench = bench_df["Close"].squeeze().dropna()
+    bench.index = pd.to_datetime(bench.index).tz_localize(None)
+    closes = {}
+    for sym, name, yf_sym in UNIVERSE:
+        try:
+            df = yf.download(yf_sym, start=start, end=end,
+                             progress=False, auto_adjust=True, timeout=30)
+            if df.empty:
+                closes[sym] = pd.Series(dtype=float)
+            else:
+                s = df["Close"].squeeze().dropna()
+                s.index = pd.to_datetime(s.index).tz_localize(None)
+                closes[sym] = s
+        except Exception:
+            closes[sym] = pd.Series(dtype=float)
+    return closes, bench
+
+
 def score_live() -> list[dict]:
     """Return current ETF Z-Score ranking for live signals / Telegram alerts.
-    Refreshes cache if older than 1 hour so prices stay current."""
+    Uses a fast 400-day fetch — always fresh, never stale."""
     try:
-        closes, bench = fetch_all(refresh=True)
+        closes, bench = _fetch_live_prices()
     except Exception:
         return []
 
