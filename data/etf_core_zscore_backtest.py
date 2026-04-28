@@ -725,14 +725,12 @@ def score_live() -> list[dict]:
     for i, r in enumerate(results):
         r["rank"] = i + 1
 
-    # Refresh display prices with live intraday data for non-Indian ETFs
+    # Refresh display prices with live intraday data for all ETFs
     yf_map = {sym: yf_sym for sym, _, yf_sym in UNIVERSE}
-    global_etfs = [(r["symbol"], yf_map.get(r["symbol"], r["symbol"]))
-                   for r in results
-                   if not yf_map.get(r["symbol"], "").endswith(".NS")]
-    if global_etfs:
-        spot = _fetch_intraday_spot([yf_sym for _, yf_sym in global_etfs])
-        sym_to_yf = dict(global_etfs)
+    all_etfs = [(r["symbol"], yf_map.get(r["symbol"], r["symbol"])) for r in results]
+    if all_etfs:
+        spot = _fetch_intraday_spot([yf_sym for _, yf_sym in all_etfs])
+        sym_to_yf = dict(all_etfs)
         for r in results:
             yf_sym = sym_to_yf.get(r["symbol"])
             if yf_sym and yf_sym in spot and spot[yf_sym] > 0:
