@@ -598,9 +598,14 @@ def run(refresh=False, use_regime=False, start_override=None):
 
 def score_live() -> list[dict]:
     """Return current ETF Z-Score ranking for live signals / Telegram alerts.
-    Uses cached price data. Returns list of dicts sorted by rank."""
+    Refreshes cache if older than 1 hour so prices stay current."""
+    import time as _time
+    stale = True
+    if os.path.exists(CACHE_FILE):
+        age_hours = (_time.time() - os.path.getmtime(CACHE_FILE)) / 3600
+        stale = age_hours > 1
     try:
-        closes, bench = fetch_all(refresh=False)
+        closes, bench = fetch_all(refresh=stale)
     except Exception:
         return []
 
