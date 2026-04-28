@@ -79,6 +79,7 @@ UNIVERSE = [
     ("XME",         "Metals & Mining",      "XME"),
     ("VGK",         "Europe (broad)",       "VGK"),
     ("SOXX",        "Semiconductors",       "SOXX"),
+    ("SEMI.L",      "Semiconductors (UCITS)","SEMI.L"),
     ("BOTZ",        "Robotics / AI",        "BOTZ"),
     ("EWY",         "South Korea",          "EWY"),
     ("EMXC",        "EM ex-China",          "EMXC"),
