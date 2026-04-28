@@ -186,8 +186,8 @@ def format_etf_zscore_alert(ranked: list) -> str | None:
     ucits_syms = set(UCITS_SUBS.values())
 
     lines = [f"<b>🌐 ETF Z-Score Top 10</b> | {ist}", "<code>"]
-    lines.append(f"{'#':<3} {'ETF (UCITS)':<16} {'Close':>7} {'12m':>6} {'3m':>6} {'Score':>5}")
-    lines.append("─" * 48)
+    lines.append(f"{'#':<4} {'ETF(UCITS)':<13} {'Cls':>6} {'12m':>6} {'3m':>5} {'Sc':>4}")
+    lines.append("─" * 42)
     shown = 0
     for s in ranked:
         if s["symbol"] in ucits_syms:
@@ -197,11 +197,11 @@ def format_etf_zscore_alert(ranked: list) -> str | None:
         shown += 1
         tag = "★" if s["rank"] <= ENTRY_THRESH else ("◀" if s["rank"] <= HOLD_THRESH else " ")
         sub = UCITS_SUBS.get(s["symbol"])
-        etf_col = f"{s['symbol']} ({sub})" if sub else s["symbol"]
+        etf_col = f"{s['symbol']}({sub})" if sub else s["symbol"]
         lines.append(
-            f"{s['rank']:<3} {etf_col:<16} {s['price']:>7,.0f}"
-            f" {s['ret_12m']:>+5.0f}% {s['ret_3m']:>+5.0f}%"
-            f" {s['score']:>5.2f} {tag}"
+            f"{tag}{s['rank']:<3} {etf_col:<13} {s['price']:>6,.0f}"
+            f" {s['ret_12m']:>+5.0f}% {s['ret_3m']:>+4.0f}%"
+            f" {s['score']:>4.2f}"
         )
     lines.append("</code>")
     lines.append(f"★ entry (rank≤{ENTRY_THRESH})  ◀ hold (rank≤{HOLD_THRESH})")
