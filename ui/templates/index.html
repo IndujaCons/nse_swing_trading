@@ -2328,7 +2328,8 @@
                             <div class="basket-stat">
                                 <div class="basket-stat-label">Capital</div>
                                 <input id="mom20-capital-input" class="basket-capital-input" type="text"
-                                    placeholder="₹20,00,000"
+                                    placeholder="e.g. 20,00,000 or 20L"
+                                    oninput="this.dataset.userEdited='true'"
                                     onkeydown="if(event.key==='Enter')mom20RecalcCapital()"
                                     onblur="mom20RecalcCapital()">
                             </div>
@@ -7832,10 +7833,17 @@ function mom20OnUserChange() {
     }
     // Reset capital input so it picks up from API on load
     const capInput = document.getElementById('mom20-capital-input');
-    if (capInput) { capInput.value = ''; capInput.dataset.fromApi = 'true'; }
+    if (capInput) { capInput.value = ''; capInput.dataset.userEdited = 'false'; }
     refreshBtn.style.display = 'inline';
     if (delBtn) delBtn.style.display = 'inline';
     mom20LoadBasket();
+}
+
+function _mom20ParseCapitalInput() {
+    const raw = (document.getElementById('mom20-capital-input').value || '').replace(/[₹,\s]/g,'');
+    // support shorthand: 10L → 1000000, 70L → 7000000
+    if (/^\d+(\.\d+)?[Ll]$/.test(raw)) return Math.round(parseFloat(raw) * 100000);
+    return parseInt(raw) || 0;
 }
 
 async function mom20LoadBasket() {
@@ -7843,11 +7851,26 @@ async function mom20LoadBasket() {
     if (!uid) return;
     const section = document.getElementById('mom20-basket-section');
     section.style.display = 'block';
-    document.getElementById('mom20-basket-capbar').innerHTML = '<span style="color:var(--text-muted);font-size:11px;">Loading…</span>';
+    document.getElementById('basket-per-slot').textContent  = '…';
+    document.getElementById('basket-min-cap').textContent   = '…';
+    document.getElementById('basket-to-deploy').textContent = '…';
     try {
         const r = await fetch(`/api/portfolio-users/${uid}/mom20-basket`);
         const d = await r.json();
         if (!d.success) { alert(d.error); return; }
+        // If user already typed a capital override, use it instead of API value
+        const override = _mom20ParseCapitalInput();
+        if (override >= 1000 && override !== d.total_capital) {
+            d.total_capital    = override;
+            d.capital_per_slot = override / 20;
+            d.entries = d.entries.map(e => {
+                const qty = e.price > 0 ? Math.floor(d.capital_per_slot / e.price) : 0;
+                return {...e, qty, capital_allocated: Math.round(qty * e.price)};
+            });
+            const maxP = Math.max(...d.entries.map(e => e.price || 0), 0);
+            d.min_capital    = Math.round(20 * maxP);
+            d.total_to_deploy = d.entries.reduce((s,e) => s + e.capital_allocated, 0);
+        }
         _mom20BasketData = d;
         _renderMom20Basket(d);
     } catch(e) { alert('Failed to load basket: ' + e); }
@@ -7857,11 +7880,11 @@ function _renderMom20Basket(d) {
     const fmt  = n => '₹' + Math.round(n).toLocaleString('en-IN');
     const fmtP = n => '₹' + (n||0).toLocaleString('en-IN', {minimumFractionDigits:0, maximumFractionDigits:2});
 
-    // Capital input — prefill from user config if empty
+    // Capital input — always show formatted; only reset from API if user hasn't overridden
     const capInput = document.getElementById('mom20-capital-input');
-    if (!capInput.value || capInput.dataset.fromApi === 'true') {
+    const userTyped = capInput.dataset.userEdited === 'true';
+    if (!userTyped) {
         capInput.value = Math.round(d.total_capital).toLocaleString('en-IN');
-        capInput.dataset.fromApi = 'true';
     }
 
     // Stats
@@ -7907,12 +7930,17 @@ function _renderMom20Basket(d) {
 }
 
 function mom20RecalcCapital() {
-    if (!_mom20BasketData) return;
-    const raw = document.getElementById('mom20-capital-input').value.replace(/[₹,\s]/g,'');
-    const newCap = parseInt(raw);
+    const newCap = _mom20ParseCapitalInput();
     if (!newCap || newCap < 1000) return;
-    document.getElementById('mom20-capital-input').dataset.fromApi = 'false';
+    document.getElementById('mom20-capital-input').dataset.userEdited = 'true';
+    // Format the input nicely
+    document.getElementById('mom20-capital-input').value = newCap.toLocaleString('en-IN');
 
+    if (!_mom20BasketData) {
+        // Basket not loaded yet — trigger a fresh load (will use the override capital)
+        mom20LoadBasket();
+        return;
+    }
     const N = 20;
     const perSlot = newCap / N;
     const entries = _mom20BasketData.entries.map(e => {
