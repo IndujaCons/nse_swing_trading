@@ -607,8 +607,11 @@ def _fetch_live_prices() -> tuple:
                            progress=False, auto_adjust=True, timeout=30)
     bench = bench_df["Close"].squeeze().dropna()
     bench.index = pd.to_datetime(bench.index).tz_localize(None)
+    _UCITS_SKIP = {"SEMI.L", "CSKR.L", "EMXC.L"}
     closes = {}
     for sym, name, yf_sym in UNIVERSE:
+        if sym in _UCITS_SKIP:
+            continue
         try:
             df = yf.download(yf_sym, start=start, end=end,
                              progress=False, auto_adjust=True, timeout=30)
@@ -632,7 +635,10 @@ def score_live() -> list[dict]:
         return []
 
     today = pd.Timestamp.today().normalize()
-    all_syms = [sym for sym, _, _ in UNIVERSE if sym in closes and len(closes[sym]) >= LONG_PD + 10]
+    UCITS_ONLY = {"SEMI.L", "CSKR.L", "EMXC.L"}
+    all_syms = [sym for sym, _, _ in UNIVERSE
+                if sym in closes and len(closes[sym]) >= LONG_PD + 10
+                and sym not in UCITS_ONLY]
 
     score_data = {}
     bench_ret = bench.pct_change()
