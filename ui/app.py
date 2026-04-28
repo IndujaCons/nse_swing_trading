@@ -2201,9 +2201,8 @@ def _etf_signal_scheduler():
             except Exception:
                 pass
 
-        # ── Mom20 + Overflow scan (Indian trading hours only) ───────────────────
-        startup_scan_done_mom20 = True
-        if not _in_indian_window(now_ist):
+        # ── Mom20 + Overflow scan (Indian trading hours only, or startup) ─────────
+        if not _in_indian_window(now_ist) and startup_scan_done_mom20:
             print(f"[ETF scheduler] Mom20 — skipped (outside Indian hours 09:00–16:00 IST)")
         else:
             try:
@@ -2253,6 +2252,8 @@ def _etf_signal_scheduler():
                     send_message(err)
                 except Exception:
                     pass
+            finally:
+                startup_scan_done_mom20 = True
 
         # Sleep until next :15-past-the-hour scan (or next window open)
         now_ist = datetime.now(IST)
