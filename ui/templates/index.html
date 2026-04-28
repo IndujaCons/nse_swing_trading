@@ -7074,7 +7074,7 @@
     function etfRenderAll(data) {
         etfRenderEntered(data.slots || []);
         etfRenderExitSignals(data.exit_signals || []);
-        etfRenderWatchlist(data.watchlist || []);
+        etfRenderWatchlist(data.watchlist || [], data.ucits_prices || {});
         loadEtfHistory();
     }
 
@@ -7164,7 +7164,7 @@
     }
 
     // ── Watchlist Table ────────────────────────────────────────────────────────
-    function etfRenderWatchlist(items) {
+    function etfRenderWatchlist(items, ucitsPrices) {
         const body = document.getElementById('etf-watchlist-body');
         if (!items || items.length === 0) {
             body.innerHTML = '<div class="empty-state">No data — press Scan</div>';
@@ -7230,9 +7230,16 @@
 
             const _etfMeta = ETF_UNIVERSE.find(e => e.symbol === item.symbol);
             const _chartTicker = _etfMeta ? _etfMeta.yf : (item.symbol + '.NS');
-            const _ucitsLine = _etfMeta && _etfMeta.ucits
-                ? `<div style="font-size:9px;color:var(--text-muted);margin-top:2px;cursor:pointer;" onclick="event.stopPropagation();loadEtfChart('${_etfMeta.ucits.yf}')">↳ UCITS: <span style="color:#7a9cc0;">${_etfMeta.ucits.symbol}</span> · ${_etfMeta.ucits.name}</div>`
-                : '';
+            let _ucitsLine = '';
+            if (_etfMeta && _etfMeta.ucits) {
+                const _uSym = _etfMeta.ucits.symbol;
+                const _uData = ucitsPrices && ucitsPrices[item.symbol];
+                const _uPricePart = _uData && _uData.price != null ? ` · ₹${fmtPrice(_uData.price)}` : '';
+                const _u3mRaw = _uData && _uData.ret_3m != null ? _uData.ret_3m : null;
+                const _u3mColor = _u3mRaw != null ? (_u3mRaw >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--text-muted)';
+                const _u3mPart = _u3mRaw != null ? ` · <span style="color:${_u3mColor}">${_u3mRaw > 0 ? '+' : ''}${_u3mRaw.toFixed(1)}%</span>` : '';
+                _ucitsLine = `<div style="font-size:9px;color:var(--text-muted);margin-top:2px;cursor:pointer;" onclick="event.stopPropagation();loadEtfChart('${_etfMeta.ucits.yf}')">↳ <span style="color:#7a9cc0;">${_uSym}</span>${_uPricePart}${_u3mPart}</div>`;
+            }
 
             return `
             <tr onclick="loadEtfChart('${_chartTicker}')" data-sym="${item.symbol}">
@@ -7690,12 +7697,14 @@
         {symbol:"LIQUIDBEES", name:"Nippon Liquid BeES (Cash proxy)", category:"Cash",            yf:"LIQUIDBEES.NS"},
         // ── Global — US & International (with UCITS alternatives where available) ──
         {symbol:"QQQ",   name:"Invesco Nasdaq 100 ETF",        category:"US Tech",         yf:"QQQ"},
-        {symbol:"SOXX",  name:"iShares Semiconductor ETF",     category:"Semiconductors",  yf:"SOXX"},
+        {symbol:"SOXX",  name:"iShares Semiconductor ETF",     category:"Semiconductors",  yf:"SOXX",
+            ucits:{symbol:"SEMI.L", yf:"SEMI.L", name:"iShares Semiconductors UCITS"}},
         {symbol:"BOTZ",  name:"Global X Robotics & AI ETF",    category:"AI/Robotics",     yf:"BOTZ"},
-        {symbol:"EWY",   name:"iShares MSCI South Korea ETF",  category:"South Korea",     yf:"EWY"},
+        {symbol:"EWY",   name:"iShares MSCI South Korea ETF",  category:"South Korea",     yf:"EWY",
+            ucits:{symbol:"CSKR.L", yf:"CSKR.L", name:"iShares MSCI Korea UCITS"}},
         {symbol:"FRDM",  name:"Freedom 100 EM ETF",            category:"EM",              yf:"FRDM"},
         {symbol:"EMXC",  name:"iShares EM ex-China ETF",       category:"EM ex-China",     yf:"EMXC",
-            ucits:{symbol:"EMXU", yf:"EMXU.L", name:"Xtrackers EM ex-China UCITS"}},
+            ucits:{symbol:"EMXC.L", yf:"EMXC.L", name:"iShares EM ex-China UCITS"}},
         {symbol:"AVDV",  name:"Avantis Intl SmallCap Value",   category:"Intl SmallCap",   yf:"AVDV",
             ucits:{symbol:"WSML", yf:"WSML.L", name:"iShares World SmallCap UCITS"}},
         {symbol:"ILF",   name:"iShares Latin America 40",      category:"Latin America",   yf:"ILF",

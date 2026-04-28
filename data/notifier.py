@@ -202,15 +202,12 @@ def format_etf_zscore_alert(ranked: list) -> str | None:
             f" {s['ret_12m']:>+5.0f}% {s['ret_3m']:>+5.0f}%"
             f" {s['score']:>5.2f} {tag}"
         )
-        # Append UCITS substitute as grey reference line
+        # Append UCITS substitute as compact reference line
         sub_sym = UCITS_SUBS.get(s["symbol"])
         if sub_sym and sub_sym in sub_map:
             u = sub_map[sub_sym]
-            lines.append(
-                f"  └ {u['symbol']:<10} {u['price']:>7,.2f}"
-                f" {u['ret_12m']:>+5.0f}% {u['ret_3m']:>+5.0f}%"
-                f" {'(UCITS)':>8}"
-            )
+            r3 = f"{u['ret_3m']:+.0f}%" if u.get('ret_3m') is not None else "—"
+            lines.append(f"  └ {u['symbol']} (UCITS) | {u['price']:,.2f} | {r3}")
     lines.append("</code>")
     lines.append(f"★ entry (rank≤{ENTRY_THRESH})  ◀ hold (rank≤{HOLD_THRESH})")
     return "\n".join(lines)

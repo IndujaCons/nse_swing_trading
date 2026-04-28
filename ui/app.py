@@ -1913,6 +1913,19 @@ def etf_scan():
             for item in unscored:
                 item["rank"] = None
             result["watchlist"] = scored + unscored
+            # Pass UCITS substitute prices as a side-dict for UI sub-lines
+            UCITS_SUBS = {"SOXX": "SEMI.L", "EWY": "CSKR.L", "EMXC": "EMXC.L"}
+            ucits_prices = {}
+            for parent, sub in UCITS_SUBS.items():
+                if sub in zscore_map:
+                    u = zscore_map[sub]
+                    ucits_prices[parent] = {
+                        "symbol": sub,
+                        "price":  u.get("price"),
+                        "ret_3m": u.get("ret_3m"),
+                        "ret_12m": u.get("ret_12m"),
+                    }
+            result["ucits_prices"] = ucits_prices
         except Exception:
             pass
 
