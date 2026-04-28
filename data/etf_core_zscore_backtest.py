@@ -628,7 +628,7 @@ def _fetch_intraday_spot(yf_syms: list) -> dict:
 def _fetch_live_prices() -> tuple:
     """Fast fetch — only last 400 days, enough for 252-day lookback + buffer."""
     start = (pd.Timestamp.today() - pd.Timedelta(days=400)).strftime('%Y-%m-%d')
-    end   = date.today().isoformat()
+    end   = (date.today() + __import__('datetime').timedelta(days=1)).isoformat()
     bench_df = yf.download(BENCH_SYM, start=start, end=end,
                            progress=False, auto_adjust=True, timeout=30)
     bench = bench_df["Close"].squeeze().dropna()
@@ -725,12 +725,14 @@ def score_live() -> list[dict]:
     for i, r in enumerate(results):
         r["rank"] = i + 1
 
-    # Refresh display prices with live intraday data for all ETFs
+    # Refresh with intraday spot for non-Indian ETFs (US daily bar incomplete during US hours)
     yf_map = {sym: yf_sym for sym, _, yf_sym in UNIVERSE}
-    all_etfs = [(r["symbol"], yf_map.get(r["symbol"], r["symbol"])) for r in results]
-    if all_etfs:
-        spot = _fetch_intraday_spot([yf_sym for _, yf_sym in all_etfs])
-        sym_to_yf = dict(all_etfs)
+    global_etfs = [(r["symbol"], yf_map.get(r["symbol"], r["symbol"]))
+                   for r in results
+                   if not yf_map.get(r["symbol"], "").endswith(".NS")]
+    if global_etfs:
+        spot = _fetch_intraday_spot([yf_sym for _, yf_sym in global_etfs])
+        sym_to_yf = dict(global_etfs)
         for r in results:
             yf_sym = sym_to_yf.get(r["symbol"])
             if yf_sym and yf_sym in spot and spot[yf_sym] > 0:
