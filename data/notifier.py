@@ -182,32 +182,27 @@ def format_etf_zscore_alert(ranked: list) -> str | None:
     ist = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%d %b %H:%M")
     ENTRY_THRESH, HOLD_THRESH = 5, 10
 
-    # Build lookup for UCITS substitutes to show as grey sub-lines
     UCITS_SUBS = {"SOXX": "SEMI.L", "EWY": "CSKR.L", "EMXC": "EMXC.L"}
-    sub_map = {s["symbol"]: s for s in ranked}
+    ucits_syms = set(UCITS_SUBS.values())
 
     lines = [f"<b>🌐 ETF Z-Score Top 10</b> | {ist}", "<code>"]
-    lines.append(f"{'#':<3} {'ETF':<12} {'Close':>7} {'12m':>6} {'3m':>6} {'Score':>5}")
-    lines.append("─" * 44)
+    lines.append(f"{'#':<3} {'ETF (UCITS)':<16} {'Close':>7} {'12m':>6} {'3m':>6} {'Score':>5}")
+    lines.append("─" * 48)
     shown = 0
     for s in ranked:
-        if s["symbol"] in UCITS_SUBS.values():
-            continue   # skip UCITS entries from main ranking
+        if s["symbol"] in ucits_syms:
+            continue
         if shown >= 10:
             break
         shown += 1
         tag = "★" if s["rank"] <= ENTRY_THRESH else ("◀" if s["rank"] <= HOLD_THRESH else " ")
+        sub = UCITS_SUBS.get(s["symbol"])
+        etf_col = f"{s['symbol']} ({sub})" if sub else s["symbol"]
         lines.append(
-            f"{s['rank']:<3} {s['symbol']:<12} {s['price']:>7,.0f}"
+            f"{s['rank']:<3} {etf_col:<16} {s['price']:>7,.0f}"
             f" {s['ret_12m']:>+5.0f}% {s['ret_3m']:>+5.0f}%"
             f" {s['score']:>5.2f} {tag}"
         )
-        # Append UCITS substitute as compact reference line
-        sub_sym = UCITS_SUBS.get(s["symbol"])
-        if sub_sym and sub_sym in sub_map:
-            u = sub_map[sub_sym]
-            r3 = f"{u['ret_3m']:+.0f}%" if u.get('ret_3m') is not None else "—"
-            lines.append(f"  └ {u['symbol']} (UCITS) | {u['price']:,.2f} | {r3}")
     lines.append("</code>")
     lines.append(f"★ entry (rank≤{ENTRY_THRESH})  ◀ hold (rank≤{HOLD_THRESH})")
     return "\n".join(lines)
