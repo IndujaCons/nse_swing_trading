@@ -1448,6 +1448,7 @@ def watchlist_chart():
     try:
         import yfinance as yf
         from datetime import date as _date, timedelta as _timedelta
+        is_lse = ticker.endswith(".L")
         base_sym = ticker.replace(".NS", "").replace(".BO", "").replace(".L", "")
 
         # Period → fetch days (display + RS lookback buffer)
@@ -1459,14 +1460,16 @@ def watchlist_chart():
         stock_closes = None
         stock_volumes = None
         broker = _get_connected_broker()
-        if broker:
+        if broker and not is_lse:
             stock_closes = _kite_daily_closes(broker, base_sym, from_date, to_date)
 
         # Fallback to yfinance
         if stock_closes is None or len(stock_closes) < 5:
             extra_map = {"1mo": "4mo", "3mo": "1y", "6mo": "2y", "1y": "2y"}
             fetch_period = extra_map[period]
-            if base_sym in ETF_YF_OVERRIDES:
+            if is_lse:
+                yf_ticker = ticker          # use full symbol e.g. CSKR.L as-is
+            elif base_sym in ETF_YF_OVERRIDES:
                 yf_ticker = ETF_YF_OVERRIDES[base_sym] + ".NS"
             else:
                 yf_ticker = _yf_symbol(base_sym)
