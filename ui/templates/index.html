@@ -2354,6 +2354,32 @@
                         </div>
                     </div>
 
+                    <!-- Seed current holdings -->
+                    <div id="mom20-seed-section" style="margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                            <div class="basket-section-title" style="margin:0;">CURRENT HOLDINGS</div>
+                            <span id="mom20-seed-status" style="font-size:10px;color:var(--text-muted);"></span>
+                            <button onclick="mom20ToggleSeed()" id="mom20-seed-toggle-btn"
+                                style="margin-left:auto;padding:2px 10px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">
+                                + Seed Holdings</button>
+                        </div>
+                        <div id="mom20-seed-editor" style="display:none;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:7px;padding:12px 14px;">
+                            <table class="basket-table" style="margin-bottom:10px;">
+                                <thead><tr><th>Ticker</th><th>Qty</th><th>Entry Price</th><th>Entry Date</th><th></th></tr></thead>
+                                <tbody id="mom20-seed-tbody"></tbody>
+                            </table>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <button onclick="mom20SeedAddRow()"
+                                    style="padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">+ Add Row</button>
+                                <button onclick="mom20SeedSave()"
+                                    style="padding:4px 14px;font-size:11px;font-weight:700;background:var(--green);color:white;border:none;border-radius:5px;cursor:pointer;">Save & Apply</button>
+                                <button onclick="mom20SeedClear()"
+                                    style="padding:4px 10px;font-size:11px;background:rgba(220,53,69,0.1);color:#dc3545;border:1px solid rgba(220,53,69,0.3);border-radius:5px;cursor:pointer;">Clear All</button>
+                                <span id="mom20-seed-msg" style="font-size:11px;color:var(--text-muted);"></span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Exits (hidden when empty) -->
                     <div id="mom20-exits-wrap">
                         <div class="basket-section-title">SELLS — EXIT POSITIONS</div>
@@ -7873,6 +7899,7 @@ async function mom20LoadBasket() {
         }
         _mom20BasketData = d;
         _renderMom20Basket(d);
+        mom20SeedLoad();
     } catch(e) { alert('Failed to load basket: ' + e); }
 }
 
@@ -7958,6 +7985,101 @@ function mom20RecalcCapital() {
     };
     _mom20BasketData = updated;
     _renderMom20Basket(updated);
+}
+
+// ── Seed holdings ──────────────────────────────────────
+function mom20SeedAddRow(ticker='', qty='', price='', date='') {
+    const tbody = document.getElementById('mom20-seed-tbody');
+    const tr = document.createElement('tr');
+    const today = date || new Date().toISOString().split('T')[0];
+    tr.innerHTML = `
+        <td><input type="text" value="${ticker}" placeholder="POWERGRID" style="width:110px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);padding:4px 6px;font-size:12px;font-family:inherit;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"></td>
+        <td><input type="number" value="${qty}" placeholder="10" style="width:70px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);padding:4px 6px;font-size:12px;font-family:inherit;"></td>
+        <td><input type="number" step="0.01" value="${price}" placeholder="500.00" style="width:100px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);padding:4px 6px;font-size:12px;font-family:inherit;"></td>
+        <td><input type="date" value="${today}" style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);padding:4px 6px;font-size:12px;font-family:inherit;"></td>
+        <td><button onclick="this.closest('tr').remove()" style="padding:2px 8px;font-size:11px;background:rgba(220,53,69,0.1);color:#dc3545;border:1px solid rgba(220,53,69,0.3);border-radius:4px;cursor:pointer;">✕</button></td>`;
+    tbody.appendChild(tr);
+}
+
+function mom20ToggleSeed() {
+    const editor = document.getElementById('mom20-seed-editor');
+    const btn = document.getElementById('mom20-seed-toggle-btn');
+    const open = editor.style.display !== 'none';
+    editor.style.display = open ? 'none' : 'block';
+    btn.textContent = open ? '+ Seed Holdings' : '− Hide';
+}
+
+async function mom20SeedLoad() {
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) return;
+    try {
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-portfolio`);
+        const d = await r.json();
+        if (!d.success) return;
+        const basket = d.portfolio?.basket || [];
+        const status = document.getElementById('mom20-seed-status');
+        const toggleBtn = document.getElementById('mom20-seed-toggle-btn');
+        if (basket.length) {
+            status.textContent = `${basket.length} positions seeded`;
+            toggleBtn.textContent = '✎ Edit Holdings';
+            // Pre-fill editor rows
+            document.getElementById('mom20-seed-tbody').innerHTML = '';
+            basket.forEach(h => mom20SeedAddRow(h.ticker, h.qty, h.entry_price, h.entry_date));
+        } else {
+            status.textContent = 'No holdings seeded — basket assumes fresh start';
+            toggleBtn.textContent = '+ Seed Holdings';
+        }
+    } catch(e) {}
+}
+
+async function mom20SeedSave() {
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) return;
+    const rows = document.querySelectorAll('#mom20-seed-tbody tr');
+    const holdings = [];
+    rows.forEach(tr => {
+        const inputs = tr.querySelectorAll('input');
+        const ticker = inputs[0].value.trim().toUpperCase();
+        const qty    = parseInt(inputs[1].value) || 0;
+        const price  = parseFloat(inputs[2].value) || 0;
+        const date   = inputs[3].value;
+        if (ticker && qty > 0 && price > 0) holdings.push({ticker, qty, entry_price: price, entry_date: date});
+    });
+    const msg = document.getElementById('mom20-seed-msg');
+    msg.textContent = 'Saving…'; msg.style.color = 'var(--text-muted)';
+    try {
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-seed`, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({holdings})
+        });
+        const d = await r.json();
+        if (d.success) {
+            msg.textContent = `✓ ${d.seeded} holdings saved`;
+            msg.style.color = 'var(--green)';
+            document.getElementById('mom20-seed-status').textContent = `${d.seeded} positions seeded`;
+            document.getElementById('mom20-seed-toggle-btn').textContent = '✎ Edit Holdings';
+            // Refresh basket to reflect new holdings
+            await mom20LoadBasket();
+        } else {
+            msg.textContent = '✗ ' + (d.error || 'Save failed');
+            msg.style.color = 'var(--red)';
+        }
+    } catch(e) { msg.textContent = '✗ Error: ' + e; msg.style.color = 'var(--red)'; }
+}
+
+async function mom20SeedClear() {
+    if (!confirm('Clear all seeded holdings? The portfolio will be treated as empty.')) return;
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) return;
+    await fetch(`/api/portfolio-users/${uid}/mom20-seed`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({holdings: []})
+    });
+    document.getElementById('mom20-seed-tbody').innerHTML = '';
+    document.getElementById('mom20-seed-status').textContent = 'No holdings seeded — basket assumes fresh start';
+    document.getElementById('mom20-seed-toggle-btn').textContent = '+ Seed Holdings';
+    document.getElementById('mom20-seed-msg').textContent = '';
+    await mom20LoadBasket();
 }
 
 async function mom20DownloadBasket() {

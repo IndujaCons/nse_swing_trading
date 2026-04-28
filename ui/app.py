@@ -2465,6 +2465,60 @@ def api_mom20_tradebook_upload(user_id):
                     "portfolio_size": len(updated.get("basket", []))})
 
 
+# ── Mom20 seed portfolio (manual entry) ───────────────────────────────────────
+
+@app.route("/api/portfolio-users/<user_id>/mom20-seed", methods=["POST"])
+def api_mom20_seed(user_id):
+    """Manually seed Mom20 portfolio (existing holdings before first trade book upload)."""
+    user = get_user(user_id)
+    if not user:
+        return jsonify({"success": False, "error": "user not found"})
+    data = request.get_json() or {}
+    holdings = data.get("holdings", [])
+
+    basket = []
+    for h in holdings:
+        ticker = (h.get("ticker") or "").strip().upper()
+        qty    = int(h.get("qty") or 0)
+        price  = float(h.get("entry_price") or 0)
+        if not ticker or qty <= 0 or price <= 0:
+            continue
+        basket.append({
+            "ticker":      ticker,
+            "qty":         qty,
+            "entry_price": round(price, 2),
+            "entry_date":  h.get("entry_date") or datetime.date.today().isoformat(),
+            "weight":      round(100 / 20, 2),
+            "source":      "manual_seed",
+        })
+
+    pf_path = mom20_portfolio_path(user_id)
+    portfolio = {
+        "status":      "seeded" if basket else "empty",
+        "basket":      basket,
+        "last_synced": datetime.date.today().isoformat(),
+    }
+    tmp = pf_path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(portfolio, f, indent=2)
+    os.replace(tmp, pf_path)
+
+    return jsonify({"success": True, "seeded": len(basket)})
+
+
+@app.route("/api/portfolio-users/<user_id>/mom20-portfolio", methods=["GET"])
+def api_mom20_portfolio_get(user_id):
+    """Return current portfolio basket for seed editor pre-fill."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(mom20_portfolio_path(user_id)) as f:
+            pf = json.load(f)
+    except Exception:
+        pf = {"status": "empty", "basket": []}
+    return jsonify({"success": True, "portfolio": pf})
+
+
 # ── ETF positions (per user, manual entry) ────────────────────────────────────
 
 @app.route("/api/portfolio-users/<user_id>/etf-positions", methods=["GET"])
