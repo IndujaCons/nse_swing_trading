@@ -81,6 +81,7 @@ UNIVERSE = [
     ("SOXX",        "Semiconductors",       "SOXX"),
     ("SEMI.L",      "Semiconductors (UCITS)","SEMI.L"),
     ("CSKR.L",      "South Korea (UCITS)",  "CSKR.L"),
+    ("EMXC.L",      "EM ex-China (UCITS)",  "EMXC.L"),
     ("BOTZ",        "Robotics / AI",        "BOTZ"),
     ("EWY",         "South Korea",          "EWY"),
     ("EMXC",        "EM ex-China",          "EMXC"),

@@ -183,7 +183,7 @@ def format_etf_zscore_alert(ranked: list) -> str | None:
     ENTRY_THRESH, HOLD_THRESH = 5, 10
 
     # Build lookup for UCITS substitutes to show as grey sub-lines
-    UCITS_SUBS = {"SOXX": "SEMI.L", "EWY": "CSKR.L"}
+    UCITS_SUBS = {"SOXX": "SEMI.L", "EWY": "CSKR.L", "EMXC": "EMXC.L"}
     sub_map = {s["symbol"]: s for s in ranked}
 
     lines = [f"<b>🌐 ETF Z-Score Top 10</b> | {ist}", "<code>"]
