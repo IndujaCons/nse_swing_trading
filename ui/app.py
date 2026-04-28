@@ -2165,6 +2165,7 @@ def _etf_signal_scheduler():
     startup_scan_done_mom20 = False  # one-time Mom20 scan on startup regardless of window
 
     while True:
+      try:
         now_ist = datetime.now(IST)
 
         if not _in_window(now_ist) and startup_scan_done:
@@ -2261,6 +2262,14 @@ def _etf_signal_scheduler():
         sleep_secs = (next_scan - now_ist).total_seconds()
         print(f"[ETF scheduler] Next scan at {next_scan.strftime('%H:%M IST')} (sleep {int(sleep_secs)}s)")
         time.sleep(max(sleep_secs, 30))
+
+      except Exception as _loop_err:
+          print(f"[ETF scheduler] !! Loop exception (will retry in 60s): {_loop_err}")
+          try:
+              send_message(f"⚠️ Scheduler loop error: {_loop_err}")
+          except Exception:
+              pass
+          time.sleep(60)
 
 
 # ============ User Registry ============
