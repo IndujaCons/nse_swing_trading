@@ -2385,19 +2385,20 @@ def api_mom20_basket_download(user_id):
         portfolio = {"status": "empty", "basket": []}
 
     basket_data = generate_basket(user, signals, portfolio)
-    csv_content = to_zerodha_csv(basket_data)
+    from data.mom20_basket import to_zerodha_json
+    json_content = to_zerodha_json(basket_data)
 
     # Save a copy locally
     import datetime
-    fname = f"mom20_{datetime.date.today().isoformat()}.csv"
+    fname = f"mom20_{datetime.date.today().isoformat()}.json"
     save_path = os.path.join(baskets_dir(user_id), fname)
     os.makedirs(baskets_dir(user_id), exist_ok=True)
     with open(save_path, "w") as f:
-        f.write(csv_content)
+        f.write(json_content)
 
     return flask.Response(
-        csv_content,
-        mimetype="text/csv",
+        json_content,
+        mimetype="application/json",
         headers={"Content-Disposition": f"attachment; filename={fname}"}
     )
 

@@ -139,6 +139,70 @@ def to_zerodha_csv(basket_data: dict) -> str:
     return output.getvalue()
 
 
+def _basket_item(ticker: str, transaction_type: str, qty: int, weight: int) -> dict:
+    """Build a single Zerodha basket JSON item."""
+    return {
+        "id": 0,
+        "instrument": {
+            "tradingsymbol": ticker,
+            "type": "EQ",
+            "symbol": ticker,
+            "segment": "NSE",
+            "exchange": "NSE",
+            "tickSize": 0.05,
+            "lotSize": 1,
+            "company": ticker,
+            "tradable": True,
+            "precision": 2,
+            "fullName": ticker,
+            "niceName": ticker,
+            "niceNameHTML": ticker,
+            "stockWidget": True,
+            "exchangeToken": 0,
+            "instrumentToken": 0,
+            "isin": "",
+            "related": [],
+            "underlying": None,
+            "auctionNumber": None,
+            "isEquity": True,
+            "isWeekly": False,
+        },
+        "weight": weight,
+        "params": {
+            "transactionType": transaction_type,
+            "product": "CNC",
+            "orderType": "MARKET",
+            "validity": "DAY",
+            "validityTTL": 1,
+            "quantity": qty,
+            "price": 0,
+            "triggerPrice": 0,
+            "disclosedQuantity": 0,
+            "lastPrice": 0,
+            "variety": "regular",
+            "tags": [],
+        },
+    }
+
+
+def to_zerodha_json(basket_data: dict) -> str:
+    """
+    Convert basket data to Zerodha basket order JSON string.
+    Exits first (SELL), then entries (BUY). Market order + CNC.
+    """
+    items = []
+    weight = 0
+    for e in basket_data["exits"]:
+        if e["qty"] > 0:
+            items.append(_basket_item(e["ticker"], "SELL", e["qty"], weight))
+            weight += 1
+    for e in basket_data["entries"]:
+        if e["qty"] > 0:
+            items.append(_basket_item(e["ticker"], "BUY", e["qty"], weight))
+            weight += 1
+    return json.dumps(items, indent=2)
+
+
 def parse_trade_book(csv_content: str) -> list:
     """
     Parse Zerodha trade book CSV export.
