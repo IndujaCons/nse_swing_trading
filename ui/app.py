@@ -2532,6 +2532,93 @@ def api_mom20_portfolio_get(user_id):
     return jsonify({"success": True, "portfolio": pf})
 
 
+@app.route("/api/portfolio-users/<user_id>/mom20-performance", methods=["GET"])
+def api_mom20_performance(user_id):
+    """Return holdings with live prices and P&L for portfolio tracker."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(mom20_portfolio_path(user_id)) as f:
+            pf = json.load(f)
+    except Exception:
+        pf = {"status": "empty", "basket": []}
+
+    basket = pf.get("basket", [])
+    if not basket:
+        return jsonify({"success": True, "holdings": [], "total_entry_value": 0,
+                        "total_current_value": 0, "total_return_pct": 0,
+                        "tracking_since": None})
+
+    tickers = [h["ticker"] for h in basket]
+
+    # Try Kite LTP first, fall back to yfinance
+    price_map = {}
+    ltp = _fetch_zerodha_ltp(tickers)
+    if ltp:
+        price_map = {t: ltp[t] for t in tickers if t in ltp}
+
+    missing = [t for t in tickers if t not in price_map]
+    if missing:
+        import yfinance as yf
+        yf_syms = [f"{t}.NS" for t in missing]
+        try:
+            df = yf.download(yf_syms, period="5d", progress=False,
+                             group_by="ticker", threads=True, auto_adjust=True)
+            for t, sym in zip(missing, yf_syms):
+                try:
+                    if len(missing) == 1:
+                        price_map[t] = float(df["Close"].dropna().iloc[-1])
+                    else:
+                        price_map[t] = float(df[sym]["Close"].dropna().iloc[-1])
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    holdings = []
+    total_entry = 0.0
+    total_current = 0.0
+    earliest_date = None
+
+    for h in basket:
+        t = h["ticker"]
+        ep = h.get("entry_price", 0)
+        qty = h.get("qty", 0)
+        cp = price_map.get(t, ep)
+        entry_val = round(ep * qty, 2)
+        curr_val  = round(cp * qty, 2)
+        ret_pct   = round((cp - ep) / ep * 100, 2) if ep > 0 else 0
+        total_entry   += entry_val
+        total_current += curr_val
+
+        edate = h.get("entry_date", "")[:10]
+        if edate and (earliest_date is None or edate < earliest_date):
+            earliest_date = edate
+
+        holdings.append({
+            "ticker":        t,
+            "qty":           qty,
+            "entry_price":   round(ep, 2),
+            "current_price": round(cp, 2),
+            "entry_date":    edate,
+            "entry_value":   entry_val,
+            "current_value": curr_val,
+            "return_pct":    ret_pct,
+        })
+
+    holdings.sort(key=lambda x: x["return_pct"], reverse=True)
+    total_return_pct = round((total_current - total_entry) / total_entry * 100, 2) if total_entry > 0 else 0
+
+    return jsonify({
+        "success":            True,
+        "holdings":           holdings,
+        "total_entry_value":  round(total_entry, 2),
+        "total_current_value": round(total_current, 2),
+        "total_return_pct":   total_return_pct,
+        "tracking_since":     earliest_date,
+    })
+
+
 # ── ETF positions (per user, manual entry) ────────────────────────────────────
 
 @app.route("/api/portfolio-users/<user_id>/etf-positions", methods=["GET"])
