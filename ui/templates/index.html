@@ -2409,9 +2409,14 @@
 
                 <!-- Performance tracker card -->
                 <div id="mom20-tracker-card" style="display:none;margin-bottom:20px;">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
                         <button onclick="mom20LoadPerformance()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Refresh</button>
+                        <div style="display:flex;gap:4px;margin-left:auto;">
+                            <span style="font-size:10px;color:var(--text-muted);align-self:center;">Sort:</span>
+                            <button id="mom20-sort-return-btn" onclick="mom20TrackerSetSort('return')" style="padding:2px 9px;font-size:10px;background:var(--green);color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700;">Return</button>
+                            <button id="mom20-sort-rank-btn" onclick="mom20TrackerSetSort('rank')" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Rank</button>
+                        </div>
                         <span id="mom20-tracker-status" style="font-size:10px;color:var(--text-muted);"></span>
                     </div>
                     <!-- Summary strip -->
@@ -7818,6 +7823,8 @@ let _allUsers = [];
 let _mom20SelectedUser = null;
 let _etfSelectedUser   = null;
 let _mom20BasketData   = null;  // last fetched basket preview
+let _mom20TrackerSort  = 'return';  // 'return' | 'rank'
+let _mom20TrackerHoldings = [];     // last fetched holdings for re-sort
 
 async function loadUsers() {
     try {
@@ -7961,30 +7968,51 @@ async function mom20LoadPerformance() {
         const curEl = document.getElementById('mom20-tracker-current');
         if (curEl) curEl.textContent = fmtInr(d.total_current_value);
 
-        // Holdings table
-        const tbody = document.getElementById('mom20-tracker-tbody');
-        if (tbody) {
-            tbody.innerHTML = d.holdings.map(h => {
-                const color = h.return_pct >= 0 ? 'var(--green)' : '#dc3545';
-                const sign  = h.return_pct >= 0 ? '+' : '';
-                const rank  = h.rank != null ? h.rank : '—';
-                const rankColor = h.rank != null && h.rank <= 20 ? 'var(--green)'
-                                : h.rank != null && h.rank <= 40 ? '#ff6b35' : '#dc3545';
-                return `<tr style="border-bottom:1px solid var(--border-color);">
-                    <td style="padding:5px 8px;font-weight:700;">${h.ticker}</td>
-                    <td style="padding:5px 8px;text-align:center;font-weight:700;color:${rankColor};">${rank}</td>
-                    <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${h.entry_price.toLocaleString('en-IN')}</td>
-                    <td style="padding:5px 8px;text-align:right;">${h.current_price.toLocaleString('en-IN')}</td>
-                    <td style="padding:5px 8px;text-align:right;font-weight:700;color:${color};">${sign}${h.return_pct.toFixed(2)}%</td>
-                    <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${h.qty}</td>
-                    <td style="padding:5px 8px;text-align:right;">₹${Math.round(h.current_value).toLocaleString('en-IN')}</td>
-                </tr>`;
-            }).join('');
-        }
+        _mom20TrackerHoldings = d.holdings;
+        mom20TrackerRender();
         if (status) status.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
     } catch(e) {
         if (status) status.textContent = 'Error loading performance';
     }
+}
+
+function mom20TrackerSetSort(mode) {
+    _mom20TrackerSort = mode;
+    document.getElementById('mom20-sort-return-btn').style.background = mode === 'return' ? 'var(--green)' : 'var(--bg-tertiary)';
+    document.getElementById('mom20-sort-return-btn').style.color = mode === 'return' ? 'white' : 'var(--text-muted)';
+    document.getElementById('mom20-sort-return-btn').style.border = mode === 'return' ? 'none' : '1px solid var(--border-color)';
+    document.getElementById('mom20-sort-rank-btn').style.background = mode === 'rank' ? 'var(--green)' : 'var(--bg-tertiary)';
+    document.getElementById('mom20-sort-rank-btn').style.color = mode === 'rank' ? 'white' : 'var(--text-muted)';
+    document.getElementById('mom20-sort-rank-btn').style.border = mode === 'rank' ? 'none' : '1px solid var(--border-color)';
+    mom20TrackerRender();
+}
+
+function mom20TrackerRender() {
+    const tbody = document.getElementById('mom20-tracker-tbody');
+    if (!tbody || !_mom20TrackerHoldings.length) return;
+    const sorted = [..._mom20TrackerHoldings].sort((a, b) => {
+        if (_mom20TrackerSort === 'rank') {
+            const ra = a.rank ?? 9999, rb = b.rank ?? 9999;
+            return ra - rb;
+        }
+        return b.return_pct - a.return_pct;
+    });
+    tbody.innerHTML = sorted.map(h => {
+        const color = h.return_pct >= 0 ? 'var(--green)' : '#dc3545';
+        const sign  = h.return_pct >= 0 ? '+' : '';
+        const rank  = h.rank != null ? h.rank : '—';
+        const rankColor = h.rank != null && h.rank <= 20 ? 'var(--green)'
+                        : h.rank != null && h.rank <= 40 ? '#ff6b35' : '#dc3545';
+        return `<tr style="border-bottom:1px solid var(--border-color);">
+            <td style="padding:5px 8px;font-weight:700;">${h.ticker}</td>
+            <td style="padding:5px 8px;text-align:center;font-weight:700;color:${rankColor};">${rank}</td>
+            <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${h.entry_price.toLocaleString('en-IN')}</td>
+            <td style="padding:5px 8px;text-align:right;">${h.current_price.toLocaleString('en-IN')}</td>
+            <td style="padding:5px 8px;text-align:right;font-weight:700;color:${color};">${sign}${h.return_pct.toFixed(2)}%</td>
+            <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${h.qty}</td>
+            <td style="padding:5px 8px;text-align:right;">₹${Math.round(h.current_value).toLocaleString('en-IN')}</td>
+        </tr>`;
+    }).join('');
 }
 
 function _mom20ParseCapitalInput() {
