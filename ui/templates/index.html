@@ -2300,12 +2300,9 @@
 
                 <!-- Header row -->
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-                    <span style="font-size:14px;font-weight:700;color:#ff6b35;letter-spacing:0.5px;">MOM20 PORTFOLIO BUILDER</span>
+                    <span style="font-size:14px;font-weight:700;color:#ff6b35;letter-spacing:0.5px;">MOM20 PORTFOLIO</span>
                     <span id="mom20-port-regime-badge2" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">Regime: —</span>
                     <span id="mom20-port-rebal-badge2" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;">Next rebalance: —</span>
-                    <button onclick="mom20ImportSignals()" style="padding:3px 10px;font-size:11px;background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer;font-weight:700;">⬇ Import Mom20 Top 20</button>
-                    <button onclick="mom20LoadPortfolio()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Load Saved</button>
-                    <button onclick="mom20ToggleHistory()" style="padding:3px 10px;font-size:11px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">📋 History</button>
                 </div>
 
                 <!-- User selector + Basket section -->
@@ -2457,77 +2454,6 @@
                 <!-- Performance card (shown when portfolio has tracking data) -->
                 <div id="mom20-perf-card2" style="display:none;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:14px;"></div>
 
-                <div style="display:grid;grid-template-columns:1fr 240px;gap:16px;align-items:start;">
-
-                    <!-- LEFT: search + stock table -->
-                    <div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative;">
-                            <div style="position:relative;flex:1;">
-                                <input id="mom20-search-input2" type="text" placeholder="🔍 Search by ticker (e.g. TITAN, SBIN)"
-                                    oninput="mom20SearchSuggest(this.value, '2')"
-                                    onkeydown="if(event.key==='Enter')mom20AddStock('2')"
-                                    style="width:100%;padding:8px 12px;font-size:13px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
-                                <div id="mom20-suggest-dropdown2" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:0 0 6px 6px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
-                            </div>
-                            <button onclick="mom20AddStock('2')" style="padding:7px 18px;font-size:13px;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:700;white-space:nowrap;">+ Add</button>
-                            <span id="mom20-total-weight-badge2" style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--bg-tertiary);color:var(--text-muted);white-space:nowrap;">Total: 0%</span>
-                        </div>
-
-                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                            <thead>
-                                <tr style="font-size:11px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
-                                    <th style="text-align:left;padding:4px 8px;">Stock</th>
-                                    <th style="text-align:right;padding:4px 8px;">Price (₹)</th>
-                                    <th style="text-align:center;padding:4px 24px;">Weights</th>
-                                    <th style="text-align:right;padding:4px 8px;">Shares | Weight%</th>
-                                    <th style="width:20px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="mom20-basket-tbody2">
-                                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);font-size:12px;">Add stocks above or click "Import Mom20 Top 20"</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- RIGHT: sidebar -->
-                    <div style="background:var(--bg-secondary);border-radius:8px;padding:16px;border:1px solid var(--border-color);">
-                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Investment Amount</div>
-                        <div style="position:relative;margin-bottom:4px;">
-                            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;">₹</span>
-                            <input id="mom20-capital-input2" type="number" step="100000" min="100000" value="2000000"
-                                oninput="mom20RenderBasket('2')"
-                                style="width:100%;padding:8px 8px 8px 26px;font-size:14px;font-weight:700;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:6px;box-sizing:border-box;">
-                        </div>
-                        <div id="mom20-min-investment2" style="font-size:10px;color:var(--text-muted);margin-bottom:14px;">Min Investment: —</div>
-
-                        <div style="border-top:1px solid var(--border-color);padding-top:12px;margin-bottom:12px;">
-                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
-                                <span>Stocks</span><span id="mom20-sb-count2">0</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px;">
-                                <span>Total weight</span><span id="mom20-sb-weight2">0%</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
-                                <span>Est. charges</span><span id="mom20-sb-charges2">—</span>
-                            </div>
-                        </div>
-
-                        <button onclick="mom20SavePortfolio('2')" style="width:100%;padding:9px;margin-bottom:8px;font-size:13px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">💾 Save Portfolio</button>
-                        <button onclick="mom20PlaceAllOrders('2')" style="width:100%;padding:9px;font-size:13px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⚡ Invest Now</button>
-
-                        <div id="mom20-order-status-wrap2" style="display:none;margin-top:12px;border-top:1px solid var(--border-color);padding-top:10px;">
-                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                                <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">ORDER STATUS</span>
-                                <button onclick="mom20PollOrders('2')" style="padding:2px 8px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺</button>
-                            </div>
-                            <div id="mom20-order-status-body2" style="display:flex;flex-direction:column;gap:4px;font-size:11px;"></div>
-                            <button onclick="mom20ConfirmInvestment('2')" style="width:100%;margin-top:10px;padding:8px;font-size:12px;font-weight:700;background:#ff6b35;color:white;border:none;border-radius:6px;cursor:pointer;">✓ Confirm Investment</button>
-                            <button onclick="mom20ResetPortfolio()" style="width:100%;margin-top:6px;padding:6px;font-size:11px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">↺ Reset to Paper</button>
-                            <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;">Switches tracking to actual avg prices</div>
-                        </div>
-                    </div>
-
-                </div><!-- end grid -->
 
                 <!-- History Panel -->
                 <div id="mom20-history-panel" style="display:none;margin-top:20px;">
