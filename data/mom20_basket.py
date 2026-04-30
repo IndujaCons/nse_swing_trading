@@ -205,25 +205,33 @@ def to_zerodha_json(basket_data: dict) -> str:
 
 def parse_trade_book(csv_content: str) -> list:
     """
-    Parse Zerodha trade book CSV export.
+    Parse Zerodha order book / trade book CSV export.
     Returns list of trade dicts with: ticker, action, qty, price, trade_date
     """
     trades = []
     reader = csv.DictReader(io.StringIO(csv_content))
     for row in reader:
-        # Zerodha trade book columns vary — handle common formats
-        ticker = (row.get("tradingsymbol") or row.get("Tradingsymbol") or
-                  row.get("Symbol") or "").strip().upper()
-        action = (row.get("trade_type") or row.get("Transaction type") or
-                  row.get("Type") or "").strip().upper()
-        qty_raw   = row.get("quantity") or row.get("Quantity") or "0"
-        price_raw = row.get("price") or row.get("Price") or "0"
-        date_raw  = (row.get("trade_date") or row.get("Order Date") or
-                     row.get("Date") or "").strip()
+        # Zerodha order book: Instrument, Type, Qty. (e.g. "35/35"), Avg. price, Time, Status
+        # Zerodha trade book: tradingsymbol, trade_type, quantity, price, trade_date
+        ticker = (row.get("Instrument") or row.get("tradingsymbol") or
+                  row.get("Tradingsymbol") or row.get("Symbol") or "").strip().upper()
+        action = (row.get("Type") or row.get("trade_type") or
+                  row.get("Transaction type") or "").strip().upper()
+        qty_raw   = row.get("Qty.") or row.get("quantity") or row.get("Quantity") or "0"
+        price_raw = row.get("Avg. price") or row.get("price") or row.get("Price") or "0"
+        date_raw  = (row.get("Time") or row.get("trade_date") or
+                     row.get("Order Date") or row.get("Date") or "").strip()
+        status    = row.get("Status", "").strip().upper()
 
+        # Skip non-complete orders (order book has pending/rejected rows)
+        if status and status not in ("COMPLETE", "COMPLETED"):
+            continue
+
+        # Qty. in order book is "filled/total" e.g. "35/35" — take filled portion
+        qty_str = str(qty_raw).split("/")[0].strip()
         try:
-            qty   = int(float(qty_raw))
-            price = float(price_raw)
+            qty   = int(float(qty_str))
+            price = float(str(price_raw).replace(",", ""))
         except (ValueError, TypeError):
             continue
 

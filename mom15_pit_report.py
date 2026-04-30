@@ -333,15 +333,17 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False):
+def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, W12, W3
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, W12, W3, START_DATE
     BETA_MIN = None  # reset each run
+    if start_override:
+        START_DATE = date.fromisoformat(start_override)
     W12, W3 = 0.50, 0.50  # reset each run
     if overflow:
-        MAX_SLOTS, BUFFER_IN, BUFFER_OUT = 5, 3, 8
-        BETA_CAP, BETA_MIN = 99.0, 1.2   # β>1.2 only (99 cap = effectively no upper limit)
-        label = "Overflow — 5-slot β>1.2, Weekly, Rank-exit"
+        MAX_SLOTS, BUFFER_IN, BUFFER_OUT = 5, 5, 40
+        BETA_CAP, BETA_MIN = 99.0, 1.2   # β>1.2 entry only; exit uses full universe
+        label = "Overflow — 5-slot β>1.2, Monthly, Top-40 Exit"
         use_regime = False  # no regime filter for overflow
     elif qqq:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 10, 7, 20, 99.0  # no beta cap for US
@@ -462,19 +464,20 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     trading_days = sorted(d for d, c in day_counts.items() if c >= 50 and d >= START_DATE)
     print(f"  Trading days in backtest: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
 
-    rebal_dates = get_rebal_dates(trading_days, monthly=(mom20 or n500 or qqq),
-                                  weekly=overflow)
+    rebal_dates = get_rebal_dates(trading_days, monthly=(mom20 or n500 or qqq or overflow),
+                                  weekly=False)
     print(f"  Rebalance dates: {len(rebal_dates)}")
 
     # ── Portfolio state ──────────────────────────────────────────────────────
     cash      = 10_00_000.0 if overflow else 20_00_000.0
+    _starting_cash = cash
     portfolio = {}            # ticker → {entry_date, entry_price, shares, entry_cost}
     all_trades = []           # closed trades
     total_charges = 0.0
     rebal_nav = []            # rebalance-date NAV snapshots for portfolio correlation analysis
 
     if overflow:
-        banner = f"  OVERFLOW PIT BACKTEST  |  NAV/5 slot  |  Weekly Rebalance  |  Beta>1.2  |  {regime_label}"
+        banner = f"  OVERFLOW PIT BACKTEST  |  NAV/5 slot  |  Monthly Rebalance  |  Beta>1.2 Entry  |  Top-40 Exit (full universe)  |  {regime_label}"
     elif qqq:
         banner = f"  MOMQQQ PIT BACKTEST  |  NAV/10 slot  |  Monthly Rebalance  |  Nasdaq-100 Universe  |  No Beta Filter  |  {regime_label}"
     elif sp500:
@@ -527,35 +530,30 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             print(f"  ⚠ Insufficient scored stocks — skipping rebalance")
             continue
 
-        # Rank all stocks
+        # Rank all stocks (β>1.2 filtered universe for entries)
         ranked = sorted(scores.items(), key=lambda x: -x[1]["norm_score"])
         ticker_rank = {t: r+1 for r, (t, _) in enumerate(ranked)}
+
+        # For overflow: compute unfiltered rank (full Nifty200, no beta_min) for exits
+        ticker_rank_unfiltered = ticker_rank
+        if overflow:
+            old_beta_min, old_beta_cap = BETA_MIN, BETA_CAP
+            BETA_MIN, BETA_CAP = None, 1.2
+            scores_unfiltered = compute_scores(rebal_day, stock_data, date_to_iloc,
+                                               pit_data, n50_raw, n50_iloc, eps_db)
+            BETA_MIN, BETA_CAP = old_beta_min, old_beta_cap
+            if scores_unfiltered:
+                ranked_unfiltered = sorted(scores_unfiltered.items(),
+                                           key=lambda x: -x[1]["norm_score"])
+                ticker_rank_unfiltered = {t: r+1 for r, (t, _) in enumerate(ranked_unfiltered)}
 
         # Buffer rule — determine new target portfolio
         current_set = set(portfolio.keys())
         new_set = set()
 
-        def _price_above_sma(ticker, n=50):
-            """Return True if ticker's latest close >= n-day SMA (or no data)."""
-            idx_map = date_to_iloc.get(ticker, {})
-            ci = idx_map.get(rebal_day)
-            if ci is None:
-                for off in range(1, 6):
-                    prev = rebal_day - timedelta(days=off)
-                    if prev in idx_map:
-                        ci = idx_map[prev]
-                        break
-            if ci is None or ci < n:
-                return True  # not enough history — keep
-            closes = stock_data[ticker]["Close"].iloc[ci - n : ci + 1]
-            return float(closes.iloc[-1]) >= float(closes.mean())
-
-        # Keeps: overflow uses SMA50 exit; others use rank buffer
+        # Keeps: overflow exits by rank in full Nifty200; others use β-filtered rank
         for t in current_set:
-            if overflow:
-                if _price_above_sma(t, 50):
-                    new_set.add(t)
-            elif ticker_rank.get(t, 9999) <= BUFFER_OUT:
+            if ticker_rank_unfiltered.get(t, 9999) <= BUFFER_OUT:
                 new_set.add(t)
 
         # New entries: add if rank ≤ BUFFER_IN and not already held
@@ -659,7 +657,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                     if prev in idx_map:
                         ci = idx_map[prev]
                         break
-            if not qqq and not sp500 and ci is not None and ci >= 252:
+            if not qqq and not sp500 and not overflow and ci is not None and ci >= 252:
                 high_52w = float(stock_data[t]["High"].iloc[ci-252:ci+1].max())
                 dist_from_high = (ep / high_52w - 1) * 100
                 if ep < high_52w * 0.80:
@@ -770,18 +768,18 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                          if t in date_to_iloc else pos["entry_price"])
         for t, pos in portfolio.items()
     )
-    total_return = (final_value - 20_00_000) / 20_00_000 * 100
+    total_return = (final_value - _starting_cash) / _starting_cash * 100
 
     # Annualised return (CAGR)
     years = (trading_days[-1] - trading_days[0]).days / 365.25
-    cagr  = ((final_value / 20_00_000) ** (1/years) - 1) * 100 if years > 0 else 0
+    cagr  = ((final_value / _starting_cash) ** (1/years) - 1) * 100 if years > 0 else 0
 
     print()
     print("=" * 72)
     print("  FINAL SUMMARY")
     print("=" * 72)
     print(f"  Period        : {trading_days[0]} → {trading_days[-1]}  ({years:.1f} years)")
-    print(f"  Starting Cap  : ₹20,00,000")
+    print(f"  Starting Cap  : {inr(_starting_cash)}")
     print(f"  Final Value   : {inr(final_value)}")
     print(f"  Total Return  : {pct(total_return)}")
     print(f"  CAGR          : {pct(cagr)}")
@@ -849,7 +847,10 @@ if __name__ == "__main__":
                         help="Run on S&P 500 PIT universe (monthly, no beta filter)")
     parser.add_argument("--qqq", action="store_true",
                         help="Run MomQQQ variant (Nasdaq-100 universe, top 20, monthly, β≤1.2 vs NDX, QQQ regime)")
+    parser.add_argument("--start", default=None,
+                        help="Override start date (YYYY-MM-DD), e.g. --start 2025-01-01")
     args = parser.parse_args()
     run(refresh=args.refresh, mom20=args.mom20, overflow=args.overflow,
         use_regime=not args.no_regime, beta_cap_override=args.beta_cap,
-        regime_exit=args.regime_exit, n500=args.n500, qqq=args.qqq, sp500=args.sp500)
+        regime_exit=args.regime_exit, n500=args.n500, qqq=args.qqq, sp500=args.sp500,
+        start_override=args.start)
