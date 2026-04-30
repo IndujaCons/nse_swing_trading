@@ -2390,7 +2390,8 @@ def api_mom20_basket_download(user_id):
 
     # Save a copy locally
     import datetime
-    fname = f"mom20_{datetime.date.today().isoformat()}.json"
+    first_name = user.get("name", "investor").split()[0].lower()
+    fname = f"mom20_{datetime.date.today().isoformat()}_{first_name}.json"
     save_path = os.path.join(baskets_dir(user_id), fname)
     os.makedirs(baskets_dir(user_id), exist_ok=True)
     with open(save_path, "w") as f:
