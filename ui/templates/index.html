@@ -2451,8 +2451,6 @@
                     </table>
                 </div>
 
-                <!-- Performance card (shown when portfolio has tracking data) -->
-                <div id="mom20-perf-card2" style="display:none;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:14px;"></div>
 
 
                 <!-- History Panel -->
@@ -6361,13 +6359,11 @@
                     <div><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Min Amount</div>
                         <div style="font-size:13px;font-weight:600;">${minInv}</div></div>
                 </div>`;
-            ['mom20-perf-card', 'mom20-perf-card2'].forEach(id => {
-                const card = document.getElementById(id);
-                if (!card) return;
-                if (!html) { card.style.display = 'none'; return; }
-                card.style.display = '';
-                card.innerHTML = html;
-            });
+            const card = document.getElementById('mom20-perf-card');
+            if (card) {
+                if (!html) { card.style.display = 'none'; }
+                else { card.style.display = ''; card.innerHTML = html; }
+            }
         }
 
         async function mom20SavePortfolio(sfx) {
