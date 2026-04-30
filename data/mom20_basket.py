@@ -209,7 +209,15 @@ def parse_trade_book(csv_content: str) -> list:
     Returns list of trade dicts with: ticker, action, qty, price, trade_date
     """
     trades = []
-    reader = csv.DictReader(io.StringIO(csv_content))
+    # Zerodha sometimes prepends a title row before the actual header — skip it
+    lines = csv_content.splitlines()
+    header_keywords = {"time", "instrument", "tradingsymbol", "type", "qty", "quantity"}
+    start = 0
+    for i, line in enumerate(lines):
+        if any(k in line.lower() for k in header_keywords):
+            start = i
+            break
+    reader = csv.DictReader(io.StringIO("\n".join(lines[start:])))
     for row in reader:
         # Zerodha order book: Instrument, Type, Qty. (e.g. "35/35"), Avg. price, Time, Status
         # Zerodha trade book: tradingsymbol, trade_type, quantity, price, trade_date
