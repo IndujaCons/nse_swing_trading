@@ -2551,6 +2551,15 @@ def api_mom20_performance(user_id):
 
     tickers = [h["ticker"] for h in basket]
 
+    # Get current ranks from cached live signals
+    rank_map = {}
+    try:
+        sig_result = live_signals_scanner.scan_entry_signals(force_refresh=False)
+        for s in sig_result.get("mom20_signals", []):
+            rank_map[s["ticker"]] = s.get("rank")
+    except Exception:
+        pass
+
     # Try Kite LTP first, fall back to yfinance
     price_map = {}
     ltp = _fetch_zerodha_ltp(tickers)
@@ -2597,6 +2606,7 @@ def api_mom20_performance(user_id):
 
         holdings.append({
             "ticker":        t,
+            "rank":          rank_map.get(t),
             "qty":           qty,
             "entry_price":   round(ep, 2),
             "current_price": round(cp, 2),
