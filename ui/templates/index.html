@@ -2350,7 +2350,6 @@
                             <span id="basket-badge-exits" class="basket-badge basket-badge-exits">0 Exits</span>
                             <span id="basket-badge-buys"  class="basket-badge basket-badge-buys">0 Buys</span>
                             <span id="basket-badge-holds" class="basket-badge basket-badge-holds">0 Holds</span>
-                            <div class="basket-badge basket-badge-deploy" id="basket-holds-list"></div>
                         </div>
                     </div>
 
@@ -8077,8 +8076,6 @@ function _renderMom20Basket(d) {
     document.getElementById('basket-badge-holds').textContent  = `${d.n_holds} Hold${d.n_holds!==1?'s':''}`;
 
     const holds = d.holds || [];
-    document.getElementById('basket-holds-list').textContent =
-        holds.length ? holds.map(h => `${h.ticker} #${h.rank}`).join(' · ') : '';
 
     // Exits section — hide if none
     const exitsWrap = document.getElementById('mom20-exits-wrap');
