@@ -7912,6 +7912,7 @@ function mom20OnUserChange() {
         if (trackerCard) trackerCard.style.display = 'none';
         return;
     }
+    if (trackerCard) trackerCard.style.display = 'block';
     // Reset capital input so it picks up from API on load
     const capInput = document.getElementById('mom20-capital-input');
     if (capInput) { capInput.value = ''; capInput.dataset.userEdited = 'false'; }
@@ -7926,15 +7927,21 @@ async function mom20LoadPerformance() {
     if (!uid) return;
     const card = document.getElementById('mom20-tracker-card');
     const status = document.getElementById('mom20-tracker-status');
+    if (card) card.style.display = 'block';
     if (status) status.textContent = 'Loading…';
     try {
         const r = await fetch(`/api/portfolio-users/${uid}/mom20-performance`);
         const d = await r.json();
-        if (!d.success || !d.holdings.length) {
-            if (card) card.style.display = 'none';
+        if (!d.success) {
+            if (status) status.textContent = 'Error loading holdings';
             return;
         }
-        if (card) card.style.display = 'block';
+        if (!d.holdings.length) {
+            if (status) status.textContent = 'No holdings — upload trade book to start tracking';
+            const tbody = document.getElementById('mom20-tracker-tbody');
+            if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
+            return;
+        }
 
         // Summary
         const ret = d.total_return_pct;

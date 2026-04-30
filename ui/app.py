@@ -2544,21 +2544,40 @@ def api_mom20_performance(user_id):
         pf = {"status": "empty", "basket": []}
 
     basket = pf.get("basket", [])
+
+    # Get current ranks + prices from cached live signals
+    rank_map = {}
+    signal_price_map = {}
+    try:
+        sig_result = live_signals_scanner.scan_entry_signals(force_refresh=False)
+        for s in sig_result.get("mom20_signals", []):
+            rank_map[s["ticker"]] = s.get("rank")
+            if s.get("price"):
+                signal_price_map[s["ticker"]] = s["price"]
+    except Exception:
+        pass
+
+    # Fallback: if portfolio basket is empty, synthesise from basket holds
+    if not basket:
+        try:
+            user = get_user(user_id)
+            signals = sig_result.get("mom20_signals", []) if 'sig_result' in dir() else []
+            basket_data = generate_basket(user, signals, pf)
+            holds = basket_data.get("holds", [])
+            # holds only have ticker/rank/price — no entry data, show as price=current
+            if holds:
+                basket = [{"ticker": h["ticker"], "qty": 0,
+                           "entry_price": h.get("price", 0),
+                           "entry_date": None} for h in holds]
+        except Exception:
+            pass
+
     if not basket:
         return jsonify({"success": True, "holdings": [], "total_entry_value": 0,
                         "total_current_value": 0, "total_return_pct": 0,
                         "tracking_since": None})
 
     tickers = [h["ticker"] for h in basket]
-
-    # Get current ranks from cached live signals
-    rank_map = {}
-    try:
-        sig_result = live_signals_scanner.scan_entry_signals(force_refresh=False)
-        for s in sig_result.get("mom20_signals", []):
-            rank_map[s["ticker"]] = s.get("rank")
-    except Exception:
-        pass
 
     # Try Kite LTP first, fall back to yfinance
     price_map = {}
@@ -2583,6 +2602,11 @@ def api_mom20_performance(user_id):
                     pass
         except Exception:
             pass
+
+    # Use signal prices as last-resort fallback
+    for t in tickers:
+        if t not in price_map and t in signal_price_map:
+            price_map[t] = signal_price_map[t]
 
     holdings = []
     total_entry = 0.0
