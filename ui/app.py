@@ -2371,6 +2371,13 @@ def api_mom20_basket_download(user_id):
     if not user:
         return jsonify({"success": False, "error": "user not found"})
 
+    # Allow UI to override capital without saving to profile
+    capital_override = request.args.get("capital", type=int)
+    if capital_override and capital_override > 0:
+        import copy
+        user = copy.deepcopy(user)
+        user.setdefault("strategies", {}).setdefault("mom20", {})["capital"] = capital_override
+
     try:
         result = live_signals_scanner.scan_entry_signals(force_refresh=False)
         signals = result.get("mom20_signals", [])

@@ -8095,7 +8095,8 @@ async function mom20SeedClear() {
 async function mom20DownloadBasket() {
     const uid = _mom20SelectedUser?.id;
     if (!uid) { alert('Select a user first'); return; }
-    window.location.href = `/api/portfolio-users/${uid}/mom20-basket/download`;
+    const cap = _mom20ParseCapitalInput();
+    window.location.href = `/api/portfolio-users/${uid}/mom20-basket/download?capital=${cap}`;
 }
 
 async function mom20UploadTradeBook(event) {
