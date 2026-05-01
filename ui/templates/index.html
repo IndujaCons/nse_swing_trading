@@ -2434,22 +2434,42 @@
                             <div id="mom20-tracker-current" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
                         </div>
                     </div>
-                    <!-- Holdings table -->
-                    <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                        <thead>
-                            <tr style="font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
-                                <th style="text-align:left;padding:5px 8px;">Ticker</th>
-                                <th style="text-align:center;padding:5px 8px;">Rank</th>
-                                <th style="text-align:right;padding:5px 8px;">Entry ₹</th>
-                                <th style="text-align:right;padding:5px 8px;">Current ₹</th>
-                                <th style="text-align:right;padding:5px 8px;">Return</th>
-                                <th style="text-align:right;padding:5px 8px;">Qty</th>
-                                <th style="text-align:right;padding:5px 8px;">Value</th>
-                                <th style="width:28px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="mom20-tracker-tbody"></tbody>
-                    </table>
+                    <!-- Holdings table + chart side panel -->
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                        <div style="flex:1;min-width:0;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                            <thead>
+                                <tr style="font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
+                                    <th style="text-align:left;padding:5px 8px;">Ticker</th>
+                                    <th style="text-align:center;padding:5px 8px;">Rank</th>
+                                    <th style="text-align:right;padding:5px 8px;">Entry ₹</th>
+                                    <th style="text-align:right;padding:5px 8px;">Current ₹</th>
+                                    <th style="text-align:right;padding:5px 8px;">Return</th>
+                                    <th style="text-align:right;padding:5px 8px;">Qty</th>
+                                    <th style="text-align:right;padding:5px 8px;">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mom20-tracker-tbody"></tbody>
+                        </table>
+                        </div>
+                        <!-- Side chart panel -->
+                        <div id="mom20-tracker-chart-panel" style="flex:0 0 38%;min-width:0;position:sticky;top:10px;align-self:flex-start;display:none;">
+                            <div class="panel" style="height:100%;">
+                                <div class="panel-header">
+                                    <span class="panel-title" id="mom20-tracker-chart-title" style="color:var(--green);">Price Chart</span>
+                                    <div style="display:flex;gap:0;">
+                                        <button onclick="openTrackerChart(null,'1mo')" class="mom20-chart-period-btn" style="padding:2px 8px;font-size:10px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:4px 0 0 4px;">1M</button>
+                                        <button onclick="openTrackerChart(null,'3mo')" class="mom20-chart-period-btn" style="padding:2px 8px;font-size:10px;border:1px solid var(--border-color);border-left:0;background:transparent;color:var(--text-secondary);cursor:pointer;">3M</button>
+                                        <button onclick="openTrackerChart(null,'6mo')" class="mom20-chart-period-btn" style="padding:2px 8px;font-size:10px;border:1px solid var(--border-color);border-left:0;background:transparent;color:var(--text-secondary);cursor:pointer;">6M</button>
+                                        <button onclick="openTrackerChart(null,'1y')" class="mom20-chart-period-btn active-period" style="padding:2px 8px;font-size:10px;border:1px solid var(--green);border-left:0;background:var(--green);color:white;cursor:pointer;border-radius:0 4px 4px 0;font-weight:700;">1Y</button>
+                                    </div>
+                                </div>
+                                <div class="panel-body" id="mom20-tracker-chart-body" style="padding:8px;max-height:none;overflow:visible;">
+                                    <div style="padding:40px 20px;text-align:center;color:var(--text-muted);">Click any stock to view chart</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
 
@@ -2925,7 +2945,7 @@
             currency = currency || '₹';
             const bodyId = targetBodyId || 'wl-chart-body';
             const canvasId = bodyId === 'ls-chart-body' ? 'ls-chart-canvas'
-                           : bodyId === 'tracker-chart-body' ? 'tracker-chart-canvas'
+                           : bodyId === 'mom20-tracker-chart-body' ? 'tracker-chart-canvas'
                            : 'wl-chart-canvas';
             const body = document.getElementById(bodyId);
             body.innerHTML = `<canvas id="${canvasId}" style="width:100%; height:380px;"></canvas>`;
@@ -7908,20 +7928,26 @@ function openTrackerChart(ticker, period) {
     if (period) _trackerChartPeriod = period;
     if (!_trackerChartTicker) return;
 
-    const modal = document.getElementById('tracker-chart-modal');
-    modal.style.display = 'flex';
-    document.getElementById('tracker-chart-title').textContent = `${_trackerChartTicker} — Price Chart`;
+    const panel = document.getElementById('mom20-tracker-chart-panel');
+    if (panel) panel.style.display = 'block';
+    document.getElementById('mom20-tracker-chart-title').textContent = _trackerChartTicker;
 
     // Highlight active period button
-    document.querySelectorAll('#tracker-chart-periods button').forEach(btn => {
-        const isActive = btn.textContent === {'1mo':'1M','3mo':'3M','6mo':'6M','1y':'1Y','2y':'2Y'}[_trackerChartPeriod];
-        btn.style.background = isActive ? 'var(--green)' : 'var(--bg-tertiary)';
-        btn.style.color = isActive ? 'white' : 'var(--text-muted)';
-        btn.style.border = isActive ? 'none' : '1px solid var(--border-color)';
+    const periodMap = {'1mo':'1M','3mo':'3M','6mo':'6M','1y':'1Y'};
+    document.querySelectorAll('.mom20-chart-period-btn').forEach(btn => {
+        const isActive = btn.textContent.trim() === (periodMap[_trackerChartPeriod] || '1Y');
+        btn.style.background = isActive ? 'var(--green)' : 'transparent';
+        btn.style.color = isActive ? 'white' : 'var(--text-secondary)';
+        btn.style.borderColor = isActive ? 'var(--green)' : 'var(--border-color)';
         btn.style.fontWeight = isActive ? '700' : '';
     });
 
-    const body = document.getElementById('tracker-chart-body');
+    // Highlight selected row
+    document.querySelectorAll('#mom20-tracker-tbody tr').forEach(tr => {
+        tr.style.background = tr.dataset.ticker === _trackerChartTicker ? 'rgba(40,167,69,0.08)' : '';
+    });
+
+    const body = document.getElementById('mom20-tracker-chart-body');
     body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">Loading…</div>';
 
     fetch(`/api/watchlist/chart?ticker=${_trackerChartTicker}&period=${_trackerChartPeriod}`)
@@ -7931,17 +7957,12 @@ function openTrackerChart(ticker, period) {
                 body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">No chart data</div>';
                 return;
             }
-            body.innerHTML = '<canvas id="tracker-chart-canvas" style="width:100%;"></canvas>';
             drawWatchlistChart(data.dates, data.prices, _trackerChartTicker,
                 data.rs, data.rs_label, data.bench, data.bench_label,
                 data.currency || '₹', data.rs_smooth,
-                'tracker-chart-body', data.dma50, data.dma200, data.volumes, data.rsi);
+                'mom20-tracker-chart-body', data.dma50, data.dma200, data.volumes, data.rsi);
         })
         .catch(() => { body.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Error loading chart</div>'; });
-}
-
-function closeTrackerChart() {
-    document.getElementById('tracker-chart-modal').style.display = 'none';
 }
 
 function mom20TrackerSetSort(mode) {
@@ -7971,7 +7992,7 @@ function mom20TrackerRender() {
         const rank  = h.rank != null ? h.rank : '—';
         const rankColor = h.rank != null && h.rank <= 20 ? 'var(--green)'
                         : h.rank != null && h.rank <= 40 ? '#ff6b35' : '#dc3545';
-        return `<tr style="border-bottom:1px solid var(--border-color);">
+        return `<tr data-ticker="${h.ticker}" onclick="openTrackerChart('${h.ticker}')" style="border-bottom:1px solid var(--border-color);cursor:pointer;">
             <td style="padding:5px 8px;font-weight:700;">${h.ticker}</td>
             <td style="padding:5px 8px;text-align:center;font-weight:700;color:${rankColor};">${rank}</td>
             <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${h.entry_price.toLocaleString('en-IN')}</td>
@@ -7979,7 +8000,6 @@ function mom20TrackerRender() {
             <td style="padding:5px 8px;text-align:right;font-weight:700;color:${color};">${sign}${h.return_pct.toFixed(2)}%</td>
             <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${h.qty}</td>
             <td style="padding:5px 8px;text-align:right;">₹${Math.round(h.current_value).toLocaleString('en-IN')}</td>
-            <td style="padding:5px 4px;text-align:center;"><button onclick="openTrackerChart('${h.ticker}')" title="Chart" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted);padding:0;">📈</button></td>
         </tr>`;
     }).join('');
 }
@@ -8368,26 +8388,6 @@ loadUsers();
 </script>
 
 <!-- Add User Modal -->
-<!-- Tracker Chart Modal -->
-<div id="tracker-chart-modal" onclick="if(event.target===this)closeTrackerChart()"
-     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:10px;padding:16px;width:min(95vw,900px);max-height:90vh;overflow-y:auto;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-                <span id="tracker-chart-title" style="font-size:14px;font-weight:700;color:var(--green);">Chart</span>
-                <div id="tracker-chart-periods" style="display:flex;gap:4px;">
-                    <button onclick="openTrackerChart(null,'1mo')" style="padding:2px 8px;font-size:11px;border-radius:3px;cursor:pointer;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);">1M</button>
-                    <button onclick="openTrackerChart(null,'3mo')" style="padding:2px 8px;font-size:11px;border-radius:3px;cursor:pointer;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);">3M</button>
-                    <button onclick="openTrackerChart(null,'6mo')" style="padding:2px 8px;font-size:11px;border-radius:3px;cursor:pointer;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);">6M</button>
-                    <button onclick="openTrackerChart(null,'1y')" style="padding:2px 8px;font-size:11px;border-radius:3px;cursor:pointer;background:var(--green);color:white;border:none;font-weight:700;">1Y</button>
-                    <button onclick="openTrackerChart(null,'2y')" style="padding:2px 8px;font-size:11px;border-radius:3px;cursor:pointer;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);">2Y</button>
-                </div>
-            </div>
-            <button onclick="closeTrackerChart()" style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;">✕</button>
-        </div>
-        <div id="tracker-chart-body" style="min-height:300px;"></div>
-    </div>
-</div>
 
 <div id="add-user-modal" onclick="if(event.target===this)closeAddUserModal()">
     <div class="modal-box">
