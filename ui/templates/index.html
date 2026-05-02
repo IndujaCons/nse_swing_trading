@@ -7906,11 +7906,22 @@ async function mom20LoadPerformance() {
     if (card) card.style.display = 'block';
     if (status) status.textContent = 'Loading…';
 
-    // Fetch holdings + basket preview in parallel
-    const [perfResp, basketResp] = await Promise.all([
-        fetch(`/api/portfolio-users/${uid}/mom20-performance`).then(r => r.json()).catch(() => null),
-        fetch(`/api/portfolio-users/${uid}/mom20-basket`).then(r => r.json()).catch(() => null),
-    ]);
+    const fetchWithTimeout = (url, ms=20000) => {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), ms);
+        return fetch(url, {signal: ctrl.signal}).then(r => r.json()).catch(() => null).finally(() => clearTimeout(t));
+    };
+
+    let perfResp, basketResp;
+    try {
+        [perfResp, basketResp] = await Promise.all([
+            fetchWithTimeout(`/api/portfolio-users/${uid}/mom20-performance`, 25000),
+            fetchWithTimeout(`/api/portfolio-users/${uid}/mom20-basket`, 25000),
+        ]);
+    } catch(e) {
+        if (status) status.textContent = 'Load failed — try Refresh';
+        return;
+    }
 
     // ── Basket preview: exits + entries ──────────────────────────────────────
     const preview = document.getElementById('mom20-basket-preview');
@@ -7980,9 +7991,13 @@ async function mom20LoadPerformance() {
     const curEl = document.getElementById('mom20-tracker-current');
     if (curEl) curEl.textContent = fmtInr(d.total_current_value);
 
-    _mom20TrackerHoldings = d.holdings;
-    mom20TrackerRender();
-    if (status) status.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+    try {
+        _mom20TrackerHoldings = d.holdings;
+        mom20TrackerRender();
+        if (status) status.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+    } catch(e) {
+        if (status) status.textContent = 'Render error';
+    }
 }
 
 let _trackerChartTicker = null;
