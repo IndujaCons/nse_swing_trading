@@ -2429,6 +2429,35 @@
                             <div id="mom20-tracker-current" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
                         </div>
                     </div>
+                    <!-- Exits / Entries (daily basket preview) -->
+                    <div id="mom20-basket-preview" style="margin-bottom:10px;display:none;font-family:monospace;font-size:12px;">
+                        <div id="mom20-exits-section" style="margin-bottom:10px;display:none;">
+                            <div style="font-size:11px;font-weight:700;color:#dc3545;letter-spacing:1px;margin-bottom:4px;">EXITS (<span id="mom20-exits-count">0</span>)</div>
+                            <table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;">
+                                <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
+                                    <th style="text-align:left;padding:3px 8px;">Ticker</th>
+                                    <th style="text-align:right;padding:3px 8px;">Rank</th>
+                                    <th style="text-align:right;padding:3px 8px;">Qty</th>
+                                    <th style="text-align:right;padding:3px 8px;">Reason</th>
+                                </tr></thead>
+                                <tbody id="mom20-exits-tbody"></tbody>
+                            </table>
+                        </div>
+                        <div id="mom20-entries-section" style="margin-bottom:10px;display:none;">
+                            <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:4px;">ENTRIES (<span id="mom20-entries-count">0</span>)</div>
+                            <table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;">
+                                <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
+                                    <th style="text-align:left;padding:3px 8px;">Ticker</th>
+                                    <th style="text-align:right;padding:3px 8px;">Rank</th>
+                                    <th style="text-align:right;padding:3px 8px;">Score</th>
+                                    <th style="text-align:right;padding:3px 8px;">Price₹</th>
+                                    <th style="text-align:right;padding:3px 8px;">Qty</th>
+                                    <th style="text-align:right;padding:3px 8px;">Capital</th>
+                                </tr></thead>
+                                <tbody id="mom20-entries-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                     <!-- Holdings table + chart side panel -->
                     <div style="display:flex;gap:12px;align-items:flex-start;">
                         <div style="flex:1;min-width:0;">
@@ -7876,44 +7905,84 @@ async function mom20LoadPerformance() {
     const status = document.getElementById('mom20-tracker-status');
     if (card) card.style.display = 'block';
     if (status) status.textContent = 'Loading…';
-    try {
-        const r = await fetch(`/api/portfolio-users/${uid}/mom20-performance`);
-        const d = await r.json();
-        if (!d.success) {
-            if (status) status.textContent = 'Error loading holdings';
-            return;
-        }
-        if (!d.holdings.length) {
-            if (status) status.textContent = 'No holdings — upload trade book to start tracking';
-            const tbody = document.getElementById('mom20-tracker-tbody');
-            if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
-            return;
-        }
 
-        // Summary
-        const ret = d.total_return_pct;
-        const retEl = document.getElementById('mom20-tracker-returns');
-        if (retEl) {
-            retEl.textContent = (ret >= 0 ? '+' : '') + ret.toFixed(2) + '%';
-            retEl.style.color = ret >= 0 ? 'var(--green)' : '#dc3545';
-        }
-        const sinceEl = document.getElementById('mom20-tracker-since');
-        if (sinceEl && d.tracking_since) {
-            const dt = new Date(d.tracking_since);
-            sinceEl.textContent = dt.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
-        }
-        const fmtInr = v => '₹' + Math.round(v).toLocaleString('en-IN');
-        const invEl = document.getElementById('mom20-tracker-invested');
-        if (invEl) invEl.textContent = fmtInr(d.total_entry_value);
-        const curEl = document.getElementById('mom20-tracker-current');
-        if (curEl) curEl.textContent = fmtInr(d.total_current_value);
+    // Fetch holdings + basket preview in parallel
+    const [perfResp, basketResp] = await Promise.all([
+        fetch(`/api/portfolio-users/${uid}/mom20-performance`).then(r => r.json()).catch(() => null),
+        fetch(`/api/portfolio-users/${uid}/mom20-basket`).then(r => r.json()).catch(() => null),
+    ]);
 
-        _mom20TrackerHoldings = d.holdings;
-        mom20TrackerRender();
-        if (status) status.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
-    } catch(e) {
-        if (status) status.textContent = 'Error loading performance';
+    // ── Basket preview: exits + entries ──────────────────────────────────────
+    const preview = document.getElementById('mom20-basket-preview');
+    if (basketResp?.success) {
+        const exits   = basketResp.exits   || [];
+        const entries = basketResp.entries || [];
+
+        const exSec = document.getElementById('mom20-exits-section');
+        const enSec = document.getElementById('mom20-entries-section');
+        document.getElementById('mom20-exits-count').textContent   = exits.length;
+        document.getElementById('mom20-entries-count').textContent = entries.length;
+
+        if (exits.length) {
+            exSec.style.display = 'block';
+            document.getElementById('mom20-exits-tbody').innerHTML = exits.map(e => `
+                <tr style="border-bottom:1px solid var(--border-color);">
+                    <td style="padding:3px 8px;font-weight:700;color:#dc3545;">${e.ticker}</td>
+                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);">${e.rank ?? '—'}</td>
+                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);">${e.qty}</td>
+                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);font-size:10px;">${e.reason || ''}</td>
+                </tr>`).join('');
+        } else { exSec.style.display = 'none'; }
+
+        if (entries.length) {
+            enSec.style.display = 'block';
+            document.getElementById('mom20-entries-tbody').innerHTML = entries.map(e => `
+                <tr style="border-bottom:1px solid var(--border-color);">
+                    <td style="padding:3px 8px;font-weight:700;color:var(--green);">${e.ticker}</td>
+                    <td style="padding:3px 8px;text-align:right;">${e.rank}</td>
+                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);">${e.score?.toFixed(3) ?? '—'}</td>
+                    <td style="padding:3px 8px;text-align:right;">${e.price?.toLocaleString('en-IN') ?? '—'}</td>
+                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);">${e.qty}</td>
+                    <td style="padding:3px 8px;text-align:right;">₹${Math.round(e.capital_allocated).toLocaleString('en-IN')}</td>
+                </tr>`).join('');
+        } else { enSec.style.display = 'none'; }
+
+        preview.style.display = (exits.length || entries.length) ? 'block' : 'none';
     }
+
+    // ── Holdings P&L ─────────────────────────────────────────────────────────
+    const d = perfResp;
+    if (!d?.success) {
+        if (status) status.textContent = 'Error loading holdings';
+        return;
+    }
+    if (!d.holdings.length) {
+        if (status) status.textContent = 'No holdings — upload trade book to start tracking';
+        const tbody = document.getElementById('mom20-tracker-tbody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
+        return;
+    }
+
+    const ret = d.total_return_pct;
+    const retEl = document.getElementById('mom20-tracker-returns');
+    if (retEl) {
+        retEl.textContent = (ret >= 0 ? '+' : '') + ret.toFixed(2) + '%';
+        retEl.style.color = ret >= 0 ? 'var(--green)' : '#dc3545';
+    }
+    const sinceEl = document.getElementById('mom20-tracker-since');
+    if (sinceEl && d.tracking_since) {
+        const dt = new Date(d.tracking_since);
+        sinceEl.textContent = dt.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+    }
+    const fmtInr = v => '₹' + Math.round(v).toLocaleString('en-IN');
+    const invEl = document.getElementById('mom20-tracker-invested');
+    if (invEl) invEl.textContent = fmtInr(d.total_entry_value);
+    const curEl = document.getElementById('mom20-tracker-current');
+    if (curEl) curEl.textContent = fmtInr(d.total_current_value);
+
+    _mom20TrackerHoldings = d.holdings;
+    mom20TrackerRender();
+    if (status) status.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
 }
 
 let _trackerChartTicker = null;
