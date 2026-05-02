@@ -2408,11 +2408,6 @@
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
                         <button onclick="mom20LoadPerformance()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Refresh</button>
-                        <div style="display:flex;gap:4px;margin-left:auto;">
-                            <span style="font-size:10px;color:var(--text-muted);align-self:center;">Sort:</span>
-                            <button id="mom20-sort-return-btn" onclick="mom20TrackerSetSort('return')" style="padding:2px 9px;font-size:10px;background:var(--green);color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700;">Return</button>
-                            <button id="mom20-sort-rank-btn" onclick="mom20TrackerSetSort('rank')" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Rank</button>
-                        </div>
                         <span id="mom20-tracker-status" style="font-size:10px;color:var(--text-muted);"></span>
                     </div>
                     <!-- Summary strip -->
@@ -2441,12 +2436,14 @@
                             <thead>
                                 <tr style="font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
                                     <th style="text-align:left;padding:5px 8px;">Ticker</th>
-                                    <th style="text-align:center;padding:5px 8px;">Rank</th>
+                                    <th id="th-rank" onclick="mom20TrackerSetSort('rank')" style="text-align:center;padding:5px 8px;cursor:pointer;user-select:none;">Rank <span id="th-rank-arrow"></span></th>
                                     <th style="text-align:right;padding:5px 8px;">Entry ₹</th>
                                     <th style="text-align:right;padding:5px 8px;">Current ₹</th>
-                                    <th style="text-align:right;padding:5px 8px;">Return</th>
+                                    <th id="th-return" onclick="mom20TrackerSetSort('return')" style="text-align:right;padding:5px 8px;cursor:pointer;user-select:none;">Return <span id="th-return-arrow">▼</span></th>
                                     <th style="text-align:right;padding:5px 8px;">Qty</th>
                                     <th style="text-align:right;padding:5px 8px;">Value</th>
+                                    <th style="text-align:right;padding:5px 8px;">Entry Date</th>
+                                    <th style="text-align:right;padding:5px 8px;">Age</th>
                                 </tr>
                             </thead>
                             <tbody id="mom20-tracker-tbody"></tbody>
@@ -7965,33 +7962,49 @@ function openTrackerChart(ticker, period) {
         .catch(() => { body.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Error loading chart</div>'; });
 }
 
+let _mom20TrackerSortDir = {return: 'desc', rank: 'asc'};
 function mom20TrackerSetSort(mode) {
-    _mom20TrackerSort = mode;
-    document.getElementById('mom20-sort-return-btn').style.background = mode === 'return' ? 'var(--green)' : 'var(--bg-tertiary)';
-    document.getElementById('mom20-sort-return-btn').style.color = mode === 'return' ? 'white' : 'var(--text-muted)';
-    document.getElementById('mom20-sort-return-btn').style.border = mode === 'return' ? 'none' : '1px solid var(--border-color)';
-    document.getElementById('mom20-sort-rank-btn').style.background = mode === 'rank' ? 'var(--green)' : 'var(--bg-tertiary)';
-    document.getElementById('mom20-sort-rank-btn').style.color = mode === 'rank' ? 'white' : 'var(--text-muted)';
-    document.getElementById('mom20-sort-rank-btn').style.border = mode === 'rank' ? 'none' : '1px solid var(--border-color)';
+    if (_mom20TrackerSort === mode) {
+        _mom20TrackerSortDir[mode] = _mom20TrackerSortDir[mode] === 'asc' ? 'desc' : 'asc';
+    } else {
+        _mom20TrackerSort = mode;
+    }
+    const rankArrow = document.getElementById('th-rank-arrow');
+    const retArrow  = document.getElementById('th-return-arrow');
+    const rankTh    = document.getElementById('th-rank');
+    const retTh     = document.getElementById('th-return');
+    if (rankArrow) rankArrow.textContent = mode === 'rank' ? (_mom20TrackerSortDir.rank === 'asc' ? '▲' : '▼') : '';
+    if (retArrow)  retArrow.textContent  = mode === 'return' ? (_mom20TrackerSortDir.return === 'asc' ? '▲' : '▼') : '';
+    if (rankTh)    rankTh.style.color    = mode === 'rank'   ? 'var(--green)' : 'var(--text-muted)';
+    if (retTh)     retTh.style.color     = mode === 'return' ? 'var(--green)' : 'var(--text-muted)';
     mom20TrackerRender();
 }
 
 function mom20TrackerRender() {
     const tbody = document.getElementById('mom20-tracker-tbody');
     if (!tbody || !_mom20TrackerHoldings.length) return;
+    const dir = _mom20TrackerSortDir[_mom20TrackerSort] === 'asc' ? 1 : -1;
     const sorted = [..._mom20TrackerHoldings].sort((a, b) => {
         if (_mom20TrackerSort === 'rank') {
             const ra = a.rank ?? 9999, rb = b.rank ?? 9999;
-            return ra - rb;
+            return dir * (ra - rb);
         }
-        return b.return_pct - a.return_pct;
+        return dir * (a.return_pct - b.return_pct);
     });
+    const today = new Date();
     tbody.innerHTML = sorted.map(h => {
         const color = h.return_pct >= 0 ? 'var(--green)' : '#dc3545';
         const sign  = h.return_pct >= 0 ? '+' : '';
         const rank  = h.rank != null ? h.rank : '—';
         const rankColor = h.rank != null && h.rank <= 20 ? 'var(--green)'
                         : h.rank != null && h.rank <= 40 ? '#ff6b35' : '#dc3545';
+        let entryDateStr = '—', ageStr = '—';
+        if (h.entry_date) {
+            const ed = new Date(h.entry_date);
+            entryDateStr = ed.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'2-digit'});
+            const days = Math.floor((today - ed) / 86400000);
+            ageStr = days >= 365 ? (days/365).toFixed(1)+'y' : days+'d';
+        }
         return `<tr data-ticker="${h.ticker}" onclick="openTrackerChart('${h.ticker}')" style="border-bottom:1px solid var(--border-color);cursor:pointer;">
             <td style="padding:5px 8px;font-weight:700;">${h.ticker}</td>
             <td style="padding:5px 8px;text-align:center;font-weight:700;color:${rankColor};">${rank}</td>
@@ -8000,6 +8013,8 @@ function mom20TrackerRender() {
             <td style="padding:5px 8px;text-align:right;font-weight:700;color:${color};">${sign}${h.return_pct.toFixed(2)}%</td>
             <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${h.qty}</td>
             <td style="padding:5px 8px;text-align:right;">₹${Math.round(h.current_value).toLocaleString('en-IN')}</td>
+            <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${entryDateStr}</td>
+            <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${ageStr}</td>
         </tr>`;
     }).join('');
 }
