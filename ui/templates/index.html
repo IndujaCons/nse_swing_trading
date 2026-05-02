@@ -2432,18 +2432,17 @@
                     <!-- Holdings table + chart side panel -->
                     <div style="display:flex;gap:12px;align-items:flex-start;">
                         <div style="flex:1;min-width:0;">
-                        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:monospace;">
                             <thead>
-                                <tr style="font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
-                                    <th style="text-align:left;padding:5px 8px;">Ticker</th>
-                                    <th id="th-rank" onclick="mom20TrackerSetSort('rank')" style="text-align:center;padding:5px 8px;cursor:pointer;user-select:none;">Rank <span id="th-rank-arrow"></span></th>
-                                    <th style="text-align:right;padding:5px 8px;">Entry ₹</th>
-                                    <th style="text-align:right;padding:5px 8px;">Current ₹</th>
-                                    <th id="th-return" onclick="mom20TrackerSetSort('return')" style="text-align:right;padding:5px 8px;cursor:pointer;user-select:none;">Return <span id="th-return-arrow">▼</span></th>
-                                    <th style="text-align:right;padding:5px 8px;">Qty</th>
-                                    <th style="text-align:right;padding:5px 8px;">Value</th>
-                                    <th style="text-align:right;padding:5px 8px;">Entry Date</th>
-                                    <th style="text-align:right;padding:5px 8px;">Age</th>
+                                <tr style="font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border-color);">
+                                    <th style="text-align:left;padding:5px 8px;font-family:monospace;">Ticker</th>
+                                    <th id="th-rank" onclick="mom20TrackerSetSort('rank')" style="text-align:right;padding:5px 8px;cursor:pointer;user-select:none;font-family:monospace;">Rank <span id="th-rank-arrow"></span></th>
+                                    <th style="text-align:right;padding:5px 8px;font-family:monospace;">Since</th>
+                                    <th style="text-align:right;padding:5px 8px;font-family:monospace;">Entry₹</th>
+                                    <th style="text-align:right;padding:5px 8px;font-family:monospace;">Now₹</th>
+                                    <th style="text-align:right;padding:5px 8px;font-family:monospace;">Qty</th>
+                                    <th style="text-align:right;padding:5px 8px;font-family:monospace;">Unreal P&amp;L</th>
+                                    <th id="th-return" onclick="mom20TrackerSetSort('return')" style="text-align:right;padding:5px 8px;cursor:pointer;user-select:none;font-family:monospace;">P&amp;L% <span id="th-return-arrow">▼</span></th>
                                 </tr>
                             </thead>
                             <tbody id="mom20-tracker-tbody"></tbody>
@@ -7998,23 +7997,23 @@ function mom20TrackerRender() {
         const rank  = h.rank != null ? h.rank : '—';
         const rankColor = h.rank != null && h.rank <= 20 ? 'var(--green)'
                         : h.rank != null && h.rank <= 40 ? '#ff6b35' : '#dc3545';
-        let entryDateStr = '—', ageStr = '—';
+        let sinceStr = '—';
         if (h.entry_date) {
             const ed = new Date(h.entry_date);
-            entryDateStr = ed.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'2-digit'});
-            const days = Math.floor((today - ed) / 86400000);
-            ageStr = days >= 365 ? (days/365).toFixed(1)+'y' : days+'d';
+            sinceStr = ed.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'2-digit'}).replace(/ /g,'-');
         }
+        const unrealPnl = Math.round((h.current_price - h.entry_price) * h.qty);
+        const pnlSign = unrealPnl >= 0 ? '+' : '';
+        const td = 'padding:4px 8px;font-family:monospace;';
         return `<tr data-ticker="${h.ticker}" onclick="openTrackerChart('${h.ticker}')" style="border-bottom:1px solid var(--border-color);cursor:pointer;">
-            <td style="padding:5px 8px;font-weight:700;">${h.ticker}</td>
-            <td style="padding:5px 8px;text-align:center;font-weight:700;color:${rankColor};">${rank}</td>
-            <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${h.entry_price.toLocaleString('en-IN')}</td>
-            <td style="padding:5px 8px;text-align:right;">${h.current_price.toLocaleString('en-IN')}</td>
-            <td style="padding:5px 8px;text-align:right;font-weight:700;color:${color};">${sign}${h.return_pct.toFixed(2)}%</td>
-            <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${h.qty}</td>
-            <td style="padding:5px 8px;text-align:right;">₹${Math.round(h.current_value).toLocaleString('en-IN')}</td>
-            <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${entryDateStr}</td>
-            <td style="padding:5px 8px;text-align:right;color:var(--text-muted);">${ageStr}</td>
+            <td style="${td}font-weight:700;">${h.ticker}</td>
+            <td style="${td}text-align:right;font-weight:700;color:${rankColor};">${rank}</td>
+            <td style="${td}text-align:right;color:var(--text-muted);">${sinceStr}</td>
+            <td style="${td}text-align:right;color:var(--text-muted);">${h.entry_price.toLocaleString('en-IN')}</td>
+            <td style="${td}text-align:right;">${h.current_price.toLocaleString('en-IN')}</td>
+            <td style="${td}text-align:right;color:var(--text-muted);">${h.qty}</td>
+            <td style="${td}text-align:right;font-weight:700;color:${color};">${pnlSign}₹${Math.abs(unrealPnl).toLocaleString('en-IN')}</td>
+            <td style="${td}text-align:right;font-weight:700;color:${color};">${sign}${h.return_pct.toFixed(1)}%</td>
         </tr>`;
     }).join('');
 }
