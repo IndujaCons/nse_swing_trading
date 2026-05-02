@@ -2429,35 +2429,6 @@
                             <div id="mom20-tracker-current" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
                         </div>
                     </div>
-                    <!-- Exits / Entries (daily basket preview) -->
-                    <div id="mom20-basket-preview" style="margin-bottom:10px;display:none;font-family:monospace;font-size:12px;">
-                        <div id="mom20-exits-section" style="margin-bottom:10px;display:none;">
-                            <div style="font-size:11px;font-weight:700;color:#dc3545;letter-spacing:1px;margin-bottom:4px;">EXITS (<span id="mom20-exits-count">0</span>)</div>
-                            <table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;">
-                                <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
-                                    <th style="text-align:left;padding:3px 8px;">Ticker</th>
-                                    <th style="text-align:right;padding:3px 8px;">Rank</th>
-                                    <th style="text-align:right;padding:3px 8px;">Qty</th>
-                                    <th style="text-align:right;padding:3px 8px;">Reason</th>
-                                </tr></thead>
-                                <tbody id="mom20-exits-tbody"></tbody>
-                            </table>
-                        </div>
-                        <div id="mom20-entries-section" style="margin-bottom:10px;display:none;">
-                            <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:4px;">ENTRIES (<span id="mom20-entries-count">0</span>)</div>
-                            <table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;">
-                                <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
-                                    <th style="text-align:left;padding:3px 8px;">Ticker</th>
-                                    <th style="text-align:right;padding:3px 8px;">Rank</th>
-                                    <th style="text-align:right;padding:3px 8px;">Score</th>
-                                    <th style="text-align:right;padding:3px 8px;">Price₹</th>
-                                    <th style="text-align:right;padding:3px 8px;">Qty</th>
-                                    <th style="text-align:right;padding:3px 8px;">Capital</th>
-                                </tr></thead>
-                                <tbody id="mom20-entries-tbody"></tbody>
-                            </table>
-                        </div>
-                    </div>
                     <!-- Holdings table + chart side panel -->
                     <div style="display:flex;gap:12px;align-items:flex-start;">
                         <div style="flex:1;min-width:0;">
@@ -7906,63 +7877,16 @@ async function mom20LoadPerformance() {
     if (card) card.style.display = 'block';
     if (status) status.textContent = 'Loading…';
 
-    const fetchWithTimeout = (url, ms=20000) => {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), ms);
-        return fetch(url, {signal: ctrl.signal}).then(r => r.json()).catch(() => null).finally(() => clearTimeout(t));
-    };
-
-    let perfResp, basketResp;
+    let d;
     try {
-        [perfResp, basketResp] = await Promise.all([
-            fetchWithTimeout(`/api/portfolio-users/${uid}/mom20-performance`, 25000),
-            fetchWithTimeout(`/api/portfolio-users/${uid}/mom20-basket`, 25000),
-        ]);
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 25000);
+        d = await fetch(`/api/portfolio-users/${uid}/mom20-performance`, {signal: ctrl.signal})
+            .then(r => r.json()).finally(() => clearTimeout(t));
     } catch(e) {
         if (status) status.textContent = 'Load failed — try Refresh';
         return;
     }
-
-    // ── Basket preview: exits + entries ──────────────────────────────────────
-    const preview = document.getElementById('mom20-basket-preview');
-    if (basketResp?.success) {
-        const exits   = basketResp.exits   || [];
-        const entries = basketResp.entries || [];
-
-        const exSec = document.getElementById('mom20-exits-section');
-        const enSec = document.getElementById('mom20-entries-section');
-        document.getElementById('mom20-exits-count').textContent   = exits.length;
-        document.getElementById('mom20-entries-count').textContent = entries.length;
-
-        if (exits.length) {
-            exSec.style.display = 'block';
-            document.getElementById('mom20-exits-tbody').innerHTML = exits.map(e => `
-                <tr style="border-bottom:1px solid var(--border-color);">
-                    <td style="padding:3px 8px;font-weight:700;color:#dc3545;">${e.ticker}</td>
-                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);">${e.rank ?? '—'}</td>
-                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);">${e.qty}</td>
-                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);font-size:10px;">${e.reason || ''}</td>
-                </tr>`).join('');
-        } else { exSec.style.display = 'none'; }
-
-        if (entries.length) {
-            enSec.style.display = 'block';
-            document.getElementById('mom20-entries-tbody').innerHTML = entries.map(e => `
-                <tr style="border-bottom:1px solid var(--border-color);">
-                    <td style="padding:3px 8px;font-weight:700;color:var(--green);">${e.ticker}</td>
-                    <td style="padding:3px 8px;text-align:right;">${e.rank}</td>
-                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);">${e.score?.toFixed(3) ?? '—'}</td>
-                    <td style="padding:3px 8px;text-align:right;">${e.price?.toLocaleString('en-IN') ?? '—'}</td>
-                    <td style="padding:3px 8px;text-align:right;color:var(--text-muted);">${e.qty}</td>
-                    <td style="padding:3px 8px;text-align:right;">₹${Math.round(e.capital_allocated).toLocaleString('en-IN')}</td>
-                </tr>`).join('');
-        } else { enSec.style.display = 'none'; }
-
-        preview.style.display = (exits.length || entries.length) ? 'block' : 'none';
-    }
-
-    // ── Holdings P&L ─────────────────────────────────────────────────────────
-    const d = perfResp;
     if (!d?.success) {
         if (status) status.textContent = 'Error loading holdings';
         return;
