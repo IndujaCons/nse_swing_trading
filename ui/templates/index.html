@@ -2390,12 +2390,6 @@
                         <tbody id="mom20-basket-entries-body"></tbody>
                     </table>
 
-                    <!-- Holds -->
-                    <div class="basket-section-title">HOLDS (<span id="mom20-holds-count-lbl">0</span>)</div>
-                    <table class="basket-table" style="margin-bottom:14px;font-family:monospace;">
-                        <thead><tr><th>#</th><th>Ticker</th><th>Rank</th></tr></thead>
-                        <tbody id="mom20-basket-holds-body"></tbody>
-                    </table>
 
                     <!-- Action buttons -->
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -8098,7 +8092,6 @@ function _renderMom20Basket(d) {
 
     document.getElementById('mom20-exits-count-lbl').textContent   = exits.length;
     document.getElementById('mom20-entries-count-lbl').textContent = entries.length;
-    document.getElementById('mom20-holds-count-lbl').textContent   = holds.length;
 
     // Exits
     document.getElementById('mom20-basket-exits-body').innerHTML = exits.length
@@ -8123,13 +8116,6 @@ function _renderMom20Basket(d) {
             <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td></tr>`).join('')
         : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
 
-    // Holds
-    document.getElementById('mom20-basket-holds-body').innerHTML = holds.length
-        ? holds.map((h,i) => `<tr>
-            <td>${i+1}</td>
-            <td style="font-weight:700;">${h.ticker}</td>
-            <td style="color:var(--text-muted)">${h.rank ?? '—'}</td></tr>`).join('')
-        : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:10px;">No holds</td></tr>';
 }
 
 function mom20RecalcCapital() {
