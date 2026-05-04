@@ -2681,7 +2681,8 @@ def api_mom20_chart(user_id):
     start_date = min(dates_list)
 
     tickers    = [h["ticker"] for h in basket]
-    yf_tickers = [f"{t}.NS" for t in tickers] + ["^CRSLDX"]
+    bench_syms  = ["^CRSLDX", "^CNX200"]
+    yf_tickers  = [f"{t}.NS" for t in tickers] + bench_syms
 
     try:
         raw = yf.download(yf_tickers, start=start_date, progress=False,
@@ -2697,7 +2698,9 @@ def api_mom20_chart(user_id):
         except Exception:
             return pd.Series(dtype=float)
 
-    bench_raw = get_close("^CRSLDX")
+    bench_n500 = get_close("^CRSLDX")
+    bench_n200 = get_close("^CNX200")
+    bench_raw  = bench_n500 if not bench_n500.empty else bench_n200
     if bench_raw.empty:
         return jsonify({"success": False, "error": "benchmark data unavailable"})
 
@@ -2743,19 +2746,35 @@ def api_mom20_chart(user_id):
 
     # Rebase both to 0% from day 0
     base_port  = port_values[0]
-    base_bench = float(bench_raw.iloc[0])
+    base_n500  = float(bench_n500.iloc[0]) if not bench_n500.empty else None
+    base_n200  = float(bench_n200.iloc[0]) if not bench_n200.empty else None
     dates_out  = [d.strftime("%Y-%m-%d") for d in all_dates]
-    port_pct   = [round((v / base_port  - 1) * 100, 3) for v in port_values]
-    bench_pct  = [round((float(bench_raw.loc[d]) / base_bench - 1) * 100, 3) for d in all_dates]
+    port_pct   = [round((v / base_port - 1) * 100, 3) for v in port_values]
+
+    def bench_series(raw, base):
+        if raw.empty or base is None:
+            return [None] * len(all_dates)
+        out = []
+        for d in all_dates:
+            try:
+                out.append(round((float(raw.loc[d]) / base - 1) * 100, 3))
+            except Exception:
+                out.append(None)
+        return out
+
+    n500_pct = bench_series(bench_n500, base_n500)
+    n200_pct = bench_series(bench_n200, base_n200)
 
     return jsonify({
-        "success": True,
-        "dates":       dates_out,
-        "portfolio":   port_pct,
-        "benchmark":   bench_pct,
-        "start_date":  start_date,
+        "success":      True,
+        "dates":        dates_out,
+        "portfolio":    port_pct,
+        "n500":         n500_pct,
+        "n200":         n200_pct,
+        "start_date":   start_date,
         "total_return": port_pct[-1],
-        "bench_return": bench_pct[-1],
+        "n500_return":  n500_pct[-1],
+        "n200_return":  n200_pct[-1],
     })
 
 

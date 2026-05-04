@@ -2429,17 +2429,6 @@
                             <div id="mom20-tracker-current" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
                         </div>
                     </div>
-                    <!-- Portfolio vs Benchmark chart -->
-                    <div id="mom20-perf-chart-wrap" style="margin-bottom:14px;display:none;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                            <span style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO vs NIFTY 500</span>
-                            <div style="display:flex;gap:14px;font-size:11px;">
-                                <span style="color:#4a9eff;">■ My Portfolio <span id="mom20-chart-port-ret" style="font-weight:700;"></span></span>
-                                <span style="color:#f5a623;">■ Nifty 500 <span id="mom20-chart-bench-ret" style="font-weight:700;"></span></span>
-                            </div>
-                        </div>
-                        <canvas id="mom20-perf-canvas" style="width:100%;height:220px;"></canvas>
-                    </div>
                     <!-- Holdings table + chart side panel -->
                     <div style="display:flex;gap:12px;align-items:flex-start;">
                         <div style="flex:1;min-width:0;">
@@ -2475,6 +2464,21 @@
                                     <div style="padding:40px 20px;text-align:center;color:var(--text-muted);">Click any stock to view chart</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio vs Nifty 200 / 500 chart -->
+                    <div id="mom20-perf-chart-wrap" style="margin-top:16px;display:none;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <span style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO vs BENCHMARK</span>
+                            <div style="display:flex;gap:14px;font-size:11px;">
+                                <span>■ <span style="color:#4a9eff;">My Portfolio</span> <span id="mom20-chart-port-ret" style="font-weight:700;color:#4a9eff;"></span></span>
+                                <span>■ <span style="color:#f5a623;">Nifty 500</span> <span id="mom20-chart-n500-ret" style="font-weight:700;color:#f5a623;"></span></span>
+                                <span>■ <span style="color:#a78bfa;">Nifty 200</span> <span id="mom20-chart-n200-ret" style="font-weight:700;color:#a78bfa;"></span></span>
+                            </div>
+                        </div>
+                        <div style="position:relative;height:220px;">
+                            <canvas id="mom20-perf-canvas"></canvas>
                         </div>
                     </div>
                 </div>
@@ -7949,23 +7953,17 @@ async function mom20LoadPerfChart(uid) {
         if (!d.success || !d.dates?.length) return;
 
         wrap.style.display = 'block';
-        document.getElementById('mom20-chart-port-ret').textContent =
-            (d.total_return >= 0 ? '+' : '') + d.total_return.toFixed(2) + '%';
-        document.getElementById('mom20-chart-bench-ret').textContent =
-            (d.bench_return >= 0 ? '+' : '') + d.bench_return.toFixed(2) + '%';
-        document.getElementById('mom20-chart-port-ret').style.color =
-            d.total_return >= 0 ? 'var(--green)' : '#dc3545';
 
-        const canvas = document.getElementById('mom20-perf-canvas');
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width  = canvas.offsetWidth  * dpr;
-        canvas.height = canvas.offsetHeight * dpr;
-        const ctx = canvas.getContext('2d');
-        ctx.scale(dpr, dpr);
+        const fmt = v => v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+        document.getElementById('mom20-chart-port-ret').textContent = fmt(d.total_return);
+        document.getElementById('mom20-chart-n500-ret').textContent = fmt(d.n500_return);
+        document.getElementById('mom20-chart-n200-ret').textContent = fmt(d.n200_return);
+        document.getElementById('mom20-chart-port-ret').style.color = d.total_return >= 0 ? 'var(--green)' : '#dc3545';
 
         if (_mom20PerfChart) { _mom20PerfChart.destroy(); _mom20PerfChart = null; }
 
-        _mom20PerfChart = new Chart(ctx, {
+        const canvas = document.getElementById('mom20-perf-canvas');
+        _mom20PerfChart = new Chart(canvas, {
             type: 'line',
             data: {
                 labels: d.dates,
@@ -7975,52 +7973,57 @@ async function mom20LoadPerfChart(uid) {
                         data: d.portfolio,
                         borderColor: '#4a9eff',
                         backgroundColor: 'rgba(74,158,255,0.10)',
-                        borderWidth: 2,
+                        borderWidth: 2.5,
                         pointRadius: 0,
                         fill: true,
-                        tension: 0.3,
+                        tension: 0.2,
+                        spanGaps: true,
                     },
                     {
                         label: 'Nifty 500',
-                        data: d.benchmark,
+                        data: d.n500,
                         borderColor: '#f5a623',
                         backgroundColor: 'transparent',
                         borderWidth: 1.5,
                         pointRadius: 0,
                         fill: false,
-                        tension: 0.3,
+                        tension: 0.2,
+                        spanGaps: true,
+                    },
+                    {
+                        label: 'Nifty 200',
+                        data: d.n200,
+                        borderColor: '#a78bfa',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.2,
+                        spanGaps: true,
                     },
                 ]
             },
             options: {
-                responsive: false,
+                responsive: true,
+                maintainAspectRatio: false,
                 animation: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y >= 0 ? '+' : ''}${ctx.parsed.y.toFixed(2)}%`
+                            label: c => ` ${c.dataset.label}: ${c.parsed.y == null ? '—' : (c.parsed.y >= 0 ? '+' : '') + c.parsed.y.toFixed(2) + '%'}`
                         }
                     }
                 },
                 scales: {
                     x: {
-                        ticks: {
-                            color: 'var(--text-muted)',
-                            maxTicksLimit: 8,
-                            font: { size: 10 },
-                            maxRotation: 0,
-                        },
-                        grid: { color: 'rgba(128,128,128,0.1)' }
+                        ticks: { color: '#888', maxTicksLimit: 8, font: { size: 10 }, maxRotation: 0 },
+                        grid:  { color: 'rgba(128,128,128,0.1)' }
                     },
                     y: {
-                        ticks: {
-                            color: 'var(--text-muted)',
-                            font: { size: 10 },
-                            callback: v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%'
-                        },
-                        grid: { color: 'rgba(128,128,128,0.1)' }
+                        ticks: { color: '#888', font: { size: 10 }, callback: v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%' },
+                        grid:  { color: 'rgba(128,128,128,0.1)' }
                     }
                 }
             }
