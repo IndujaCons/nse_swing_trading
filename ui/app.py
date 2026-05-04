@@ -2534,7 +2534,10 @@ def api_mom20_portfolio_get(user_id):
 
 @app.route("/api/portfolio-users/<user_id>/mom20-performance", methods=["GET"])
 def api_mom20_performance(user_id):
-    """Return holdings with live prices and P&L for portfolio tracker."""
+    """Return holdings with live prices and P&L for portfolio tracker.
+    ?live=1  → fetch fresh Kite/yfinance prices (slow)
+    default  → use cached signal prices (fast)
+    """
     if not get_user(user_id):
         return jsonify({"success": False, "error": "user not found"})
     try:
@@ -2545,7 +2548,7 @@ def api_mom20_performance(user_id):
 
     basket = pf.get("basket", [])
 
-    # Get current ranks + prices from cached live signals
+    # Get current ranks + prices from cached live signals (no network call)
     rank_map = {}
     signal_price_map = {}
     try:
@@ -2561,10 +2564,9 @@ def api_mom20_performance(user_id):
     if not basket:
         try:
             user = get_user(user_id)
-            signals = sig_result.get("mom20_signals", []) if 'sig_result' in dir() else []
+            signals = list(sig_result.get("mom20_signals", [])) if 'sig_result' in dir() else []
             basket_data = generate_basket(user, signals, pf)
             holds = basket_data.get("holds", [])
-            # holds only have ticker/rank/price — no entry data, show as price=current
             if holds:
                 basket = [{"ticker": h["ticker"], "qty": 0,
                            "entry_price": h.get("price", 0),
@@ -2579,34 +2581,30 @@ def api_mom20_performance(user_id):
 
     tickers = [h["ticker"] for h in basket]
 
-    # Try Kite LTP first, fall back to yfinance
-    price_map = {}
-    ltp = _fetch_zerodha_ltp(tickers)
-    if ltp:
-        price_map = {t: ltp[t] for t in tickers if t in ltp}
+    # Default: use cached signal prices (instant)
+    # ?live=1: fetch fresh Kite LTP + yfinance (slow, explicit request)
+    want_live = request.args.get("live") == "1"
+    price_map = dict(signal_price_map)  # start with cached prices
 
-    missing = [t for t in tickers if t not in price_map]
-    if missing:
-        import yfinance as yf
-        yf_syms = [f"{t}.NS" for t in missing]
-        try:
-            df = yf.download(yf_syms, period="5d", progress=False,
-                             group_by="ticker", threads=True, auto_adjust=True)
-            for t, sym in zip(missing, yf_syms):
-                try:
-                    if len(missing) == 1:
-                        price_map[t] = float(df["Close"].dropna().iloc[-1])
-                    else:
-                        price_map[t] = float(df[sym]["Close"].dropna().iloc[-1])
-                except Exception:
-                    pass
-        except Exception:
-            pass
-
-    # Use signal prices as last-resort fallback
-    for t in tickers:
-        if t not in price_map and t in signal_price_map:
-            price_map[t] = signal_price_map[t]
+    if want_live:
+        ltp = _fetch_zerodha_ltp(tickers)
+        if ltp:
+            price_map.update({t: ltp[t] for t in tickers if t in ltp})
+        missing = [t for t in tickers if t not in price_map]
+        if missing:
+            import yfinance as yf
+            yf_syms = [f"{t}.NS" for t in missing]
+            try:
+                df = yf.download(yf_syms, period="5d", progress=False,
+                                 group_by="ticker", threads=True, auto_adjust=True)
+                for t, sym in zip(missing, yf_syms):
+                    try:
+                        price_map[t] = float(df["Close"].dropna().iloc[-1]) if len(missing) == 1 \
+                                       else float(df[sym]["Close"].dropna().iloc[-1])
+                    except Exception:
+                        pass
+            except Exception:
+                pass
 
     holdings = []
     total_entry = 0.0
