@@ -7962,6 +7962,9 @@ async function mom20LoadPerfChart(uid) {
 
         if (_mom20PerfChart) { _mom20PerfChart.destroy(); _mom20PerfChart = null; }
 
+        // defer until browser reflows the now-visible container
+        await new Promise(r => setTimeout(r, 50));
+
         const canvas = document.getElementById('mom20-perf-canvas');
         _mom20PerfChart = new Chart(canvas, {
             type: 'line',
