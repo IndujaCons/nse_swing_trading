@@ -43,7 +43,7 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict) -> dict:
         basket_date:  today
         summary:      human-readable string
     """
-    total_capital  = user["strategies"]["mom20"]["capital"]
+    total_capital  = (user.get("strategies") or {}).get("mom20", {}).get("capital") or 20_00_000
     capital_per_slot = total_capital / N_SLOTS
 
     # Build rank map from signals

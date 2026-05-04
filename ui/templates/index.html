@@ -8164,8 +8164,18 @@ async function mom20LoadBasket() {
     document.getElementById('basket-to-deploy').textContent = '…';
     try {
         const r = await fetch(`/api/portfolio-users/${uid}/mom20-basket`);
-        const d = await r.json();
-        if (!d.success) { alert(d.error); return; }
+        const text = await r.text();
+        let d;
+        try { d = JSON.parse(text); } catch(e) {
+            console.error('Basket parse error:', text.slice(0, 200));
+            document.getElementById('basket-per-slot').textContent = 'Error';
+            return;
+        }
+        if (!d.success) {
+            console.error('Basket error:', d.error);
+            document.getElementById('basket-per-slot').textContent = 'Error';
+            return;
+        }
         // If user already typed a capital override, use it instead of API value
         const override = _mom20ParseCapitalInput();
         if (override >= 1000 && override !== d.total_capital) {
@@ -8182,7 +8192,7 @@ async function mom20LoadBasket() {
         _mom20BasketData = d;
         _renderMom20Basket(d);
         mom20SeedLoad();
-    } catch(e) { alert('Failed to load basket: ' + e); }
+    } catch(e) { console.error('Failed to load basket:', e); }
 }
 
 function _renderMom20Basket(d) {
