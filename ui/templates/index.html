@@ -7963,9 +7963,15 @@ async function mom20LoadPerfChart(uid) {
         if (_mom20PerfChart) { _mom20PerfChart.destroy(); _mom20PerfChart = null; }
 
         // defer until browser reflows the now-visible container
-        await new Promise(r => setTimeout(r, 50));
+        await new Promise(r => setTimeout(r, 100));
 
         const canvas = document.getElementById('mom20-perf-canvas');
+        const containerW = document.getElementById('mom20-perf-chart-wrap').offsetWidth || 800;
+        canvas.width  = containerW;
+        canvas.height = 220;
+        canvas.style.width  = containerW + 'px';
+        canvas.style.height = '220px';
+
         _mom20PerfChart = new Chart(canvas, {
             type: 'line',
             data: {
@@ -8007,7 +8013,7 @@ async function mom20LoadPerfChart(uid) {
                 ]
             },
             options: {
-                responsive: true,
+                responsive: false,
                 maintainAspectRatio: false,
                 animation: false,
                 interaction: { mode: 'index', intersect: false },
@@ -8032,7 +8038,9 @@ async function mom20LoadPerfChart(uid) {
             }
         });
     } catch(e) {
-        // silently skip if chart fails
+        console.error('mom20PerfChart error:', e);
+        const wrap = document.getElementById('mom20-perf-chart-wrap');
+        if (wrap) wrap.innerHTML += `<div style="color:#dc3545;font-size:11px;padding:8px;">Chart error: ${e.message}</div>`;
     }
 }
 
