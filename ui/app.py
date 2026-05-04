@@ -2651,6 +2651,114 @@ def api_mom20_performance(user_id):
     })
 
 
+# ── Mom20 portfolio chart ──────────────────────────────────────────────────────
+
+@app.route("/api/portfolio-users/<user_id>/mom20-chart", methods=["GET"])
+def api_mom20_chart(user_id):
+    """
+    Daily cumulative return: portfolio vs Nifty 500, from earliest entry date.
+    Returns: dates[], portfolio_pct[], bench_pct[]
+    """
+    import yfinance as yf
+    import pandas as pd
+
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(mom20_portfolio_path(user_id)) as f:
+            pf = json.load(f)
+    except Exception:
+        return jsonify({"success": False, "error": "no portfolio"})
+
+    basket = pf.get("basket", [])
+    if not basket:
+        return jsonify({"success": False, "error": "no holdings"})
+
+    # Determine start date
+    dates_list = [h.get("entry_date","")[:10] for h in basket if h.get("entry_date")]
+    if not dates_list:
+        return jsonify({"success": False, "error": "no entry dates"})
+    start_date = min(dates_list)
+
+    tickers    = [h["ticker"] for h in basket]
+    yf_tickers = [f"{t}.NS" for t in tickers] + ["^CRSLDX"]
+
+    try:
+        raw = yf.download(yf_tickers, start=start_date, progress=False,
+                          auto_adjust=True, group_by="ticker", threads=True)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+    def get_close(sym):
+        try:
+            if len(yf_tickers) == 1:
+                return raw["Close"].dropna()
+            return raw[sym]["Close"].dropna()
+        except Exception:
+            return pd.Series(dtype=float)
+
+    bench_raw = get_close("^CRSLDX")
+    if bench_raw.empty:
+        return jsonify({"success": False, "error": "benchmark data unavailable"})
+
+    # Build per-ticker close series
+    ticker_closes = {}
+    for t, sym in zip(tickers, yf_tickers[:-1]):
+        s = get_close(sym)
+        if not s.empty:
+            ticker_closes[t] = s
+
+    # Align all series to benchmark trading days from start_date
+    all_dates = bench_raw.index
+    port_values = []
+
+    total_invested = sum(h.get("entry_price", 0) * h.get("qty", 0) for h in basket)
+    if total_invested <= 0:
+        return jsonify({"success": False, "error": "no invested capital"})
+
+    entry_price_map = {h["ticker"]: h.get("entry_price", 0) for h in basket}
+    entry_date_map  = {h["ticker"]: h.get("entry_date", "")[:10] for h in basket}
+    qty_map         = {h["ticker"]: h.get("qty", 0) for h in basket}
+
+    for dt in all_dates:
+        dt_str = dt.strftime("%Y-%m-%d")
+        val = 0.0
+        for t in tickers:
+            qty = qty_map.get(t, 0)
+            ep  = entry_price_map.get(t, 0)
+            if qty <= 0 or ep <= 0:
+                continue
+            if dt_str < entry_date_map.get(t, ""):
+                val += qty * ep          # not yet entered — treat as cash at cost
+            else:
+                s = ticker_closes.get(t)
+                if s is not None and dt in s.index:
+                    val += qty * float(s.loc[dt])
+                else:
+                    val += qty * ep      # no data — hold at cost
+        port_values.append(val)
+
+    if not port_values:
+        return jsonify({"success": False, "error": "could not compute portfolio values"})
+
+    # Rebase both to 0% from day 0
+    base_port  = port_values[0]
+    base_bench = float(bench_raw.iloc[0])
+    dates_out  = [d.strftime("%Y-%m-%d") for d in all_dates]
+    port_pct   = [round((v / base_port  - 1) * 100, 3) for v in port_values]
+    bench_pct  = [round((float(bench_raw.loc[d]) / base_bench - 1) * 100, 3) for d in all_dates]
+
+    return jsonify({
+        "success": True,
+        "dates":       dates_out,
+        "portfolio":   port_pct,
+        "benchmark":   bench_pct,
+        "start_date":  start_date,
+        "total_return": port_pct[-1],
+        "bench_return": bench_pct[-1],
+    })
+
+
 # ── ETF positions (per user, manual entry) ────────────────────────────────────
 
 @app.route("/api/portfolio-users/<user_id>/etf-positions", methods=["GET"])
