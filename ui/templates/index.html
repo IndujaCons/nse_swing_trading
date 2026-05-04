@@ -2469,7 +2469,7 @@
                     </div>
 
                     <!-- Portfolio vs Nifty 200 / 500 chart -->
-                    <div id="mom20-perf-chart-wrap" style="margin-top:16px;display:none;">
+                    <div id="mom20-perf-chart-wrap" style="margin-top:16px;display:none;max-width:50%;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                             <span style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO vs BENCHMARK</span>
                             <div style="display:flex;gap:14px;font-size:11px;">
@@ -7967,7 +7967,7 @@ async function mom20LoadPerfChart(uid) {
         await new Promise(r => setTimeout(r, 100));
 
         const canvas = document.getElementById('mom20-perf-canvas');
-        const containerW = document.getElementById('mom20-perf-chart-wrap').offsetWidth || 800;
+        const containerW = document.getElementById('mom20-perf-chart-wrap').offsetWidth || 400;
         canvas.width  = containerW;
         canvas.height = 220;
         canvas.style.width  = containerW + 'px';
