@@ -2336,7 +2336,7 @@
                                 <div id="basket-per-slot" class="basket-stat-value">—</div>
                             </div>
                             <div class="basket-stat">
-                                <div class="basket-stat-label">Min Needed</div>
+                                <div class="basket-stat-label" id="basket-min-cap-label">Min Needed</div>
                                 <div id="basket-min-cap" class="basket-stat-value">—</div>
                             </div>
                             <div class="basket-stat">
@@ -8208,12 +8208,20 @@ function _renderMom20Basket(d) {
         capInput.value = Math.round(d.total_capital).toLocaleString('en-IN');
     }
 
-    // Stats
-    const ok = d.total_capital >= d.min_capital;
-    document.getElementById('basket-per-slot').textContent  = fmt(d.capital_per_slot);
-    document.getElementById('basket-min-cap').style.color   = ok ? 'var(--text-primary)' : 'var(--red)';
-    document.getElementById('basket-min-cap').textContent   = fmt(d.min_capital);
-    document.getElementById('basket-to-deploy').textContent = fmt(d.total_to_deploy);
+    // Stats — SIP mode when no entries: min = sum of 1 share per hold
+    const holds  = d.holds  || [];
+    let displayMin = d.min_capital;
+    let minLabel   = 'Min Needed';
+    if ((d.n_entries === 0 || d.entries.length === 0) && holds.length > 0) {
+        displayMin = Math.round(holds.reduce((s, h) => s + (h.price || 0), 0));
+        minLabel   = 'Min Needed (SIP)';
+    }
+    const ok = d.total_capital >= displayMin;
+    document.getElementById('basket-per-slot').textContent        = fmt(d.capital_per_slot);
+    document.getElementById('basket-min-cap-label').textContent   = minLabel;
+    document.getElementById('basket-min-cap').style.color         = ok ? 'var(--text-primary)' : 'var(--red)';
+    document.getElementById('basket-min-cap').textContent         = fmt(displayMin);
+    document.getElementById('basket-to-deploy').textContent       = fmt(d.total_to_deploy);
 
     // Badges
     document.getElementById('basket-badge-exits').textContent  = `${d.n_exits} Exit${d.n_exits!==1?'s':''}`;
@@ -8222,7 +8230,6 @@ function _renderMom20Basket(d) {
 
     const exits  = d.exits  || [];
     const entries = d.entries || [];
-    const holds  = d.holds  || [];
 
     document.getElementById('mom20-exits-count-lbl').textContent   = exits.length;
     document.getElementById('mom20-entries-count-lbl').textContent = entries.length;
