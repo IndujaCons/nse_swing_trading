@@ -73,6 +73,7 @@ UNIVERSE = [
     ("GOLDBEES",    "Gold",                 "GOLDBEES.NS"),
     ("SILVERBEES",  "Silver",               "SILVERBEES.NS"),
     # International (US-listed, priced in USD — yfinance daily data available)
+    ("SPY",         "S&P 500",              "SPY"),
     ("QQQ",         "Nasdaq 100",           "QQQ"),
     ("XLE",         "US Energy",            "XLE"),
     ("GDX",         "Gold Miners",          "GDX"),
@@ -152,15 +153,24 @@ def fetch_all(refresh=False):
     return data
 
 # ── REBALANCE DATES ───────────────────────────────────────────────────────────
-def get_rebal_dates(trading_days):
-    """First trading day of each month (signal day).
-    Execution at next trading day open (T+1 open).
+def get_rebal_dates(trading_days, midmonth=False):
+    """Rebalance dates.
+    midmonth=False: first trading day of each month (default)
+    midmonth=True:  trading day on or after the 15th of each month
     """
     dates = []
     seen_months = set()
     for d in sorted(trading_days):
+        if d < pd.Timestamp(START_DATE):
+            continue
         key = (d.year, d.month)
-        if key not in seen_months and d >= pd.Timestamp(START_DATE):
+        if key in seen_months:
+            continue
+        if midmonth:
+            if d.day >= 15:
+                seen_months.add(key)
+                dates.append(d)
+        else:
             seen_months.add(key)
             dates.append(d)
     return dates
@@ -180,7 +190,7 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False, use_regime=False, start_override=None):
+def run(refresh=False, use_regime=False, start_override=None, midmonth=False):
     global START_DATE
     if start_override:
         START_DATE = date.fromisoformat(start_override)
@@ -224,7 +234,8 @@ def run(refresh=False, use_regime=False, start_override=None):
     date_to_idx = {d: i for i, d in enumerate(all_syms)}
 
     trading_days = sorted(d for d in all_dates if d >= pd.Timestamp(START_DATE))
-    rebal_dates  = get_rebal_dates(trading_days)
+    rebal_dates  = get_rebal_dates(trading_days, midmonth=midmonth)
+    rebal_label  = "Mid-Month (15th)" if midmonth else "Month-Start (1st)"
 
     # Nifty 200 for regime filter (^CNX200)
     n200_raw = pd.Series(dtype=float)
@@ -557,7 +568,7 @@ def run(refresh=False, use_regime=False, start_override=None):
         year_navs.setdefault(yr, []).append(row["nav"])
 
     print(f"\n{'='*72}")
-    print(f"  ETF MOM Z-SCORE  |  Monthly  |  β≤{BETA_CAP}  |  {MAX_SLOTS} slots")
+    print(f"  ETF MOM Z-SCORE  |  {rebal_label}  |  β≤{BETA_CAP}  |  {MAX_SLOTS} slots")
     print(f"{'='*72}")
     print(f"  Period        : {START_DATE} → {last_day.date()}")
     print(f"  Initial capital: ₹{initial/1e5:.1f}L  ({MAX_SLOTS} slots × ₹{SLOT_START/1e5:.1f}L)")
@@ -743,8 +754,9 @@ def score_live() -> list[dict]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--refresh", action="store_true", help="Re-download data")
-    parser.add_argument("--regime",  action="store_true", help="Enable regime filter (Nifty200 < SMA200 → hold all)")
-    parser.add_argument("--start",   default=None,        help="Override start date (YYYY-MM-DD)")
+    parser.add_argument("--refresh",   action="store_true", help="Re-download data")
+    parser.add_argument("--regime",    action="store_true", help="Enable regime filter (Nifty200 < SMA200 → hold all)")
+    parser.add_argument("--start",     default=None,        help="Override start date (YYYY-MM-DD)")
+    parser.add_argument("--midmonth",  action="store_true", help="Rebalance on 15th of each month instead of 1st trading day")
     args = parser.parse_args()
-    run(refresh=args.refresh, use_regime=args.regime, start_override=args.start)
+    run(refresh=args.refresh, use_regime=args.regime, start_override=args.start, midmonth=args.midmonth)

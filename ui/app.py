@@ -1196,7 +1196,7 @@ ETF_TICKERS = [
 INTL_ETF_TICKERS = ["FRDM", "EMXC", "AVDV", "ILF", "XLE", "GDX", "XME", "VGK",
                     "SOXX", "BOTZ", "EWY", "XLK", "XLP", "TLT", "XLV", "ITA", "EWJ"]
 # LSE-listed UCITS ETFs (estate-tax friendly; .L suffix)
-LSE_ETF_TICKERS = ["GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML", "CJPN"]
+LSE_ETF_TICKERS = ["GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML", "CJPN", "CSPX"]
 
 def _yf_symbol(ticker):
     """Return yfinance symbol — skip .NS for international ETFs and index tickers."""
