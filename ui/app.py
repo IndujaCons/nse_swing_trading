@@ -2598,24 +2598,19 @@ def api_mom20_performance(user_id):
     price_map = dict(signal_price_map)  # start with cached prices
 
     if want_live:
-        ltp = _fetch_zerodha_ltp(tickers)
-        if ltp:
-            price_map.update({t: ltp[t] for t in tickers if t in ltp})
-        missing = [t for t in tickers if t not in price_map]
-        if missing:
-            import yfinance as yf
-            yf_syms = [f"{t}.NS" for t in missing]
-            try:
-                df = yf.download(yf_syms, period="5d", progress=False,
-                                 group_by="ticker", threads=True, auto_adjust=True)
-                for t, sym in zip(missing, yf_syms):
-                    try:
-                        price_map[t] = float(df["Close"].dropna().iloc[-1]) if len(missing) == 1 \
-                                       else float(df[sym]["Close"].dropna().iloc[-1])
-                    except Exception:
-                        pass
-            except Exception:
-                pass
+        import yfinance as yf
+        yf_syms = [f"{t}.NS" for t in tickers]
+        try:
+            df = yf.download(yf_syms, period="1d", interval="5m", progress=False,
+                             group_by="ticker", threads=True, auto_adjust=True)
+            for t, sym in zip(tickers, yf_syms):
+                try:
+                    price_map[t] = float(df["Close"].dropna().iloc[-1]) if len(tickers) == 1 \
+                                   else float(df[sym]["Close"].dropna().iloc[-1])
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     holdings = []
     total_entry = 0.0
@@ -2755,29 +2750,20 @@ def api_mom20_chart(user_id):
     if not port_values:
         return jsonify({"success": False, "error": "could not compute portfolio values"})
 
-    # Append today's intraday value via yfinance if today not yet in daily data (market open)
+    # Append today using the SAME cached signal prices the tracker uses
+    # so chart return matches RETURNS header exactly
     import datetime as _dt
     today_str = _dt.date.today().isoformat()
     last_yf_date = all_dates[-1].strftime("%Y-%m-%d") if len(all_dates) else ""
     if last_yf_date < today_str:
         try:
-            intra_syms = [f"{t}.NS" for t in tickers] + ["^CRSLDX", "^CNX200"]
-            intra_raw  = yf.download(intra_syms, period="1d", interval="5m",
-                                     progress=False, auto_adjust=True,
-                                     group_by="ticker", threads=True)
-            def last_price(sym):
-                try:
-                    if len(intra_syms) == 1:
-                        return float(intra_raw["Close"].dropna().iloc[-1])
-                    return float(intra_raw[sym]["Close"].dropna().iloc[-1])
-                except Exception:
-                    return None
-
-            live_price_map = {}
-            for t, sym in zip(tickers, intra_syms[:-2]):
-                p = last_price(sym)
-                if p:
-                    live_price_map[t] = p
+            sig = live_signals_scanner.scan_entry_signals(force_refresh=False)
+            cached_prices = {}
+            for s in sig.get("mom20_signals", []) + sig.get("mom20_overflow", []):
+                if s.get("price"):
+                    cached_prices[s["ticker"]] = s["price"]
+            for tk, pr in sig.get("mom20_all_prices", {}).items():
+                cached_prices.setdefault(tk, pr)
 
             today_val = 0.0
             for t in tickers:
@@ -2788,16 +2774,11 @@ def api_mom20_chart(user_id):
                 if today_str < entry_date_map.get(t, ""):
                     today_val += qty * ep
                 else:
-                    today_val += qty * live_price_map.get(t, ep)
+                    today_val += qty * cached_prices.get(t, ep)
 
             if today_val > 0:
                 port_values.append(today_val)
                 all_dates = list(all_dates) + [pd.Timestamp(today_str)]
-                # Extend benchmarks using their latest intraday price
-                for sym, bench_s in [("^CRSLDX", bench_n500), ("^CNX200", bench_n200)]:
-                    p = last_price(sym)
-                    if p is not None and not bench_s.empty:
-                        bench_s.loc[pd.Timestamp(today_str)] = p
         except Exception:
             pass
 
