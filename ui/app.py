@@ -2755,6 +2755,39 @@ def api_mom20_chart(user_id):
     if not port_values:
         return jsonify({"success": False, "error": "could not compute portfolio values"})
 
+    # Append today's value using cached signal prices if market is open (today not in yfinance yet)
+    import datetime as _dt
+    today_str = _dt.date.today().isoformat()
+    last_yf_date = all_dates[-1].strftime("%Y-%m-%d") if len(all_dates) else ""
+    if last_yf_date < today_str:
+        try:
+            sig = live_signals_scanner.scan_entry_signals(force_refresh=False)
+            live_price_map = {}
+            for s in sig.get("mom20_signals", []) + sig.get("mom20_overflow", []):
+                if s.get("price"):
+                    live_price_map[s["ticker"]] = s["price"]
+            # Also use all_prices if available
+            for tk, pr in sig.get("mom20_all_prices", {}).items():
+                live_price_map.setdefault(tk, pr)
+            today_val = 0.0
+            for t in tickers:
+                qty = qty_map.get(t, 0)
+                ep  = entry_price_map.get(t, 0)
+                if qty <= 0 or ep <= 0:
+                    continue
+                if today_str < entry_date_map.get(t, ""):
+                    today_val += qty * ep
+                else:
+                    today_val += qty * live_price_map.get(t, ep)
+            if today_val > 0:
+                port_values.append(today_val)
+                all_dates = list(all_dates) + [pd.Timestamp(today_str)]
+                # Extend benchmarks with last known value (no intraday index data)
+                bench_n500 = bench_n500.copy() if not bench_n500.empty else bench_n500
+                bench_n200 = bench_n200.copy() if not bench_n200.empty else bench_n200
+        except Exception:
+            pass
+
     # Rebase from entry prices (matches tracker P&L); day-1 close diverges from fills
     base_port  = total_invested
     base_n500  = float(bench_n500.iloc[0]) if not bench_n500.empty else None
@@ -2766,11 +2799,14 @@ def api_mom20_chart(user_id):
         if raw.empty or base is None:
             return [None] * len(all_dates)
         out = []
+        last_val = None
         for d in all_dates:
             try:
-                out.append(round((float(raw.loc[d]) / base - 1) * 100, 3))
+                v = round((float(raw.loc[d]) / base - 1) * 100, 3)
+                last_val = v
+                out.append(v)
             except Exception:
-                out.append(None)
+                out.append(last_val)  # carry forward for today if not yet in index
         return out
 
     n500_pct = bench_series(bench_n500, base_n500)
