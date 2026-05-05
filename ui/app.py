@@ -2523,6 +2523,19 @@ def api_mom20_seed(user_id):
     return jsonify({"success": True, "seeded": len(basket)})
 
 
+@app.route("/api/portfolio-users/<user_id>/mom20-history", methods=["GET"])
+def api_mom20_history(user_id):
+    """Return rebalance history for a user (most recent first)."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(mom20_history_path(user_id)) as f:
+            history = json.load(f)
+    except Exception:
+        history = []
+    return jsonify({"success": True, "history": list(reversed(history))})
+
+
 @app.route("/api/portfolio-users/<user_id>/mom20-portfolio", methods=["GET"])
 def api_mom20_portfolio_get(user_id):
     """Return current portfolio basket for seed editor pre-fill."""

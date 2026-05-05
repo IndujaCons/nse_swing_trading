@@ -1,15 +1,96 @@
+$AEOS: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$ALTR: possibly delisted; no timezone found
+$ALXN: possibly delisted; no timezone found
+$AMLN: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$ANSS: possibly delisted; no timezone found
+$APCC: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$APOL: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$ATVI: possibly delisted; no timezone found
+$BEAS: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$BMET: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$BRCM: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$CDWC: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$CELG: possibly delisted; no timezone found
+$CEPH: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$CERN: possibly delisted; no timezone found
+$CKFR: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$CMVT: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$CTRP: possibly delisted; no timezone found
+$CTRX: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$CTXS: possibly delisted; no timezone found
+$DISCA: possibly delisted; no timezone found
+$DISCK: possibly delisted; no timezone found
+$DISH: possibly delisted; no timezone found
+$DTV: possibly delisted; no timezone found
+$FI: possibly delisted; no timezone found
+$FLIR: possibly delisted; no timezone found
+$FMCN: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$FWLT: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$GMCR: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$HANS: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$IACI: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$JNPR: possibly delisted; no timezone found
+$JOYG: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$KRFT: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$LEAP: possibly delisted; no timezone found
+$LLTC: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$LMCA: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$LMCK: possibly delisted; no timezone found
+$LVLT: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$MXIM: possibly delisted; no timezone found
+$MYL: possibly delisted; no timezone found
+$NDOI: possibly delisted; no timezone found
+$NIHD: possibly delisted; no timezone found
+$NLOK: possibly delisted; no timezone found
+$NLTI: possibly delisted; no timezone found
+$NUAN: possibly delisted; no timezone found
+$PDCO: possibly delisted; no timezone found
+$PETM: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$PPDI: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$QRTEA: possibly delisted; no timezone found
+$RIMM: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$SEPR: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$SGEN: possibly delisted; no timezone found
+$SIAL: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$SPLK: possibly delisted; no timezone found
+$SRCL: possibly delisted; no timezone found
+$STRZA: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$TCFCA: possibly delisted; no timezone found
+$TCFCB: possibly delisted; no timezone found
+$UAUA: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$VIAB: possibly delisted; no timezone found
+$VMED: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$WBA: possibly delisted; no timezone found
+$WCRX: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$WFM: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$WFMI: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$XLNX: possibly delisted; no timezone found
+$XMSR: possibly delisted; no price data found  (1d 2013-10-08 -> 2026-05-05)
+$YHOO: possibly delisted; no timezone found
 === MomQQQ — Nasdaq-100 Universe, Top10, Monthly Rebalance, No β filter | Regime ON ===
 Loading PIT universe...
-  268 unique PIT tickers across all periods
+  267 unique PIT tickers across all periods
 Loading EPS data...
   367 stocks with EPS data
-Loading cached data from /Users/jay/Desktop/relative_strength/data/cache/qqq_daily.pkl...
+Fetching 267 tickers from yfinance (this takes ~5-10 min)...
+  25/267 done, 18 loaded...
+  50/267 done, 35 loaded...
+  75/267 done, 52 loaded...
+  100/267 done, 72 loaded...
+  125/267 done, 94 loaded...
+  150/267 done, 110 loaded...
+  175/267 done, 127 loaded...
+  200/267 done, 147 loaded...
+  225/267 done, 162 loaded...
+  250/267 done, 181 loaded...
+  Done. 191 stocks with sufficient history.
+  Cached to /Users/jay/Desktop/relative_strength/data/cache/qqq_daily.pkl
 Fetching Nasdaq-100 (^NDX) (beta)...
-  3160 bars
+  3161 bars
 Fetching QQQ (Nasdaq-100) (regime filter)...
-  3160 bars
-  Trading days in backtest: 2844 (2015-01-02 → 2026-04-24)
-  Rebalance dates: 136
+  3161 bars
+  Trading days in backtest: 2850 (2015-01-02 → 2026-05-04)
+  Rebalance dates: 137
 
 ====================================================================================================================
   MOMQQQ PIT BACKTEST  |  NAV/10 slot  |  Monthly Rebalance  |  Nasdaq-100 Universe  |  No Beta Filter  |  Regime ON
@@ -26,40 +107,40 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   ENTRIES (9)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  MAR         1      3.206    0.77   +60.7%    +16.7%    69.7        2870   ₹199,939    
-  ORLY        2      3.137    0.71   +49.2%    +27.3%    12.8        15616  ₹199,999    
-  DLTR        3      2.431    0.57   +24.7%    +26.2%    70.3        2842   ₹199,935    
-  HSIC        4      2.262    0.67   +20.6%    +19.3%    53.7        3726   ₹199,947    
-  ROST        5      2.137    0.49   +27.5%    +23.9%    42.0        4762   ₹199,971    
-  ADP         6      2.090    0.72   +21.6%    +15.5%    65.0        3075   ₹199,953    
-  AMAT        7      2.021    1.04   +45.0%    +22.1%    21.7        9200   ₹199,985    
-  COST        8      1.901    0.46   +21.6%    +12.9%    114.0       1754   ₹199,922    
-  KLAC        9      1.886    0.97   +41.8%    +14.8%    56.8        3520   ₹199,971    
+  MAR         1      3.202    0.77   +60.7%    +16.7%    69.7        2870   ₹199,939    
+  ORLY        2      3.138    0.71   +49.2%    +27.3%    12.8        15616  ₹199,999    
+  DLTR        3      2.429    0.57   +24.7%    +26.2%    70.3        2842   ₹199,935    
+  HSIC        4      2.257    0.67   +20.6%    +19.3%    53.7        3726   ₹199,947    
+  ROST        5      2.130    0.49   +27.5%    +23.9%    42.0        4762   ₹199,971    
+  ADP         6      2.081    0.72   +21.6%    +15.5%    65.0        3075   ₹199,953    
+  AMAT        7      2.010    1.04   +45.0%    +22.1%    21.7        9200   ₹199,985    
+  COST        8      1.890    0.46   +21.6%    +12.9%    113.8       1757   ₹199,973    
+  KLAC        9      1.872    0.97   +41.8%    +14.8%    56.8        3520   ₹199,971    
 
   HOLDS (0)
     —
 
-  AFTER: Invested ₹1,799,622 | Cash ₹198,241 | Total ₹1,997,863 | Positions 9/10 | Slot ₹200,000
+  AFTER: Invested ₹1,799,674 | Cash ₹198,189 | Total ₹1,997,863 | Positions 9/10 | Slot ₹200,000
 
 ========================================================================
   REBALANCE #02  —  02 Feb 2015
-  NAV: ₹1,958,273  |  Slot: ₹195,827  |  Cash: ₹198,241
+  NAV: ₹1,958,274  |  Slot: ₹195,827  |  Cash: ₹198,189
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  KLAC        31     02-Jan-15   56.8        50.0        3520   ₹-23,954      -12.0%    31d   
+  KLAC        31     02-Jan-15   56.8        50.0        3520   ₹-23,955      -12.0%    31d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AAPL        2      2.995    0.91   +69.4%    +11.4%    26.3        7453   ₹195,825    
+  AAPL        2      2.991    0.91   +69.4%    +11.4%    26.3        7453   ₹195,825    
 
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  COST        3      02-Jan-15   114.0       117.5       1754   ₹6,198        +3.1%     
+  COST        3      02-Jan-15   113.8       117.3       1757   ₹6,199        +3.1%     
   DLTR        1      02-Jan-15   70.3        72.2        2842   ₹5,343        +2.7%     
   HSIC        4      02-Jan-15   53.7        54.4        3726   ₹2,791        +1.4%     
   ADP         12     02-Jan-15   65.0        65.1        3075   ₹360          +0.2%     
@@ -68,11 +149,11 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   MAR         13     02-Jan-15   69.7        67.0        2870   ₹-7,586       -3.8%     
   AMAT        15     02-Jan-15   21.7        19.9        9200   ₹-16,826      -8.4%     
 
-  AFTER: Invested ₹1,779,840 | Cash ₹178,200 | Total ₹1,958,040 | Positions 9/10 | Slot ₹195,827
+  AFTER: Invested ₹1,779,893 | Cash ₹178,148 | Total ₹1,958,041 | Positions 9/10 | Slot ₹195,827
 
 ========================================================================
   REBALANCE #03  —  02 Mar 2015
-  NAV: ₹2,131,085  |  Slot: ₹213,109  |  Cash: ₹178,200
+  NAV: ₹2,131,089  |  Slot: ₹213,109  |  Cash: ₹178,148
 ========================================================================
 
   EXITS (2)
@@ -84,8 +165,8 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  SBUX        5      2.491    0.71   +34.8%    +18.7%    37.7        5655   ₹213,099    
-  MNST        7      2.280    0.85   +90.9%    +27.9%    23.5        9053   ₹213,093    
+  SBUX        5      2.478    0.71   +34.8%    +18.7%    37.7        5655   ₹213,099    
+  MNST        7      2.271    0.85   +90.9%    +27.9%    23.5        9053   ₹213,093    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
@@ -96,13 +177,13 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   MAR         3      02-Jan-15   69.7        76.2        2870   ₹18,738       +9.4%     
   AAPL        2      02-Feb-15   26.3        28.7        7453   ₹18,108       +9.2%     
   ADP         10     02-Jan-15   65.0        70.4        3075   ₹16,541       +8.3%     
-  COST        8      02-Jan-15   114.0       123.3       1754   ₹16,374       +8.2%     
+  COST        8      02-Jan-15   113.8       123.1       1757   ₹16,378       +8.2%     
 
-  AFTER: Invested ₹1,965,558 | Cash ₹165,021 | Total ₹2,130,579 | Positions 9/10 | Slot ₹213,109
+  AFTER: Invested ₹1,965,614 | Cash ₹164,969 | Total ₹2,130,583 | Positions 9/10 | Slot ₹213,109
 
 ========================================================================
   REBALANCE #04  —  01 Apr 2015
-  NAV: ₹2,097,699  |  Slot: ₹209,770  |  Cash: ₹165,021
+  NAV: ₹2,097,703  |  Slot: ₹209,770  |  Cash: ₹164,969
 ========================================================================
 
   EXITS (1)
@@ -113,7 +194,7 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  EA          2      2.703    0.95   +94.4%    +20.9%    55.6        3770   ₹209,764    
+  EA          2      2.692    0.95   +94.4%    +20.9%    55.6        3770   ₹209,764    
 
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
@@ -121,63 +202,64 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   DLTR        1      02-Jan-15   70.3        81.3        2842   ₹31,120       +15.6%    
   ORLY        7      02-Jan-15   12.8        14.4        15616  ₹24,142       +12.1%    
   ROST        8      02-Jan-15   42.0        46.7        4762   ₹22,451       +11.2%    
-  COST        3      02-Jan-15   114.0       125.2       1754   ₹19,737       +9.9%     
+  COST        3      02-Jan-15   113.8       125.1       1757   ₹19,742       +9.9%     
   AAPL        4      02-Feb-15   26.3        27.6        7453   ₹10,087       +5.2%     
   MAR         12     02-Jan-15   69.7        72.2        2870   ₹7,138        +3.6%     
-  SBUX        9      02-Mar-15   37.7        37.2        5655   ₹-2,736       -1.3%     
+  SBUX        9      02-Mar-15   37.7        37.2        5655   ₹-2,737       -1.3%     
   MNST        5      02-Mar-15   23.5        22.8        9053   ₹-6,910       -3.2%     
 
-  AFTER: Invested ₹1,936,575 | Cash ₹160,875 | Total ₹2,097,450 | Positions 9/10 | Slot ₹209,770
+  AFTER: Invested ₹1,936,632 | Cash ₹160,822 | Total ₹2,097,454 | Positions 9/10 | Slot ₹209,770
 
 ========================================================================
   REBALANCE #05  —  01 May 2015
-  NAV: ₹2,123,653  |  Slot: ₹212,365  |  Cash: ₹160,875
-========================================================================
-
-  EXITS (3)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ROST        11     02-Jan-15   42.0        45.7        4762   ₹17,490       +8.7%     119d  
-  COST        18     02-Jan-15   114.0       121.5       1754   ₹13,227       +6.6%     119d  
-  MAR         17     02-Jan-15   69.7        72.7        2870   ₹8,788        +4.4%     119d  
-
-  ENTRIES (3)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  VRSK        3      2.360    0.53   +26.4%    +17.7%    72.2        2942   ₹212,345    
-  AKAM        4      2.358    1.18   +36.9%    +28.4%    74.7        2844   ₹212,333    
-  INTU        6      2.135    0.93   +33.9%    +16.2%    92.0        2307   ₹212,274    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ORLY        1      02-Jan-15   12.8        14.8        15616  ₹31,159       +15.6%    
-  DLTR        10     02-Jan-15   70.3        77.7        2842   ₹20,974       +10.5%    
-  AAPL        9      02-Feb-15   26.3        28.7        7453   ₹17,876       +9.1%     
-  SBUX        2      02-Mar-15   37.7        40.2        5655   ₹14,360       +6.7%     
-  EA          8      01-Apr-15   55.6        57.6        3770   ₹7,507        +3.6%     
-  MNST        5      02-Mar-15   23.5        23.5        9053   ₹-151         -0.1%     
-
-  AFTER: Invested ₹1,960,393 | Cash ₹162,503 | Total ₹2,122,896 | Positions 9/10 | Slot ₹212,365
-
-========================================================================
-  REBALANCE #06  —  01 Jun 2015
-  NAV: ₹2,134,149  |  Slot: ₹213,415  |  Cash: ₹162,503
+  NAV: ₹2,123,656  |  Slot: ₹212,366  |  Cash: ₹160,822
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  VRSK        17     01-May-15   72.2        70.1        2942   ₹-6,002       -2.8%     31d   
-  MNST        26     02-Mar-15   23.5        21.2        9053   ₹-21,214      -10.0%    91d   
+  COST        18     02-Jan-15   113.8       121.3       1757   ₹13,231       +6.6%     119d  
+  MAR         17     02-Jan-15   69.7        72.7        2870   ₹8,788        +4.4%     119d  
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  TCOM        1      3.283    1.02   +47.3%    +80.8%    40.6        5254   ₹213,405    
-  REGN        2      2.670    1.17   +67.4%    +22.8%    510.4       418    ₹213,331    
+  VRSK        3      2.345    0.53   +26.4%    +17.7%    72.2        2942   ₹212,345    
+  AKAM        4      2.342    1.18   +36.9%    +28.4%    74.7        2844   ₹212,333    
 
   HOLDS (7)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  ORLY        1      02-Jan-15   12.8        14.8        15616  ₹31,159       +15.6%    
+  DLTR        10     02-Jan-15   70.3        77.7        2842   ₹20,974       +10.5%    
+  AAPL        9      02-Feb-15   26.3        28.7        7453   ₹17,876       +9.1%     
+  ROST        11     02-Jan-15   42.0        45.7        4762   ₹17,490       +8.7%     
+  SBUX        2      02-Mar-15   37.7        40.2        5655   ₹14,360       +6.7%     
+  EA          7      01-Apr-15   55.6        57.6        3770   ₹7,507        +3.6%     
+  MNST        5      02-Mar-15   23.5        23.5        9053   ₹-151         -0.1%     
+
+  AFTER: Invested ₹1,965,580 | Cash ₹157,572 | Total ₹2,123,151 | Positions 9/10 | Slot ₹212,366
+
+========================================================================
+  REBALANCE #06  —  01 Jun 2015
+  NAV: ₹2,111,024  |  Slot: ₹211,102  |  Cash: ₹157,572
+========================================================================
+
+  EXITS (3)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  ROST        37     02-Jan-15   42.0        43.3        4762   ₹6,414        +3.2%     150d  
+  VRSK        17     01-May-15   72.2        70.1        2942   ₹-6,002       -2.8%     31d   
+  MNST        25     02-Mar-15   23.5        21.2        9053   ₹-21,214      -10.0%    91d   
+
+  ENTRIES (3)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  TCOM        1      3.260    1.02   +47.3%    +80.8%    40.6        5197   ₹211,090    
+  REGN        2      2.656    1.17   +67.4%    +22.8%    510.4       413    ₹210,780    
+  NXPI        6      2.137    1.36   +80.3%    +12.5%    99.0        2132   ₹211,063    
+
+  HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
   ORLY        5      02-Jan-15   12.8        14.8        15616  ₹31,628       +15.8%    
@@ -185,76 +267,75 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   AAPL        10     02-Feb-15   26.3        29.1        7453   ₹21,414       +10.9%    
   EA          4      01-Apr-15   55.6        61.1        3770   ₹20,544       +9.8%     
   DLTR        14     02-Jan-15   70.3        77.0        2842   ₹18,842       +9.4%     
-  INTU        7      01-May-15   92.0        97.3        2307   ₹12,303       +5.8%     
   AKAM        11     01-May-15   74.7        75.2        2844   ₹1,621        +0.8%     
 
-  AFTER: Invested ₹2,000,160 | Cash ₹133,482 | Total ₹2,133,642 | Positions 9/10 | Slot ₹213,415
+  AFTER: Invested ₹1,981,779 | Cash ₹128,494 | Total ₹2,110,273 | Positions 9/10 | Slot ₹211,102
 
 ========================================================================
   REBALANCE #07  —  01 Jul 2015
-  NAV: ₹2,116,312  |  Slot: ₹211,631  |  Cash: ₹133,482
+  NAV: ₹2,076,362  |  Slot: ₹207,636  |  Cash: ₹128,494
 ========================================================================
 
-  EXITS (2)
+  EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
   AKAM        38     01-May-15   74.7        70.4        2844   ₹-12,201      -5.7%     61d   
-  TCOM        31     01-Jun-15   40.6        35.3        5254   ₹-27,816      -13.0%    30d   
+  NXPI        33     01-Jun-15   99.0        86.3        2132   ₹-27,047      -12.8%    30d   
+  TCOM        32     01-Jun-15   40.6        35.3        5197   ₹-27,514      -13.0%    30d   
 
-  ENTRIES (2)
+  ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  NFLX        3      2.708    1.05   +38.5%    +58.7%    9.4         22601  ₹211,626    
-  TSLA        6      2.161    1.16   +12.3%    +43.5%    17.9        11794  ₹211,624    
+  NFLX        3      2.689    1.05   +38.5%    +58.7%    9.4         22174  ₹207,628    
+  TSLA        6      2.143    1.16   +12.3%    +43.5%    17.9        11571  ₹207,622    
+  TSCO        7      1.916    1.07   +50.0%    +7.4%     15.5        13428  ₹207,623    
 
-  HOLDS (7)
+  HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
   ORLY        4      02-Jan-15   12.8        15.4        15616  ₹40,466       +20.2%    
   EA          1      01-Apr-15   55.6        66.1        3770   ₹39,258       +18.7%    
-  SBUX        2      02-Mar-15   37.7        43.2        5655   ₹31,419       +14.7%    
+  SBUX        2      02-Mar-15   37.7        43.2        5655   ₹31,418       +14.7%    
   DLTR        10     02-Jan-15   70.3        80.1        2842   ₹27,738       +13.9%    
   AAPL        18     02-Feb-15   26.3        28.3        7453   ₹14,857       +7.6%     
-  INTU        20     01-May-15   92.0        93.0        2307   ₹2,174        +1.0%     
-  REGN        5      01-Jun-15   510.4       503.1       418    ₹-3,031       -1.4%     
+  REGN        5      01-Jun-15   510.4       503.1       413    ₹-2,995       -1.4%     
 
-  AFTER: Invested ₹2,020,359 | Cash ₹95,450 | Total ₹2,115,809 | Positions 9/10 | Slot ₹211,631
+  AFTER: Invested ₹2,003,018 | Cash ₹72,605 | Total ₹2,075,623 | Positions 9/10 | Slot ₹207,636
 
 ========================================================================
   REBALANCE #08  —  03 Aug 2015
-  NAV: ₹2,199,789  |  Slot: ₹219,979  |  Cash: ₹95,450
+  NAV: ₹2,152,200  |  Slot: ₹215,220  |  Cash: ₹72,605
 ========================================================================
 
-  EXITS (4)
+  EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  DLTR        23     02-Jan-15   70.3        77.7        2842   ₹20,775       +10.4%    213d  
-  INTU        22     01-May-15   92.0        96.3        2307   ₹9,948        +4.7%     94d   
-  AAPL        51     02-Feb-15   26.3        26.4        7453   ₹1,278        +0.7%     182d  
-  TSLA        37     01-Jul-15   17.9        17.3        11794  ₹-7,202       -3.4%     33d   
+  DLTR        22     02-Jan-15   70.3        77.7        2842   ₹20,775       +10.4%    213d  
+  AAPL        50     02-Feb-15   26.3        26.4        7453   ₹1,278        +0.7%     182d  
+  TSLA        36     01-Jul-15   17.9        17.3        11571  ₹-7,066       -3.4%     33d   
 
-  ENTRIES (4)
+  ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  BMRN        2      3.135    1.06   +137.6%   +26.5%    147.2       1494   ₹219,872    
-  AMZN        4      2.595    0.99   +74.2%    +26.5%    26.8        8223   ₹219,978    
-  MNST        7      2.366    0.71   +138.9%   +9.8%     26.0        8471   ₹219,978    
-  MDLZ        8      2.348    0.60   +27.3%    +18.2%    35.6        6176   ₹219,956    
+  BMRN        2      3.150    1.06   +137.6%   +26.5%    147.2       1462   ₹215,163    
+  AMZN        4      2.616    0.99   +74.2%    +26.5%    26.8        8045   ₹215,216    
+  MDLZ        7      2.373    0.60   +27.3%    +18.2%    35.6        6043   ₹215,220    
 
-  HOLDS (5)
+  HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
   ORLY        6      02-Jan-15   12.8        16.1        15616  ₹51,429       +25.7%    
   EA          1      01-Apr-15   55.6        68.9        3770   ₹50,134       +23.9%    
   SBUX        3      02-Mar-15   37.7        46.7        5655   ₹50,929       +23.9%    
-  NFLX        5      01-Jul-15   9.4         11.3        22601  ₹42,771       +20.2%    
-  REGN        9      01-Jun-15   510.4       550.6       418    ₹16,799       +7.9%     
+  NFLX        5      01-Jul-15   9.4         11.3        22174  ₹41,963       +20.2%    
+  REGN        9      01-Jun-15   510.4       550.6       413    ₹16,598       +7.9%     
+  TSCO        14     01-Jul-15   15.5        15.6        13428  ₹1,281        +0.6%     
 
-  AFTER: Invested ₹2,139,665 | Cash ₹59,079 | Total ₹2,198,744 | Positions 9/10 | Slot ₹219,979
+  AFTER: Invested ₹2,106,824 | Cash ₹44,610 | Total ₹2,151,433 | Positions 9/10 | Slot ₹215,220
 
 ========================================================================
   REBALANCE #09  —  01 Sep 2015
-  NAV: ₹2,000,322  |  Slot: ₹200,032  |  Cash: ₹59,079
+  NAV: ₹1,964,027  |  Slot: ₹196,403  |  Cash: ₹44,610
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 93.4 < SMA200 98.5 — holding all, skipping exits & entries
@@ -270,19 +351,19 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
   ORLY        1      02-Jan-15   12.8        15.4        15616  ₹41,049       +20.5%    
   SBUX        5      02-Mar-15   37.7        43.0        5655   ₹30,318       +14.2%    
-  NFLX        7      01-Jul-15   9.4         10.6        22601  ₹27,470       +13.0%    
+  NFLX        7      01-Jul-15   9.4         10.6        22174  ₹26,951       +13.0%    
   EA          3      01-Apr-15   55.6        61.6        3770   ₹22,522       +10.7%    
-  REGN        11     01-Jun-15   510.4       493.1       418    ₹-7,220       -3.4%     
-  AMZN        2      03-Aug-15   26.8        24.8        8223   ₹-15,825      -7.2%     
-  MDLZ        12     03-Aug-15   35.6        32.1        6176   ₹-21,662      -9.8%     
-  MNST        4      03-Aug-15   26.0        22.5        8471   ₹-29,338      -13.3%    
-  BMRN        6      03-Aug-15   147.2       124.6       1494   ₹-33,675      -15.3%    
+  REGN        10     01-Jun-15   510.4       493.1       413    ₹-7,134       -3.4%     
+  AMZN        2      03-Aug-15   26.8        24.8        8045   ₹-15,483      -7.2%     
+  TSCO        25     01-Jul-15   15.5        14.0        13428  ₹-19,148      -9.2%     
+  MDLZ        11     03-Aug-15   35.6        32.1        6043   ₹-21,196      -9.8%     
+  BMRN        6      03-Aug-15   147.2       124.6       1462   ₹-32,953      -15.3%    
 
-  AFTER: Invested ₹1,941,243 | Cash ₹59,079 | Total ₹2,000,322 | Positions 9/10 | Slot ₹200,032
+  AFTER: Invested ₹1,919,417 | Cash ₹44,610 | Total ₹1,964,027 | Positions 9/10 | Slot ₹196,403
 
 ========================================================================
   REBALANCE #10  —  01 Oct 2015
-  NAV: ₹2,037,341  |  Slot: ₹203,734  |  Cash: ₹59,079
+  NAV: ₹2,010,969  |  Slot: ₹201,097  |  Cash: ₹44,610
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 94.7 < SMA200 98.5 — holding all, skipping exits & entries
@@ -299,35 +380,35 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   ORLY        1      02-Jan-15   12.8        16.8        15616  ₹62,245       +31.1%    
   SBUX        3      02-Mar-15   37.7        46.2        5655   ₹48,427       +22.7%    
   EA          4      01-Apr-15   55.6        65.3        3770   ₹36,328       +17.3%    
-  NFLX        9      01-Jul-15   9.4         10.6        22601  ₹27,899       +13.2%    
-  AMZN        2      03-Aug-15   26.8        26.0        8223   ₹-5,884       -2.7%     
-  MDLZ        13     03-Aug-15   35.6        33.2        6176   ₹-15,046      -6.8%     
-  REGN        27     01-Jun-15   510.4       469.8       418    ₹-16,957      -7.9%     
-  MNST        12     03-Aug-15   26.0        22.4        8471   ₹-30,510      -13.9%    
-  BMRN        30     03-Aug-15   147.2       109.8       1494   ₹-55,846      -25.4%    
+  NFLX        9      01-Jul-15   9.4         10.6        22174  ₹27,372       +13.2%    
+  AMZN        2      03-Aug-15   26.8        26.0        8045   ₹-5,756       -2.7%     
+  TSCO        16     01-Jul-15   15.5        14.7        13428  ₹-10,622      -5.1%     
+  MDLZ        12     03-Aug-15   35.6        33.2        6043   ₹-14,722      -6.8%     
+  REGN        26     01-Jun-15   510.4       469.8       413    ₹-16,754      -7.9%     
+  BMRN        29     03-Aug-15   147.2       109.8       1462   ₹-54,650      -25.4%    
 
-  AFTER: Invested ₹1,978,262 | Cash ₹59,079 | Total ₹2,037,341 | Positions 9/10 | Slot ₹203,734
+  AFTER: Invested ₹1,966,360 | Cash ₹44,610 | Total ₹2,010,969 | Positions 9/10 | Slot ₹201,097
 
 ========================================================================
   REBALANCE #11  —  02 Nov 2015
-  NAV: ₹2,223,613  |  Slot: ₹222,361  |  Cash: ₹59,079
+  NAV: ₹2,207,967  |  Slot: ₹220,797  |  Cash: ₹44,610
 ========================================================================
 
   EXITS (4)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  NFLX        25     01-Jul-15   9.4         10.8        22601  ₹31,651       +15.0%    124d  
-  REGN        26     01-Jun-15   510.4       575.1       418    ₹27,067       +12.7%    154d  
-  MNST        47     03-Aug-15   26.0        22.5        8471   ₹-29,408      -13.4%    91d   
-  BMRN        50     03-Aug-15   147.2       116.8       1494   ₹-45,313      -20.6%    91d   
+  NFLX        24     01-Jul-15   9.4         10.8        22174  ₹31,053       +15.0%    124d  
+  REGN        25     01-Jun-15   510.4       575.1       413    ₹26,743       +12.7%    154d  
+  TSCO        28     01-Jul-15   15.5        15.7        13428  ₹3,428        +1.7%     124d  
+  BMRN        49     03-Aug-15   147.2       116.8       1462   ₹-44,342      -20.6%    91d   
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  NVDA        1      3.091    1.08   +49.4%    +41.5%    0.7         318851  ₹222,361    
-  COST        5      2.191    0.62   +24.6%    +10.2%    133.4       1667   ₹222,358    
-  META        7      1.950    1.07   +37.8%    +9.8%     102.5       2169   ₹222,335    
-  KLAC        8      1.925    0.88   +8.0%     +29.6%    55.2        4027   ₹222,348    
+  NVDA        1      3.101    1.08   +49.4%    +41.5%    0.7         316608  ₹220,796    
+  COST        5      2.200    0.62   +24.6%    +10.2%    133.2       1657   ₹220,704    
+  META        7      1.959    1.07   +37.8%    +9.8%     102.5       2153   ₹220,695    
+  KLAC        8      1.938    0.88   +8.0%     +29.6%    55.2        3998   ₹220,747    
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
@@ -335,75 +416,75 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   ORLY        3      02-Jan-15   12.8        18.3        15616  ₹85,086       +42.5%    
   SBUX        4      02-Mar-15   37.7        50.1        5655   ₹70,084       +32.9%    
   EA          6      01-Apr-15   55.6        69.9        3770   ₹53,906       +25.7%    
-  AMZN        2      03-Aug-15   26.8        31.4        8223   ₹38,369       +17.4%    
-  MDLZ        19     03-Aug-15   35.6        36.5        6176   ₹5,489        +2.5%     
+  AMZN        2      03-Aug-15   26.8        31.4        8045   ₹37,538       +17.4%    
+  MDLZ        18     03-Aug-15   35.6        36.5        6043   ₹5,371        +2.5%     
 
-  AFTER: Invested ₹2,205,132 | Cash ₹17,425 | Total ₹2,222,557 | Positions 9/10 | Slot ₹222,361
+  AFTER: Invested ₹2,188,225 | Cash ₹18,694 | Total ₹2,206,919 | Positions 9/10 | Slot ₹220,797
 
 ========================================================================
   REBALANCE #12  —  01 Dec 2015
-  NAV: ₹2,256,138  |  Slot: ₹225,614  |  Cash: ₹17,425
+  NAV: ₹2,239,910  |  Slot: ₹223,991  |  Cash: ₹18,694
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  EA          17     01-Apr-15   55.6        66.7        3770   ₹41,565       +19.8%    244d  
-  KLAC        16     02-Nov-15   55.2        56.8        4027   ₹6,288        +2.8%     29d   
-  MDLZ        32     03-Aug-15   35.6        34.8        6176   ₹-4,803       -2.2%     120d  
+  EA          16     01-Apr-15   55.6        66.7        3770   ₹41,565       +19.8%    244d  
+  KLAC        15     02-Nov-15   55.2        56.8        3998   ₹6,242        +2.8%     29d   
+  MDLZ        31     03-Aug-15   35.6        34.8        6043   ₹-4,699       -2.2%     120d  
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  TCOM        3      2.798    1.04   +119.5%   +69.2%    54.2        4165   ₹225,584    
-  NFLX        4      2.462    1.25   +156.7%   +18.5%    12.5        17995  ₹225,603    
-  PAYX        5      2.408    0.71   +18.3%    +25.6%    39.6        5694   ₹225,606    
+  TCOM        3      2.814    1.04   +119.5%   +69.2%    54.2        4135   ₹223,959    
+  NFLX        4      2.482    1.25   +156.7%   +18.5%    12.5        17866  ₹223,986    
+  PAYX        5      2.423    0.71   +18.3%    +25.6%    39.6        5653   ₹223,981    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ORLY        10     02-Jan-15   12.8        17.5        15616  ₹73,104       +36.6%    
+  ORLY        9      02-Jan-15   12.8        17.5        15616  ₹73,104       +36.6%    
   SBUX        6      02-Mar-15   37.7        49.5        5655   ₹67,030       +31.5%    
-  AMZN        1      03-Aug-15   26.8        34.0        8223   ₹59,218       +26.9%    
-  NVDA        2      02-Nov-15   0.7         0.8         318851  ₹32,342       +14.5%    
-  META        8      02-Nov-15   102.5       106.3       2169   ₹8,200        +3.7%     
-  COST        13     02-Nov-15   133.4       135.5       1667   ₹3,572        +1.6%     
+  AMZN        1      03-Aug-15   26.8        34.0        8045   ₹57,936       +26.9%    
+  NVDA        2      02-Nov-15   0.7         0.8         316608  ₹32,114       +14.5%    
+  META        8      02-Nov-15   102.5       106.3       2153   ₹8,139        +3.7%     
+  COST        12     02-Nov-15   133.2       135.3       1657   ₹3,546        +1.6%     
 
-  AFTER: Invested ₹2,220,388 | Cash ₹34,946 | Total ₹2,255,334 | Positions 9/10 | Slot ₹225,614
+  AFTER: Invested ₹2,204,305 | Cash ₹34,807 | Total ₹2,239,112 | Positions 9/10 | Slot ₹223,991
 
 ========================================================================
   REBALANCE #13  —  04 Jan 2016
-  NAV: ₹2,114,328  |  Slot: ₹211,433  |  Cash: ₹34,946
+  NAV: ₹2,099,149  |  Slot: ₹209,915  |  Cash: ₹34,807
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ORLY        29     02-Jan-15   12.8        16.4        15616  ₹56,218       +28.1%    367d  
-  PAYX        17     01-Dec-15   39.6        37.7        5694   ₹-10,832      -4.8%     34d   
+  ORLY        27     02-Jan-15   12.8        16.4        15616  ₹56,218       +28.1%    367d  
+  PAYX        16     01-Dec-15   39.6        37.7        5653   ₹-10,754      -4.8%     34d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  GOOG        4      2.227    1.12   +41.7%    +18.3%    36.8        5747   ₹211,432    
-  GOOGL       5      2.186    1.09   +43.4%    +15.6%    37.7        5614   ₹211,427    
+  GOOG        4      2.248    1.12   +41.7%    +18.3%    36.8        5705   ₹209,887    
+  ADSK        6      2.183    0.82   +1.3%     +37.1%    60.3        3480   ₹209,879    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  SBUX        13     02-Mar-15   37.7        47.0        5655   ₹52,834       +24.8%    
-  AMZN        1      03-Aug-15   26.8        31.8        8223   ₹41,921       +19.1%    
-  NVDA        2      02-Nov-15   0.7         0.8         318851  ₹29,387       +13.2%    
-  COST        14     02-Nov-15   133.4       134.1       1667   ₹1,121        +0.5%     
-  META        15     02-Nov-15   102.5       101.4       2169   ₹-2,346       -1.1%     
-  NFLX        7      01-Dec-15   12.5        11.0        17995  ₹-27,730      -12.3%    
-  TCOM        3      01-Dec-15   54.2        45.0        4165   ₹-38,112      -16.9%    
+  SBUX        12     02-Mar-15   37.7        47.0        5655   ₹52,834       +24.8%    
+  AMZN        1      03-Aug-15   26.8        31.8        8045   ₹41,013       +19.1%    
+  NVDA        2      02-Nov-15   0.7         0.8         316608  ₹29,180       +13.2%    
+  COST        13     02-Nov-15   133.2       133.9       1657   ₹1,113        +0.5%     
+  META        14     02-Nov-15   102.5       101.4       2153   ₹-2,329       -1.1%     
+  NFLX        5      01-Dec-15   12.5        11.0        17866  ₹-27,531      -12.3%    
+  TCOM        3      01-Dec-15   54.2        45.0        4135   ₹-37,837      -16.9%    
 
-  AFTER: Invested ₹2,031,251 | Cash ₹82,575 | Total ₹2,113,826 | Positions 9/10 | Slot ₹211,433
+  AFTER: Invested ₹2,014,663 | Cash ₹83,987 | Total ₹2,098,651 | Positions 9/10 | Slot ₹209,915
 
 ========================================================================
   REBALANCE #14  —  01 Feb 2016
-  NAV: ₹2,058,783  |  Slot: ₹205,878  |  Cash: ₹82,575
+  NAV: ₹1,997,280  |  Slot: ₹199,728  |  Cash: ₹83,987
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 97.0 < SMA200 100.7 — holding all, skipping exits & entries
@@ -417,21 +498,22 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  SBUX        9      02-Mar-15   37.7        49.6        5655   ₹67,167       +31.5%    
-  META        2      02-Nov-15   102.5       114.2       2169   ₹25,352       +11.4%    
-  AMZN        13     03-Aug-15   26.8        28.7        8223   ₹16,356       +7.4%     
-  NVDA        3      02-Nov-15   0.7         0.7         318851  ₹5,511        +2.5%     
-  GOOGL       6      04-Jan-16   37.7        38.2        5614   ₹3,154        +1.5%     
-  GOOG        7      04-Jan-16   36.8        37.3        5747   ₹2,896        +1.4%     
-  COST        27     02-Nov-15   133.4       127.1       1667   ₹-10,491      -4.7%     
-  TCOM        15     01-Dec-15   54.2        41.8        4165   ₹-51,624      -22.9%    
-  NFLX        22     01-Dec-15   12.5        9.4         17995  ₹-56,288      -25.0%    
+  SBUX        8      02-Mar-15   37.7        49.6        5655   ₹67,167       +31.5%    
+  META        2      02-Nov-15   102.5       114.2       2153   ₹25,165       +11.4%    
+  AMZN        12     03-Aug-15   26.8        28.7        8045   ₹16,002       +7.4%     
+  NVDA        3      02-Nov-15   0.7         0.7         316608  ₹5,472        +2.5%     
+  GOOG        6      04-Jan-16   36.8        37.3        5705   ₹2,875        +1.4%     
+  COST        25     02-Nov-15   133.2       126.9       1657   ₹-10,413      -4.7%     
+  ADSK        54     04-Jan-16   60.3        47.7        3480   ₹-44,057      -21.0% ⚠  
+  TCOM        14     01-Dec-15   54.2        41.8        4135   ₹-51,252      -22.9%    
+  NFLX        21     01-Dec-15   12.5        9.4         17866  ₹-55,885      -25.0%    
+  ⚠  WAZ < 0 (momentum below universe mean): ADSK
 
-  AFTER: Invested ₹1,976,208 | Cash ₹82,575 | Total ₹2,058,783 | Positions 9/10 | Slot ₹205,878
+  AFTER: Invested ₹1,913,293 | Cash ₹83,987 | Total ₹1,997,280 | Positions 9/10 | Slot ₹199,728
 
 ========================================================================
   REBALANCE #15  —  01 Mar 2016
-  NAV: ₹2,061,040  |  Slot: ₹206,104  |  Cash: ₹82,575
+  NAV: ₹2,030,548  |  Slot: ₹203,055  |  Cash: ₹83,987
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 98.3 < SMA200 100.0 — holding all, skipping exits & entries
@@ -445,54 +527,54 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  SBUX        8      02-Mar-15   37.7        48.6        5655   ₹61,855       +29.0%    
-  NVDA        4      02-Nov-15   0.7         0.8         318851  ₹33,270       +15.0%    
-  AMZN        15     03-Aug-15   26.8        29.0        8223   ₹18,095       +8.2%     
-  META        6      02-Nov-15   102.5       109.0       2169   ₹14,010       +6.3%     
-  GOOGL       13     04-Jan-16   37.7        36.8        5614   ₹-4,808       -2.3%     
-  GOOG        16     04-Jan-16   36.8        35.6        5747   ₹-6,564       -3.1%     
-  COST        43     02-Nov-15   133.4       126.8       1667   ₹-10,942      -4.9% ⚠   
-  NFLX        27     01-Dec-15   12.5        9.8         17995  ₹-48,712      -21.6%    
-  TCOM        10     01-Dec-15   54.2        41.7        4165   ₹-51,914      -23.0%    
-  ⚠  WAZ < 0 (momentum below universe mean): COST
+  SBUX        8      02-Mar-15   37.7        48.6        5655   ₹61,854       +29.0%    
+  NVDA        4      02-Nov-15   0.7         0.8         316608  ₹33,036       +15.0%    
+  AMZN        14     03-Aug-15   26.8        29.0        8045   ₹17,703       +8.2%     
+  META        6      02-Nov-15   102.5       109.0       2153   ₹13,907       +6.3%     
+  GOOG        15     04-Jan-16   36.8        35.6        5705   ₹-6,516       -3.1%     
+  COST        42     02-Nov-15   133.2       126.6       1657   ₹-10,861      -4.9% ⚠   
+  ADSK        61     04-Jan-16   60.3        54.3        3480   ₹-20,880      -9.9% ⚠   
+  NFLX        25     01-Dec-15   12.5        9.8         17866  ₹-48,363      -21.6%    
+  TCOM        10     01-Dec-15   54.2        41.7        4135   ₹-51,540      -23.0%    
+  ⚠  WAZ < 0 (momentum below universe mean): COST, ADSK
 
-  AFTER: Invested ₹1,978,465 | Cash ₹82,575 | Total ₹2,061,040 | Positions 9/10 | Slot ₹206,104
+  AFTER: Invested ₹1,946,561 | Cash ₹83,987 | Total ₹2,030,548 | Positions 9/10 | Slot ₹203,055
 
 ========================================================================
   REBALANCE #16  —  01 Apr 2016
-  NAV: ₹2,166,377  |  Slot: ₹216,638  |  Cash: ₹82,575
+  NAV: ₹2,139,481  |  Slot: ₹213,948  |  Cash: ₹83,987
 ========================================================================
 
   EXITS (4)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AMZN        23     03-Aug-15   26.8        29.9        8223   ₹26,096       +11.9%    242d  
-  GOOG        15     04-Jan-16   36.8        37.2        5747   ₹2,300        +1.1%     88d   
-  COST        40     02-Nov-15   133.4       133.3       1667   ₹-85          -0.0%     151d  
-  TCOM        27     01-Dec-15   54.2        44.6        4165   ₹-39,728      -17.6%    122d  
+  AMZN        22     03-Aug-15   26.8        29.9        8045   ₹25,531       +11.9%    242d  
+  COST        39     02-Nov-15   133.2       133.1       1657   ₹-84          -0.0%     151d  
+  ADSK        52     04-Jan-16   60.3        57.8        3480   ₹-8,839       -4.2%     88d   
+  TCOM        26     01-Dec-15   54.2        44.6        4135   ₹-39,442      -17.6%    122d  
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  MAT         1      3.281    0.50   +57.6%    +26.5%    31.7        6825   ₹216,609    
-  FAST        3      2.622    0.74   +22.1%    +18.8%    9.4         23045  ₹216,631    
-  HSIC        4      2.429    0.72   +25.1%    +8.1%     67.8        3195   ₹216,634    
-  ORLY        5      2.271    0.79   +29.0%    +7.8%     18.5        11696  ₹216,626    
+  MAT         1      3.294    0.50   +57.6%    +26.5%    31.7        6741   ₹213,943    
+  FAST        3      2.629    0.74   +22.1%    +18.8%    9.4         22880  ₹213,939    
+  HSIC        4      2.442    0.72   +25.1%    +8.1%     67.8        3155   ₹213,921    
+  ORLY        5      2.284    0.79   +29.0%    +7.8%     18.5        11551  ₹213,940    
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
   SBUX        9      02-Mar-15   37.7        49.4        5655   ₹66,342       +31.1%    
-  NVDA        2      02-Nov-15   0.7         0.9         318851  ₹59,809       +26.9%    
-  META        6      02-Nov-15   102.5       115.2       2169   ₹27,439       +12.3%    
-  GOOGL       12     04-Jan-16   37.7        38.2        5614   ₹2,848        +1.3%     
-  NFLX        13     01-Dec-15   12.5        10.6        17995  ₹-35,396      -15.7%    
+  NVDA        2      02-Nov-15   0.7         0.9         316608  ₹59,388       +26.9%    
+  META        6      02-Nov-15   102.5       115.2       2153   ₹27,237       +12.3%    
+  GOOG        14     04-Jan-16   36.8        37.2        5705   ₹2,283        +1.1%     
+  NFLX        12     01-Dec-15   12.5        10.6        17866  ₹-35,142      -15.7%    
 
-  AFTER: Invested ₹2,082,366 | Cash ₹82,981 | Total ₹2,165,348 | Positions 9/10 | Slot ₹216,638
+  AFTER: Invested ₹2,064,315 | Cash ₹74,150 | Total ₹2,138,465 | Positions 9/10 | Slot ₹213,948
 
 ========================================================================
   REBALANCE #17  —  02 May 2016
-  NAV: ₹2,076,237  |  Slot: ₹207,624  |  Cash: ₹82,981
+  NAV: ₹2,050,719  |  Slot: ₹205,072  |  Cash: ₹74,150
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 99.4 < SMA200 100.0 — holding all, skipping exits & entries
@@ -506,925 +588,923 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         0.9         318851  ₹58,638       +26.4%    
-  SBUX        50     02-Mar-15   37.7        46.5        5655   ₹49,581       +23.3% ⚠  
-  META        11     02-Nov-15   102.5       117.6       2169   ₹32,841       +14.8%    
-  HSIC        4      01-Apr-16   67.8        67.1        3195   ₹-2,381       -1.1%     
-  FAST        9      01-Apr-16   9.4         9.1         23045  ₹-7,077       -3.3%     
-  ORLY        28     01-Apr-16   18.5        17.6        11696  ₹-10,558      -4.9%     
-  GOOGL       37     04-Jan-16   37.7        35.4        5614   ₹-12,536      -5.9%     
-  MAT         10     01-Apr-16   31.7        29.0        6825   ₹-18,525      -8.6%     
-  NFLX        44     01-Dec-15   12.5        9.3         17995  ₹-58,052      -25.7% ⚠  
+  NVDA        1      02-Nov-15   0.7         0.9         316608  ₹58,225       +26.4%    
+  SBUX        49     02-Mar-15   37.7        46.5        5655   ₹49,581       +23.3% ⚠  
+  META        11     02-Nov-15   102.5       117.6       2153   ₹32,599       +14.8%    
+  HSIC        4      01-Apr-16   67.8        67.1        3155   ₹-2,351       -1.1%     
+  FAST        9      01-Apr-16   9.4         9.0         22880  ₹-6,989       -3.3%     
+  ORLY        28     01-Apr-16   18.5        17.6        11551  ₹-10,427      -4.9%     
+  GOOG        36     04-Jan-16   36.8        34.6        5705   ₹-12,344      -5.9%     
+  MAT         10     01-Apr-16   31.7        29.0        6741   ₹-18,297      -8.6%     
+  NFLX        43     01-Dec-15   12.5        9.3         17866  ₹-57,636      -25.7% ⚠  
   ⚠  WAZ < 0 (momentum below universe mean): NFLX, SBUX
 
-  AFTER: Invested ₹1,993,256 | Cash ₹82,981 | Total ₹2,076,237 | Positions 9/10 | Slot ₹207,624
+  AFTER: Invested ₹1,976,569 | Cash ₹74,150 | Total ₹2,050,719 | Positions 9/10 | Slot ₹205,072
 
 ========================================================================
   REBALANCE #18  —  01 Jun 2016
-  NAV: ₹2,180,099  |  Slot: ₹218,010  |  Cash: ₹82,981
+  NAV: ₹2,154,506  |  Slot: ₹215,451  |  Cash: ₹74,150
 ========================================================================
 
-  EXITS (6)
+  EXITS (5)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  SBUX        62     02-Mar-15   37.7        44.5        5655   ₹38,828       +18.2%    457d  
-  GOOGL       21     04-Jan-16   37.7        37.1        5614   ₹-3,057       -1.4%     149d  
-  FAST        38     01-Apr-16   9.4         8.9         23045  ₹-10,553      -4.9%     61d   
-  ORLY        37     01-Apr-16   18.5        17.6        11696  ₹-11,135      -5.1%     61d   
-  MAT         28     01-Apr-16   31.7        29.9        6825   ₹-12,861      -5.9%     61d   
-  NFLX        40     01-Dec-15   12.5        10.2        17995  ₹-42,936      -19.0%    183d  
-
-  ENTRIES (6)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ULTA        2      3.607    0.92   +53.3%    +40.6%    236.7       921    ₹217,982    
-  AMZN        3      3.003    1.19   +66.9%    +24.0%    36.0        6060   ₹217,990    
-  CHTR        4      2.522    0.86   +29.0%    +25.1%    227.5       958    ₹217,945    
-  AMAT        5      2.431    0.94   +22.2%    +25.6%    21.9        9960   ₹218,008    
-  ISRG        6      2.201    0.61   +27.8%    +11.1%    70.9        3076   ₹217,948    
-  NTES        7      2.104    0.92   +24.0%    +30.8%    29.6        7375   ₹218,008    
-
-  HOLDS (3)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         1.1         318851  ₹143,964      +64.7%    
-  META        9      02-Nov-15   102.5       117.9       2169   ₹33,293       +15.0%    
-  HSIC        15     01-Apr-16   67.8        67.9        3195   ₹251          +0.1%     
-
-  AFTER: Invested ₹2,146,718 | Cash ₹31,828 | Total ₹2,178,546 | Positions 9/10 | Slot ₹218,010
-
-========================================================================
-  REBALANCE #19  —  01 Jul 2016
-  NAV: ₹2,201,433  |  Slot: ₹220,143  |  Cash: ₹31,828
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (9)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         1.1         318851  ₹142,790      +64.2%    
-  META        17     02-Nov-15   102.5       113.3       2169   ₹23,415       +10.5%    
-  NTES        5      01-Jun-16   29.6        31.0        7375   ₹10,408       +4.8%     
-  ISRG        6      01-Jun-16   70.9        74.0        3076   ₹9,782        +4.5%     
-  ULTA        2      01-Jun-16   236.7       243.7       921    ₹6,502        +3.0%     
-  HSIC        12     01-Apr-16   67.8        69.5        3195   ₹5,400        +2.5%     
-  CHTR        7      01-Jun-16   227.5       232.3       958    ₹4,589        +2.1%     
-  AMZN        3      01-Jun-16   36.0        36.3        6060   ₹1,891        +0.9%     
-  AMAT        9      01-Jun-16   21.9        21.4        9960   ₹-4,382       -2.0%     
-
-  AFTER: Invested ₹2,169,606 | Cash ₹31,828 | Total ₹2,201,433 | Positions 9/10 | Slot ₹220,143
-
-========================================================================
-  REBALANCE #20  —  01 Aug 2016
-  NAV: ₹2,390,639  |  Slot: ₹239,064  |  Cash: ₹31,828
-========================================================================
-
-  EXITS (3)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  META        31     02-Nov-15   102.5       123.3       2169   ₹45,194       +20.3%    273d  
-  HSIC        24     01-Apr-16   67.8        70.6        3195   ₹9,071        +4.2%     122d  
-  CHTR        28     01-Jun-16   227.5       236.0       958    ₹8,143        +3.7%     61d   
-
-  ENTRIES (3)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  TXN         4      2.466    0.95   +43.5%    +21.4%    53.7        4450   ₹239,025    
-  PAYX        6      2.385    0.76   +32.0%    +14.4%    44.4        5378   ₹239,026    
-  MCHP        7      1.878    0.94   +34.5%    +13.9%    23.2        10295  ₹239,048    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         1.4         318851  ₹221,596      +99.7%    
-  NTES        3      01-Jun-16   29.6        34.0        7375   ₹32,857       +15.1%    
-  ULTA        5      01-Jun-16   236.7       260.6       921    ₹22,003       +10.1%    
-  ISRG        8      01-Jun-16   70.9        77.1        3076   ₹19,201       +8.8%     
-  AMAT        2      01-Jun-16   21.9        23.6        9960   ₹16,901       +7.8%     
-  AMZN        14     01-Jun-16   36.0        38.4        6060   ₹14,635       +6.7%     
-
-  AFTER: Invested ₹2,356,589 | Cash ₹33,199 | Total ₹2,389,787 | Positions 9/10 | Slot ₹239,064
-
-========================================================================
-  REBALANCE #21  —  01 Sep 2016
-  NAV: ₹2,518,599  |  Slot: ₹251,860  |  Cash: ₹33,199
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ULTA        24     01-Jun-16   236.7       245.5       921    ₹8,142        +3.7%     92d   
-
-  ENTRIES (1)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  NTAP        6      2.385    0.98   +14.8%    +41.1%    27.4        9197   ₹251,849    
-
-  HOLDS (8)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         1.6         318851  ₹272,748      +122.7%   
-  AMAT        2      01-Jun-16   21.9        27.3        9960   ₹53,780       +24.7%    
-  NTES        5      01-Jun-16   29.6        36.4        7375   ₹50,154       +23.0%    
-  MCHP        3      01-Aug-16   23.2        26.3        10295  ₹31,538       +13.2%    
-  ISRG        12     01-Jun-16   70.9        76.6        3076   ₹17,772       +8.2%     
-  AMZN        17     01-Jun-16   36.0        38.5        6060   ₹15,508       +7.1%     
-  PAYX        4      01-Aug-16   44.4        45.7        5378   ₹6,978        +2.9%     
-  TXN         7      01-Aug-16   53.7        53.6        4450   ₹-616         -0.3%     
-
-  AFTER: Invested ₹2,511,126 | Cash ₹7,174 | Total ₹2,518,300 | Positions 9/10 | Slot ₹251,860
-
-========================================================================
-  REBALANCE #22  —  03 Oct 2016
-  NAV: ₹2,606,682  |  Slot: ₹260,668  |  Cash: ₹7,174
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  PAYX        51     01-Aug-16   44.4        43.1        5378   ₹-7,260       -3.0%     63d   
-
-  ENTRIES (0)
-    —
-
-  HOLDS (8)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         1.7         318851  ₹314,301      +141.3%   
-  NTES        3      01-Jun-16   29.6        41.2        7375   ₹86,110       +39.5%    
-  AMAT        2      01-Jun-16   21.9        27.0        9960   ₹50,460       +23.1%    
-  AMZN        11     01-Jun-16   36.0        41.8        6060   ₹35,542       +16.3%    
-  ISRG        7      01-Jun-16   70.9        79.8        3076   ₹27,428       +12.6%    
-  MCHP        5      01-Aug-16   23.2        25.9        10295  ₹27,316       +11.4%    
-  NTAP        4      01-Sep-16   27.4        27.7        9197   ₹3,100        +1.2%     
-  TXN         9      01-Aug-16   53.7        53.5        4450   ₹-752         -0.3%     
-
-  AFTER: Invested ₹2,367,742 | Cash ₹238,940 | Total ₹2,606,682 | Positions 8/10 | Slot ₹260,668
-
-========================================================================
-  REBALANCE #23  —  01 Nov 2016
-  NAV: ₹2,552,501  |  Slot: ₹255,250  |  Cash: ₹238,940
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AMZN        23     01-Jun-16   36.0        39.3        6060   ₹19,989       +9.2%     153d  
-
-  ENTRIES (1)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AKAM        4      2.183    1.22   +10.2%    +37.7%    68.1        3748   ₹255,239    
-
-  HOLDS (7)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         1.7         318851  ₹319,005      +143.5%   
-  NTES        3      01-Jun-16   29.6        41.9        7375   ₹91,289       +41.9%    
-  AMAT        2      01-Jun-16   21.9        26.0        9960   ₹41,308       +18.9%    
-  MCHP        6      01-Aug-16   23.2        25.2        10295  ₹20,249       +8.5%     
-  ISRG        14     01-Jun-16   70.9        74.4        3076   ₹10,947       +5.0%     
-  TXN         20     01-Aug-16   53.7        53.4        4450   ₹-1,505       -0.6%     
-  NTAP        9      01-Sep-16   27.4        26.1        9197   ₹-11,959      -4.7%     
-
-  AFTER: Invested ₹2,330,821 | Cash ₹221,377 | Total ₹2,552,198 | Positions 8/10 | Slot ₹255,250
-
-========================================================================
-  REBALANCE #24  —  01 Dec 2016
-  NAV: ₹2,670,866  |  Slot: ₹267,087  |  Cash: ₹221,377
-========================================================================
-
-  EXITS (3)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  NTES        32     01-Jun-16   29.6        36.8        7375   ₹53,430       +24.5%    183d  
-  NTAP        33     01-Sep-16   27.4        27.9        9197   ₹5,078        +2.0%     91d   
-  ISRG        43     01-Jun-16   70.9        70.3        3076   ₹-1,832       -0.8%     183d  
-
-  ENTRIES (3)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CSX         2      3.247    0.78   +36.5%    +30.6%    10.8        24821  ₹267,077    
-  TMUS        3      2.794    1.06   +51.9%    +17.3%    52.2        5119   ₹267,058    
-  ROST        4      2.143    0.63   +27.1%    +8.0%     61.4        4351   ₹267,034    
-
-  HOLDS (5)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         2.2         318851  ₹465,783      +209.5%   
-  AMAT        7      01-Jun-16   21.9        27.2        9960   ₹52,940       +24.3%    
-  MCHP        19     01-Aug-16   23.2        25.8        10295  ₹26,232       +11.0%    
-  TXN         17     01-Aug-16   53.7        54.5        4450   ₹3,575        +1.5%     
-  AKAM        20     01-Nov-16   68.1        63.5        3748   ₹-17,203      -6.7%     
-
-  AFTER: Invested ₹2,506,177 | Cash ₹163,738 | Total ₹2,669,915 | Positions 8/10 | Slot ₹267,087
-
-========================================================================
-  REBALANCE #25  —  03 Jan 2017
-  NAV: ₹2,844,967  |  Slot: ₹284,497  |  Cash: ₹163,738
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ROST        29     01-Dec-16   61.4        59.9        4351   ₹-6,493       -2.4%     33d   
-
-  ENTRIES (1)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ADP         2      3.056    0.74   +29.2%    +18.8%    84.8        3354   ₹284,436    
-
-  HOLDS (7)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         2.5         318851  ₹578,616      +260.2%   
-  AMAT        6      01-Jun-16   21.9        28.9        9960   ₹69,502       +31.9%    
-  MCHP        17     01-Aug-16   23.2        26.9        10295  ₹37,583       +15.7%    
-  TMUS        3      01-Dec-16   52.2        56.1        5119   ₹19,983       +7.5%     
-  TXN         11     01-Aug-16   53.7        57.0        4450   ₹14,497       +6.1%     
-  AKAM        14     01-Nov-16   68.1        67.6        3748   ₹-1,986       -0.8%     
-  CSX         4      01-Dec-16   10.8        10.5        24821  ₹-5,324       -2.0%     
-
-  AFTER: Invested ₹2,705,124 | Cash ₹139,505 | Total ₹2,844,629 | Positions 8/10 | Slot ₹284,497
-
-========================================================================
-  REBALANCE #26  —  01 Feb 2017
-  NAV: ₹3,084,450  |  Slot: ₹308,445  |  Cash: ₹139,505
-========================================================================
-
-  EXITS (2)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AKAM        47     01-Nov-16   68.1        68.7        3748   ₹2,249        +0.9%     92d   
-  ADP         26     03-Jan-17   84.8        78.0        3354   ₹-22,673      -8.0%     29d   
-
-  ENTRIES (2)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CMCSA       3      2.731    0.48   +40.8%    +22.8%    27.9        11051  ₹308,419    
-  CHTR        4      2.571    0.84   +90.0%    +30.8%    326.9       943    ₹308,220    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         2.8         318851  ₹672,368      +302.4%   
-  AMAT        5      01-Jun-16   21.9        31.7        9960   ₹97,317       +44.6%    
-  CSX         2      01-Dec-16   10.8        13.8        24821  ₹76,360       +28.6%    
-  MCHP        14     01-Aug-16   23.2        28.8        10295  ₹57,340       +24.0%    
-  TMUS        9      01-Dec-16   52.2        60.8        5119   ₹44,296       +16.6%    
-  TXN         15     01-Aug-16   53.7        59.4        4450   ₹25,434       +10.6%    
-
-  AFTER: Invested ₹3,042,332 | Cash ₹41,385 | Total ₹3,083,717 | Positions 8/10 | Slot ₹308,445
-
-========================================================================
-  REBALANCE #27  —  01 Mar 2017
-  NAV: ₹3,054,173  |  Slot: ₹305,417  |  Cash: ₹41,385
-========================================================================
-
-  EXITS (2)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  TMUS        17     01-Dec-16   52.2        59.9        5119   ₹39,768       +14.9%    90d   
-  TXN         25     01-Aug-16   53.7        60.9        4450   ₹31,953       +13.4%    212d  
-
-  ENTRIES (2)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AAPL        2      2.548    0.98   +42.0%    +25.8%    32.3        9447   ₹305,412    
-  NTES        3      2.528    1.34   +122.3%   +31.0%    51.3        5953   ₹305,370    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        4      02-Nov-15   0.7         2.5         318851  ₹585,759      +263.4%   
-  AMAT        5      01-Jun-16   21.9        33.4        9960   ₹114,646      +52.6%    
-  CSX         1      01-Dec-16   10.8        14.5        24821  ₹93,175       +34.9%    
-  MCHP        11     01-Aug-16   23.2        31.1        10295  ₹81,609       +34.1%    
-  CHTR        8      01-Feb-17   326.9       325.2       943    ₹-1,584       -0.5%     
-  CMCSA       13     01-Feb-17   27.9        27.7        11051  ₹-1,754       -0.6%     
-
-  AFTER: Invested ₹3,045,765 | Cash ₹7,683 | Total ₹3,053,448 | Positions 8/10 | Slot ₹305,417
-
-========================================================================
-  REBALANCE #28  —  03 Apr 2017
-  NAV: ₹3,089,826  |  Slot: ₹308,983  |  Cash: ₹7,683
-========================================================================
-
-  EXITS (2)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CHTR        23     01-Feb-17   326.9       328.3       943    ₹1,339        +0.4%     61d   
-  CMCSA       25     01-Feb-17   27.9        27.8        11051  ₹-705         -0.2%     61d   
-
-  ENTRIES (2)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  IDXX        1      3.082    0.84   +94.7%    +32.4%    155.3       1989   ₹308,852    
-  MU          2      2.576    1.66   +165.2%   +30.7%    27.9        11061  ₹308,958    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        8      02-Nov-15   0.7         2.7         318851  ₹629,707      +283.2%   
-  AMAT        5      01-Jun-16   21.9        35.2        9960   ₹133,061      +61.0%    
-  MCHP        18     01-Aug-16   23.2        31.0        10295  ₹79,736       +33.4%    
-  CSX         4      01-Dec-16   10.8        13.7        24821  ₹74,068       +27.7%    
-  AAPL        9      01-Mar-17   32.3        33.2        9447   ₹8,543        +2.8%     
-  NTES        6      01-Mar-17   51.3        48.4        5953   ₹-17,520      -5.7%     
-
-  AFTER: Invested ₹3,082,681 | Cash ₹6,411 | Total ₹3,089,093 | Positions 8/10 | Slot ₹308,983
-
-========================================================================
-  REBALANCE #29  —  01 May 2017
-  NAV: ₹3,153,414  |  Slot: ₹315,341  |  Cash: ₹6,411
-========================================================================
-
-  EXITS (2)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CSX         22     01-Dec-16   10.8        15.2        24821  ₹110,086      +41.2%    151d  
-  NTES        29     01-Mar-17   51.3        45.7        5953   ₹-33,072      -10.8%    61d   
-
-  ENTRIES (2)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  LRCX        2      3.143    1.35   +98.3%    +29.1%    13.2        23905  ₹315,334    
-  ADBE        6      2.209    1.10   +43.4%    +18.7%    135.1       2333   ₹315,212    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        13     02-Nov-15   0.7         2.6         318851  ₹616,027      +277.0%   
-  AMAT        4      01-Jun-16   21.9        37.8        9960   ₹158,428      +72.7%    
-  MCHP        18     01-Aug-16   23.2        32.2        10295  ₹92,582       +38.7%    
-  IDXX        1      03-Apr-17   155.3       163.7       1989   ₹16,807       +5.4%     
-  AAPL        3      01-Mar-17   32.3        33.9        9447   ₹14,835       +4.9%     
-  MU          5      03-Apr-17   27.9        27.6        11061  ₹-3,776       -1.2%     
-
-  AFTER: Invested ₹3,128,088 | Cash ₹24,578 | Total ₹3,152,666 | Positions 8/10 | Slot ₹315,341
-
-========================================================================
-  REBALANCE #30  —  01 Jun 2017
-  NAV: ₹3,604,801  |  Slot: ₹360,480  |  Cash: ₹24,578
-========================================================================
-
-  EXITS (2)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MCHP        19     01-Aug-16   23.2        35.4        10295  ₹125,903      +52.7%    304d  
-  ADBE        14     01-May-17   135.1       141.4       2333   ₹14,628       +4.6%     31d   
-
-  ENTRIES (1)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  MAR         4      2.592    0.95   +64.3%    +24.6%    100.9       3573   ₹360,462    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        2      02-Nov-15   0.7         3.6         318851  ₹913,771      +410.9%   
-  AMAT        3      01-Jun-16   21.9        41.8        9960   ₹198,175      +90.9%    
-  AAPL        10     01-Mar-17   32.3        35.6        9447   ₹30,636       +10.0%    
-  IDXX        8      03-Apr-17   155.3       168.2       1989   ₹25,797       +8.4%     
-  MU          9      03-Apr-17   27.9        30.0        11061  ₹22,870       +7.4%     
-  LRCX        1      01-May-17   13.2        13.8        23905  ₹15,257       +4.8%     
-
-  AFTER: Invested ₹3,245,894 | Cash ₹358,479 | Total ₹3,604,373 | Positions 7/10 | Slot ₹360,480
-
-========================================================================
-  REBALANCE #31  —  03 Jul 2017
-  NAV: ₹3,399,336  |  Slot: ₹339,934  |  Cash: ₹358,479
-========================================================================
-
-  EXITS (3)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AMAT        14     01-Jun-16   21.9        37.3        9960   ₹153,028      +70.2%    397d  
-  AAPL        25     01-Mar-17   32.3        33.3        9447   ₹9,400        +3.1%     124d  
-  IDXX        24     03-Apr-17   155.3       159.3       1989   ₹8,036        +2.6%     91d   
-
-  ENTRIES (4)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CSX         2      2.589    0.77   +111.9%   +17.4%    16.1        21072  ₹339,918    
-  ISRG        3      2.530    0.78   +38.3%    +20.5%    102.4       3319   ₹339,888    
-  PYPL        4      2.525    1.00   +45.4%    +24.0%    52.6        6463   ₹339,882    
-  JD          5      2.357    1.32   +82.4%    +21.7%    34.0        9983   ₹339,900    
-
-  HOLDS (4)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         3.4         318851  ₹874,185      +393.1%   
-  MU          13     03-Apr-17   27.9        28.4        11061  ₹5,394        +1.7%     
-  LRCX        10     01-May-17   13.2        12.3        23905  ₹-20,147      -6.4%     
-  MAR         8      01-Jun-17   100.9       92.9        3573   ₹-28,424      -7.9%     
-
-  AFTER: Invested ₹3,397,710 | Cash ₹12 | Total ₹3,397,722 | Positions 8/10 | Slot ₹339,934
-
-========================================================================
-  REBALANCE #32  —  01 Aug 2017
-  NAV: ₹3,712,748  |  Slot: ₹371,275  |  Cash: ₹12
-========================================================================
-
-  EXITS (2)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MU          21     03-Apr-17   27.9        27.6        11061  ₹-3,236       -1.0%     120d  
-  CSX         40     03-Jul-17   16.1        14.4        21072  ₹-36,743      -10.8%    29d   
-
-  ENTRIES (1)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  EA          4      2.365    1.14   +52.6%    +24.1%    113.6       3269   ₹371,271    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      02-Nov-15   0.7         4.1         318851  ₹1,072,197    +482.2%   
-  JD          2      03-Jul-17   34.0        39.9        9983   ₹58,516       +17.2%    
-  PYPL        3      03-Jul-17   52.6        59.0        6463   ₹41,593       +12.2%    
-  LRCX        16     01-May-17   13.2        14.0        23905  ₹18,359       +5.8%     
-  ISRG        19     03-Jul-17   102.4       104.6       3319   ₹7,121        +2.1%     
-  MAR         11     01-Jun-17   100.9       97.6        3573   ₹-11,774      -3.3%     
-
-  AFTER: Invested ₹3,475,109 | Cash ₹237,198 | Total ₹3,712,307 | Positions 7/10 | Slot ₹371,275
-
-========================================================================
-  REBALANCE #33  —  01 Sep 2017
-  NAV: ₹3,791,470  |  Slot: ₹379,147  |  Cash: ₹237,198
-========================================================================
-
-  EXITS (3)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  JD          22     03-Jul-17   34.0        36.8        9983   ₹27,377       +8.1%     60d   
-  EA          25     01-Aug-17   113.6       115.9       3269   ₹7,589        +2.0%     31d   
-  MAR         28     01-Jun-17   100.9       96.7        3573   ₹-15,035      -4.2%     92d   
-
-  ENTRIES (3)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AAPL        3      2.354    1.10   +56.4%    +7.0%     38.2        9913   ₹379,130    
-  ADBE        4      2.338    1.14   +50.7%    +8.0%     155.1       2445   ₹379,122    
-  GILD        5      2.288    0.65   +11.3%    +28.9%    60.8        6231   ₹379,145    
-
-  HOLDS (4)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        2      02-Nov-15   0.7         4.2         318851  ₹1,120,363    +503.8%   
-  PYPL        1      03-Jul-17   52.6        61.1        6463   ₹55,222       +16.2%    
-  LRCX        10     01-May-17   13.2        14.8        23905  ₹38,279       +12.1%    
-  ISRG        8      03-Jul-17   102.4       111.9       3319   ₹31,379       +9.2%     
-
-  AFTER: Invested ₹3,600,105 | Cash ₹190,015 | Total ₹3,790,120 | Positions 7/10 | Slot ₹379,147
-
-========================================================================
-  REBALANCE #34  —  02 Oct 2017
-  NAV: ₹3,896,442  |  Slot: ₹389,644  |  Cash: ₹190,015
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  GILD        31     01-Sep-17   60.8        61.1        6231   ₹1,323        +0.3%     31d   
-
-  ENTRIES (1)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  MU          2      2.905    1.81   +125.0%   +37.3%    39.0        9985   ₹389,627    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        7      02-Nov-15   0.7         4.4         318851  ₹1,187,633    +534.1%   
-  LRCX        1      01-May-17   13.2        16.5        23905  ₹79,782       +25.3%    
-  PYPL        6      03-Jul-17   52.6        63.8        6463   ₹72,708       +21.4%    
-  ISRG        9      03-Jul-17   102.4       117.8       3319   ₹51,194       +15.1%    
-  ADBE        20     01-Sep-17   155.1       147.9       2445   ₹-17,408      -4.6%     
-  AAPL        19     01-Sep-17   38.2        35.9        9913   ₹-23,665      -6.2%     
-
-  AFTER: Invested ₹3,715,586 | Cash ₹180,394 | Total ₹3,895,979 | Positions 7/10 | Slot ₹389,644
-
-========================================================================
-  REBALANCE #35  —  01 Nov 2017
-  NAV: ₹4,373,833  |  Slot: ₹437,383  |  Cash: ₹180,394
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AAPL        15     01-Sep-17   38.2        38.9        9913   ₹6,563        +1.7%     61d   
-
-  ENTRIES (1)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ALGN        1      3.468    1.37   +177.9%   +37.8%    234.9       1861   ₹437,242    
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        12     02-Nov-15   0.7         5.1         318851  ₹1,409,766    +634.0%   
-  PYPL        4      03-Jul-17   52.6        72.0        6463   ₹125,423      +36.9%    
-  LRCX        3      01-May-17   13.2        18.0        23905  ₹115,840      +36.7%    
-  ISRG        8      03-Jul-17   102.4       125.3       3319   ₹76,138       +22.4%    
-  ADBE        9      01-Sep-17   155.1       176.2       2445   ₹51,810       +13.7%    
-  MU          2      02-Oct-17   39.0        43.3        9985   ₹42,556       +10.9%    
-
-  AFTER: Invested ₹4,244,988 | Cash ₹128,326 | Total ₹4,373,314 | Positions 7/10 | Slot ₹437,383
-
-========================================================================
-  REBALANCE #36  —  01 Dec 2017
-  NAV: ₹4,329,186  |  Slot: ₹432,919  |  Cash: ₹128,326
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (7)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        18     02-Nov-15   0.7         4.9         318851  ₹1,335,858    +600.8%   
-  PYPL        3      03-Jul-17   52.6        74.9        6463   ₹144,194      +42.4%    
-  ISRG        2      03-Jul-17   102.4       132.2       3319   ₹98,950       +29.1%    
-  LRCX        11     01-May-17   13.2        16.7        23905  ₹83,734       +26.6%    
-  ADBE        6      01-Sep-17   155.1       179.5       2445   ₹59,805       +15.8%    
-  ALGN        1      01-Nov-17   234.9       254.1       1861   ₹35,582       +8.1%     
-  MU          8      02-Oct-17   39.0        41.0        9985   ₹19,282       +4.9%     
-
-  AFTER: Invested ₹4,200,860 | Cash ₹128,326 | Total ₹4,329,186 | Positions 7/10 | Slot ₹432,919
-
-========================================================================
-  REBALANCE #37  —  02 Jan 2018
-  NAV: ₹4,270,621  |  Slot: ₹427,062  |  Cash: ₹128,326
-========================================================================
-
-  EXITS (3)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  NVDA        35     02-Nov-15   0.7         4.9         318851  ₹1,349,022    +606.7%   792d  
-  LRCX        30     01-May-17   13.2        16.9        23905  ₹87,973       +27.9%    246d  
-  MU          24     02-Oct-17   39.0        42.6        9985   ₹35,642       +9.1%     92d   
+  SBUX        60     02-Mar-15   37.7        44.5        5655   ₹38,828       +18.2%    457d  
+  FAST        37     01-Apr-16   9.4         8.9         22880  ₹-10,422      -4.9%     61d   
+  ORLY        36     01-Apr-16   18.5        17.6        11551  ₹-10,997      -5.1%     61d   
+  MAT         27     01-Apr-16   31.7        29.9        6741   ₹-12,703      -5.9%     61d   
+  NFLX        39     01-Dec-15   12.5        10.2        17866  ₹-42,628      -19.0%    183d  
 
   ENTRIES (5)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  MAR         1      2.984    0.70   +63.8%    +21.3%    124.9       3419   ₹427,030    
-  TXN         2      2.536    1.04   +48.3%    +18.5%    83.8        5095   ₹426,997    
-  AMZN        4      2.458    1.43   +58.6%    +24.0%    59.5        7183   ₹427,033    
-  MSFT        7      2.342    1.06   +41.4%    +15.8%    78.9        5414   ₹427,004    
-  VOD         8      2.215    0.23   +39.5%    +15.6%    18.6        22992  ₹427,056    
+  ULTA        2      3.613    0.92   +53.3%    +40.6%    236.7       910    ₹215,379    
+  AMZN        3      3.015    1.19   +66.9%    +24.0%    36.0        5989   ₹215,436    
+  CHTR        4      2.528    0.86   +29.0%    +25.1%    227.5       947    ₹215,442    
+  AMAT        5      2.436    0.94   +22.2%    +25.6%    21.9        9843   ₹215,447    
+  ISRG        6      2.211    0.61   +27.8%    +11.1%    70.9        3040   ₹215,398    
 
   HOLDS (4)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  PYPL        5      03-Jul-17   52.6        73.4        6463   ₹134,808      +39.7%    
-  ISRG        9      03-Jul-17   102.4       125.1       3319   ₹75,264       +22.1%    
-  ADBE        3      01-Sep-17   155.1       177.7       2445   ₹55,355       +14.6%    
-  ALGN        6      01-Nov-17   234.9       224.6       1861   ₹-19,224      -4.4%     
+  NVDA        1      02-Nov-15   0.7         1.1         316608  ₹142,951      +64.7%    
+  META        8      02-Nov-15   102.5       117.9       2153   ₹33,048       +15.0%    
+  HSIC        15     01-Apr-16   67.8        67.9        3155   ₹247          +0.1%     
+  GOOG        17     04-Jan-16   36.8        36.4        5705   ₹-2,176       -1.0%     
 
-  AFTER: Invested ₹3,877,456 | Cash ₹390,630 | Total ₹4,268,086 | Positions 9/10 | Slot ₹427,062
+  AFTER: Invested ₹2,116,472 | Cash ₹36,755 | Total ₹2,153,227 | Positions 9/10 | Slot ₹215,451
+
+========================================================================
+  REBALANCE #19  —  01 Jul 2016
+  NAV: ₹2,155,622  |  Slot: ₹215,562  |  Cash: ₹36,755
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  GOOG        27     04-Jan-16   36.8        34.7        5705   ₹-12,061      -5.7%     179d  
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  PAYX        4      2.741    0.76   +29.1%    +12.1%    44.2        4872   ₹215,536    
+
+  HOLDS (8)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         1.1         316608  ₹141,786      +64.2%    
+  META        17     02-Nov-15   102.5       113.3       2153   ₹23,242       +10.5%    
+  ISRG        6      01-Jun-16   70.9        74.0        3040   ₹9,667        +4.5%     
+  ULTA        2      01-Jun-16   236.7       243.7       910    ₹6,425        +3.0%     
+  HSIC        12     01-Apr-16   67.8        69.5        3155   ₹5,333        +2.5%     
+  CHTR        7      01-Jun-16   227.5       232.3       947    ₹4,536        +2.1%     
+  AMZN        3      01-Jun-16   36.0        36.3        5989   ₹1,869        +0.9%     
+  AMAT        9      01-Jun-16   21.9        21.4        9843   ₹-4,330       -2.0%     
+
+  AFTER: Invested ₹2,136,578 | Cash ₹18,788 | Total ₹2,155,366 | Positions 9/10 | Slot ₹215,562
+
+========================================================================
+  REBALANCE #20  —  01 Aug 2016
+  NAV: ₹2,321,626  |  Slot: ₹232,163  |  Cash: ₹18,788
+========================================================================
+
+  EXITS (3)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  META        30     02-Nov-15   102.5       123.3       2153   ₹44,861       +20.3%    273d  
+  HSIC        23     01-Apr-16   67.8        70.6        3155   ₹8,958        +4.2%     122d  
+  CHTR        27     01-Jun-16   227.5       236.0       947    ₹8,050        +3.7%     61d   
+
+  ENTRIES (3)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  NTES        3      2.599    0.93   +48.6%    +46.1%    34.0        6825   ₹232,156    
+  TXN         4      2.468    0.95   +43.5%    +21.4%    53.7        4322   ₹232,150    
+  MCHP        7      1.882    0.94   +34.5%    +13.9%    23.2        9998   ₹232,152    
+
+  HOLDS (6)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         1.4         316608  ₹220,037      +99.7%    
+  ULTA        5      01-Jun-16   236.7       260.6       910    ₹21,740       +10.1%    
+  ISRG        8      01-Jun-16   70.9        77.1        3040   ₹18,976       +8.8%     
+  AMAT        2      01-Jun-16   21.9        23.6        9843   ₹16,702       +7.8%     
+  AMZN        14     01-Jun-16   36.0        38.4        5989   ₹14,463       +6.7%     
+  PAYX        6      01-Jul-16   44.2        44.4        4872   ₹1,001        +0.5%     
+
+  AFTER: Invested ₹2,287,370 | Cash ₹33,429 | Total ₹2,320,799 | Positions 9/10 | Slot ₹232,163
+
+========================================================================
+  REBALANCE #21  —  01 Sep 2016
+  NAV: ₹2,446,151  |  Slot: ₹244,615  |  Cash: ₹33,429
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  ULTA        23     01-Jun-16   236.7       245.5       910    ₹8,044        +3.7%     92d   
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  NTAP        6      2.383    0.98   +14.8%    +41.1%    27.4        8932   ₹244,593    
+
+  HOLDS (8)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         1.6         316608  ₹270,829      +122.7%   
+  AMAT        2      01-Jun-16   21.9        27.3        9843   ₹53,148       +24.7%    
+  MCHP        3      01-Aug-16   23.2        26.3        9998   ₹30,628       +13.2%    
+  ISRG        12     01-Jun-16   70.9        76.6        3040   ₹17,564       +8.2%     
+  AMZN        17     01-Jun-16   36.0        38.5        5989   ₹15,326       +7.1%     
+  NTES        5      01-Aug-16   34.0        36.4        6825   ₹16,006       +6.9%     
+  PAYX        4      01-Jul-16   44.2        45.7        4872   ₹7,322        +3.4%     
+  TXN         7      01-Aug-16   53.7        53.6        4322   ₹-598         -0.3%     
+
+  AFTER: Invested ₹2,433,891 | Cash ₹11,970 | Total ₹2,445,861 | Positions 9/10 | Slot ₹244,615
+
+========================================================================
+  REBALANCE #22  —  03 Oct 2016
+  NAV: ₹2,532,336  |  Slot: ₹253,234  |  Cash: ₹11,970
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  PAYX        50     01-Jul-16   44.2        43.1        4872   ₹-5,577       -2.6%     94d   
+
+  ENTRIES (0)
+    —
+
+  HOLDS (8)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         1.7         316608  ₹312,090      +141.3%   
+  AMAT        2      01-Jun-16   21.9        27.0        9843   ₹49,867       +23.1%    
+  NTES        3      01-Aug-16   34.0        41.2        6825   ₹49,281       +21.2%    
+  AMZN        11     01-Jun-16   36.0        41.8        5989   ₹35,125       +16.3%    
+  ISRG        7      01-Jun-16   70.9        79.8        3040   ₹27,107       +12.6%    
+  MCHP        5      01-Aug-16   23.2        25.9        9998   ₹26,528       +11.4%    
+  NTAP        4      01-Sep-16   27.4        27.7        8932   ₹3,011        +1.2%     
+  TXN         9      01-Aug-16   53.7        53.5        4322   ₹-731         -0.3%     
+
+  AFTER: Invested ₹2,310,407 | Cash ₹221,929 | Total ₹2,532,336 | Positions 8/10 | Slot ₹253,234
+
+========================================================================
+  REBALANCE #23  —  01 Nov 2016
+  NAV: ₹2,478,878  |  Slot: ₹247,888  |  Cash: ₹221,929
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  AMZN        23     01-Jun-16   36.0        39.3        5989   ₹19,755       +9.2%     153d  
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  AKAM        4      2.178    1.22   +10.2%    +37.7%    68.1        3640   ₹247,884    
+
+  HOLDS (7)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         1.7         316608  ₹316,761      +143.5%   
+  NTES        3      01-Aug-16   34.0        41.9        6825   ₹54,074       +23.3%    
+  AMAT        2      01-Jun-16   21.9        26.0        9843   ₹40,823       +18.9%    
+  MCHP        6      01-Aug-16   23.2        25.2        9998   ₹19,665       +8.5%     
+  ISRG        14     01-Jun-16   70.9        74.4        3040   ₹10,819       +5.0%     
+  TXN         20     01-Aug-16   53.7        53.4        4322   ₹-1,462       -0.6%     
+  NTAP        9      01-Sep-16   27.4        26.1        8932   ₹-11,614      -4.7%     
+
+  AFTER: Invested ₹2,269,642 | Cash ₹208,942 | Total ₹2,478,584 | Positions 8/10 | Slot ₹247,888
+
+========================================================================
+  REBALANCE #24  —  01 Dec 2016
+  NAV: ₹2,598,742  |  Slot: ₹259,874  |  Cash: ₹208,942
+========================================================================
+
+  EXITS (3)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  NTES        32     01-Aug-16   34.0        36.8        6825   ₹19,039       +8.2%     122d  
+  NTAP        33     01-Sep-16   27.4        27.9        8932   ₹4,932        +2.0%     91d   
+  ISRG        43     01-Jun-16   70.9        70.3        3040   ₹-1,810       -0.8%     183d  
+
+  ENTRIES (3)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  CSX         2      3.231    0.78   +36.5%    +30.6%    10.8        24151  ₹259,868    
+  TMUS        3      2.780    1.06   +51.9%    +17.3%    52.2        4981   ₹259,859    
+  ROST        4      2.132    0.63   +27.1%    +8.0%     61.4        4234   ₹259,853    
+
+  HOLDS (5)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         2.2         316608  ₹462,507      +209.5%   
+  AMAT        7      01-Jun-16   21.9        27.2        9843   ₹52,318       +24.3%    
+  MCHP        19     01-Aug-16   23.2        25.8        9998   ₹25,475       +11.0%    
+  TXN         17     01-Aug-16   53.7        54.5        4322   ₹3,472        +1.5%     
+  AKAM        20     01-Nov-16   68.1        63.5        3640   ₹-16,708      -6.7%     
+
+  AFTER: Invested ₹2,455,074 | Cash ₹142,742 | Total ₹2,597,816 | Positions 8/10 | Slot ₹259,874
+
+========================================================================
+  REBALANCE #25  —  03 Jan 2017
+  NAV: ₹2,770,579  |  Slot: ₹277,058  |  Cash: ₹142,742
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  ROST        29     01-Dec-16   61.4        59.9        4234   ₹-6,318       -2.4%     33d   
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  ADP         2      3.042    0.74   +29.2%    +18.8%    84.8        3267   ₹277,058    
+
+  HOLDS (7)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         2.5         316608  ₹574,546      +260.2%   
+  AMAT        6      01-Jun-16   21.9        28.9        9843   ₹68,686       +31.9%    
+  MCHP        17     01-Aug-16   23.2        26.9        9998   ₹36,499       +15.7%    
+  TMUS        3      01-Dec-16   52.2        56.1        4981   ₹19,444       +7.5%     
+  TXN         11     01-Aug-16   53.7        57.0        4322   ₹14,080       +6.1%     
+  AKAM        14     01-Nov-16   68.1        67.6        3640   ₹-1,929       -0.8%     
+  CSX         4      01-Dec-16   10.8        10.5        24151  ₹-5,180       -2.0%     
+
+  AFTER: Invested ₹2,651,360 | Cash ₹118,891 | Total ₹2,770,250 | Positions 8/10 | Slot ₹277,058
+
+========================================================================
+  REBALANCE #26  —  01 Feb 2017
+  NAV: ₹3,005,806  |  Slot: ₹300,581  |  Cash: ₹118,891
+========================================================================
+
+  EXITS (2)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  AKAM        47     01-Nov-16   68.1        68.7        3640   ₹2,184        +0.9%     92d   
+  ADP         26     03-Jan-17   84.8        78.0        3267   ₹-22,084      -8.0%     29d   
+
+  ENTRIES (2)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  CMCSA       3      2.717    0.48   +40.8%    +22.8%    27.9        10770  ₹300,577    
+  CHTR        4      2.558    0.84   +90.0%    +30.8%    326.9       919    ₹300,375    
+
+  HOLDS (6)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         2.8         316608  ₹667,638      +302.4%   
+  AMAT        5      01-Jun-16   21.9        31.7        9843   ₹96,174       +44.6%    
+  CSX         2      01-Dec-16   10.8        13.8        24151  ₹74,299       +28.6%    
+  MCHP        14     01-Aug-16   23.2        28.8        9998   ₹55,685       +24.0%    
+  TMUS        9      01-Dec-16   52.2        60.8        4981   ₹43,102       +16.6%    
+  TXN         15     01-Aug-16   53.7        59.4        4322   ₹24,702       +10.6%    
+
+  AFTER: Invested ₹2,982,825 | Cash ₹22,267 | Total ₹3,005,092 | Positions 8/10 | Slot ₹300,581
+
+========================================================================
+  REBALANCE #27  —  01 Mar 2017
+  NAV: ₹2,974,819  |  Slot: ₹297,482  |  Cash: ₹22,267
+========================================================================
+
+  EXITS (2)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  TMUS        17     01-Dec-16   52.2        59.9        4981   ₹38,696       +14.9%    90d   
+  TXN         25     01-Aug-16   53.7        60.9        4322   ₹31,034       +13.4%    212d  
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  AAPL        2      2.540    0.98   +42.0%    +25.8%    32.3        9201   ₹297,459    
+
+  HOLDS (6)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        4      02-Nov-15   0.7         2.5         316608  ₹581,638      +263.4%   
+  AMAT        5      01-Jun-16   21.9        33.4        9843   ₹113,299      +52.6%    
+  CSX         1      01-Dec-16   10.8        14.5        24151  ₹90,660       +34.9%    
+  MCHP        11     01-Aug-16   23.2        31.1        9998   ₹79,254       +34.1%    
+  CHTR        8      01-Feb-17   326.9       325.2       919    ₹-1,544       -0.5%     
+  CMCSA       13     01-Feb-17   27.9        27.7        10770  ₹-1,709       -0.6%     
+
+  AFTER: Invested ₹2,688,273 | Cash ₹286,193 | Total ₹2,974,466 | Positions 7/10 | Slot ₹297,482
+
+========================================================================
+  REBALANCE #28  —  03 Apr 2017
+  NAV: ₹3,028,085  |  Slot: ₹302,809  |  Cash: ₹286,193
+========================================================================
+
+  EXITS (2)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  CHTR        23     01-Feb-17   326.9       328.3       919    ₹1,305        +0.4%     61d   
+  CMCSA       25     01-Feb-17   27.9        27.8        10770  ₹-687         -0.2%     61d   
+
+  ENTRIES (2)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  IDXX        1      3.069    0.84   +94.7%    +32.4%    155.3       1950   ₹302,796    
+  MU          2      2.566    1.66   +165.2%   +30.7%    27.9        10840  ₹302,785    
+
+  HOLDS (5)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        8      02-Nov-15   0.7         2.7         316608  ₹625,277      +283.2%   
+  AMAT        5      01-Jun-16   21.9        35.2        9843   ₹131,498      +61.0%    
+  MCHP        18     01-Aug-16   23.2        31.0        9998   ₹77,436       +33.4%    
+  CSX         4      01-Dec-16   10.8        13.7        24151  ₹72,069       +27.7%    
+  AAPL        9      01-Mar-17   32.3        33.2        9201   ₹8,320        +2.8%     
+
+  AFTER: Invested ₹2,745,904 | Cash ₹281,463 | Total ₹3,027,366 | Positions 7/10 | Slot ₹302,809
+
+========================================================================
+  REBALANCE #29  —  01 May 2017
+  NAV: ₹3,105,278  |  Slot: ₹310,528  |  Cash: ₹281,463
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  CSX         21     01-Dec-16   10.8        15.2        24151  ₹107,114      +41.2%    151d  
+
+  ENTRIES (2)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  LRCX        2      3.152    1.35   +98.3%    +29.1%    13.2        23540  ₹310,519    
+  ADBE        6      2.220    1.10   +43.4%    +18.7%    135.1       2298   ₹310,483    
+
+  HOLDS (6)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        12     02-Nov-15   0.7         2.6         316608  ₹611,693      +277.0%   
+  AMAT        4      01-Jun-16   21.9        37.8        9843   ₹156,567      +72.7%    
+  MCHP        17     01-Aug-16   23.2        32.2        9998   ₹89,911       +38.7%    
+  IDXX        1      03-Apr-17   155.3       163.7       1950   ₹16,477       +5.4%     
+  AAPL        3      01-Mar-17   32.3        33.9        9201   ₹14,448       +4.9%     
+  MU          5      03-Apr-17   27.9        27.6        10840  ₹-3,700       -1.2%     
+
+  AFTER: Invested ₹3,077,835 | Cash ₹26,705 | Total ₹3,104,540 | Positions 8/10 | Slot ₹310,528
+
+========================================================================
+  REBALANCE #30  —  01 Jun 2017
+  NAV: ₹3,551,580  |  Slot: ₹355,158  |  Cash: ₹26,705
+========================================================================
+
+  EXITS (2)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  MCHP        18     01-Aug-16   23.2        35.4        9998   ₹122,271      +52.7%    304d  
+  ADBE        14     01-May-17   135.1       141.4       2298   ₹14,408       +4.6%     31d   
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  MAR         4      2.603    0.95   +64.3%    +24.6%    100.9       3520   ₹355,115    
+
+  HOLDS (6)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        2      02-Nov-15   0.7         3.6         316608  ₹907,343      +410.9%   
+  AMAT        3      01-Jun-16   21.9        41.8        9843   ₹195,847      +90.9%    
+  AAPL        10     01-Mar-17   32.3        35.6        9201   ₹29,838       +10.0%    
+  IDXX        8      03-Apr-17   155.3       168.2       1950   ₹25,292       +8.4%     
+  MU          9      03-Apr-17   27.9        30.0        10840  ₹22,413       +7.4%     
+  LRCX        1      01-May-17   13.2        13.8        23540  ₹15,024       +4.8%     
+
+  AFTER: Invested ₹3,200,676 | Cash ₹350,483 | Total ₹3,551,159 | Positions 7/10 | Slot ₹355,158
+
+========================================================================
+  REBALANCE #31  —  03 Jul 2017
+  NAV: ₹3,349,144  |  Slot: ₹334,914  |  Cash: ₹350,483
+========================================================================
+
+  EXITS (3)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  AMAT        14     01-Jun-16   21.9        37.3        9843   ₹151,231      +70.2%    397d  
+  AAPL        24     01-Mar-17   32.3        33.3        9201   ₹9,155        +3.1%     124d  
+  IDXX        23     03-Apr-17   155.3       159.3       1950   ₹7,878        +2.6%     91d   
+
+  ENTRIES (3)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  CSX         2      2.592    0.77   +111.9%   +17.4%    16.1        20761  ₹334,901    
+  ISRG        3      2.534    0.78   +38.3%    +20.5%    102.4       3270   ₹334,870    
+  PYPL        4      2.528    1.00   +45.4%    +24.0%    52.6        6368   ₹334,886    
+
+  HOLDS (4)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         3.4         316608  ₹868,035      +393.1%   
+  MU          13     03-Apr-17   27.9        28.4        10840  ₹5,286        +1.7%     
+  LRCX        10     01-May-17   13.2        12.3        23540  ₹-19,840      -6.4%     
+  MAR         8      01-Jun-17   100.9       92.9        3520   ₹-28,003      -7.9%     
+
+  AFTER: Invested ₹3,019,352 | Cash ₹328,599 | Total ₹3,347,951 | Positions 7/10 | Slot ₹334,914
+
+========================================================================
+  REBALANCE #32  —  01 Aug 2017
+  NAV: ₹3,602,231  |  Slot: ₹360,223  |  Cash: ₹328,599
+========================================================================
+
+  EXITS (2)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  MU          21     03-Apr-17   27.9        27.6        10840  ₹-3,172       -1.0%     120d  
+  CSX         40     03-Jul-17   16.1        14.4        20761  ₹-36,201      -10.8%    29d   
+
+  ENTRIES (2)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  JD          2      2.910    1.36   +108.6%   +28.5%    39.9        9025   ₹360,183    
+  EA          4      2.356    1.14   +52.6%    +24.1%    113.6       3171   ₹360,140    
+
+  HOLDS (5)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        1      02-Nov-15   0.7         4.1         316608  ₹1,064,654    +482.2%   
+  PYPL        3      03-Jul-17   52.6        59.0        6368   ₹40,982       +12.2%    
+  LRCX        16     01-May-17   13.2        14.0        23540  ₹18,079       +5.8%     
+  ISRG        19     03-Jul-17   102.4       104.6       3270   ₹7,016        +2.1%     
+  MAR         11     01-Jun-17   100.9       97.6        3520   ₹-11,600      -3.3%     
+
+  AFTER: Invested ₹3,395,641 | Cash ₹205,735 | Total ₹3,601,375 | Positions 7/10 | Slot ₹360,223
+
+========================================================================
+  REBALANCE #33  —  01 Sep 2017
+  NAV: ₹3,682,146  |  Slot: ₹368,215  |  Cash: ₹205,735
+========================================================================
+
+  EXITS (3)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  EA          25     01-Aug-17   113.6       115.9       3171   ₹7,362        +2.0%     31d   
+  MAR         28     01-Jun-17   100.9       96.7        3520   ₹-14,812      -4.2%     92d   
+  JD          22     01-Aug-17   39.9        36.8        9025   ₹-28,150      -7.8%     31d   
+
+  ENTRIES (3)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  AAPL        3      2.344    1.10   +56.4%    +7.0%     38.2        9627   ₹368,192    
+  ADBE        4      2.328    1.14   +50.7%    +8.0%     155.1       2374   ₹368,112    
+  GILD        5      2.283    0.65   +11.3%    +28.9%    60.8        6051   ₹368,192    
+
+  HOLDS (4)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        2      02-Nov-15   0.7         4.2         316608  ₹1,112,481    +503.8%   
+  PYPL        1      03-Jul-17   52.6        61.1        6368   ₹54,410       +16.2%    
+  LRCX        10     01-May-17   13.2        14.8        23540  ₹37,695       +12.1%    
+  ISRG        9      03-Jul-17   102.4       111.9       3270   ₹30,916       +9.2%     
+
+  AFTER: Invested ₹3,541,071 | Cash ₹139,764 | Total ₹3,680,835 | Positions 7/10 | Slot ₹368,215
+
+========================================================================
+  REBALANCE #34  —  02 Oct 2017
+  NAV: ₹3,786,650  |  Slot: ₹378,665  |  Cash: ₹139,764
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  GILD        31     01-Sep-17   60.8        61.1        6051   ₹1,285        +0.3%     31d   
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  MU          2      2.895    1.81   +125.0%   +37.3%    39.0        9704   ₹378,662    
+
+  HOLDS (6)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        7      02-Nov-15   0.7         4.4         316608  ₹1,179,278    +534.1%   
+  LRCX        1      01-May-17   13.2        16.5        23540  ₹78,564       +25.3%    
+  PYPL        6      03-Jul-17   52.6        63.8        6368   ₹71,639       +21.4%    
+  ISRG        9      03-Jul-17   102.4       117.8       3270   ₹50,438       +15.1%    
+  ADBE        20     01-Sep-17   155.1       147.9       2374   ₹-16,903      -4.6%     
+  AAPL        19     01-Sep-17   38.2        35.9        9627   ₹-22,983      -6.2%     
+
+  AFTER: Invested ₹3,656,071 | Cash ₹130,130 | Total ₹3,786,201 | Positions 7/10 | Slot ₹378,665
+
+========================================================================
+  REBALANCE #35  —  01 Nov 2017
+  NAV: ₹4,256,718  |  Slot: ₹425,672  |  Cash: ₹130,130
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  AAPL        15     01-Sep-17   38.2        38.9        9627   ₹6,374        +1.7%     61d   
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  ALGN        1      3.462    1.37   +177.9%   +37.8%    234.9       1811   ₹425,494    
+
+  HOLDS (6)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        12     02-Nov-15   0.7         5.1         316608  ₹1,399,849    +634.0%   
+  PYPL        4      03-Jul-17   52.6        72.0        6368   ₹123,579      +36.9%    
+  LRCX        3      01-May-17   13.2        18.0        23540  ₹114,072      +36.7%    
+  ISRG        8      03-Jul-17   102.4       125.3       3270   ₹75,014       +22.4%    
+  ADBE        9      01-Sep-17   155.1       176.2       2374   ₹50,305       +13.7%    
+  MU          2      02-Oct-17   39.0        43.3        9704   ₹41,358       +10.9%    
+
+  AFTER: Invested ₹4,177,517 | Cash ₹78,696 | Total ₹4,256,213 | Positions 7/10 | Slot ₹425,672
+
+========================================================================
+  REBALANCE #36  —  01 Dec 2017
+  NAV: ₹4,211,950  |  Slot: ₹421,195  |  Cash: ₹78,696
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (7)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  NVDA        18     02-Nov-15   0.7         4.9         316608  ₹1,326,461    +600.8%   
+  PYPL        3      03-Jul-17   52.6        74.9        6368   ₹142,075      +42.4%    
+  ISRG        2      03-Jul-17   102.4       132.2       3270   ₹97,490       +29.1%    
+  LRCX        11     01-May-17   13.2        16.7        23540  ₹82,455       +26.6%    
+  ADBE        6      01-Sep-17   155.1       179.5       2374   ₹58,068       +15.8%    
+  ALGN        1      01-Nov-17   234.9       254.1       1811   ₹34,626       +8.1%     
+  MU          8      02-Oct-17   39.0        41.0        9704   ₹18,739       +4.9%     
+
+  AFTER: Invested ₹4,133,254 | Cash ₹78,696 | Total ₹4,211,950 | Positions 7/10 | Slot ₹421,195
+
+========================================================================
+  REBALANCE #37  —  02 Jan 2018
+  NAV: ₹4,154,856  |  Slot: ₹415,486  |  Cash: ₹78,696
+========================================================================
+
+  EXITS (3)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  NVDA        34     02-Nov-15   0.7         4.9         316608  ₹1,339,532    +606.7%   792d  
+  LRCX        29     01-May-17   13.2        16.9        23540  ₹86,630       +27.9%    246d  
+  MU          23     02-Oct-17   39.0        42.6        9704   ₹34,639       +9.1%     92d   
+
+  ENTRIES (5)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  MAR         1      2.988    0.70   +63.8%    +21.3%    124.9       3326   ₹415,414    
+  TXN         2      2.541    1.04   +48.3%    +18.5%    83.8        4957   ₹415,432    
+  AMZN        4      2.463    1.43   +58.6%    +24.0%    59.5        6988   ₹415,440    
+  MSFT        7      2.348    1.06   +41.4%    +15.8%    78.9        5267   ₹415,410    
+  VOD         8      2.221    0.23   +39.5%    +15.6%    18.6        22369  ₹415,484    
+
+  HOLDS (4)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  PYPL        5      03-Jul-17   52.6        73.4        6368   ₹132,827      +39.7%    
+  ISRG        9      03-Jul-17   102.4       125.1       3270   ₹74,153       +22.1%    
+  ADBE        3      01-Sep-17   155.1       177.7       2374   ₹53,747       +14.6%    
+  ALGN        6      01-Nov-17   234.9       224.6       1811   ₹-18,708      -4.4%     
+
+  AFTER: Invested ₹3,782,562 | Cash ₹369,828 | Total ₹4,152,390 | Positions 9/10 | Slot ₹415,486
 
 ========================================================================
   REBALANCE #38  —  01 Feb 2018
-  NAV: ₹4,623,769  |  Slot: ₹462,377  |  Cash: ₹390,630
+  NAV: ₹4,499,390  |  Slot: ₹449,939  |  Cash: ₹369,828
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  TXN         18     02-Jan-18   83.8        87.9        5095   ₹20,706       +4.8%     30d   
-  VOD         32     02-Jan-18   18.6        17.8        22992  ₹-18,435      -4.3%     30d   
+  TXN         17     02-Jan-18   83.8        87.9        4957   ₹20,145       +4.8%     30d   
+  VOD         31     02-Jan-18   18.6        17.8        22369  ₹-17,936      -4.3%     30d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CSCO        3      2.428    0.69   +41.5%    +23.0%    32.7        14129  ₹462,357    
-  MELI        4      2.424    1.75   +101.3%   +57.7%    378.8       1220   ₹462,087    
+  CSCO        3      2.443    0.69   +41.5%    +23.0%    32.7        13749  ₹449,922    
+  MELI        4      2.439    1.75   +101.3%   +57.7%    378.8       1187   ₹449,588    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  PYPL        14     03-Jul-17   52.6        78.0        6463   ₹164,123      +48.3%    
-  ISRG        6      03-Jul-17   102.4       142.0       3319   ₹131,322      +38.6%    
-  ADBE        13     01-Sep-17   155.1       199.4       2445   ₹108,362      +28.6%    
-  AMZN        2      02-Jan-18   59.5        69.5        7183   ₹72,186       +16.9%    
-  MAR         1      02-Jan-18   124.9       137.8       3419   ₹43,964       +10.3%    
-  MSFT        7      02-Jan-18   78.9        86.5        5414   ₹41,285       +9.7%     
-  ALGN        10     01-Nov-17   234.9       255.6       1861   ₹38,374       +8.8%     
+  PYPL        13     03-Jul-17   52.6        78.0        6368   ₹161,710      +48.3%    
+  ISRG        6      03-Jul-17   102.4       142.0       3270   ₹129,383      +38.6%    
+  ADBE        12     01-Sep-17   155.1       199.4       2374   ₹105,216      +28.6%    
+  AMZN        2      02-Jan-18   59.5        69.5        6988   ₹70,226       +16.9%    
+  MAR         1      02-Jan-18   124.9       137.8       3326   ₹42,768       +10.3%    
+  MSFT        7      02-Jan-18   78.9        86.5        5267   ₹40,164       +9.7%     
+  ALGN        9      01-Nov-17   234.9       255.6       1811   ₹37,343       +8.8%     
 
-  AFTER: Invested ₹4,301,260 | Cash ₹321,412 | Total ₹4,622,671 | Positions 9/10 | Slot ₹462,377
+  AFTER: Invested ₹4,195,947 | Cash ₹302,375 | Total ₹4,498,322 | Positions 9/10 | Slot ₹449,939
 
 ========================================================================
   REBALANCE #39  —  01 Mar 2018
-  NAV: ₹4,639,406  |  Slot: ₹463,941  |  Cash: ₹321,412
+  NAV: ₹4,514,405  |  Slot: ₹451,440  |  Cash: ₹302,375
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ALGN        13     01-Nov-17   234.9       245.6       1861   ₹19,727       +4.5%     120d  
+  ALGN        13     01-Nov-17   234.9       245.6       1811   ₹19,197       +4.5%     120d  
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  NFLX        1      3.484    1.48   +103.6%   +45.8%    29.0        15976  ₹463,927    
+  NFLX        1      3.471    1.48   +103.6%   +45.8%    29.0        15546  ₹451,440    
 
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  PYPL        11     03-Jul-17   52.6        78.2        6463   ₹165,666      +48.7%    
-  ISRG        12     03-Jul-17   102.4       137.4       3319   ₹116,065      +34.1%    
-  ADBE        4      01-Sep-17   155.1       206.0       2445   ₹124,622      +32.9%    
-  AMZN        2      02-Jan-18   59.5        74.7        7183   ₹109,340      +25.6%    
-  MSFT        7      02-Jan-18   78.9        85.6        5414   ₹36,446       +8.5%     
-  CSCO        8      01-Feb-18   32.7        34.4        14129  ₹23,284       +5.0%     
-  MAR         6      02-Jan-18   124.9       128.7       3419   ₹13,124       +3.1%     
-  MELI        3      01-Feb-18   378.8       385.4       1220   ₹8,076        +1.7%     
+  PYPL        11     03-Jul-17   52.6        78.2        6368   ₹163,231      +48.7%    
+  ISRG        12     03-Jul-17   102.4       137.4       3270   ₹114,352      +34.1%    
+  ADBE        4      01-Sep-17   155.1       206.0       2374   ₹121,003      +32.9%    
+  AMZN        2      02-Jan-18   59.5        74.7        6988   ₹106,371      +25.6%    
+  MSFT        7      02-Jan-18   78.9        85.6        5267   ₹35,457       +8.5%     
+  CSCO        8      01-Feb-18   32.7        34.4        13749  ₹22,658       +5.0%     
+  MAR         6      02-Jan-18   124.9       128.7       3326   ₹12,767       +3.1%     
+  MELI        3      01-Feb-18   378.8       385.4       1187   ₹7,858        +1.7%     
 
-  AFTER: Invested ₹4,324,953 | Cash ₹313,902 | Total ₹4,638,855 | Positions 9/10 | Slot ₹463,941
+  AFTER: Invested ₹4,218,779 | Cash ₹295,089 | Total ₹4,513,869 | Positions 9/10 | Slot ₹451,440
 
 ========================================================================
   REBALANCE #40  —  02 Apr 2018
-  NAV: ₹4,441,911  |  Slot: ₹444,191  |  Cash: ₹313,902
+  NAV: ₹4,321,782  |  Slot: ₹432,178  |  Cash: ₹295,089
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MAR         26     02-Jan-18   124.9       123.6       3419   ₹-4,381       -1.0%     90d   
-  CSCO        23     01-Feb-18   32.7        32.2        14129  ₹-7,650       -1.7%     60d   
-  MELI        22     01-Feb-18   378.8       347.2       1220   ₹-38,503      -8.3%     60d   
+  MAR         26     02-Jan-18   124.9       123.6       3326   ₹-4,262       -1.0%     90d   
+  CSCO        23     01-Feb-18   32.7        32.2        13749  ₹-7,445       -1.7%     60d   
+  MELI        22     01-Feb-18   378.8       347.2       1187   ₹-37,462      -8.3%     60d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CTSH        3      2.654    0.63   +34.9%    +11.2%    70.5        6301   ₹444,181    
-  WDAY        5      2.474    1.19   +49.6%    +22.5%    125.2       3546   ₹444,101    
-  ALGN        6      2.441    1.47   +113.0%   +7.2%     242.7       1830   ₹444,123    
+  CTSH        3      2.645    0.63   +34.9%    +11.2%    70.5        6130   ₹432,127    
+  WDAY        5      2.466    1.19   +49.6%    +22.5%    125.2       3450   ₹432,078    
+  ALGN        6      2.434    1.47   +113.0%   +7.2%     242.7       1780   ₹431,988    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  PYPL        10     03-Jul-17   52.6        74.6        6463   ₹142,266      +41.9%    
-  ADBE        2      01-Sep-17   155.1       212.3       2445   ₹139,903      +36.9%    
-  ISRG        8      03-Jul-17   102.4       133.6       3319   ₹103,630      +30.5%    
-  AMZN        4      02-Jan-18   59.5        68.6        7183   ₹65,717       +15.4%    
-  MSFT        18     02-Jan-18   78.9        81.6        5414   ₹14,834       +3.5%     
-  NFLX        1      01-Mar-18   29.0        28.0        15976  ₹-16,136      -3.5%     
+  PYPL        10     03-Jul-17   52.6        74.6        6368   ₹140,174      +41.9%    
+  ADBE        2      01-Sep-17   155.1       212.3       2374   ₹135,840      +36.9%    
+  ISRG        8      03-Jul-17   102.4       133.6       3270   ₹102,100      +30.5%    
+  AMZN        4      02-Jan-18   59.5        68.6        6988   ₹63,933       +15.4%    
+  MSFT        18     02-Jan-18   78.9        81.6        5267   ₹14,431       +3.5%     
+  NFLX        1      01-Mar-18   29.0        28.0        15546  ₹-15,701      -3.5%     
 
-  AFTER: Invested ₹4,159,474 | Cash ₹280,854 | Total ₹4,440,329 | Positions 9/10 | Slot ₹444,191
+  AFTER: Invested ₹4,057,129 | Cash ₹263,113 | Total ₹4,320,243 | Positions 9/10 | Slot ₹432,178
 
 ========================================================================
   REBALANCE #41  —  01 May 2018
-  NAV: ₹4,711,992  |  Slot: ₹471,199  |  Cash: ₹280,854
+  NAV: ₹4,585,110  |  Slot: ₹458,511  |  Cash: ₹263,113
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  PYPL        24     03-Jul-17   52.6        74.4        6463   ₹141,044      +41.5%    302d  
+  PYPL        24     03-Jul-17   52.6        74.4        6368   ₹138,971      +41.5%    302d  
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  INTU        1      2.949    0.81   +50.7%    +11.4%    177.1       2660   ₹471,033    
+  INTU        1      2.936    0.81   +50.7%    +11.4%    177.1       2589   ₹458,460    
 
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ISRG        7      03-Jul-17   102.4       149.2       3319   ₹155,252      +45.7%    
-  ADBE        2      01-Sep-17   155.1       224.1       2445   ₹168,754      +44.5%    
-  AMZN        4      02-Jan-18   59.5        79.1        7183   ₹141,236      +33.1%    
-  MSFT        14     02-Jan-18   78.9        87.6        5414   ₹47,178       +11.0%    
-  NFLX        3      01-Mar-18   29.0        31.3        15976  ₹36,601       +7.9%     
-  ALGN        17     02-Apr-18   242.7       251.3       1830   ₹15,829       +3.6%     
-  CTSH        5      02-Apr-18   70.5        72.8        6301   ₹14,636       +3.3%     
-  WDAY        19     02-Apr-18   125.2       125.6       3546   ₹1,347        +0.3%     
+  ISRG        7      03-Jul-17   102.4       149.2       3270   ₹152,960      +45.7%    
+  ADBE        2      01-Sep-17   155.1       224.1       2374   ₹163,853      +44.5%    
+  AMZN        4      02-Jan-18   59.5        79.1        6988   ₹137,402      +33.1%    
+  MSFT        14     02-Jan-18   78.9        87.6        5267   ₹45,897       +11.0%    
+  NFLX        3      01-Mar-18   29.0        31.3        15546  ₹35,616       +7.9%     
+  ALGN        17     02-Apr-18   242.7       251.3       1780   ₹15,397       +3.6%     
+  CTSH        5      02-Apr-18   70.5        72.8        6130   ₹14,239       +3.3%     
+  WDAY        19     02-Apr-18   125.2       125.6       3450   ₹1,311        +0.3%     
 
-  AFTER: Invested ₹4,421,245 | Cash ₹290,188 | Total ₹4,711,433 | Positions 9/10 | Slot ₹471,199
+  AFTER: Invested ₹4,306,600 | Cash ₹277,965 | Total ₹4,584,566 | Positions 9/10 | Slot ₹458,511
 
 ========================================================================
   REBALANCE #42  —  01 Jun 2018
-  NAV: ₹5,107,669  |  Slot: ₹510,767  |  Cash: ₹290,188
+  NAV: ₹4,970,364  |  Slot: ₹497,036  |  Cash: ₹277,965
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  WDAY        51     02-Apr-18   125.2       126.3       3546   ₹3,723        +0.8%     60d   
-  CTSH        52     02-Apr-18   70.5        68.6        6301   ₹-11,985      -2.7%     60d   
+  WDAY        50     02-Apr-18   125.2       126.3       3450   ₹3,623        +0.8%     60d   
+  CTSH        51     02-Apr-18   70.5        68.6        6130   ₹-11,660      -2.7%     60d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  INTC        5      2.357    1.17   +62.2%    +17.2%    48.5        10526  ₹510,742    
-  ADP         7      2.231    0.63   +31.3%    +17.5%    111.8       4569   ₹510,682    
+  INTC        5      2.351    1.17   +62.2%    +17.2%    48.5        10243  ₹497,010    
+  ADP         7      2.227    0.63   +31.3%    +17.5%    111.8       4446   ₹496,934    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ADBE        3      01-Sep-17   155.1       251.3       2445   ₹235,331      +62.1%    
-  ISRG        6      03-Jul-17   102.4       159.8       3319   ₹190,323      +56.0%    
-  AMZN        9      02-Jan-18   59.5        82.1        7183   ₹162,526      +38.1%    
-  ALGN        1      02-Apr-18   242.7       333.1       1830   ₹165,432      +37.2%    
-  NFLX        4      01-Mar-18   29.0        36.0        15976  ₹111,097      +23.9%    
-  MSFT        12     02-Jan-18   78.9        93.3        5414   ₹78,259       +18.3%    
-  INTU        2      01-May-18   177.1       193.0       2660   ₹42,364       +9.0%     
+  ADBE        3      01-Sep-17   155.1       251.3       2374   ₹228,498      +62.1%    
+  ISRG        6      03-Jul-17   102.4       159.8       3270   ₹187,513      +56.0%    
+  AMZN        9      02-Jan-18   59.5        82.1        6988   ₹158,114      +38.1%    
+  ALGN        1      02-Apr-18   242.7       333.1       1780   ₹160,912      +37.2%    
+  NFLX        4      01-Mar-18   29.0        36.0        15546  ₹108,107      +23.9%    
+  MSFT        12     02-Jan-18   78.9        93.3        5267   ₹76,134       +18.3%    
+  INTU        2      01-May-18   177.1       193.0       2589   ₹41,233       +9.0%     
 
-  AFTER: Invested ₹4,958,885 | Cash ₹147,572 | Total ₹5,106,457 | Positions 9/10 | Slot ₹510,767
+  AFTER: Invested ₹4,830,176 | Cash ₹139,008 | Total ₹4,969,184 | Positions 9/10 | Slot ₹497,036
 
 ========================================================================
   REBALANCE #43  —  02 Jul 2018
-  NAV: ₹5,145,565  |  Slot: ₹514,557  |  Cash: ₹147,572
+  NAV: ₹5,007,389  |  Slot: ₹500,739  |  Cash: ₹139,008
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  INTC        34     01-Jun-18   48.5        42.7        10526  ₹-61,561      -12.1%    31d   
+  INTC        33     01-Jun-18   48.5        42.7        10243  ₹-59,906      -12.1%    31d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ILMN        6      2.190    1.04   +60.8%    +21.4%    271.4       1895   ₹514,378    
+  ILMN        6      2.191    1.04   +60.8%    +21.4%    271.4       1844   ₹500,535    
 
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ISRG        5      03-Jul-17   102.4       162.7       3319   ₹200,114      +58.9%    
-  ADBE        9      01-Sep-17   155.1       243.3       2445   ₹215,649      +56.9%    
-  AMZN        4      02-Jan-18   59.5        85.7        7183   ₹188,471      +44.1%    
-  ALGN        2      02-Apr-18   242.7       340.3       1830   ₹178,590      +40.2%    
-  NFLX        1      01-Mar-18   29.0        39.8        15976  ₹172,205      +37.1%    
-  MSFT        12     02-Jan-18   78.9        92.6        5414   ₹74,348       +17.4%    
-  INTU        3      01-May-18   177.1       194.3       2660   ₹45,785       +9.7%     
-  ADP         8      01-Jun-18   111.8       114.1       4569   ₹10,839       +2.1%     
+  ISRG        5      03-Jul-17   102.4       162.7       3270   ₹197,159      +58.9%    
+  ADBE        9      01-Sep-17   155.1       243.3       2374   ₹209,387      +56.9%    
+  AMZN        4      02-Jan-18   59.5        85.7        6988   ₹183,355      +44.1%    
+  ALGN        2      02-Apr-18   242.7       340.3       1780   ₹173,710      +40.2%    
+  NFLX        1      01-Mar-18   29.0        39.8        15546  ₹167,570      +37.1%    
+  MSFT        12     02-Jan-18   78.9        92.6        5267   ₹72,330       +17.4%    
+  INTU        3      01-May-18   177.1       194.3       2589   ₹44,563       +9.7%     
+  ADP         8      01-Jun-18   111.8       114.1       4446   ₹10,548       +2.1%     
 
-  AFTER: Invested ₹5,063,191 | Cash ₹81,764 | Total ₹5,144,954 | Positions 9/10 | Slot ₹514,557
+  AFTER: Invested ₹4,931,812 | Cash ₹74,983 | Total ₹5,006,795 | Positions 9/10 | Slot ₹500,739
 
 ========================================================================
   REBALANCE #44  —  01 Aug 2018
-  NAV: ₹5,248,913  |  Slot: ₹524,891  |  Cash: ₹81,764
+  NAV: ₹5,108,285  |  Slot: ₹510,829  |  Cash: ₹74,983
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  NFLX        22     01-Mar-18   29.0        33.8        15976  ₹76,669       +16.5%    153d  
-  ADP         33     01-Jun-18   111.8       112.2       4569   ₹2,138        +0.4%     61d   
+  NFLX        21     01-Mar-18   29.0        33.8        15546  ₹74,605       +16.5%    153d  
+  ADP         32     01-Jun-18   111.8       112.2       4446   ₹2,081        +0.4%     61d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CTAS        2      2.910    0.66   +53.6%    +20.5%    47.6        11038  ₹524,877    
-  IDXX        5      2.316    0.95   +52.7%    +22.2%    236.1       2222   ₹524,725    
+  CTAS        2      2.923    0.66   +53.6%    +20.5%    47.6        10742  ₹510,802    
+  IDXX        5      2.329    0.95   +52.7%    +22.2%    236.1       2163   ₹510,792    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ISRG        7      03-Jul-17   102.4       172.1       3319   ₹231,301      +68.1%    
-  ADBE        13     01-Sep-17   155.1       248.0       2445   ₹227,263      +59.9%    
-  AMZN        4      02-Jan-18   59.5        89.9        7183   ₹218,421      +51.1%    
-  ALGN        1      02-Apr-18   242.7       353.7       1830   ₹203,148      +45.7%    
-  MSFT        8      02-Jan-18   78.9        98.4        5414   ₹105,780      +24.8%    
-  ILMN        3      02-Jul-18   271.4       314.4       1895   ₹81,459       +15.8%    
-  INTU        9      01-May-18   177.1       193.5       2660   ₹43,781       +9.3%     
+  ISRG        7      03-Jul-17   102.4       172.1       3270   ₹227,886      +68.1%    
+  ADBE        12     01-Sep-17   155.1       248.0       2374   ₹220,663      +59.9%    
+  AMZN        4      02-Jan-18   59.5        89.9        6988   ₹212,491      +51.1%    
+  ALGN        1      02-Apr-18   242.7       353.7       1780   ₹197,598      +45.7%    
+  MSFT        8      02-Jan-18   78.9        98.4        5267   ₹102,908      +24.8%    
+  ILMN        3      02-Jul-18   271.4       314.4       1844   ₹79,267       +15.8%    
+  INTU        9      01-May-18   177.1       193.5       2589   ₹42,613       +9.3%     
 
-  AFTER: Invested ₹5,163,335 | Cash ₹84,332 | Total ₹5,247,667 | Positions 9/10 | Slot ₹524,891
+  AFTER: Invested ₹5,029,835 | Cash ₹77,237 | Total ₹5,107,072 | Positions 9/10 | Slot ₹510,829
 
 ========================================================================
   REBALANCE #45  —  04 Sep 2018
-  NAV: ₹5,665,392  |  Slot: ₹566,539  |  Cash: ₹84,332
+  NAV: ₹5,513,964  |  Slot: ₹551,396  |  Cash: ₹77,237
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ADBE        20     01-Sep-17   155.1       266.7       2445   ₹272,911      +72.0%    368d  
-  MSFT        15     02-Jan-18   78.9        103.8       5414   ₹135,156      +31.7%    245d  
-  INTU        12     01-May-18   177.1       209.2       2660   ₹85,317       +18.1%    126d  
+  ADBE        20     01-Sep-17   155.1       266.7       2374   ₹264,986      +72.0%    368d  
+  MSFT        15     02-Jan-18   78.9        103.8       5267   ₹131,486      +31.7%    245d  
+  INTU        12     01-May-18   177.1       209.2       2589   ₹83,040       +18.1%    126d  
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  COST        2      2.704    0.52   +50.0%    +18.9%    211.7       2676   ₹566,452    
-  ORLY        4      2.464    0.58   +74.5%    +24.6%    22.9        24719  ₹566,527    
-  VRSK        6      2.368    0.55   +48.8%    +10.5%    114.8       4933   ₹566,500    
+  COST        2      2.697    0.52   +50.0%    +18.9%    211.4       2608   ₹551,258    
+  ORLY        4      2.459    0.58   +74.5%    +24.6%    22.9        24058  ₹551,377    
+  VRSK        6      2.363    0.55   +48.8%    +10.5%    114.8       4801   ₹551,341    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ISRG        11     03-Jul-17   102.4       185.3       3319   ₹275,267      +81.0%    
-  AMZN        1      02-Jan-18   59.5        102.0       7183   ₹305,457      +71.5%    
-  ALGN        10     02-Apr-18   242.7       385.3       1830   ₹261,031      +58.8%    
-  ILMN        5      02-Jul-18   271.4       343.4       1895   ₹136,355      +26.5%    
-  IDXX        9      01-Aug-18   236.1       251.0       2222   ₹32,997       +6.3%     
-  CTAS        3      01-Aug-18   47.6        49.8        11038  ₹24,387       +4.6%     
+  ISRG        11     03-Jul-17   102.4       185.3       3270   ₹271,203      +81.0%    
+  AMZN        1      02-Jan-18   59.5        102.0       6988   ₹297,165      +71.5%    
+  ALGN        10     02-Apr-18   242.7       385.3       1780   ₹253,899      +58.8%    
+  ILMN        5      02-Jul-18   271.4       343.4       1844   ₹132,685      +26.5%    
+  IDXX        9      01-Aug-18   236.1       251.0       2163   ₹32,121       +6.3%     
+  CTAS        3      01-Aug-18   47.6        49.8        10742  ₹23,733       +4.6%     
 
-  AFTER: Invested ₹5,509,996 | Cash ₹153,378 | Total ₹5,663,374 | Positions 9/10 | Slot ₹566,539
+  AFTER: Invested ₹5,369,209 | Cash ₹142,791 | Total ₹5,512,000 | Positions 9/10 | Slot ₹551,396
 
 ========================================================================
   REBALANCE #46  —  01 Oct 2018
-  NAV: ₹5,661,344  |  Slot: ₹566,134  |  Cash: ₹153,378
+  NAV: ₹5,510,270  |  Slot: ₹551,027  |  Cash: ₹142,791
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  IDXX        17     01-Aug-18   236.1       248.9       2222   ₹28,375       +5.4%     61d   
-  CTAS        24     01-Aug-18   47.6        45.7        11038  ₹-20,259      -3.9%     61d   
+  IDXX        17     01-Aug-18   236.1       248.9       2163   ₹27,622       +5.4%     61d   
+  CTAS        24     01-Aug-18   47.6        45.7        10742  ₹-19,716      -3.9%     61d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AAPL        3      2.524    0.97   +49.7%    +21.8%    53.8        10526  ₹566,123    
-  INTU        6      2.371    0.85   +61.7%    +11.1%    215.8       2623   ₹565,958    
+  AAPL        3      2.518    0.97   +49.7%    +21.8%    53.8        10245  ₹551,010    
+  INTU        6      2.367    0.85   +61.7%    +11.1%    215.8       2553   ₹550,855    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ISRG        11     03-Jul-17   102.4       191.6       3319   ₹295,966      +87.1%    
-  AMZN        1      02-Jan-18   59.5        100.2       7183   ₹292,833      +68.6%    
-  ALGN        15     02-Apr-18   242.7       391.5       1830   ₹272,359      +61.3%    
-  ILMN        2      02-Jul-18   271.4       356.6       1895   ₹161,296      +31.4%    
-  ORLY        4      04-Sep-18   22.9        23.1        24719  ₹3,296        +0.6%     
-  COST        8      04-Sep-18   211.7       211.7       2676   ₹-72          -0.0%     
-  VRSK        5      04-Sep-18   114.8       114.8       4933   ₹-329         -0.1%     
+  ISRG        11     03-Jul-17   102.4       191.6       3270   ₹291,597      +87.1%    
+  AMZN        1      02-Jan-18   59.5        100.2       6988   ₹284,883      +68.6%    
+  ALGN        15     02-Apr-18   242.7       391.5       1780   ₹264,917      +61.3%    
+  ILMN        2      02-Jul-18   271.4       356.6       1844   ₹156,955      +31.4%    
+  ORLY        4      04-Sep-18   22.9        23.1        24058  ₹3,208        +0.6%     
+  COST        8      04-Sep-18   211.4       211.3       2608   ₹-70          -0.0%     
+  VRSK        5      04-Sep-18   114.8       114.8       4801   ₹-320         -0.1%     
 
-  AFTER: Invested ₹5,582,330 | Cash ₹77,670 | Total ₹5,660,000 | Positions 9/10 | Slot ₹566,134
+  AFTER: Invested ₹5,439,843 | Cash ₹69,118 | Total ₹5,508,961 | Positions 9/10 | Slot ₹551,027
 
 ========================================================================
   REBALANCE #47  —  01 Nov 2018
-  NAV: ₹4,957,601  |  Slot: ₹495,760  |  Cash: ₹77,670
+  NAV: ₹4,824,838  |  Slot: ₹482,484  |  Cash: ₹69,118
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AMZN        19     02-Jan-18   59.5        83.3        7183   ₹171,142      +40.1%    303d  
-  ILMN        16     02-Jul-18   271.4       304.2       1895   ₹62,122       +12.1%    122d  
-  ALGN        79     02-Apr-18   242.7       230.9       1830   ₹-21,484      -4.8%     213d  
+  AMZN        19     02-Jan-18   59.5        83.3        6988   ₹166,496      +40.1%    303d  
+  ILMN        16     02-Jul-18   271.4       304.2       1844   ₹60,450       +12.1%    122d  
+  ALGN        78     02-Apr-18   242.7       230.9       1780   ₹-20,897      -4.8%     213d  
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ESRX        1      3.717    0.45   +56.0%    +25.4%    97.2        5098   ₹495,730    
-  ROST        2      3.080    0.50   +56.6%    +10.8%    91.4        5422   ₹495,674    
-  ULTA        4      2.509    0.44   +33.3%    +16.1%    273.0       1816   ₹495,677    
+  ESRX        1      3.703    0.45   +56.0%    +25.4%    97.2        4961   ₹482,408    
+  ROST        2      3.067    0.50   +56.6%    +10.8%    91.4        5277   ₹482,418    
+  ULTA        4      2.499    0.44   +33.3%    +16.1%    273.0       1767   ₹482,303    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ISRG        14     03-Jul-17   102.4       172.9       3319   ₹233,868      +68.8%    
-  COST        3      04-Sep-18   211.7       207.1       2676   ₹-12,262      -2.2%     
-  AAPL        6      01-Oct-18   53.8        52.6        10526  ₹-12,555      -2.2%     
-  VRSK        11     04-Sep-18   114.8       110.2       4933   ₹-22,668      -4.0%     
-  INTU        8      01-Oct-18   215.8       201.6       2623   ₹-37,031      -6.5%     
-  ORLY        7      04-Sep-18   22.9        21.4        24719  ₹-38,183      -6.7%     
+  ISRG        14     03-Jul-17   102.4       172.9       3270   ₹230,415      +68.8%    
+  COST        3      04-Sep-18   211.4       206.8       2608   ₹-11,933      -2.2%     
+  AAPL        6      01-Oct-18   53.8        52.6        10245  ₹-12,220      -2.2%     
+  VRSK        11     04-Sep-18   114.8       110.2       4801   ₹-22,061      -4.0%     
+  INTU        8      01-Oct-18   215.8       201.6       2553   ₹-36,043      -6.5%     
+  ORLY        7      04-Sep-18   22.9        21.4        24058  ₹-37,162      -6.7%     
 
-  AFTER: Invested ₹4,769,698 | Cash ₹186,138 | Total ₹4,955,836 | Positions 9/10 | Slot ₹495,760
+  AFTER: Invested ₹4,648,836 | Cash ₹174,283 | Total ₹4,823,119 | Positions 9/10 | Slot ₹482,484
 
 ========================================================================
   REBALANCE #48  —  03 Dec 2018
-  NAV: ₹5,002,384  |  Slot: ₹500,238  |  Cash: ₹186,138
+  NAV: ₹4,868,802  |  Slot: ₹486,880  |  Cash: ₹174,283
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ROST        58     01-Nov-18   91.4        78.7        5422   ₹-68,846      -13.9%    32d   
-  AAPL        71     01-Oct-18   53.8        43.9        10526  ₹-104,115     -18.4%    63d   
+  ROST        57     01-Nov-18   91.4        78.7        5277   ₹-67,005      -13.9%    32d   
+  AAPL        70     01-Oct-18   53.8        43.9        10245  ₹-101,336     -18.4%    63d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  SBUX        2      3.163    0.40   +20.5%    +26.8%    57.6        8679   ₹500,190    
-  HSIC        3      2.528    0.48   +27.9%    +16.1%    70.9        7055   ₹500,213    
+  SBUX        2      3.151    0.40   +20.5%    +26.8%    57.6        8448   ₹486,877    
+  HSIC        3      2.519    0.48   +27.9%    +16.1%    70.9        6866   ₹486,813    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ISRG        20     03-Jul-17   102.4       183.0       3319   ₹267,412      +78.7%    
-  ULTA        4      01-Nov-18   273.0       306.5       1816   ₹60,909       +12.3%    
-  ESRX        1      01-Nov-18   97.2        100.6       5098   ₹17,333       +3.5%     
-  VRSK        6      04-Sep-18   114.8       118.9       4933   ₹19,893       +3.5%     
-  ORLY        7      04-Sep-18   22.9        23.1        24719  ₹4,219        +0.7%     
-  COST        14     04-Sep-18   211.7       209.8       2676   ₹-4,944       -0.9%     
-  INTU        17     01-Oct-18   215.8       202.8       2623   ₹-34,142      -6.0%     
+  ISRG        20     03-Jul-17   102.4       183.0       3270   ₹263,464      +78.7%    
+  ULTA        4      01-Nov-18   273.0       306.5       1767   ₹59,265       +12.3%    
+  ESRX        1      01-Nov-18   97.2        100.6       4961   ₹16,867       +3.5%     
+  VRSK        6      04-Sep-18   114.8       118.9       4801   ₹19,360       +3.5%     
+  ORLY        7      04-Sep-18   22.9        23.1        24058  ₹4,106        +0.7%     
+  COST        14     04-Sep-18   211.4       209.5       2608   ₹-4,812       -0.9%     
+  INTU        17     01-Oct-18   215.8       202.8       2553   ₹-33,230      -6.0%     
 
-  AFTER: Invested ₹4,927,814 | Cash ₹73,382 | Total ₹5,001,196 | Positions 9/10 | Slot ₹500,238
+  AFTER: Invested ₹4,803,122 | Cash ₹64,524 | Total ₹4,867,646 | Positions 9/10 | Slot ₹486,880
 
 ========================================================================
   REBALANCE #49  —  02 Jan 2019
-  NAV: ₹4,487,255  |  Slot: ₹448,726  |  Cash: ₹73,382
+  NAV: ₹4,366,383  |  Slot: ₹436,638  |  Cash: ₹64,524
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 148.0 < SMA200 163.1 — holding all, skipping exits & entries
@@ -1438,21 +1518,21 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ISRG        20     03-Jul-17   102.4       155.3       3319   ₹175,697      +51.7%    
-  ESRX        —      01-Nov-18   97.2        97.2        5098   ₹0            +0.0%     
-  ORLY        3      04-Sep-18   22.9        22.7        24719  ₹-4,334       -0.8%     
-  SBUX        1      03-Dec-18   57.6        54.9        8679   ₹-23,565      -4.7%     
-  ULTA        25     01-Nov-18   273.0       248.0       1816   ₹-45,364      -9.2%     
-  VRSK        21     04-Sep-18   114.8       103.6       4933   ₹-55,540      -9.8%     
-  COST        34     04-Sep-18   211.7       185.1       2676   ₹-71,044      -12.5%    
-  INTU        15     01-Oct-18   215.8       184.7       2623   ₹-81,589      -14.4%    
-  HSIC        31     03-Dec-18   70.9        59.9        7055   ₹-77,522      -15.5%    
+  ISRG        20     03-Jul-17   102.4       155.3       3270   ₹173,103      +51.7%    
+  ESRX        —      01-Nov-18   97.2        97.2        4961   ₹0            +0.0%     
+  ORLY        3      04-Sep-18   22.9        22.7        24058  ₹-4,218       -0.8%     
+  SBUX        1      03-Dec-18   57.6        54.9        8448   ₹-22,937      -4.7%     
+  ULTA        25     01-Nov-18   273.0       248.0       1767   ₹-44,140      -9.2%     
+  VRSK        21     04-Sep-18   114.8       103.6       4801   ₹-54,054      -9.8%     
+  COST        34     04-Sep-18   211.4       184.9       2608   ₹-69,138      -12.5%    
+  INTU        15     01-Oct-18   215.8       184.7       2553   ₹-79,412      -14.4%    
+  HSIC        31     03-Dec-18   70.9        59.9        6866   ₹-75,445      -15.5%    
 
-  AFTER: Invested ₹4,413,874 | Cash ₹73,382 | Total ₹4,487,255 | Positions 9/10 | Slot ₹448,726
+  AFTER: Invested ₹4,301,859 | Cash ₹64,524 | Total ₹4,366,383 | Positions 9/10 | Slot ₹436,638
 
 ========================================================================
   REBALANCE #50  —  01 Feb 2019
-  NAV: ₹4,784,844  |  Slot: ₹478,484  |  Cash: ₹73,382
+  NAV: ₹4,656,776  |  Slot: ₹465,678  |  Cash: ₹64,524
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 160.1 < SMA200 163.3 — holding all, skipping exits & entries
@@ -1466,117 +1546,117 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ISRG        22     03-Jul-17   102.4       174.9       3319   ₹240,550      +70.8%    
-  ULTA        11     01-Nov-18   273.0       291.4       1816   ₹33,433       +6.7%     
-  SBUX        2      03-Dec-18   57.6        58.2        8679   ₹4,520        +0.9%     
-  ORLY        10     04-Sep-18   22.9        23.1        24719  ₹4,894        +0.9%     
-  ESRX        —      01-Nov-18   97.2        97.2        5098   ₹0            +0.0%     
-  VRSK        18     04-Sep-18   114.8       113.2       4933   ₹-7,948       -1.4%     
-  INTU        12     01-Oct-18   215.8       204.1       2623   ₹-30,590      -5.4%     
-  COST        64     04-Sep-18   211.7       190.1       2676   ₹-57,712      -10.2% ⚠  
-  HSIC        69     03-Dec-18   70.9        60.6        7055   ₹-72,819      -14.6% ⚠  
+  ISRG        22     03-Jul-17   102.4       174.9       3270   ₹236,999      +70.8%    
+  ULTA        11     01-Nov-18   273.0       291.4       1767   ₹32,530       +6.7%     
+  SBUX        2      03-Dec-18   57.6        58.2        8448   ₹4,400        +0.9%     
+  ORLY        10     04-Sep-18   22.9        23.1        24058  ₹4,763        +0.9%     
+  ESRX        —      01-Nov-18   97.2        97.2        4961   ₹0            +0.0%     
+  VRSK        18     04-Sep-18   114.8       113.2       4801   ₹-7,735       -1.4%     
+  INTU        12     01-Oct-18   215.8       204.1       2553   ₹-29,774      -5.4%     
+  COST        63     04-Sep-18   211.4       189.8       2608   ₹-56,164      -10.2% ⚠  
+  HSIC        68     03-Dec-18   70.9        60.6        6866   ₹-70,868      -14.6% ⚠  
   ⚠  WAZ < 0 (momentum below universe mean): COST, HSIC
 
-  AFTER: Invested ₹4,711,462 | Cash ₹73,382 | Total ₹4,784,844 | Positions 9/10 | Slot ₹478,484
+  AFTER: Invested ₹4,592,252 | Cash ₹64,524 | Total ₹4,656,776 | Positions 9/10 | Slot ₹465,678
 
 ========================================================================
   REBALANCE #51  —  01 Mar 2019
-  NAV: ₹5,076,112  |  Slot: ₹507,611  |  Cash: ₹73,382
+  NAV: ₹4,940,699  |  Slot: ₹494,070  |  Cash: ₹64,524
 ========================================================================
 
   EXITS (5)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ISRG        23     03-Jul-17   102.4       186.2       3319   ₹278,055      +81.8%    606d  
-  VRSK        25     04-Sep-18   114.8       120.8       4933   ₹29,392       +5.2%     178d  
-  ESRX        —      01-Nov-18   97.2        97.2        5098   ₹0            +0.0%     120d  
-  COST        53     04-Sep-18   211.7       198.9       2676   ₹-34,092      -6.0%     178d  
-  HSIC        75     03-Dec-18   70.9        60.1        7055   ₹-76,419      -15.3%    88d   
+  ISRG        23     03-Jul-17   102.4       186.2       3270   ₹273,950      +81.8%    606d  
+  VRSK        25     04-Sep-18   114.8       120.8       4801   ₹28,606       +5.2%     178d  
+  ESRX        —      01-Nov-18   97.2        97.2        4961   ₹0            +0.0%     120d  
+  COST        52     04-Sep-18   211.4       198.7       2608   ₹-33,178      -6.0%     178d  
+  HSIC        74     03-Dec-18   70.9        60.1        6866   ₹-74,372      -15.3%    88d   
 
   ENTRIES (5)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CDNS        1      3.219    0.87   +50.0%    +35.0%    58.1        8730   ₹507,562    
-  WDAY        3      2.515    1.28   +49.3%    +36.3%    189.1       2683   ₹507,463    
-  REGN        4      2.362    0.82   +37.2%    +24.3%    436.6       1162   ₹507,353    
-  PAYX        5      2.222    0.58   +23.0%    +12.8%    63.0        8061   ₹507,586    
-  XEL         6      2.210    0.04   +31.2%    +7.0%     44.1        11503  ₹507,567    
+  CDNS        1      3.207    0.87   +50.0%    +35.0%    58.1        8497   ₹494,016    
+  WDAY        3      2.506    1.28   +49.3%    +36.3%    189.1       2612   ₹494,034    
+  REGN        4      2.354    0.82   +37.2%    +24.3%    436.6       1131   ₹493,818    
+  PAYX        5      2.215    0.58   +23.0%    +12.8%    63.0        7846   ₹494,047    
+  XEL         6      2.203    0.04   +31.2%    +7.0%     44.1        11197  ₹494,065    
 
   HOLDS (4)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ULTA        12     01-Nov-18   273.0       315.3       1816   ₹76,908       +15.5%    
-  INTU        2      01-Oct-18   215.8       238.3       2623   ₹59,183       +10.5%    
-  ORLY        9      04-Sep-18   22.9        24.7        24719  ₹45,005       +7.9%     
-  SBUX        18     03-Dec-18   57.6        60.8        8679   ₹27,564       +5.5%     
+  ULTA        12     01-Nov-18   273.0       315.3       1767   ₹74,832       +15.5%    
+  INTU        2      01-Oct-18   215.8       238.3       2553   ₹57,603       +10.5%    
+  ORLY        9      04-Sep-18   22.9        24.7        24058  ₹43,802       +7.9%     
+  SBUX        18     03-Dec-18   57.6        60.8        8448   ₹26,831       +5.5%     
 
-  AFTER: Invested ₹4,874,543 | Cash ₹198,556 | Total ₹5,073,099 | Positions 9/10 | Slot ₹507,611
+  AFTER: Invested ₹4,744,460 | Cash ₹193,307 | Total ₹4,937,766 | Positions 9/10 | Slot ₹494,070
 
 ========================================================================
   REBALANCE #52  —  01 Apr 2019
-  NAV: ₹5,302,311  |  Slot: ₹530,231  |  Cash: ₹198,556
+  NAV: ₹5,160,845  |  Slot: ₹516,084  |  Cash: ₹193,307
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  SBUX        22     03-Dec-18   57.6        63.5        8679   ₹50,730       +10.1%    119d  
-  WDAY        30     01-Mar-19   189.1       192.8       2683   ₹9,686        +1.9%     31d   
-  REGN        51     01-Mar-19   436.6       407.3       1162   ₹-34,072      -6.7%     31d   
+  SBUX        22     03-Dec-18   57.6        63.5        8448   ₹49,380       +10.1%    119d  
+  WDAY        30     01-Mar-19   189.1       192.8       2612   ₹9,429        +1.9%     31d   
+  REGN        50     01-Mar-19   436.6       407.3       1131   ₹-33,163      -6.7%     31d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  SNPS        3      2.796    0.93   +41.2%    +40.6%    117.6       4509   ₹530,123    
-  ADP         5      2.631    0.74   +45.8%    +26.1%    139.3       3805   ₹530,136    
-  MDLZ        7      2.283    0.29   +21.9%    +25.2%    41.8        12675  ₹530,225    
+  SNPS        3      2.785    0.93   +41.2%    +40.6%    117.6       4389   ₹516,015    
+  ADP         5      2.621    0.74   +45.8%    +26.1%    139.3       3704   ₹516,064    
+  MDLZ        7      2.275    0.29   +21.9%    +25.2%    41.8        12336  ₹516,044    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ULTA        2      01-Nov-18   273.0       352.5       1816   ₹144,554      +29.2%    
-  INTU        6      01-Oct-18   215.8       252.9       2623   ₹97,479       +17.2%    
-  ORLY        17     04-Sep-18   22.9        26.1        24719  ₹78,705       +13.9%    
-  CDNS        1      01-Mar-19   58.1        64.8        8730   ₹58,142       +11.5%    
-  PAYX        4      01-Mar-19   63.0        65.8        8061   ₹22,944       +4.5%     
-  XEL         18     01-Mar-19   44.1        45.0        11503  ₹9,705        +1.9%     
+  ULTA        2      01-Nov-18   273.0       352.5       1767   ₹140,653      +29.2%    
+  INTU        6      01-Oct-18   215.8       252.9       2553   ₹94,877       +17.2%    
+  ORLY        17     04-Sep-18   22.9        26.1        24058  ₹76,601       +13.9%    
+  CDNS        1      01-Mar-19   58.1        64.8        8497   ₹56,590       +11.5%    
+  PAYX        4      01-Mar-19   63.0        65.8        7846   ₹22,332       +4.5%     
+  XEL         18     01-Mar-19   44.1        45.0        11197  ₹9,447        +1.9%     
 
-  AFTER: Invested ₹5,152,890 | Cash ₹147,533 | Total ₹5,300,423 | Positions 9/10 | Slot ₹530,231
+  AFTER: Invested ₹5,015,286 | Cash ₹143,721 | Total ₹5,159,007 | Positions 9/10 | Slot ₹516,084
 
 ========================================================================
   REBALANCE #53  —  01 May 2019
-  NAV: ₹5,244,920  |  Slot: ₹524,492  |  Cash: ₹147,533
+  NAV: ₹5,104,993  |  Slot: ₹510,499  |  Cash: ₹143,721
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ULTA        31     01-Nov-18   273.0       334.9       1816   ₹112,574      +22.7%    181d  
-  INTU        28     01-Oct-18   215.8       232.5       2623   ₹43,905       +7.8%     212d  
-  XEL         23     01-Mar-19   44.1        45.2        11503  ₹12,777       +2.5%     61d   
+  ULTA        31     01-Nov-18   273.0       334.9       1767   ₹109,536      +22.7%    181d  
+  INTU        28     01-Oct-18   215.8       232.5       2553   ₹42,733       +7.8%     212d  
+  XEL         23     01-Mar-19   44.1        45.2        11197  ₹12,437       +2.5%     61d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  QCOM        1      3.747    0.72   +76.6%    +74.2%    73.3        7155   ₹524,444    
-  VRSK        6      2.261    0.62   +31.7%    +19.3%    133.6       3925   ₹524,427    
-  PEP         7      2.188    0.19   +30.3%    +15.7%    102.8       5100   ₹524,437    
+  QCOM        1      3.730    0.72   +76.6%    +74.2%    73.3        6964   ₹510,444    
+  VRSK        6      2.252    0.62   +31.7%    +19.3%    133.6       3820   ₹510,398    
+  PEP         7      2.179    0.19   +30.3%    +15.7%    102.8       4964   ₹510,452    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  CDNS        2      01-Mar-19   58.1        68.5        8730   ₹90,792       +17.9%    
-  ORLY        19     04-Sep-18   22.9        24.9        24719  ₹49,059       +8.7%     
-  PAYX        4      01-Mar-19   63.0        66.7        8061   ₹29,761       +5.9%     
-  MDLZ        3      01-Apr-19   41.8        43.5        12675  ₹20,808       +3.9%     
-  SNPS        5      01-Apr-19   117.6       120.1       4509   ₹11,363       +2.1%     
-  ADP         13     01-Apr-19   139.3       135.4       3805   ₹-15,014      -2.8%     
+  CDNS        2      01-Mar-19   58.1        68.5        8497   ₹88,369       +17.9%    
+  ORLY        19     04-Sep-18   22.9        24.9        24058  ₹47,747       +8.7%     
+  PAYX        4      01-Mar-19   63.0        66.7        7846   ₹28,968       +5.9%     
+  MDLZ        3      01-Apr-19   41.8        43.5        12336  ₹20,251       +3.9%     
+  SNPS        5      01-Apr-19   117.6       120.1       4389   ₹11,060       +2.1%     
+  ADP         13     01-Apr-19   139.3       135.4       3704   ₹-14,616      -2.8%     
 
-  AFTER: Invested ₹4,932,236 | Cash ₹310,816 | Total ₹5,243,051 | Positions 9/10 | Slot ₹524,492
+  AFTER: Invested ₹4,800,637 | Cash ₹302,538 | Total ₹5,103,175 | Positions 9/10 | Slot ₹510,499
 
 ========================================================================
   REBALANCE #54  —  03 Jun 2019
-  NAV: ₹5,057,695  |  Slot: ₹505,769  |  Cash: ₹310,816
+  NAV: ₹4,922,763  |  Slot: ₹492,276  |  Cash: ₹302,538
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 162.9 < SMA200 166.4 — holding all, skipping exits & entries
@@ -1590,83 +1670,83 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  PAYX        3      01-Mar-19   63.0        69.2        8061   ₹50,025       +9.9%     
-  ORLY        19     04-Sep-18   22.9        24.9        24719  ₹50,163       +8.9%     
-  CDNS        15     01-Mar-19   58.1        61.7        8730   ₹31,079       +6.1%     
-  MDLZ        1      01-Apr-19   41.8        43.4        12675  ₹19,954       +3.8%     
-  PEP         2      01-May-19   102.8       104.2       5100   ₹7,172        +1.4%     
-  VRSK        4      01-May-19   133.6       133.9       3925   ₹1,312        +0.3%     
-  SNPS        11     01-Apr-19   117.6       113.4       4509   ₹-18,757      -3.5%     
-  ADP         27     01-Apr-19   139.3       134.1       3805   ₹-19,855      -3.7%     
-  QCOM        13     01-May-19   73.3        56.6        7155   ₹-119,680     -22.8%    
+  PAYX        3      01-Mar-19   63.0        69.2        7846   ₹48,691       +9.9%     
+  ORLY        19     04-Sep-18   22.9        24.9        24058  ₹48,822       +8.9%     
+  CDNS        15     01-Mar-19   58.1        61.7        8497   ₹30,249       +6.1%     
+  MDLZ        1      01-Apr-19   41.8        43.4        12336  ₹19,420       +3.8%     
+  PEP         2      01-May-19   102.8       104.2       4964   ₹6,980        +1.4%     
+  VRSK        4      01-May-19   133.6       133.9       3820   ₹1,277        +0.3%     
+  SNPS        11     01-Apr-19   117.6       113.4       4389   ₹-18,258      -3.5%     
+  ADP         27     01-Apr-19   139.3       134.1       3704   ₹-19,328      -3.7%     
+  QCOM        13     01-May-19   73.3        56.6        6964   ₹-116,486     -22.8%    
 
-  AFTER: Invested ₹4,746,879 | Cash ₹310,816 | Total ₹5,057,695 | Positions 9/10 | Slot ₹505,769
+  AFTER: Invested ₹4,620,225 | Cash ₹302,538 | Total ₹4,922,763 | Positions 9/10 | Slot ₹492,276
 
 ========================================================================
   REBALANCE #55  —  01 Jul 2019
-  NAV: ₹5,422,616  |  Slot: ₹542,262  |  Cash: ₹310,816
+  NAV: ₹5,277,953  |  Slot: ₹527,795  |  Cash: ₹302,538
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ORLY        43     04-Sep-18   22.9        25.0        24719  ₹50,361       +8.9%     300d  
-  PAYX        24     01-Mar-19   63.0        68.4        8061   ₹43,949       +8.7%     122d  
-  ADP         31     01-Apr-19   139.3       143.7       3805   ₹16,746       +3.2%     91d   
+  ORLY        44     04-Sep-18   22.9        25.0        24058  ₹49,014       +8.9%     300d  
+  PAYX        24     01-Mar-19   63.0        68.4        7846   ₹42,777       +8.7%     122d  
+  ADP         31     01-Apr-19   139.3       143.7       3704   ₹16,301       +3.2%     91d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  SBUX        1      3.686    0.44   +78.1%    +14.8%    72.9        7438   ₹542,254    
-  IDXX        6      2.302    0.97   +28.8%    +24.4%    280.2       1935   ₹542,110    
-  XEL         7      2.278    0.03   +34.1%    +7.7%     48.4        11198  ₹542,225    
+  SBUX        1      3.673    0.44   +78.1%    +14.8%    72.9        7239   ₹527,746    
+  IDXX        6      2.295    0.97   +28.8%    +24.4%    280.2       1883   ₹527,541    
+  XEL         7      2.267    0.03   +34.1%    +7.7%     48.4        10900  ₹527,795    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  CDNS        5      01-Mar-19   58.1        73.3        8730   ₹132,783      +26.2%    
-  SNPS        8      01-Apr-19   117.6       131.4       4509   ₹62,495       +11.8%    
-  MDLZ        2      01-Apr-19   41.8        46.3        12675  ₹56,367       +10.6%    
-  VRSK        3      01-May-19   133.6       141.3       3925   ₹30,005       +5.7%     
-  PEP         14     01-May-19   102.8       107.4       5100   ₹23,063       +4.4%     
-  QCOM        4      01-May-19   73.3        66.4        7155   ₹-49,435      -9.4%     
+  CDNS        5      01-Mar-19   58.1        73.3        8497   ₹129,239      +26.2%    
+  SNPS        8      01-Apr-19   117.6       131.4       4389   ₹60,832       +11.8%    
+  MDLZ        2      01-Apr-19   41.8        46.3        12336  ₹54,860       +10.6%    
+  VRSK        3      01-May-19   133.6       141.3       3820   ₹29,203       +5.7%     
+  PEP         14     01-May-19   102.8       107.4       4964   ₹22,447       +4.4%     
+  QCOM        4      01-May-19   73.3        66.4        6964   ₹-48,116      -9.4%     
 
-  AFTER: Invested ₹5,023,084 | Cash ₹397,600 | Total ₹5,420,685 | Positions 9/10 | Slot ₹542,262
+  AFTER: Invested ₹4,888,915 | Cash ₹387,158 | Total ₹5,276,073 | Positions 9/10 | Slot ₹527,795
 
 ========================================================================
   REBALANCE #56  —  01 Aug 2019
-  NAV: ₹5,431,459  |  Slot: ₹543,146  |  Cash: ₹397,600
+  NAV: ₹5,286,560  |  Slot: ₹528,656  |  Cash: ₹387,158
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  PEP         35     01-May-19   102.8       103.5       5100   ₹3,425        +0.7%     92d   
-  IDXX        24     01-Jul-19   280.2       268.3       1935   ₹-22,949      -4.2%     31d   
-  QCOM        75     01-May-19   73.3        61.0        7155   ₹-88,161      -16.8%    92d   
+  PEP         35     01-May-19   102.8       103.5       4964   ₹3,333        +0.7%     92d   
+  IDXX        24     01-Jul-19   280.2       268.3       1883   ₹-22,332      -4.2%     31d   
+  QCOM        74     01-May-19   73.3        61.0        6964   ₹-85,808      -16.8%    92d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CTAS        4      2.531    0.72   +28.1%    +17.9%    60.5        8979   ₹543,097    
-  MELI        5      2.437    1.30   +82.7%    +29.9%    626.5       867    ₹543,132    
-  COST        6      2.360    0.57   +26.8%    +13.4%    249.6       2176   ₹543,108    
+  CTAS        4      2.522    0.72   +28.1%    +17.9%    60.5        8740   ₹528,641    
+  MELI        5      2.428    1.30   +82.7%    +29.9%    626.5       843    ₹528,097    
+  COST        6      2.352    0.57   +26.8%    +13.4%    249.2       2121   ₹528,614    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  CDNS        8      01-Mar-19   58.1        73.0        8730   ₹130,077      +25.6%    
-  SBUX        1      01-Jul-19   72.9        82.2        7438   ₹69,457       +12.8%    
-  SNPS        7      01-Apr-19   117.6       132.5       4509   ₹67,410       +12.7%    
-  VRSK        3      01-May-19   133.6       146.3       3925   ₹49,872       +9.5%     
-  MDLZ        11     01-Apr-19   41.8        45.4        12675  ₹44,788       +8.4%     
-  XEL         2      01-Jul-19   48.4        49.5        11198  ₹12,135       +2.2%     
+  CDNS        8      01-Mar-19   58.1        73.0        8497   ₹126,605      +25.6%    
+  SBUX        1      01-Jul-19   72.9        82.2        7239   ₹67,599       +12.8%    
+  SNPS        7      01-Apr-19   117.6       132.5       4389   ₹65,616       +12.7%    
+  VRSK        3      01-May-19   133.6       146.3       3820   ₹48,538       +9.5%     
+  MDLZ        11     01-Apr-19   41.8        45.4        12336  ₹43,590       +8.4%     
+  XEL         2      01-Jul-19   48.4        49.5        10900  ₹11,812       +2.2%     
 
-  AFTER: Invested ₹5,179,891 | Cash ₹249,633 | Total ₹5,429,524 | Positions 9/10 | Slot ₹543,146
+  AFTER: Invested ₹5,041,124 | Cash ₹243,554 | Total ₹5,284,678 | Positions 9/10 | Slot ₹528,656
 
 ========================================================================
   REBALANCE #57  —  03 Sep 2019
-  NAV: ₹5,524,981  |  Slot: ₹552,498  |  Cash: ₹249,633
+  NAV: ₹5,377,627  |  Slot: ₹537,763  |  Cash: ₹243,554
 ========================================================================
 
   EXITS (0)
@@ -1678,115 +1758,115 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  SNPS        7      01-Apr-19   117.6       139.3       4509   ₹97,845       +18.5%    
-  CDNS        13     01-Mar-19   58.1        68.1        8730   ₹87,300       +17.2%    
-  VRSK        3      01-May-19   133.6       154.8       3925   ₹82,996       +15.8%    
-  SBUX        1      01-Jul-19   72.9        83.8        7438   ₹80,724       +14.9%    
-  MDLZ        6      01-Apr-19   41.8        47.1        12675  ₹66,338       +12.5%    
-  XEL         2      01-Jul-19   48.4        53.4        11198  ₹55,655       +10.3%    
-  COST        5      01-Aug-19   249.6       266.1       2176   ₹35,854       +6.6%     
-  CTAS        10     01-Aug-19   60.5        60.7        8979   ₹1,887        +0.3%     
-  MELI        19     01-Aug-19   626.5       581.0       867    ₹-39,405      -7.3%     
+  SNPS        7      01-Apr-19   117.6       139.3       4389   ₹95,241       +18.5%    
+  CDNS        13     01-Mar-19   58.1        68.1        8497   ₹84,970       +17.2%    
+  VRSK        3      01-May-19   133.6       154.8       3820   ₹80,776       +15.8%    
+  SBUX        1      01-Jul-19   72.9        83.8        7239   ₹78,564       +14.9%    
+  MDLZ        6      01-Apr-19   41.8        47.1        12336  ₹64,564       +12.5%    
+  XEL         2      01-Jul-19   48.4        53.4        10900  ₹54,174       +10.3%    
+  COST        5      01-Aug-19   249.2       265.7       2121   ₹34,897       +6.6%     
+  CTAS        10     01-Aug-19   60.5        60.7        8740   ₹1,837        +0.3%     
+  MELI        19     01-Aug-19   626.5       581.0       843    ₹-38,314      -7.3%     
 
-  AFTER: Invested ₹5,275,347 | Cash ₹249,633 | Total ₹5,524,981 | Positions 9/10 | Slot ₹552,498
+  AFTER: Invested ₹5,134,074 | Cash ₹243,554 | Total ₹5,377,627 | Positions 9/10 | Slot ₹537,763
 
 ========================================================================
   REBALANCE #58  —  01 Oct 2019
-  NAV: ₹5,353,717  |  Slot: ₹535,372  |  Cash: ₹249,633
+  NAV: ₹5,210,966  |  Slot: ₹521,097  |  Cash: ₹243,554
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CDNS        36     01-Mar-19   58.1        65.3        8730   ₹62,420       +12.3%    214d  
-  MELI        32     01-Aug-19   626.5       550.4       867    ₹-65,909      -12.1%    61d   
+  CDNS        35     01-Mar-19   58.1        65.3        8497   ₹60,754       +12.3%    214d  
+  MELI        31     01-Aug-19   626.5       550.4       843    ₹-64,085      -12.1%    61d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  KLAC        1      3.492    1.12   +60.0%    +33.1%    146.4       3656   ₹535,329    
-  LRCX        3      2.785    1.18   +55.5%    +23.7%    21.3        25083  ₹535,360    
+  KLAC        1      3.492    1.12   +60.0%    +33.1%    146.4       3558   ₹520,979    
+  LRCX        3      2.785    1.18   +55.5%    +23.7%    21.3        24414  ₹521,081    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  SNPS        15     01-Apr-19   117.6       136.0       4509   ₹83,056       +15.7%    
-  VRSK        6      01-May-19   133.6       149.9       3925   ₹64,078       +12.2%    
-  MDLZ        11     01-Apr-19   41.8        46.5        12675  ₹58,630       +11.1%    
-  XEL         2      01-Jul-19   48.4        53.3        11198  ₹54,182       +10.0%    
-  COST        12     01-Aug-19   249.6       258.7       2176   ₹19,757       +3.6%     
-  SBUX        4      01-Jul-19   72.9        74.9        7438   ₹14,673       +2.7%     
-  CTAS        5      01-Aug-19   60.5        61.3        8979   ₹7,045        +1.3%     
+  SNPS        15     01-Apr-19   117.6       136.0       4389   ₹80,845       +15.7%    
+  VRSK        6      01-May-19   133.6       149.9       3820   ₹62,364       +12.2%    
+  MDLZ        11     01-Apr-19   41.8        46.5        12336  ₹57,062       +11.1%    
+  XEL         2      01-Jul-19   48.4        53.3        10900  ₹52,740       +10.0%    
+  COST        12     01-Aug-19   249.2       258.3       2121   ₹19,229       +3.6%     
+  SBUX        4      01-Jul-19   72.9        74.9        7239   ₹14,281       +2.7%     
+  CTAS        5      01-Aug-19   60.5        61.3        8740   ₹6,857        +1.3%     
 
-  AFTER: Invested ₹5,127,568 | Cash ₹224,878 | Total ₹5,352,446 | Positions 9/10 | Slot ₹535,372
+  AFTER: Invested ₹4,990,691 | Cash ₹219,038 | Total ₹5,209,728 | Positions 9/10 | Slot ₹521,097
 
 ========================================================================
   REBALANCE #59  —  01 Nov 2019
-  NAV: ₹5,442,898  |  Slot: ₹544,290  |  Cash: ₹224,878
+  NAV: ₹5,297,768  |  Slot: ₹529,777  |  Cash: ₹219,038
 ========================================================================
 
   EXITS (4)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  SNPS        16     01-Apr-19   117.6       136.1       4509   ₹83,552       +15.8%    214d  
-  MDLZ        34     01-Apr-19   41.8        44.2        12675  ₹30,502       +5.8%     214d  
-  VRSK        57     01-May-19   133.6       139.3       3925   ₹22,362       +4.3%     184d  
-  SBUX        54     01-Jul-19   72.9        72.0        7438   ₹-6,571       -1.2%     123d  
+  SNPS        16     01-Apr-19   117.6       136.1       4389   ₹81,328       +15.8%    214d  
+  MDLZ        34     01-Apr-19   41.8        44.2        12336  ₹29,686       +5.8%     214d  
+  VRSK        56     01-May-19   133.6       139.3       3820   ₹21,763       +4.3%     184d  
+  SBUX        53     01-Jul-19   72.9        72.0        7239   ₹-6,395       -1.2%     123d  
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CHTR        3      2.754    0.63   +48.7%    +25.5%    476.5       1142   ₹544,140    
-  ASML        4      2.510    1.10   +58.8%    +27.6%    254.9       2135   ₹544,262    
-  PCAR        5      2.473    0.71   +44.0%    +21.7%    40.7        13365  ₹544,277    
-  FAST        6      2.449    0.85   +48.4%    +30.8%    15.8        34365  ₹544,280    
+  CHTR        3      2.745    0.63   +48.7%    +25.5%    476.5       1111   ₹529,369    
+  ASML        4      2.502    1.10   +58.8%    +27.6%    254.4       2082   ₹529,594    
+  PCAR        5      2.465    0.71   +44.0%    +21.7%    40.7        13008  ₹529,738    
+  FAST        6      2.441    0.85   +48.4%    +30.8%    15.8        33627  ₹529,768    
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  LRCX        2      01-Oct-19   21.3        25.8        25083  ₹111,236      +20.8%    
-  KLAC        1      01-Oct-19   146.4       159.5       3656   ₹47,787       +8.9%     
-  COST        15     01-Aug-19   249.6       270.3       2176   ₹45,138       +8.3%     
-  XEL         12     01-Jul-19   48.4        51.7        11198  ₹37,194       +6.9%     
-  CTAS        13     01-Aug-19   60.5        62.8        8979   ₹20,673       +3.8%     
+  LRCX        2      01-Oct-19   21.3        25.8        24414  ₹108,269      +20.8%    
+  KLAC        1      01-Oct-19   146.4       159.5       3558   ₹46,506       +8.9%     
+  COST        15     01-Aug-19   249.2       269.9       2121   ₹43,933       +8.3%     
+  XEL         12     01-Jul-19   48.4        51.7        10900  ₹36,205       +6.9%     
+  CTAS        13     01-Aug-19   60.5        62.8        8740   ₹20,123       +3.8%     
 
-  AFTER: Invested ₹5,138,105 | Cash ₹302,207 | Total ₹5,440,313 | Positions 9/10 | Slot ₹544,290
+  AFTER: Invested ₹5,000,616 | Cash ₹294,637 | Total ₹5,295,253 | Positions 9/10 | Slot ₹529,777
 
 ========================================================================
   REBALANCE #60  —  02 Dec 2019
-  NAV: ₹5,305,900  |  Slot: ₹530,590  |  Cash: ₹302,207
+  NAV: ₹5,164,432  |  Slot: ₹516,443  |  Cash: ₹294,637
 ========================================================================
 
   EXITS (4)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  COST        31     01-Aug-19   249.6       271.5       2176   ₹47,721       +8.8%     123d  
-  XEL         56     01-Jul-19   48.4        50.2        11198  ₹19,747       +3.6%     154d  
-  CTAS        35     01-Aug-19   60.5        60.3        8979   ₹-1,370       -0.3%     123d  
-  FAST        28     01-Nov-19   15.8        14.9        34365  ₹-32,086      -5.9%     31d   
+  COST        31     01-Aug-19   249.2       271.1       2121   ₹46,447       +8.8%     123d  
+  XEL         55     01-Jul-19   48.4        50.2        10900  ₹19,222       +3.6%     154d  
+  CTAS        35     01-Aug-19   60.5        60.3        8740   ₹-1,333       -0.3%     123d  
+  FAST        28     01-Nov-19   15.8        14.8        33627  ₹-31,230      -5.9%     31d   
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AAPL        2      2.615    1.25   +49.3%    +28.8%    63.7        8332   ₹530,555    
-  LULU        3      2.515    0.95   +74.2%    +25.6%    225.5       2352   ₹530,447    
-  SWKS        7      2.093    1.24   +41.0%    +33.2%    84.2        6304   ₹530,507    
-  MSFT        9      1.906    1.06   +37.7%    +10.3%    141.7       3745   ₹530,560    
+  AAPL        2      2.609    1.25   +49.3%    +28.8%    63.7        8110   ₹516,419    
+  LULU        3      2.509    0.95   +74.2%    +25.6%    225.5       2289   ₹516,238    
+  SWKS        7      2.089    1.24   +41.0%    +33.2%    84.2        6136   ₹516,370    
+  MSFT        9      1.904    1.06   +37.7%    +10.3%    141.7       3645   ₹516,393    
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  LRCX        5      01-Oct-19   21.3        24.4        25083  ₹75,637       +14.1%    
-  PCAR        1      01-Nov-19   40.7        42.3        13365  ₹20,743       +3.8%     
-  KLAC        8      01-Oct-19   146.4       149.7       3656   ₹12,002       +2.2%     
-  CHTR        6      01-Nov-19   476.5       470.3       1142   ₹-7,023       -1.3%     
-  ASML        4      01-Nov-19   254.9       251.3       2135   ₹-7,757       -1.4%     
+  LRCX        5      01-Oct-19   21.3        24.4        24414  ₹73,620       +14.1%    
+  PCAR        1      01-Nov-19   40.7        42.3        13008  ₹20,189       +3.8%     
+  KLAC        8      01-Oct-19   146.4       149.7       3558   ₹11,681       +2.2%     
+  CHTR        6      01-Nov-19   476.5       470.3       1111   ₹-6,833       -1.3%     
+  ASML        4      01-Nov-19   254.4       250.7       2082   ₹-7,548       -1.4%     
 
-  AFTER: Invested ₹4,919,039 | Cash ₹384,341 | Total ₹5,303,380 | Positions 9/10 | Slot ₹530,590
+  AFTER: Invested ₹4,787,290 | Cash ₹374,689 | Total ₹5,161,979 | Positions 9/10 | Slot ₹516,443
 
 ========================================================================
   REBALANCE #61  —  02 Jan 2020
-  NAV: ₹5,822,704  |  Slot: ₹582,270  |  Cash: ₹384,341
+  NAV: ₹5,667,412  |  Slot: ₹566,741  |  Cash: ₹374,689
 ========================================================================
 
   EXITS (0)
@@ -1798,82 +1878,82 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  LRCX        7      01-Oct-19   21.3        27.7        25083  ₹159,834      +29.9%    
-  SWKS        2      02-Dec-19   84.2        104.1       6304   ₹125,723      +23.7%    
-  KLAC        8      01-Oct-19   146.4       169.7       3656   ₹85,100       +15.9%    
-  AAPL        1      02-Dec-19   63.7        72.4        8332   ₹72,686       +13.7%    
-  ASML        4      01-Nov-19   254.9       286.5       2135   ₹67,470       +12.4%    
-  MSFT        6      02-Dec-19   141.7       152.2       3745   ₹39,273       +7.4%     
-  PCAR        12     01-Nov-19   40.7        42.8        13365  ₹28,353       +5.2%     
-  LULU        9      02-Dec-19   225.5       233.4       2352   ₹18,557       +3.5%     
-  CHTR        5      01-Nov-19   476.5       490.4       1142   ₹15,931       +2.9%     
+  LRCX        7      01-Oct-19   21.3        27.7        24414  ₹155,571      +29.9%    
+  SWKS        2      02-Dec-19   84.2        104.1       6136   ₹122,373      +23.7%    
+  KLAC        8      01-Oct-19   146.4       169.7       3558   ₹82,819       +15.9%    
+  AAPL        1      02-Dec-19   63.7        72.4        8110   ₹70,750       +13.7%    
+  ASML        4      01-Nov-19   254.4       285.9       2082   ₹65,651       +12.4%    
+  MSFT        6      02-Dec-19   141.7       152.2       3645   ₹38,224       +7.4%     
+  PCAR        12     01-Nov-19   40.7        42.8        13008  ₹27,595       +5.2%     
+  LULU        9      02-Dec-19   225.5       233.4       2289   ₹18,060       +3.5%     
+  CHTR        5      01-Nov-19   476.5       490.4       1111   ₹15,498       +2.9%     
 
-  AFTER: Invested ₹5,438,363 | Cash ₹384,341 | Total ₹5,822,704 | Positions 9/10 | Slot ₹582,270
+  AFTER: Invested ₹5,292,723 | Cash ₹374,689 | Total ₹5,667,412 | Positions 9/10 | Slot ₹566,741
 
 ========================================================================
   REBALANCE #62  —  03 Feb 2020
-  NAV: ₹5,845,184  |  Slot: ₹584,518  |  Cash: ₹384,341
+  NAV: ₹5,689,279  |  Slot: ₹568,928  |  Cash: ₹374,689
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  KLAC        38     01-Oct-19   146.4       158.0       3656   ₹42,146       +7.9%     125d  
-  ASML        16     01-Nov-19   254.9       272.6       2135   ₹37,835       +7.0%     94d   
-  PCAR        55     01-Nov-19   40.7        40.1        13365  ₹-8,882       -1.6%     94d   
+  KLAC        37     01-Oct-19   146.4       158.0       3558   ₹41,015       +7.9%     125d  
+  ASML        16     01-Nov-19   254.4       272.1       2082   ₹36,816       +7.0%     94d   
+  PCAR        54     01-Nov-19   40.7        40.1        13008  ₹-8,644       -1.6%     94d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  TSLA        1      4.342    1.37   +149.8%   +147.7%   52.0        11240  ₹584,480    
-  VRSK        5      2.405    0.50   +40.1%    +14.4%    158.6       3685   ₹584,487    
-  ADBE        6      2.382    1.08   +44.7%    +28.8%    358.0       1632   ₹584,256    
+  TSLA        1      4.342    1.37   +149.8%   +147.7%   52.0        10940  ₹568,880    
+  VRSK        5      2.408    0.50   +40.1%    +14.4%    158.6       3586   ₹568,785    
+  ADBE        6      2.387    1.08   +44.7%    +28.8%    358.0       1589   ₹568,862    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  LRCX        11     01-Oct-19   21.3        28.7        25083  ₹184,454      +34.5%    
-  SWKS        12     02-Dec-19   84.2        98.4        6304   ₹89,910       +16.9%    
-  AAPL        3      02-Dec-19   63.7        74.4        8332   ₹89,376       +16.8%    
-  MSFT        2      02-Dec-19   141.7       165.2       3745   ₹88,090       +16.6%    
-  CHTR        4      01-Nov-19   476.5       532.0       1142   ₹63,461       +11.7%    
-  LULU        10     02-Dec-19   225.5       246.4       2352   ₹49,016       +9.2%     
+  LRCX        11     01-Oct-19   21.3        28.7        24414  ₹179,535      +34.5%    
+  SWKS        12     02-Dec-19   84.2        98.4        6136   ₹87,514       +16.9%    
+  AAPL        3      02-Dec-19   63.7        74.4        8110   ₹86,995       +16.8%    
+  MSFT        2      02-Dec-19   141.7       165.2       3645   ₹85,737       +16.6%    
+  CHTR        4      01-Nov-19   476.5       532.0       1111   ₹61,738       +11.7%    
+  LULU        10     02-Dec-19   225.5       246.4       2289   ₹47,703       +9.2%     
 
-  AFTER: Invested ₹5,519,100 | Cash ₹324,003 | Total ₹5,843,103 | Positions 9/10 | Slot ₹584,518
+  AFTER: Invested ₹5,371,619 | Cash ₹315,634 | Total ₹5,687,253 | Positions 9/10 | Slot ₹568,928
 
 ========================================================================
   REBALANCE #63  —  02 Mar 2020
-  NAV: ₹5,634,095  |  Slot: ₹563,410  |  Cash: ₹324,003
+  NAV: ₹5,483,845  |  Slot: ₹548,384  |  Cash: ₹315,634
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  SWKS        31     02-Dec-19   84.2        89.6        6304   ₹34,056       +6.4%     91d   
-  LULU        21     02-Dec-19   225.5       228.9       2352   ₹7,926        +1.5%     91d   
+  SWKS        30     02-Dec-19   84.2        89.6        6136   ₹33,148       +6.4%     91d   
+  LULU        21     02-Dec-19   225.5       228.9       2289   ₹7,714        +1.5%     91d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  NVDA        4      2.536    1.65   +77.3%    +26.7%    6.9         81846  ₹563,408    
-  JD          6      2.317    1.49   +50.7%    +30.6%    37.9        14850  ₹563,381    
+  NVDA        4      2.533    1.65   +77.3%    +26.7%    6.9         79663  ₹548,381    
+  JD          6      2.315    1.49   +50.7%    +30.6%    37.9        14454  ₹548,358    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  LRCX        10     01-Oct-19   21.3        27.9        25083  ₹165,528      +30.9%    
-  MSFT        2      02-Dec-19   141.7       164.1       3745   ₹84,123       +15.9%    
-  AAPL        3      02-Dec-19   63.7        72.2        8332   ₹71,018       +13.4%    
-  CHTR        5      01-Nov-19   476.5       497.1       1142   ₹23,582       +4.3%     
-  ADBE        9      03-Feb-20   358.0       360.3       1632   ₹3,721        +0.6%     
-  VRSK        7      03-Feb-20   158.6       156.6       3685   ₹-7,394       -1.3%     
-  TSLA        1      03-Feb-20   52.0        49.6        11240  ₹-27,261      -4.7%     
+  LRCX        10     01-Oct-19   21.3        27.9        24414  ₹161,113      +30.9%    
+  MSFT        2      02-Dec-19   141.7       164.1       3645   ₹81,877       +15.9%    
+  AAPL        3      02-Dec-19   63.7        72.2        8110   ₹69,125       +13.4%    
+  CHTR        5      01-Nov-19   476.5       497.1       1111   ₹22,942       +4.3%     
+  ADBE        9      03-Feb-20   358.0       360.3       1589   ₹3,623        +0.6%     
+  VRSK        7      03-Feb-20   158.6       156.6       3586   ₹-7,195       -1.3%     
+  TSLA        1      03-Feb-20   52.0        49.6        10940  ₹-26,533      -4.7%     
 
-  AFTER: Invested ₹5,333,945 | Cash ₹298,812 | Total ₹5,632,757 | Positions 9/10 | Slot ₹563,410
+  AFTER: Invested ₹5,191,479 | Cash ₹291,063 | Total ₹5,482,542 | Positions 9/10 | Slot ₹548,384
 
 ========================================================================
   REBALANCE #64  —  01 Apr 2020
-  NAV: ₹4,712,533  |  Slot: ₹471,253  |  Cash: ₹298,812
+  NAV: ₹4,586,889  |  Slot: ₹458,689  |  Cash: ₹291,063
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 176.1 < SMA200 192.1 — holding all, skipping exits & entries
@@ -1887,151 +1967,151 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MSFT        11     02-Dec-19   141.7       144.5       3745   ₹10,556       +2.0%     
-  LRCX        24     01-Oct-19   21.3        20.9        25083  ₹-11,043      -2.1%     
-  JD          2      02-Mar-20   37.9        35.8        14850  ₹-31,096      -5.5%     
-  AAPL        18     02-Dec-19   63.7        58.2        8332   ₹-45,548      -8.6%     
-  CHTR        17     01-Nov-19   476.5       424.0       1142   ₹-59,898      -11.0%    
-  NVDA        8      02-Mar-20   6.9         6.1         81846  ₹-67,993      -12.1%    
-  VRSK        20     03-Feb-20   158.6       135.4       3685   ₹-85,572      -14.6%    
-  ADBE        19     03-Feb-20   358.0       301.2       1632   ₹-92,681      -15.9%    
-  TSLA        3      03-Feb-20   52.0        32.1        11240  ₹-223,631     -38.3%    
+  MSFT        11     02-Dec-19   141.7       144.5       3645   ₹10,274       +2.0%     
+  LRCX        24     01-Oct-19   21.3        20.9        24414  ₹-10,748      -2.1%     
+  JD          2      02-Mar-20   37.9        35.8        14454  ₹-30,267      -5.5%     
+  AAPL        18     02-Dec-19   63.7        58.2        8110   ₹-44,335      -8.6%     
+  CHTR        17     01-Nov-19   476.5       424.0       1111   ₹-58,272      -11.0%    
+  NVDA        8      02-Mar-20   6.9         6.1         79663  ₹-66,180      -12.1%    
+  VRSK        20     03-Feb-20   158.6       135.4       3586   ₹-83,273      -14.6%    
+  ADBE        19     03-Feb-20   358.0       301.2       1589   ₹-90,239      -15.9%    
+  TSLA        3      03-Feb-20   52.0        32.1        10940  ₹-217,662     -38.3%    
 
-  AFTER: Invested ₹4,413,721 | Cash ₹298,812 | Total ₹4,712,533 | Positions 9/10 | Slot ₹471,253
+  AFTER: Invested ₹4,295,826 | Cash ₹291,063 | Total ₹4,586,889 | Positions 9/10 | Slot ₹458,689
 
 ========================================================================
   REBALANCE #65  —  01 May 2020
-  NAV: ₹5,380,799  |  Slot: ₹538,080  |  Cash: ₹298,812
+  NAV: ₹5,237,295  |  Slot: ₹523,730  |  Cash: ₹291,063
 ========================================================================
 
   EXITS (4)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AAPL        21     02-Dec-19   63.7        69.8        8332   ₹51,409       +9.7%     151d  
-  LRCX        51     01-Oct-19   21.3        22.0        25083  ₹16,402       +3.1%     213d  
-  ADBE        26     03-Feb-20   358.0       343.8       1632   ₹-23,109      -4.0%     88d   
-  VRSK        41     03-Feb-20   158.6       147.6       3685   ₹-40,670      -7.0%     88d   
+  AAPL        21     02-Dec-19   63.7        69.8        8110   ₹50,039       +9.7%     151d  
+  LRCX        50     01-Oct-19   21.3        22.0        24414  ₹15,965       +3.1%     213d  
+  ADBE        26     03-Feb-20   358.0       343.8       1589   ₹-22,500      -4.0%     88d   
+  VRSK        41     03-Feb-20   158.6       147.6       3586   ₹-39,577      -7.0%     88d   
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  DXCM        1      4.522    0.74   +183.7%   +41.9%    85.4        6302   ₹538,065    
-  REGN        2      4.094    0.61   +56.7%    +55.5%    522.0       1030   ₹537,633    
-  GILD        4      2.656    0.53   +27.1%    +27.7%    63.6        8455   ₹538,066    
-  INCY        5      2.616    0.63   +20.2%    +33.2%    97.3        5530   ₹538,069    
+  DXCM        1      4.504    0.74   +183.7%   +41.9%    85.4        6134   ₹523,721    
+  REGN        2      4.078    0.61   +56.7%    +55.5%    522.0       1003   ₹523,540    
+  GILD        4      2.647    0.53   +27.1%    +27.7%    63.6        8229   ₹523,683    
+  INCY        5      2.607    0.63   +20.2%    +33.2%    97.3        5382   ₹523,669    
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MSFT        13     02-Dec-19   141.7       165.8       3745   ₹90,455       +17.0%    
-  CHTR        15     01-Nov-19   476.5       509.6       1142   ₹37,869       +7.0%     
-  NVDA        7      02-Mar-20   6.9         7.0         81846  ₹12,942       +2.3%     
-  JD          11     02-Mar-20   37.9        36.3        14850  ₹-24,981      -4.4%     
-  TSLA        3      03-Feb-20   52.0        46.8        11240  ₹-58,958      -10.1%    
+  MSFT        13     02-Dec-19   141.7       165.8       3645   ₹88,040       +17.0%    
+  CHTR        15     01-Nov-19   476.5       509.6       1111   ₹36,841       +7.0%     
+  NVDA        7      02-Mar-20   6.9         7.0         79663  ₹12,597       +2.3%     
+  JD          11     02-Mar-20   37.9        36.3        14454  ₹-24,315      -4.4%     
+  TSLA        3      03-Feb-20   52.0        46.8        10940  ₹-57,384      -10.1%    
 
-  AFTER: Invested ₹4,995,129 | Cash ₹383,115 | Total ₹5,378,244 | Positions 9/10 | Slot ₹538,080
+  AFTER: Invested ₹4,861,771 | Cash ₹373,037 | Total ₹5,234,808 | Positions 9/10 | Slot ₹523,730
 
 ========================================================================
   REBALANCE #66  —  01 Jun 2020
-  NAV: ₹6,034,965  |  Slot: ₹603,496  |  Cash: ₹383,115
+  NAV: ₹5,874,028  |  Slot: ₹587,403  |  Cash: ₹373,037
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MSFT        30     02-Dec-19   141.7       174.2       3745   ₹121,651      +22.9%    182d  
-  CHTR        23     01-Nov-19   476.5       541.3       1142   ₹74,024       +13.6%    213d  
-  GILD        47     01-May-20   63.6        59.8        8455   ₹-32,237      -6.0%     31d   
+  MSFT        30     02-Dec-19   141.7       174.2       3645   ₹118,402      +22.9%    182d  
+  CHTR        23     01-Nov-19   476.5       541.3       1111   ₹72,015       +13.6%    213d  
+  GILD        46     01-May-20   63.6        59.8        8229   ₹-31,375      -6.0%     31d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ZM          2      3.347    0.03   +156.1%   +80.5%    204.1       2956   ₹603,467    
-  LULU        7      2.419    1.03   +86.4%    +34.9%    308.7       1955   ₹603,489    
-  AMZN        8      2.313    0.73   +39.2%    +26.5%    123.6       4884   ₹603,428    
+  ZM          2      3.334    0.03   +156.1%   +80.5%    204.1       2877   ₹587,340    
+  LULU        7      2.412    1.03   +86.4%    +34.9%    308.7       1902   ₹587,128    
+  AMZN        8      2.306    0.73   +39.2%    +26.5%    123.6       4754   ₹587,366    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        5      02-Mar-20   6.9         8.8         81846  ₹154,533      +27.4%    
-  JD          6      02-Mar-20   37.9        48.0        14850  ₹148,717      +26.4%    
-  TSLA        1      03-Feb-20   52.0        59.9        11240  ₹88,496       +15.1%    
-  REGN        4      01-May-20   522.0       595.4       1030   ₹75,678       +14.1%    
-  DXCM        3      01-May-20   85.4        94.7        6302   ₹58,577       +10.9%    
-  INCY        15     01-May-20   97.3        101.8       5530   ₹24,608       +4.6%     
+  NVDA        5      02-Mar-20   6.9         8.8         79663  ₹150,411      +27.4%    
+  JD          6      02-Mar-20   37.9        48.0        14454  ₹144,751      +26.4%    
+  TSLA        1      03-Feb-20   52.0        59.9        10940  ₹86,134       +15.1%    
+  REGN        4      01-May-20   522.0       595.4       1003   ₹73,694       +14.1%    
+  DXCM        3      01-May-20   85.4        94.7        6134   ₹57,016       +10.9%    
+  INCY        15     01-May-20   97.3        101.8       5382   ₹23,950       +4.6%     
 
-  AFTER: Invested ₹5,686,030 | Cash ₹346,785 | Total ₹6,032,815 | Positions 9/10 | Slot ₹603,496
+  AFTER: Invested ₹5,534,338 | Cash ₹337,598 | Total ₹5,871,936 | Positions 9/10 | Slot ₹587,403
 
 ========================================================================
   REBALANCE #67  —  01 Jul 2020
-  NAV: ₹6,637,468  |  Slot: ₹663,747  |  Cash: ₹346,785
+  NAV: ₹6,460,460  |  Slot: ₹646,046  |  Cash: ₹337,598
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  JD          12     02-Mar-20   37.9        52.6        14850  ₹217,286      +38.6%    121d  
-  REGN        17     01-May-20   522.0       605.1       1030   ₹85,602       +15.9%    61d   
-  INCY        32     01-May-20   97.3        102.7       5530   ₹29,585       +5.5%     61d   
+  JD          12     02-Mar-20   37.9        52.6        14454  ₹211,491      +38.6%    121d  
+  REGN        17     01-May-20   522.0       605.1       1003   ₹83,358       +15.9%    61d   
+  INCY        32     01-May-20   97.3        102.7       5382   ₹28,794       +5.5%     61d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  DOCU        1      4.282    0.70   +248.6%   +94.3%    179.0       3708   ₹663,584    
-  EBAY        3      3.077    0.61   +34.2%    +84.7%    48.1        13805  ₹663,711    
-  MELI        5      2.694    1.10   +55.8%    +118.4%   977.1       679    ₹663,478    
+  DOCU        1      4.266    0.70   +248.6%   +94.3%    179.0       3610   ₹646,046    
+  EBAY        3      3.067    0.61   +34.2%    +84.7%    48.1        13437  ₹646,018    
+  MELI        5      2.687    1.10   +55.8%    +118.4%   977.1       661    ₹645,890    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        2      03-Feb-20   52.0        74.6        11240  ₹254,496      +43.5%    
-  NVDA        10     02-Mar-20   6.9         9.5         81846  ₹213,893      +38.0%    
-  ZM          4      01-Jun-20   204.1       259.1       2956   ₹162,521      +26.9%    
-  DXCM        7      01-May-20   85.4        100.1       6302   ₹92,466       +17.2%    
-  AMZN        8      01-Jun-20   123.6       143.9       4884   ₹99,551       +16.5%    
-  LULU        11     01-Jun-20   308.7       308.6       1955   ₹-137         -0.0%     
+  TSLA        2      03-Feb-20   52.0        74.6        10940  ₹247,703      +43.5%    
+  NVDA        10     02-Mar-20   6.9         9.5         79663  ₹208,188      +38.0%    
+  ZM          4      01-Jun-20   204.1       259.1       2877   ₹158,177      +26.9%    
+  DXCM        7      01-May-20   85.4        100.1       6134   ₹90,001       +17.2%    
+  AMZN        8      01-Jun-20   123.6       143.9       4754   ₹96,901       +16.5%    
+  LULU        11     01-Jun-20   308.7       308.6       1902   ₹-133         -0.0%     
 
-  AFTER: Invested ₹6,309,899 | Cash ₹325,205 | Total ₹6,635,104 | Positions 9/10 | Slot ₹663,747
+  AFTER: Invested ₹6,141,607 | Cash ₹316,552 | Total ₹6,458,159 | Positions 9/10 | Slot ₹646,046
 
 ========================================================================
   REBALANCE #68  —  03 Aug 2020
-  NAV: ₹7,573,734  |  Slot: ₹757,373  |  Cash: ₹325,205
+  NAV: ₹7,371,800  |  Slot: ₹737,180  |  Cash: ₹316,552
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  DXCM        14     01-May-20   85.4        110.9       6302   ₹160,937      +29.9%    94d   
-  LULU        15     01-Jun-20   308.7       328.6       1955   ₹38,904       +6.4%     63d   
+  DXCM        14     01-May-20   85.4        110.9       6134   ₹156,647      +29.9%    94d   
+  LULU        15     01-Jun-20   308.7       328.6       1902   ₹37,850       +6.4%     63d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  MRNA        3      2.785    -0.04  +512.6%   +54.4%    78.0        9712   ₹757,342    
-  JD          6      2.449    0.92   +130.4%   +52.7%    56.5        13395  ₹757,342    
+  MRNA        3      2.772    -0.04  +512.6%   +54.4%    78.0        9453   ₹737,145    
+  JD          6      2.438    0.92   +130.4%   +52.7%    56.5        13038  ₹737,158    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        2      03-Feb-20   52.0        99.0        11240  ₹528,280      +90.4%    
-  NVDA        8      02-Mar-20   6.9         11.0        81846  ₹334,627      +59.4%    
-  ZM          4      01-Jun-20   204.1       268.0       2956   ₹188,741      +31.3%    
-  DOCU        1      01-Jul-20   179.0       226.3       3708   ₹175,463      +26.4%    
-  AMZN        11     01-Jun-20   123.6       155.6       4884   ₹156,496      +25.9%    
-  MELI        5      01-Jul-20   977.1       1,172.6     679    ₹132,731      +20.0%    
-  EBAY        13     01-Jul-20   48.1        51.4        13805  ₹45,242       +6.8%     
+  TSLA        2      03-Feb-20   52.0        99.0        10940  ₹514,180      +90.4%    
+  NVDA        8      02-Mar-20   6.9         11.0        79663  ₹325,702      +59.4%    
+  ZM          4      01-Jun-20   204.1       268.0       2877   ₹183,696      +31.3%    
+  DOCU        1      01-Jul-20   179.0       226.3       3610   ₹170,825      +26.4%    
+  AMZN        11     01-Jun-20   123.6       155.6       4754   ₹152,330      +25.9%    
+  MELI        5      01-Jul-20   977.1       1,172.6     661    ₹129,212      +20.0%    
+  EBAY        13     01-Jul-20   48.1        51.4        13437  ₹44,036       +6.8%     
 
-  AFTER: Invested ₹7,421,818 | Cash ₹150,118 | Total ₹7,571,936 | Positions 9/10 | Slot ₹757,373
+  AFTER: Invested ₹7,224,204 | Cash ₹145,845 | Total ₹7,370,049 | Positions 9/10 | Slot ₹737,180
 
 ========================================================================
   REBALANCE #69  —  01 Sep 2020
-  NAV: ₹9,340,250  |  Slot: ₹934,025  |  Cash: ₹150,118
+  NAV: ₹9,091,207  |  Slot: ₹909,121  |  Cash: ₹145,845
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  EBAY        34     01-Jul-20   48.1        48.8        13805  ₹10,636       +1.6%     62d   
+  EBAY        34     01-Jul-20   48.1        48.8        13437  ₹10,352       +1.6%     62d   
 
   ENTRIES (0)
     —
@@ -2039,106 +2119,106 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        1      03-Feb-20   52.0        158.4       11240  ₹1,195,374    +204.5%   
-  ZM          3      01-Jun-20   204.1       457.7       2956   ₹749,464      +124.2%   
-  NVDA        5      02-Mar-20   6.9         13.8        81846  ₹564,219      +100.1%   
-  DOCU        2      01-Jul-20   179.0       268.8       3708   ₹333,127      +50.2%    
-  AMZN        8      01-Jun-20   123.6       175.0       4884   ₹251,057      +41.6%    
-  JD          7      03-Aug-20   56.5        72.3        13395  ₹210,784      +27.8%    
-  MELI        9      01-Jul-20   977.1       1,209.3     679    ₹157,609      +23.8%    
-  MRNA        20     03-Aug-20   78.0        63.3        9712   ₹-142,378     -18.8%    
+  TSLA        1      03-Feb-20   52.0        158.4       10940  ₹1,163,469    +204.5%   
+  ZM          3      01-Jun-20   204.1       457.7       2877   ₹729,435      +124.2%   
+  NVDA        5      02-Mar-20   6.9         13.8        79663  ₹549,170      +100.1%   
+  DOCU        2      01-Jul-20   179.0       268.8       3610   ₹324,322      +50.2%    
+  AMZN        8      01-Jun-20   123.6       175.0       4754   ₹244,375      +41.6%    
+  JD          7      03-Aug-20   56.5        72.3        13038  ₹205,166      +27.8%    
+  MELI        9      01-Jul-20   977.1       1,209.3     661    ₹153,431      +23.8%    
+  MRNA        20     03-Aug-20   78.0        63.3        9453   ₹-138,581     -18.8%    
 
-  AFTER: Invested ₹8,515,786 | Cash ₹824,464 | Total ₹9,340,250 | Positions 8/10 | Slot ₹934,025
+  AFTER: Invested ₹8,288,991 | Cash ₹802,215 | Total ₹9,091,207 | Positions 8/10 | Slot ₹909,121
 
 ========================================================================
   REBALANCE #70  —  01 Oct 2020
-  NAV: ₹9,012,406  |  Slot: ₹901,241  |  Cash: ₹824,464
+  NAV: ₹8,772,049  |  Slot: ₹877,205  |  Cash: ₹802,215
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MELI        23     01-Jul-20   977.1       1,115.3     679    ₹93,838       +14.1%    92d   
+  MELI        23     01-Jul-20   977.1       1,115.3     661    ₹91,350       +14.1%    92d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AMD         3      3.123    1.26   +199.8%   +62.1%    84.9        10620  ₹901,213    
+  AMD         3      3.110    1.26   +199.8%   +62.1%    84.9        10337  ₹877,198    
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        1      03-Feb-20   52.0        149.4       11240  ₹1,094,626    +187.3%   
-  ZM          2      01-Jun-20   204.1       483.0       2956   ₹824,251      +136.6%   
-  NVDA        4      02-Mar-20   6.9         13.6        81846  ₹547,371      +97.2%    
-  AMZN        13     01-Jun-20   123.6       161.1       4884   ₹183,204      +30.4%    
-  DOCU        6      01-Jul-20   179.0       222.3       3708   ₹160,556      +24.2%    
-  JD          5      03-Aug-20   56.5        68.8        13395  ₹164,777      +21.8%    
-  MRNA        8      03-Aug-20   78.0        70.0        9712   ₹-77,210      -10.2%    
+  TSLA        1      03-Feb-20   52.0        149.4       10940  ₹1,065,410    +187.3%   
+  ZM          2      01-Jun-20   204.1       483.0       2877   ₹802,223      +136.6%   
+  NVDA        4      02-Mar-20   6.9         13.6        79663  ₹532,771      +97.2%    
+  AMZN        13     01-Jun-20   123.6       161.1       4754   ₹178,327      +30.4%    
+  DOCU        6      01-Jul-20   179.0       222.3       3610   ₹156,313      +24.2%    
+  JD          5      03-Aug-20   56.5        68.8        13038  ₹160,386      +21.8%    
+  MRNA        8      03-Aug-20   78.0        70.0        9453   ₹-75,151      -10.2%    
 
-  AFTER: Invested ₹8,331,840 | Cash ₹679,497 | Total ₹9,011,336 | Positions 8/10 | Slot ₹901,241
+  AFTER: Invested ₹8,109,792 | Cash ₹661,216 | Total ₹8,771,007 | Positions 8/10 | Slot ₹877,205
 
 ========================================================================
   REBALANCE #71  —  02 Nov 2020
-  NAV: ₹8,437,875  |  Slot: ₹843,788  |  Cash: ₹679,497
+  NAV: ₹8,212,827  |  Slot: ₹821,283  |  Cash: ₹661,216
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AMZN        26     01-Jun-20   123.6       150.2       4884   ₹130,266      +21.6%    154d  
-  AMD         37     01-Oct-20   84.9        74.7        10620  ₹-107,899     -12.0%    32d   
+  AMZN        25     01-Jun-20   123.6       150.2       4754   ₹126,799      +21.6%    154d  
+  AMD         36     01-Oct-20   84.9        74.7        10337  ₹-105,024     -12.0%    32d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ALGN        4      2.711    1.17   +78.4%    +59.0%    458.4       1840   ₹843,530    
-  MELI        6      1.918    1.08   +148.1%   +3.6%     1,215.9     693    ₹842,591    
+  ALGN        4      2.716    1.17   +78.4%    +59.0%    458.4       1791   ₹821,066    
+  MELI        6      1.919    1.08   +148.1%   +3.6%     1,215.9     675    ₹820,705    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        2      03-Feb-20   52.0        133.5       11240  ₹916,097      +156.7%   
-  ZM          1      01-Jun-20   204.1       453.0       2956   ₹735,601      +121.9%   
-  NVDA        5      02-Mar-20   6.9         12.5        81846  ₹463,030      +82.2%    
-  JD          3      03-Aug-20   56.5        72.1        13395  ₹208,789      +27.6%    
-  DOCU        8      01-Jul-20   179.0       201.6       3708   ₹83,801       +12.6%    
-  MRNA        7      03-Aug-20   78.0        67.1        9712   ₹-105,569     -13.9%    
+  TSLA        2      03-Feb-20   52.0        133.5       10940  ₹891,646      +156.7%   
+  ZM          1      01-Jun-20   204.1       453.0       2877   ₹715,941      +121.9%   
+  NVDA        5      02-Mar-20   6.9         12.5        79663  ₹450,680      +82.2%    
+  JD          3      03-Aug-20   56.5        72.1        13038  ₹203,224      +27.6%    
+  DOCU        8      01-Jul-20   179.0       201.6       3610   ₹81,586       +12.6%    
+  MRNA        7      03-Aug-20   78.0        67.1        9453   ₹-102,754     -13.9%    
 
-  AFTER: Invested ₹7,917,491 | Cash ₹518,382 | Total ₹8,435,873 | Positions 8/10 | Slot ₹843,788
+  AFTER: Invested ₹7,707,044 | Cash ₹503,833 | Total ₹8,210,877 | Positions 8/10 | Slot ₹821,283
 
 ========================================================================
   REBALANCE #72  —  01 Dec 2020
-  NAV: ₹10,148,643  |  Slot: ₹1,014,864  |  Cash: ₹518,382
+  NAV: ₹9,878,126  |  Slot: ₹987,813  |  Cash: ₹503,833
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  NVDA        23     02-Mar-20   6.9         13.3        81846  ₹529,055      +93.9%    274d  
-  DOCU        37     01-Jul-20   179.0       215.7       3708   ₹136,269      +20.5%    153d  
+  NVDA        23     02-Mar-20   6.9         13.3        79663  ₹514,944      +93.9%    274d  
+  DOCU        36     01-Jul-20   179.0       215.7       3610   ₹132,668      +20.5%    153d  
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  PDD         3      3.254    0.65   +278.9%   +49.5%    136.5       7432   ₹1,014,765  
-  MU          7      2.005    1.18   +44.6%    +46.6%    65.4        15512  ₹1,014,830  
+  PDD         3      3.243    0.65   +278.9%   +49.5%    136.5       7234   ₹987,730    
+  MU          7      2.001    1.18   +44.6%    +46.6%    65.4        15099  ₹987,811    
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        2      03-Feb-20   52.0        194.9       11240  ₹1,606,421    +274.8%   
-  ZM          5      01-Jun-20   204.1       406.3       2956   ₹597,585      +99.0%    
-  MRNA        1      03-Aug-20   78.0        141.0       9712   ₹612,147      +80.8%    
-  JD          11     03-Aug-20   56.5        74.8        13395  ₹244,467      +32.3%    
-  MELI        6      02-Nov-20   1,215.9     1,521.7     693    ₹211,919      +25.2%    
-  ALGN        4      02-Nov-20   458.4       500.1       1840   ₹76,654       +9.1%     
+  TSLA        2      03-Feb-20   52.0        194.9       10940  ₹1,563,545    +274.8%   
+  ZM          5      01-Jun-20   204.1       406.3       2877   ₹581,614      +99.0%    
+  MRNA        1      03-Aug-20   78.0        141.0       9453   ₹595,823      +80.8%    
+  JD          11     03-Aug-20   56.5        74.8        13038  ₹237,951      +32.3%    
+  MELI        6      02-Nov-20   1,215.9     1,521.7     675    ₹206,415      +25.2%    
+  ALGN        4      02-Nov-20   458.4       500.1       1791   ₹74,613       +9.1%     
 
-  AFTER: Invested ₹9,767,541 | Cash ₹378,692 | Total ₹10,146,233 | Positions 8/10 | Slot ₹1,014,864
+  AFTER: Invested ₹9,507,796 | Cash ₹367,984 | Total ₹9,875,780 | Positions 8/10 | Slot ₹987,813
 
 ========================================================================
   REBALANCE #73  —  04 Jan 2021
-  NAV: ₹10,740,305  |  Slot: ₹1,074,031  |  Cash: ₹378,692
+  NAV: ₹10,454,075  |  Slot: ₹1,045,407  |  Cash: ₹367,984
 ========================================================================
 
   EXITS (0)
@@ -2150,409 +2230,404 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        2      03-Feb-20   52.0        243.3       11240  ₹2,149,725    +367.8%   
-  ZM          10     01-Jun-20   204.1       360.0       2956   ₹460,634      +76.3%    
-  MRNA        4      03-Aug-20   78.0        111.7       9712   ₹327,780      +43.3%    
-  MELI        5      02-Nov-20   1,215.9     1,640.0     693    ₹293,929      +34.9%    
-  JD          15     03-Aug-20   56.5        75.6        13395  ₹255,851      +33.8%    
-  PDD         1      01-Dec-20   136.5       166.8       7432   ₹224,744      +22.1%    
-  ALGN        6      02-Nov-20   458.4       526.5       1840   ₹125,157      +14.8%    
-  MU          8      01-Dec-20   65.4        72.2        15512  ₹105,447      +10.4%    
+  TSLA        2      03-Feb-20   52.0        243.3       10940  ₹2,092,348    +367.8%   
+  ZM          10     01-Jun-20   204.1       360.0       2877   ₹448,323      +76.3%    
+  MRNA        4      03-Aug-20   78.0        111.7       9453   ₹319,039      +43.3%    
+  MELI        5      02-Nov-20   1,215.9     1,640.0     675    ₹286,295      +34.9%    
+  JD          15     03-Aug-20   56.5        75.6        13038  ₹249,032      +33.8%    
+  PDD         1      01-Dec-20   136.5       166.8       7234   ₹218,756      +22.1%    
+  ALGN        6      02-Nov-20   458.4       526.5       1791   ₹121,824      +14.8%    
+  MU          8      01-Dec-20   65.4        72.2        15099  ₹102,639      +10.4%    
 
-  AFTER: Invested ₹10,361,613 | Cash ₹378,692 | Total ₹10,740,305 | Positions 8/10 | Slot ₹1,074,031
+  AFTER: Invested ₹10,086,090 | Cash ₹367,984 | Total ₹10,454,075 | Positions 8/10 | Slot ₹1,045,407
 
 ========================================================================
   REBALANCE #74  —  01 Feb 2021
-  NAV: ₹12,078,137  |  Slot: ₹1,207,814  |  Cash: ₹378,692
+  NAV: ₹11,756,348  |  Slot: ₹1,175,635  |  Cash: ₹367,984
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ALGN        28     02-Nov-20   458.4       543.0       1840   ₹155,682      +18.5%    91d   
+  ALGN        28     02-Nov-20   458.4       543.0       1791   ₹151,536      +18.5%    91d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  BIDU        4      3.305    0.73   +95.8%    +83.3%    241.9       4993   ₹1,207,757  
+  BIDU        4      3.297    0.73   +95.8%    +83.3%    241.9       4860   ₹1,175,585  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        2      03-Feb-20   52.0        279.9       11240  ₹2,562,008    +438.3%   
-  MRNA        1      03-Aug-20   78.0        157.5       9712   ₹772,104      +101.9%   
-  ZM          15     01-Jun-20   204.1       381.9       2956   ₹525,518      +87.1%    
-  MELI        5      02-Nov-20   1,215.9     1,896.8     693    ₹471,885      +56.0%    
-  JD          20     03-Aug-20   56.5        80.0        13395  ₹313,828      +41.4%    
-  PDD         3      01-Dec-20   136.5       174.0       7432   ₹278,106      +27.4%    
-  MU          8      01-Dec-20   65.4        78.4        15512  ₹201,967      +19.9%    
+  TSLA        2      03-Feb-20   52.0        279.9       10940  ₹2,493,627    +438.3%   
+  MRNA        1      03-Aug-20   78.0        157.5       9453   ₹751,513      +101.9%   
+  ZM          15     01-Jun-20   204.1       381.9       2877   ₹511,473      +87.1%    
+  MELI        5      02-Nov-20   1,215.9     1,896.8     675    ₹459,628      +56.0%    
+  JD          20     03-Aug-20   56.5        80.0        13038  ₹305,464      +41.4%    
+  PDD         3      01-Dec-20   136.5       174.0       7234   ₹270,696      +27.4%    
+  MU          8      01-Dec-20   65.4        78.4        15099  ₹196,590      +19.9%    
 
-  AFTER: Invested ₹11,907,990 | Cash ₹168,713 | Total ₹12,076,703 | Positions 8/10 | Slot ₹1,207,814
+  AFTER: Invested ₹11,591,346 | Cash ₹163,606 | Total ₹11,754,952 | Positions 8/10 | Slot ₹1,175,635
 
 ========================================================================
   REBALANCE #75  —  01 Mar 2021
-  NAV: ₹12,230,637  |  Slot: ₹1,223,064  |  Cash: ₹168,713
+  NAV: ₹11,904,719  |  Slot: ₹1,190,472  |  Cash: ₹163,606
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ZM          21     01-Jun-20   204.1       409.7       2956   ₹607,488      +100.7%   273d  
+  ZM          21     01-Jun-20   204.1       409.7       2877   ₹591,252      +100.7%   273d  
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CDNS        5      2.233    1.13   +122.9%   +30.4%    147.4       8295   ₹1,223,015  
+  CDNS        5      2.232    1.13   +122.9%   +30.4%    147.4       8074   ₹1,190,431  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        4      03-Feb-20   52.0        239.5       11240  ₹2,107,238    +360.5%   
-  MRNA        3      03-Aug-20   78.0        157.4       9712   ₹771,327      +101.8%   
-  JD          14     03-Aug-20   56.5        85.9        13395  ₹393,048      +51.9%    
-  MU          11     01-Dec-20   65.4        92.4        15512  ₹418,761      +41.3%    
-  MELI        12     02-Nov-20   1,215.9     1,713.3     693    ₹344,712      +40.9%    
-  PDD         2      01-Dec-20   136.5       186.1       7432   ₹368,702      +36.3%    
-  BIDU        1      01-Feb-21   241.9       295.6       4993   ₹268,074      +22.2%    
+  TSLA        4      03-Feb-20   52.0        239.5       10940  ₹2,050,995    +360.5%   
+  MRNA        3      03-Aug-20   78.0        157.4       9453   ₹750,757      +101.8%   
+  JD          14     03-Aug-20   56.5        85.9        13038  ₹382,573      +51.9%    
+  MU          11     01-Dec-20   65.4        92.4        15099  ₹407,612      +41.3%    
+  MELI        12     02-Nov-20   1,215.9     1,713.3     675    ₹335,759      +40.9%    
+  PDD         2      01-Dec-20   136.5       186.1       7234   ₹358,879      +36.3%    
+  BIDU        1      01-Feb-21   241.9       295.6       4860   ₹260,933      +22.2%    
 
-  AFTER: Invested ₹12,073,984 | Cash ₹155,201 | Total ₹12,229,185 | Positions 8/10 | Slot ₹1,223,064
+  AFTER: Invested ₹11,752,952 | Cash ₹150,353 | Total ₹11,903,305 | Positions 8/10 | Slot ₹1,190,472
 
 ========================================================================
   REBALANCE #76  —  01 Apr 2021
-  NAV: ₹10,696,494  |  Slot: ₹1,069,649  |  Cash: ₹155,201
+  NAV: ₹10,411,371  |  Slot: ₹1,041,137  |  Cash: ₹150,353
 ========================================================================
 
   EXITS (5)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  JD          61     03-Aug-20   56.5        73.9        13395  ₹232,144      +30.7%    241d  
-  MELI        25     02-Nov-20   1,215.9     1,510.5     693    ₹204,186      +24.2%    150d  
-  PDD         38     01-Dec-20   136.5       143.9       7432   ₹54,922       +5.4%     121d  
-  CDNS        29     01-Mar-21   147.4       141.5       8295   ₹-49,355      -4.0%     31d   
-  BIDU        55     01-Feb-21   241.9       219.7       4993   ₹-110,795     -9.2%     59d   
+  JD          60     03-Aug-20   56.5        73.9        13038  ₹225,957      +30.7%    241d  
+  MELI        24     02-Nov-20   1,215.9     1,510.5     675    ₹198,882      +24.2%    150d  
+  PDD         37     01-Dec-20   136.5       143.9       7234   ₹53,459       +5.4%     121d  
+  CDNS        28     01-Mar-21   147.4       141.5       8074   ₹-48,040      -4.0%     31d   
+  BIDU        54     01-Feb-21   241.9       219.7       4860   ₹-107,843     -9.2%     59d   
 
   ENTRIES (5)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AMAT        1      3.665    1.26   +230.8%   +63.0%    135.6       7887   ₹1,069,588  
-  ASML        3      2.581    1.11   +158.1%   +30.0%    608.2       1758   ₹1,069,217  
-  EXPE        4      2.444    0.69   +238.3%   +33.2%    174.1       6142   ₹1,069,589  
-  EBAY        5      2.407    0.63   +122.1%   +25.2%    57.8        18498  ₹1,069,620  
-  KLAC        6      2.280    1.41   +168.1%   +33.9%    329.5       3245   ₹1,069,364  
+  AMAT        1      3.690    1.26   +230.8%   +63.0%    135.6       7677   ₹1,041,109  
+  ASML        3      2.600    1.11   +158.1%   +30.0%    606.9       1715   ₹1,040,791  
+  EXPE        4      2.460    0.69   +238.3%   +33.2%    174.1       5978   ₹1,041,030  
+  EBAY        5      2.426    0.63   +122.1%   +25.2%    57.8        18005  ₹1,041,113  
+  KLAC        6      2.298    1.41   +168.1%   +33.9%    329.5       3159   ₹1,041,023  
 
   HOLDS (3)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        2      03-Feb-20   52.0        220.6       11240  ₹1,894,877    +324.2%   
-  MRNA        16     03-Aug-20   78.0        132.6       9712   ₹529,984      +70.0%    
-  MU          13     01-Dec-20   65.4        90.1        15512  ₹383,209      +37.8%    
+  TSLA        2      03-Feb-20   52.0        220.6       10940  ₹1,844,302    +324.2%   
+  MRNA        15     03-Aug-20   78.0        132.6       9453   ₹515,850      +70.0%    
+  MU          12     01-Dec-20   65.4        90.1        15099  ₹373,006      +37.8%    
 
-  AFTER: Invested ₹10,512,099 | Cash ₹178,046 | Total ₹10,690,145 | Positions 8/10 | Slot ₹1,069,649
+  AFTER: Invested ₹10,232,059 | Cash ₹173,131 | Total ₹10,405,190 | Positions 8/10 | Slot ₹1,041,137
 
 ========================================================================
   REBALANCE #77  —  03 May 2021
-  NAV: ₹10,949,268  |  Slot: ₹1,094,927  |  Cash: ₹178,046
+  NAV: ₹10,657,377  |  Slot: ₹1,065,738  |  Cash: ₹173,131
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MU          42     01-Dec-20   65.4        82.9        15512  ₹271,408      +26.7%    153d  
-  EBAY        67     01-Apr-21   57.8        53.3        18498  ₹-84,064      -7.9%     32d   
-  KLAC        34     01-Apr-21   329.5       295.3       3245   ₹-111,035     -10.4%    32d   
+  MU          41     01-Dec-20   65.4        82.9        15099  ₹264,182      +26.7%    153d  
+  EBAY        66     01-Apr-21   57.8        53.3        18005  ₹-81,824      -7.9%     32d   
+  KLAC        33     01-Apr-21   329.5       295.3       3159   ₹-108,092     -10.4%    32d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  GOOG        2      2.562    0.89   +81.4%    +26.0%    118.8       9217   ₹1,094,826  
-  ORLY        3      2.526    0.32   +47.5%    +27.1%    37.0        29594  ₹1,094,899  
-  GOOGL       5      2.383    0.90   +77.9%    +23.8%    116.2       9423   ₹1,094,893  
+  GOOG        2      2.589    0.89   +81.4%    +26.0%    118.8       8972   ₹1,065,724  
+  ORLY        3      2.557    0.32   +47.5%    +27.1%    37.0        28805  ₹1,065,708  
+  LRCX        6      2.329    1.26   +166.0%   +23.4%    58.5        18212  ₹1,065,721  
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TSLA        10     03-Feb-20   52.0        228.3       11240  ₹1,981,612    +339.0%   
-  MRNA        15     03-Aug-20   78.0        186.0       9712   ₹1,049,284    +138.5%   
-  ASML        6      01-Apr-21   608.2       626.6       1758   ₹32,263       +3.0%     
-  EXPE        4      01-Apr-21   174.1       173.0       6142   ₹-6,748       -0.6%     
-  AMAT        1      01-Apr-21   135.6       127.3       7887   ₹-65,527      -6.1%     
+  TSLA        9      03-Feb-20   52.0        228.3       10940  ₹1,928,722    +339.0%   
+  MRNA        14     03-Aug-20   78.0        186.0       9453   ₹1,021,302    +138.5%   
+  ASML        5      01-Apr-21   606.9       625.2       1715   ₹31,404       +3.0%     
+  EXPE        4      01-Apr-21   174.1       173.0       5978   ₹-6,568       -0.6%     
+  AMAT        1      01-Apr-21   135.6       127.3       7677   ₹-63,782      -6.1%     
 
-  AFTER: Invested ₹10,825,717 | Cash ₹119,651 | Total ₹10,945,368 | Positions 8/10 | Slot ₹1,094,927
+  AFTER: Invested ₹10,537,186 | Cash ₹116,395 | Total ₹10,653,580 | Positions 8/10 | Slot ₹1,065,738
 
 ========================================================================
   REBALANCE #78  —  01 Jun 2021
-  NAV: ₹10,789,809  |  Slot: ₹1,078,981  |  Cash: ₹119,651
-========================================================================
-
-  EXITS (2)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  TSLA        16     03-Feb-20   52.0        208.0       11240  ₹1,753,065    +299.9%   484d  
-  EXPE        17     01-Apr-21   174.1       175.5       6142   ₹8,390        +0.8%     61d   
-
-  ENTRIES (3)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  KDP         1      2.634    0.33   +32.7%    +20.4%    32.4        33284  ₹1,078,974  
-  MDLZ        4      2.357    0.38   +23.9%    +18.6%    55.7        19386  ₹1,078,936  
-  KHC         6      2.325    0.36   +50.4%    +19.8%    34.8        30961  ₹1,078,969  
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MRNA        12     03-Aug-20   78.0        184.7       9712   ₹1,036,076    +136.8%   
-  ASML        3      01-Apr-21   608.2       643.2       1758   ₹61,498       +5.8%     
-  GOOGL       9      03-May-21   116.2       118.1       9423   ₹17,804       +1.6%     
-  GOOG        5      03-May-21   118.8       120.5       9217   ₹15,834       +1.4%     
-  AMAT        2      01-Apr-21   135.6       132.7       7887   ₹-23,191      -2.2%     
-  ORLY        11     03-May-21   37.0        35.8        29594  ₹-34,151      -3.1%     
-
-  AFTER: Invested ₹10,491,513 | Cash ₹294,453 | Total ₹10,785,965 | Positions 9/10 | Slot ₹1,078,981
-
-========================================================================
-  REBALANCE #79  —  01 Jul 2021
-  NAV: ₹11,301,966  |  Slot: ₹1,130,197  |  Cash: ₹294,453
-========================================================================
-
-  EXITS (4)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ASML        19     01-Apr-21   608.2       650.4       1758   ₹74,138       +6.9%     91d   
-  MDLZ        21     01-Jun-21   55.7        55.2        19386  ₹-9,320       -0.9%     30d   
-  KDP         46     01-Jun-21   32.4        31.1        33284  ₹-43,320      -4.0%     30d   
-  KHC         48     01-Jun-21   34.8        32.2        30961  ₹-82,676      -7.7%     30d   
-
-  ENTRIES (4)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  IDXX        2      3.203    1.00   +91.0%    +31.4%    639.0       1768   ₹1,129,664  
-  NVDA        3      3.113    1.50   +112.3%   +46.4%    20.2        56045  ₹1,130,193  
-  CPRT        5      2.515    0.65   +58.9%    +19.4%    33.6        33631  ₹1,130,170  
-  INTU        6      2.443    1.04   +63.3%    +24.4%    475.0       2379   ₹1,129,995  
-
-  HOLDS (5)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MRNA        1      03-Aug-20   78.0        235.1       9712   ₹1,526,047    +201.5%   
-  GOOG        4      03-May-21   118.8       125.3       9217   ₹60,428       +5.5%     
-  GOOGL       8      03-May-21   116.2       121.4       9423   ₹49,444       +4.5%     
-  ORLY        12     03-May-21   37.0        38.4        29594  ₹40,287       +3.7%     
-  AMAT        16     01-Apr-21   135.6       132.4       7887   ₹-25,159      -2.4%     
-
-  AFTER: Invested ₹11,282,615 | Cash ₹13,983 | Total ₹11,296,599 | Positions 9/10 | Slot ₹1,130,197
-
-========================================================================
-  REBALANCE #80  —  02 Aug 2021
-  NAV: ₹12,892,459  |  Slot: ₹1,289,246  |  Cash: ₹13,983
+  NAV: ₹10,539,758  |  Slot: ₹1,053,976  |  Cash: ₹116,395
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ORLY        34     03-May-21   37.0        40.1        29594  ₹91,090       +8.3%     91d   
-
-  ENTRIES (0)
-    —
-
-  HOLDS (8)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MRNA        1      03-Aug-20   78.0        346.6       9712   ₹2,608,934    +344.5%   
-  GOOGL       5      03-May-21   116.2       133.7       9423   ₹165,425      +15.1%    
-  GOOG        6      03-May-21   118.8       134.9       9217   ₹148,383      +13.6%    
-  CPRT        9      01-Jul-21   33.6        36.5        33631  ₹97,698       +8.6%     
-  INTU        2      01-Jul-21   475.0       510.9       2379   ₹85,318       +7.6%     
-  IDXX        7      01-Jul-21   639.0       678.7       1768   ₹70,313       +6.2%     
-  AMAT        16     01-Apr-21   135.6       136.3       7887   ₹5,580        +0.5%     
-  NVDA        11     01-Jul-21   20.2        19.7        56045  ₹-25,833      -2.3%     
-
-  AFTER: Invested ₹11,692,487 | Cash ₹1,199,973 | Total ₹12,892,459 | Positions 8/10 | Slot ₹1,289,246
-
-========================================================================
-  REBALANCE #81  —  01 Sep 2021
-  NAV: ₹13,657,590  |  Slot: ₹1,365,759  |  Cash: ₹1,199,973
-========================================================================
-
-  EXITS (2)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  NVDA        21     01-Jul-21   20.2        22.4        56045  ₹124,860      +11.0%    62d   
-  AMAT        28     01-Apr-21   135.6       128.3       7887   ₹-57,304      -5.4%     153d  
-
-  ENTRIES (2)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  TEAM        2      2.795    0.95   +89.2%    +67.9%    371.7       3674   ₹1,365,626  
-  ASML        3      2.506    1.23   +119.1%   +26.5%    806.3       1693   ₹1,365,057  
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MRNA        1      03-Aug-20   78.0        389.9       9712   ₹3,029,756    +400.1%   
-  GOOGL       5      03-May-21   116.2       144.0       9423   ₹262,256      +24.0%    
-  GOOG        6      03-May-21   118.8       144.7       9217   ₹238,454      +21.8%    
-  INTU        8      01-Jul-21   475.0       545.3       2379   ₹167,382      +14.8%    
-  CPRT        19     01-Jul-21   33.6        36.2        33631  ₹88,450       +7.8%     
-  IDXX        10     01-Jul-21   639.0       676.9       1768   ₹67,096       +5.9%     
-
-  AFTER: Invested ₹12,920,964 | Cash ₹733,384 | Total ₹13,654,348 | Positions 8/10 | Slot ₹1,365,759
-
-========================================================================
-  REBALANCE #82  —  01 Oct 2021
-  NAV: ₹12,746,010  |  Slot: ₹1,274,601  |  Cash: ₹733,384
-========================================================================
-
-  EXITS (2)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CPRT        29     01-Jul-21   33.6        35.0        33631  ₹46,327       +4.1%     92d   
-  IDXX        32     01-Jul-21   639.0       624.0       1768   ₹-26,467      -2.3%     92d   
-
-  ENTRIES (2)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  COST        5      2.494    0.51   +29.4%    +12.6%    426.2       2990   ₹1,274,227  
-  PAYX        6      2.318    0.41   +49.1%    +6.5%     100.9       12631  ₹1,274,566  
-
-  HOLDS (6)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MRNA        1      03-Aug-20   78.0        341.1       9712   ₹2,555,324    +337.4%   
-  GOOGL       3      03-May-21   116.2       135.4       9423   ₹181,205      +16.6%    
-  GOOG        4      03-May-21   118.8       135.4       9217   ₹152,707      +13.9%    
-  INTU        7      01-Jul-21   475.0       526.8       2379   ₹123,240      +10.9%    
-  TEAM        2      01-Sep-21   371.7       392.2       3674   ₹75,390       +5.5%     
-  ASML        8      01-Sep-21   806.3       710.2       1693   ₹-162,672     -11.9%    
-
-  AFTER: Invested ₹12,281,727 | Cash ₹461,257 | Total ₹12,742,984 | Positions 8/10 | Slot ₹1,274,601
-
-========================================================================
-  REBALANCE #83  —  01 Nov 2021
-  NAV: ₹13,511,749  |  Slot: ₹1,351,175  |  Cash: ₹461,257
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  PAYX        14     01-Oct-21   100.9       107.1       12631  ₹78,633       +6.2%     31d   
+  EXPE        16     01-Apr-21   174.1       175.5       5978   ₹8,166        +0.8%     61d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  TSLA        1      3.723    1.68   +211.5%   +70.3%    402.9       3353   ₹1,350,801  
+  KDP         1      2.649    0.33   +32.7%    +20.4%    32.4        32512  ₹1,053,948  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MRNA        6      03-Aug-20   78.0        337.2       9712   ₹2,517,253    +332.4%   
-  INTU        3      01-Jul-21   475.0       590.3       2379   ₹274,409      +24.3%    
-  GOOGL       12     03-May-21   116.2       142.3       9423   ₹246,195      +22.5%    
-  TEAM        2      01-Sep-21   371.7       450.1       3674   ₹288,189      +21.1%    
-  GOOG        11     03-May-21   118.8       142.6       9217   ₹219,548      +20.1%    
-  COST        7      01-Oct-21   426.2       468.3       2990   ₹126,010      +9.9%     
-  ASML        13     01-Sep-21   806.3       773.1       1693   ₹-56,277      -4.1%     
+  TSLA        15     03-Feb-20   52.0        208.0       10940  ₹1,706,275    +299.9%   
+  MRNA        11     03-Aug-20   78.0        184.7       9453   ₹1,008,446    +136.8%   
+  ASML        3      01-Apr-21   606.9       641.8       1715   ₹59,863       +5.8%     
+  LRCX        7      03-May-21   58.5        61.5        18212  ₹54,906       +5.2%     
+  GOOG        5      03-May-21   118.8       120.5       8972   ₹15,413       +1.4%     
+  AMAT        2      01-Apr-21   135.6       132.7       7677   ₹-22,572      -2.2%     
+  ORLY        10     03-May-21   37.0        35.8        28805  ₹-33,241      -3.1%     
 
-  AFTER: Invested ₹13,048,094 | Cash ₹462,051 | Total ₹13,510,145 | Positions 8/10 | Slot ₹1,351,175
+  AFTER: Invested ₹10,428,115 | Cash ₹110,391 | Total ₹10,538,506 | Positions 8/10 | Slot ₹1,053,976
 
 ========================================================================
-  REBALANCE #84  —  01 Dec 2021
-  NAV: ₹12,974,178  |  Slot: ₹1,297,418  |  Cash: ₹462,051
+  REBALANCE #79  —  01 Jul 2021
+  NAV: ₹11,270,955  |  Slot: ₹1,127,095  |  Cash: ₹110,391
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MRNA        42     03-Aug-20   78.0        310.6       9712   ₹2,259,302    +298.3%   485d  
-  TEAM        33     01-Sep-21   371.7       357.2       3674   ₹-53,236      -3.9%     91d   
-  ASML        21     01-Sep-21   806.3       771.7       1693   ₹-58,497      -4.3%     91d   
+  ASML        18     01-Apr-21   606.9       649.0       1715   ₹72,167       +6.9%     91d   
+  LRCX        30     03-May-21   58.5        60.1        18212  ₹29,522       +2.8%     59d   
+  KDP         45     01-Jun-21   32.4        31.1        32512  ₹-42,315      -4.0%     30d   
 
-  ENTRIES (4)
+  ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  NVDA        1      3.469    1.73   +135.0%   +40.1%    31.4        41355  ₹1,297,411  
-  MSFT        4      2.654    0.92   +53.9%    +9.6%     318.7       4071   ₹1,297,234  
-  AMD         6      2.457    1.45   +61.0%    +35.6%    149.1       8701   ₹1,297,406  
-  DLTR        7      2.346    0.32   +18.0%    +47.3%    132.6       9784   ₹1,297,358  
+  IDXX        2      3.225    1.00   +91.0%    +31.4%    639.0       1763   ₹1,126,469  
+  NVDA        3      3.134    1.50   +112.3%   +46.4%    20.2        55891  ₹1,127,087  
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  INTU        2      01-Jul-21   475.0       643.7       2379   ₹401,467      +35.5%    
-  GOOGL       16     03-May-21   116.2       139.9       9423   ₹223,340      +20.4%    
-  COST        3      01-Oct-21   426.2       504.5       2990   ₹234,101      +18.4%    
-  GOOG        14     03-May-21   118.8       140.5       9217   ₹199,838      +18.3%    
-  TSLA        5      01-Nov-21   402.9       365.0       3353   ₹-126,956     -9.4%     
+  TSLA        13     03-Feb-20   52.0        226.0       10940  ₹1,903,268    +334.6%   
+  MRNA        1      03-Aug-20   78.0        235.1       9453   ₹1,485,350    +201.5%   
+  GOOG        4      03-May-21   118.8       125.3       8972   ₹58,822       +5.5%     
+  ORLY        11     03-May-21   37.0        38.4        28805  ₹39,213       +3.7%     
+  AMAT        15     01-Apr-21   135.6       132.4       7677   ₹-24,488      -2.4%     
 
-  AFTER: Invested ₹12,065,942 | Cash ₹902,074 | Total ₹12,968,016 | Positions 9/10 | Slot ₹1,297,418
+  AFTER: Invested ₹10,194,286 | Cash ₹1,073,993 | Total ₹11,268,279 | Positions 7/10 | Slot ₹1,127,095
+
+========================================================================
+  REBALANCE #80  —  02 Aug 2021
+  NAV: ₹12,647,407  |  Slot: ₹1,264,741  |  Cash: ₹1,073,993
+========================================================================
+
+  EXITS (2)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  TSLA        32     03-Feb-20   52.0        236.6       10940  ₹2,019,050    +354.9%   546d  
+  ORLY        33     03-May-21   37.0        40.1        28805  ₹88,662       +8.3%     91d   
+
+  ENTRIES (3)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  INTU        2      2.724    1.07   +73.2%    +28.4%    510.9       2475   ₹1,264,354  
+  PAYX        3      2.716    0.42   +61.8%    +15.7%    99.2        12745  ₹1,264,737  
+  ASML        4      2.442    1.21   +119.1%   +17.6%    735.3       1720   ₹1,264,644  
+
+  HOLDS (5)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  MRNA        1      03-Aug-20   78.0        346.6       9453   ₹2,539,359    +344.5%   
+  GOOG        5      03-May-21   118.8       134.9       8972   ₹144,439      +13.6%    
+  IDXX        6      01-Jul-21   639.0       678.7       1763   ₹70,114       +6.2%     
+  AMAT        15     01-Apr-21   135.6       136.3       7677   ₹5,431        +0.5%     
+  NVDA        10     01-Jul-21   20.2        19.7        55891  ₹-25,762      -2.3%     
+
+  AFTER: Invested ₹11,624,850 | Cash ₹1,018,052 | Total ₹12,642,902 | Positions 8/10 | Slot ₹1,264,741
+
+========================================================================
+  REBALANCE #81  —  01 Sep 2021
+  NAV: ₹13,434,820  |  Slot: ₹1,343,482  |  Cash: ₹1,018,052
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  AMAT        27     01-Apr-21   135.6       128.3       7677   ₹-55,778      -5.4%     153d  
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  TEAM        2      2.819    0.95   +89.2%    +67.9%    371.7       3614   ₹1,343,324  
+
+  HOLDS (7)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  MRNA        1      03-Aug-20   78.0        389.9       9453   ₹2,948,958    +400.1%   
+  GOOG        5      03-May-21   118.8       144.7       8972   ₹232,115      +21.8%    
+  NVDA        20     01-Jul-21   20.2        22.4        55891  ₹124,517      +11.0%    
+  ASML        3      02-Aug-21   735.3       804.5       1720   ₹119,161      +9.4%     
+  INTU        7      02-Aug-21   510.9       545.3       2475   ₹85,376       +6.8%     
+  IDXX        9      01-Jul-21   639.0       676.9       1763   ₹66,906       +5.9%     
+  PAYX        10     02-Aug-21   99.2        99.6        12745  ₹4,244        +0.3%     
+
+  AFTER: Invested ₹12,774,761 | Cash ₹658,464 | Total ₹13,433,225 | Positions 8/10 | Slot ₹1,343,482
+
+========================================================================
+  REBALANCE #82  —  01 Oct 2021
+  NAV: ₹12,580,340  |  Slot: ₹1,258,034  |  Cash: ₹658,464
+========================================================================
+
+  EXITS (2)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  NVDA        36     01-Jul-21   20.2        20.7        55891  ₹29,759       +2.6%     92d   
+  IDXX        30     01-Jul-21   639.0       624.0       1763   ₹-26,392      -2.3%     92d   
+
+  ENTRIES (2)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  COST        4      2.525    0.51   +29.4%    +12.6%    425.5       2956   ₹1,257,913  
+  DXCM        8      2.088    1.05   +32.9%    +27.4%    137.5       9150   ₹1,257,942  
+
+  HOLDS (6)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  MRNA        1      03-Aug-20   78.0        341.1       9453   ₹2,487,179    +337.4%   
+  GOOG        3      03-May-21   118.8       135.4       8972   ₹148,648      +13.9%    
+  TEAM        2      01-Sep-21   371.7       392.2       3614   ₹74,159       +5.5%     
+  INTU        6      02-Aug-21   510.9       526.8       2475   ₹39,452       +3.1%     
+  PAYX        5      02-Aug-21   99.2        100.9       12745  ₹21,332       +1.7%     
+  ASML        7      02-Aug-21   735.3       708.7       1720   ₹-45,745      -3.6%     
+
+  AFTER: Invested ₹12,180,808 | Cash ₹396,544 | Total ₹12,577,352 | Positions 8/10 | Slot ₹1,258,034
+
+========================================================================
+  REBALANCE #83  —  01 Nov 2021
+  NAV: ₹13,460,486  |  Slot: ₹1,346,049  |  Cash: ₹396,544
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  PAYX        13     02-Aug-21   99.2        107.1       12745  ₹100,675      +8.0%     91d   
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  TSLA        1      3.737    1.68   +211.5%   +70.3%    402.9       3341   ₹1,345,966  
+
+  HOLDS (7)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  MRNA        6      03-Aug-20   78.0        337.2       9453   ₹2,450,123    +332.4%   
+  TEAM        2      01-Sep-21   371.7       450.1       3614   ₹283,482      +21.1%    
+  GOOG        11     03-May-21   118.8       142.6       8972   ₹213,713      +20.1%    
+  INTU        3      02-Aug-21   510.9       590.3       2475   ₹196,721      +15.6%    
+  DXCM        8      01-Oct-21   137.5       156.8       9150   ₹176,938      +14.1%    
+  COST        7      01-Oct-21   425.5       467.6       2956   ₹124,396      +9.9%     
+  ASML        12     02-Aug-21   735.3       771.4       1720   ₹62,111       +4.9%     
+
+  AFTER: Invested ₹13,044,496 | Cash ₹414,392 | Total ₹13,458,888 | Positions 8/10 | Slot ₹1,346,049
+
+========================================================================
+  REBALANCE #84  —  01 Dec 2021
+  NAV: ₹12,782,393  |  Slot: ₹1,278,239  |  Cash: ₹414,392
+========================================================================
+
+  EXITS (3)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  MRNA        41     03-Aug-20   78.0        310.6       9453   ₹2,199,051    +298.3%   485d  
+  DXCM        21     01-Oct-21   137.5       137.1       9150   ₹-3,591       -0.3%     61d   
+  TEAM        31     01-Sep-21   371.7       357.2       3614   ₹-52,367      -3.9%     91d   
+
+  ENTRIES (4)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  NVDA        1      3.491    1.73   +135.0%   +40.1%    31.4        40743  ₹1,278,211  
+  MSFT        4      2.674    0.92   +53.9%    +9.6%     318.7       4011   ₹1,278,115  
+  AMD         6      2.467    1.45   +61.0%    +35.6%    149.1       8572   ₹1,278,171  
+  DLTR        7      2.347    0.32   +18.0%    +47.3%    132.6       9639   ₹1,278,131  
+
+  HOLDS (5)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  INTU        2      02-Aug-21   510.9       643.7       2475   ₹328,907      +26.0%    
+  COST        3      01-Oct-21   425.5       503.7       2956   ₹231,104      +18.4%    
+  GOOG        14     03-May-21   118.8       140.5       8972   ₹194,526      +18.3%    
+  ASML        20     02-Aug-21   735.3       770.1       1720   ₹59,860       +4.7%     
+  TSLA        5      01-Nov-21   402.9       365.0       3341   ₹-126,501     -9.4%     
+
+  AFTER: Invested ₹11,999,126 | Cash ₹777,197 | Total ₹12,776,323 | Positions 9/10 | Slot ₹1,278,239
 
 ========================================================================
   REBALANCE #85  —  03 Jan 2022
-  NAV: ₹13,241,523  |  Slot: ₹1,324,152  |  Cash: ₹902,074
+  NAV: ₹12,995,806  |  Slot: ₹1,299,581  |  Cash: ₹777,197
 ========================================================================
 
-  EXITS (4)
+  EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  GOOGL       18     03-May-21   116.2       143.8       9423   ₹260,163      +23.8%    245d  
-  GOOG        15     03-May-21   118.8       143.9       9217   ₹231,437      +21.1%    245d  
-  DLTR        21     01-Dec-21   132.6       141.2       9784   ₹83,849       +6.5%     33d   
-  TSLA        25     01-Nov-21   402.9       399.9       3353   ₹-9,847       -0.7%     63d   
+  DLTR        21     01-Dec-21   132.6       141.2       9639   ₹82,606       +6.5%     33d   
+  ASML        35     02-Aug-21   735.3       763.8       1720   ₹49,136       +3.9%     154d  
+  TSLA        24     01-Nov-21   402.9       399.9       3341   ₹-9,811       -0.7%     63d   
 
-  ENTRIES (4)
+  ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AVGO        3      2.650    1.21   +60.6%    +40.3%    61.3        21595  ₹1,324,121  
-  ADP         4      2.638    0.46   +47.2%    +22.6%    222.3       5956   ₹1,323,997  
-  PAYX        5      2.548    0.47   +52.6%    +17.6%    118.5       11173  ₹1,324,081  
-  MRVL        6      2.531    1.49   +93.7%    +55.4%    87.9        15066  ₹1,324,136  
+  AVGO        3      2.667    1.21   +60.6%    +40.3%    61.3        21194  ₹1,299,533  
+  ADP         4      2.660    0.46   +47.2%    +22.6%    222.3       5846   ₹1,299,544  
+  PAYX        5      2.574    0.47   +52.6%    +17.6%    118.5       10966  ₹1,299,550  
 
-  HOLDS (5)
+  HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  INTU        12     01-Jul-21   475.0       612.3       2379   ₹326,681      +28.9%    
-  COST        1      01-Oct-21   426.2       539.6       2990   ₹339,061      +26.6%    
-  MSFT        8      01-Dec-21   318.7       323.2       4071   ₹18,353       +1.4%     
-  AMD         14     01-Dec-21   149.1       150.2       8701   ₹9,832        +0.8%     
-  NVDA        2      01-Dec-21   31.4        30.1        41355  ₹-54,233      -4.2%     
+  COST        1      01-Oct-21   425.5       538.8       2956   ₹334,720      +26.6%    
+  GOOG        14     03-May-21   118.8       143.9       8972   ₹225,286      +21.1%    
+  INTU        12     02-Aug-21   510.9       612.3       2475   ₹251,103      +19.9%    
+  MSFT        7      01-Dec-21   318.7       323.2       4011   ₹18,083       +1.4%     
+  AMD         15     01-Dec-21   149.1       150.2       8572   ₹9,686        +0.8%     
+  NVDA        2      01-Dec-21   31.4        30.1        40743  ₹-53,430      -4.2%     
 
-  AFTER: Invested ₹12,232,305 | Cash ₹1,002,929 | Total ₹13,235,234 | Positions 9/10 | Slot ₹1,324,152
+  AFTER: Invested ₹12,106,564 | Cash ₹884,612 | Total ₹12,991,176 | Positions 9/10 | Slot ₹1,299,581
 
 ========================================================================
   REBALANCE #86  —  01 Feb 2022
-  NAV: ₹11,532,967  |  Slot: ₹1,153,297  |  Cash: ₹1,002,929
+  NAV: ₹11,490,080  |  Slot: ₹1,149,008  |  Cash: ₹884,612
 ========================================================================
 
   EXITS (5)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  INTU        27     01-Jul-21   475.0       544.4       2379   ₹165,230      +14.6%    215d  
-  MSFT        32     01-Dec-21   318.7       298.1       4071   ₹-83,789      -6.5%     62d   
-  ADP         41     03-Jan-22   222.3       187.3       5956   ₹-208,630     -15.8%    29d   
-  MRVL        26     03-Jan-22   87.9        71.2        15066  ₹-251,092     -19.0%    29d   
-  AMD         43     01-Dec-21   149.1       116.8       8701   ₹-281,303     -21.7%    62d   
+  INTU        25     02-Aug-21   510.9       544.4       2475   ₹83,137       +6.6%     183d  
+  MSFT        30     01-Dec-21   318.7       298.1       4011   ₹-82,554      -6.5%     62d   
+  PAYX        15     03-Jan-22   118.5       104.7       10966  ₹-151,755     -11.7%    29d   
+  ADP         40     03-Jan-22   222.3       187.3       5846   ₹-204,776     -15.8%    29d   
+  AMD         42     01-Dec-21   149.1       116.8       8572   ₹-277,133     -21.7%    62d   
 
   ENTRIES (5)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  EXC         1      2.899    0.28   +39.6%    +8.1%     35.4        32549  ₹1,153,286  
-  PEP         2      2.805    0.23   +28.2%    +7.6%     150.7       7653   ₹1,153,160  
-  VRTX        3      2.803    0.29   +13.0%    +32.5%    245.7       4694   ₹1,153,128  
-  ORLY        4      2.782    0.29   +47.6%    +6.0%     43.8        26331  ₹1,153,280  
-  MDLZ        5      2.571    0.14   +21.3%    +10.1%    59.6        19363  ₹1,153,267  
+  EXC         1      2.916    0.28   +39.6%    +8.1%     35.4        32428  ₹1,148,998  
+  PEP         2      2.820    0.23   +28.2%    +7.6%     150.7       7625   ₹1,148,941  
+  VRTX        3      2.803    0.29   +13.0%    +32.5%    245.7       4677   ₹1,148,952  
+  ORLY        4      2.801    0.29   +47.6%    +6.0%     43.8        26233  ₹1,148,988  
+  MDLZ        5      2.582    0.14   +21.3%    +10.1%    59.6        19291  ₹1,148,979  
 
   HOLDS (4)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  COST        7      01-Oct-21   426.2       484.1       2990   ₹173,095      +13.6%    
-  AVGO        12     03-Jan-22   61.3        54.8        21595  ₹-140,932     -10.6%    
-  PAYX        16     03-Jan-22   118.5       104.7       11173  ₹-154,620     -11.7%    
-  NVDA        13     01-Dec-21   31.4        24.6        41355  ₹-280,531     -21.6%    
+  GOOG        14     03-May-21   118.8       136.8       8972   ₹161,249      +15.1%    
+  COST        7      01-Oct-21   425.5       483.4       2956   ₹170,879      +13.6%    
+  AVGO        12     03-Jan-22   61.3        54.8        21194  ₹-138,315     -10.6%    
+  NVDA        13     01-Dec-21   31.4        24.6        40743  ₹-276,380     -21.6%    
 
-  AFTER: Invested ₹10,582,974 | Cash ₹943,146 | Total ₹11,526,121 | Positions 9/10 | Slot ₹1,153,297
+  AFTER: Invested ₹10,563,672 | Cash ₹919,586 | Total ₹11,483,258 | Positions 9/10 | Slot ₹1,149,008
 
 ========================================================================
   REBALANCE #87  —  01 Mar 2022
-  NAV: ₹11,329,561  |  Slot: ₹1,132,956  |  Cash: ₹943,146
+  NAV: ₹11,260,629  |  Slot: ₹1,126,063  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 332.6 < SMA200 357.5 — holding all, skipping exits & entries
@@ -2566,21 +2641,21 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  COST        6      01-Oct-21   426.2       498.6       2990   ₹216,686      +17.0%    
-  EXC         1      01-Feb-22   35.4        36.6        32549  ₹37,272       +3.2%     
-  ORLY        4      01-Feb-22   43.8        43.8        26331  ₹-825         -0.1%     
-  MDLZ        7      01-Feb-22   59.6        57.5        19363  ₹-40,472      -3.5%     
-  PEP         11     01-Feb-22   150.7       141.9       7653   ₹-67,380      -5.8%     
-  VRTX        9      01-Feb-22   245.7       230.7       4694   ₹-70,269      -6.1%     
-  PAYX        18     03-Jan-22   118.5       104.2       11173  ₹-160,066     -12.1%    
-  AVGO        21     03-Jan-22   61.3        52.7        21595  ₹-186,046     -14.1%    
-  NVDA        30     01-Dec-21   31.4        23.4        41355  ₹-328,449     -25.3%    
+  COST        6      01-Oct-21   425.5       497.9       2956   ₹213,911      +17.0%    
+  GOOG        25     03-May-21   118.8       133.1       8972   ₹128,229      +12.0%    
+  EXC         1      01-Feb-22   35.4        36.6        32428  ₹37,134       +3.2%     
+  ORLY        4      01-Feb-22   43.8        43.8        26233  ₹-822         -0.1%     
+  MDLZ        7      01-Feb-22   59.6        57.5        19291  ₹-40,321      -3.5%     
+  PEP         11     01-Feb-22   150.7       141.9       7625   ₹-67,134      -5.8%     
+  VRTX        9      01-Feb-22   245.7       230.7       4677   ₹-70,015      -6.1%     
+  AVGO        21     03-Jan-22   61.3        52.7        21194  ₹-182,591     -14.1%    
+  NVDA        29     01-Dec-21   31.4        23.4        40743  ₹-323,588     -25.3%    
 
-  AFTER: Invested ₹10,386,414 | Cash ₹943,146 | Total ₹11,329,561 | Positions 9/10 | Slot ₹1,132,956
+  AFTER: Invested ₹10,341,043 | Cash ₹919,586 | Total ₹11,260,629 | Positions 9/10 | Slot ₹1,126,063
 
 ========================================================================
   REBALANCE #88  —  01 Apr 2022
-  NAV: ₹12,334,826  |  Slot: ₹1,233,483  |  Cash: ₹943,146
+  NAV: ₹12,105,317  |  Slot: ₹1,210,532  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 352.8 < SMA200 359.0 — holding all, skipping exits & entries
@@ -2594,21 +2669,21 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  COST        3      01-Oct-21   426.2       548.8       2990   ₹366,767      +28.8%    
-  EXC         1      01-Feb-22   35.4        41.3        32549  ₹190,356      +16.5%    
-  VRTX        5      01-Feb-22   245.7       266.1       4694   ₹96,180       +8.3%     
-  PAYX        8      03-Jan-22   118.5       123.1       11173  ₹51,051       +3.9%     
-  ORLY        22     01-Feb-22   43.8        44.5        26331  ₹18,326       +1.6%     
-  PEP         15     01-Feb-22   150.7       149.4       7653   ₹-9,792       -0.8%     
-  MDLZ        37     01-Feb-22   59.6        57.1        19363  ₹-48,348      -4.2%     
-  AVGO        29     03-Jan-22   61.3        58.3        21595  ₹-64,079      -4.8%     
-  NVDA        14     01-Dec-21   31.4        26.7        41355  ₹-194,744     -15.0%    
+  COST        3      01-Oct-21   425.5       548.0       2956   ₹362,071      +28.8%    
+  GOOG        26     03-May-21   118.8       139.6       8972   ₹186,357      +17.5%    
+  EXC         1      01-Feb-22   35.4        41.3        32428  ₹189,648      +16.5%    
+  VRTX        5      01-Feb-22   245.7       266.1       4677   ₹95,832       +8.3%     
+  ORLY        22     01-Feb-22   43.8        44.5        26233  ₹18,258       +1.6%     
+  PEP         15     01-Feb-22   150.7       149.4       7625   ₹-9,756       -0.8%     
+  MDLZ        36     01-Feb-22   59.6        57.1        19291  ₹-48,169      -4.2%     
+  AVGO        28     03-Jan-22   61.3        58.3        21194  ₹-62,888      -4.8%     
+  NVDA        14     01-Dec-21   31.4        26.7        40743  ₹-191,862     -15.0%    
 
-  AFTER: Invested ₹11,391,680 | Cash ₹943,146 | Total ₹12,334,826 | Positions 9/10 | Slot ₹1,233,483
+  AFTER: Invested ₹11,185,730 | Cash ₹919,586 | Total ₹12,105,317 | Positions 9/10 | Slot ₹1,210,532
 
 ========================================================================
   REBALANCE #89  —  02 May 2022
-  NAV: ₹11,538,398  |  Slot: ₹1,153,840  |  Cash: ₹943,146
+  NAV: ₹11,219,010  |  Slot: ₹1,121,901  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 310.5 < SMA200 357.4 — holding all, skipping exits & entries
@@ -2622,21 +2697,22 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  COST        4      01-Oct-21   426.2       505.2       2990   ₹236,303      +18.5%    
-  EXC         1      01-Feb-22   35.4        40.4        32549  ₹161,882      +14.0%    
-  VRTX        11     01-Feb-22   245.7       262.0       4694   ₹76,512       +6.6%     
-  PEP         16     01-Feb-22   150.7       147.6       7653   ₹-23,262      -2.0%     
-  MDLZ        36     01-Feb-22   59.6        57.3        19363  ₹-43,826      -3.8%     
-  PAYX        5      03-Jan-22   118.5       113.1       11173  ₹-60,052      -4.5%     
-  ORLY        34     01-Feb-22   43.8        40.7        26331  ₹-81,345      -7.1%     
-  AVGO        14     03-Jan-22   61.3        53.6        21595  ₹-165,830     -12.5%    
-  NVDA        37     01-Dec-21   31.4        19.5        41355  ₹-491,092     -37.9%    
+  COST        4      01-Oct-21   425.5       504.5       2956   ₹233,278      +18.5%    
+  EXC         1      01-Feb-22   35.4        40.4        32428  ₹161,280      +14.0%    
+  VRTX        11     01-Feb-22   245.7       262.0       4677   ₹76,235       +6.6%     
+  PEP         16     01-Feb-22   150.7       147.6       7625   ₹-23,177      -2.0%     
+  GOOG        65     03-May-21   118.8       116.2       8972   ₹-23,151      -2.2% ⚠   
+  MDLZ        36     01-Feb-22   59.6        57.3        19291  ₹-43,663      -3.8%     
+  ORLY        34     01-Feb-22   43.8        40.7        26233  ₹-81,042      -7.1%     
+  AVGO        14     03-Jan-22   61.3        53.6        21194  ₹-162,750     -12.5%    
+  NVDA        37     01-Dec-21   31.4        19.5        40743  ₹-483,824     -37.9%    
+  ⚠  WAZ < 0 (momentum below universe mean): GOOG
 
-  AFTER: Invested ₹10,595,252 | Cash ₹943,146 | Total ₹11,538,398 | Positions 9/10 | Slot ₹1,153,840
+  AFTER: Invested ₹10,299,423 | Cash ₹919,586 | Total ₹11,219,010 | Positions 9/10 | Slot ₹1,121,901
 
 ========================================================================
   REBALANCE #90  —  01 Jun 2022
-  NAV: ₹11,349,121  |  Slot: ₹1,134,912  |  Cash: ₹943,146
+  NAV: ₹11,051,259  |  Slot: ₹1,105,126  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 298.4 < SMA200 350.9 — holding all, skipping exits & entries
@@ -2650,22 +2726,22 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  EXC         1      01-Feb-22   35.4        42.9        32549  ₹243,404      +21.1%    
-  VRTX        4      01-Feb-22   245.7       269.4       4694   ₹111,482      +9.7%     
-  COST        36     01-Oct-21   426.2       436.5       2990   ₹30,806       +2.4%     
-  PEP         10     01-Feb-22   150.7       146.5       7653   ₹-31,816      -2.8%     
-  ORLY        25     01-Feb-22   43.8        41.6        26331  ₹-56,840      -4.9%     
-  MDLZ        37     01-Feb-22   59.6        56.5        19363  ₹-59,132      -5.1%     
-  PAYX        9      03-Jan-22   118.5       109.1       11173  ₹-105,412     -8.0%     
-  AVGO        14     03-Jan-22   61.3        53.4        21595  ₹-171,316     -12.9%    
-  NVDA        47     01-Dec-21   31.4        18.3        41355  ₹-541,164     -41.7% ⚠  
-  ⚠  WAZ < 0 (momentum below universe mean): NVDA
+  EXC         1      01-Feb-22   35.4        42.9        32428  ₹242,499      +21.1%    
+  VRTX        4      01-Feb-22   245.7       269.4       4677   ₹111,079      +9.7%     
+  COST        36     01-Oct-21   425.5       435.8       2956   ₹30,411       +2.4%     
+  PEP         10     01-Feb-22   150.7       146.5       7625   ₹-31,700      -2.8%     
+  GOOG        67     03-May-21   118.8       113.2       8972   ₹-50,025      -4.7% ⚠   
+  ORLY        25     01-Feb-22   43.8        41.6        26233  ₹-56,628      -4.9%     
+  MDLZ        37     01-Feb-22   59.6        56.5        19291  ₹-58,912      -5.1%     
+  AVGO        14     03-Jan-22   61.3        53.4        21194  ₹-168,135     -12.9%    
+  NVDA        47     01-Dec-21   31.4        18.3        40743  ₹-533,155     -41.7% ⚠  
+  ⚠  WAZ < 0 (momentum below universe mean): NVDA, GOOG
 
-  AFTER: Invested ₹10,405,974 | Cash ₹943,146 | Total ₹11,349,121 | Positions 9/10 | Slot ₹1,134,912
+  AFTER: Invested ₹10,131,672 | Cash ₹919,586 | Total ₹11,051,259 | Positions 9/10 | Slot ₹1,105,126
 
 ========================================================================
   REBALANCE #91  —  01 Jul 2022
-  NAV: ₹11,088,173  |  Slot: ₹1,108,817  |  Cash: ₹943,146
+  NAV: ₹10,808,619  |  Slot: ₹1,080,862  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 275.6 < SMA200 342.3 — holding all, skipping exits & entries
@@ -2679,22 +2755,22 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  VRTX        2      01-Feb-22   245.7       287.3       4694   ₹195,552      +17.0%    
-  EXC         1      01-Feb-22   35.4        40.2        32549  ₹154,815      +13.4%    
-  COST        22     01-Oct-21   426.2       463.9       2990   ₹112,965      +8.9%     
-  PEP         4      01-Feb-22   150.7       150.1       7653   ₹-4,349       -0.4%     
-  ORLY        19     01-Feb-22   43.8        42.4        26331  ₹-36,705      -3.2%     
-  MDLZ        11     01-Feb-22   59.6        57.2        19363  ₹-45,370      -3.9%     
-  PAYX        29     03-Jan-22   118.5       103.8       11173  ₹-164,222     -12.4%    
-  AVGO        42     03-Jan-22   61.3        44.8        21595  ₹-355,844     -26.9% ⚠  
-  NVDA        73     01-Dec-21   31.4        14.5        41355  ₹-697,777     -53.8% ⚠  
-  ⚠  WAZ < 0 (momentum below universe mean): AVGO, NVDA
+  VRTX        2      01-Feb-22   245.7       287.3       4677   ₹194,844      +17.0%    
+  EXC         1      01-Feb-22   35.4        40.2        32428  ₹154,240      +13.4%    
+  COST        22     01-Oct-21   425.5       463.3       2956   ₹111,518      +8.9%     
+  PEP         4      01-Feb-22   150.7       150.1       7625   ₹-4,333       -0.4%     
+  ORLY        19     01-Feb-22   43.8        42.4        26233  ₹-36,569      -3.2%     
+  MDLZ        11     01-Feb-22   59.6        57.2        19291  ₹-45,201      -3.9%     
+  GOOG        62     03-May-21   118.8       108.2       8972   ₹-95,018      -8.9% ⚠   
+  AVGO        42     03-Jan-22   61.3        44.8        21194  ₹-349,236     -26.9% ⚠  
+  NVDA        72     01-Dec-21   31.4        14.5        40743  ₹-687,451     -53.8% ⚠  
+  ⚠  WAZ < 0 (momentum below universe mean): AVGO, GOOG, NVDA
 
-  AFTER: Invested ₹10,145,027 | Cash ₹943,146 | Total ₹11,088,173 | Positions 9/10 | Slot ₹1,108,817
+  AFTER: Invested ₹9,889,033 | Cash ₹919,586 | Total ₹10,808,619 | Positions 9/10 | Slot ₹1,080,862
 
 ========================================================================
   REBALANCE #92  —  01 Aug 2022
-  NAV: ₹11,791,636  |  Slot: ₹1,179,164  |  Cash: ₹943,146
+  NAV: ₹11,459,752  |  Slot: ₹1,145,975  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 308.0 < SMA200 336.0 — holding all, skipping exits & entries
@@ -2708,21 +2784,22 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  COST        14     01-Oct-21   426.2       523.2       2990   ₹290,002      +22.8%    
-  EXC         3      01-Feb-22   35.4        40.2        32549  ₹155,951      +13.5%    
-  VRTX        13     01-Feb-22   245.7       273.8       4694   ₹132,230      +11.5%    
-  ORLY        4      01-Feb-22   43.8        47.3        26331  ₹91,281       +7.9%     
-  PEP         10     01-Feb-22   150.7       156.8       7653   ₹46,923       +4.1%     
-  MDLZ        29     01-Feb-22   59.6        58.6        19363  ₹-18,259      -1.6%     
-  PAYX        25     03-Jan-22   118.5       112.9       11173  ₹-62,351      -4.7%     
-  AVGO        36     03-Jan-22   61.3        50.3        21595  ₹-237,241     -17.9%    
-  NVDA        46     01-Dec-21   31.4        18.4        41355  ₹-536,008     -41.3%    
+  COST        14     01-Oct-21   425.5       522.4       2956   ₹286,288      +22.8%    
+  EXC         3      01-Feb-22   35.4        40.2        32428  ₹155,371      +13.5%    
+  VRTX        13     01-Feb-22   245.7       273.8       4677   ₹131,751      +11.5%    
+  ORLY        4      01-Feb-22   43.8        47.3        26233  ₹90,941       +7.9%     
+  PEP         10     01-Feb-22   150.7       156.8       7625   ₹46,752       +4.1%     
+  MDLZ        29     01-Feb-22   59.6        58.6        19291  ₹-18,191      -1.6%     
+  GOOG        57     03-May-21   118.8       114.5       8972   ₹-38,074      -3.6% ⚠   
+  AVGO        36     03-Jan-22   61.3        50.3        21194  ₹-232,836     -17.9%    
+  NVDA        46     01-Dec-21   31.4        18.4        40743  ₹-528,076     -41.3%    
+  ⚠  WAZ < 0 (momentum below universe mean): GOOG
 
-  AFTER: Invested ₹10,848,490 | Cash ₹943,146 | Total ₹11,791,636 | Positions 9/10 | Slot ₹1,179,164
+  AFTER: Invested ₹10,540,166 | Cash ₹919,586 | Total ₹11,459,752 | Positions 9/10 | Slot ₹1,145,975
 
 ========================================================================
   REBALANCE #93  —  01 Sep 2022
-  NAV: ₹11,413,302  |  Slot: ₹1,141,330  |  Cash: ₹943,146
+  NAV: ₹11,058,459  |  Slot: ₹1,105,846  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 292.5 < SMA200 328.7 — holding all, skipping exits & entries
@@ -2736,22 +2813,22 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  COST        6      01-Oct-21   426.2       506.3       2990   ₹239,540      +18.8%    
-  VRTX        1      01-Feb-22   245.7       290.2       4694   ₹209,071      +18.1%    
-  EXC         20     01-Feb-22   35.4        39.1        32549  ₹118,221      +10.3%    
-  ORLY        3      01-Feb-22   43.8        47.1        26331  ₹86,857       +7.5%     
-  PEP         5      01-Feb-22   150.7       154.2       7653   ₹26,995       +2.3%     
-  PAYX        21     03-Jan-22   118.5       111.5       11173  ₹-78,056      -5.9%     
-  MDLZ        28     01-Feb-22   59.6        56.0        19363  ₹-69,333      -6.0%     
-  AVGO        58     03-Jan-22   61.3        46.2        21595  ₹-327,130     -24.7% ⚠  
-  NVDA        82     01-Dec-21   31.4        13.9        41355  ₹-721,972     -55.6% ⚠  
-  ⚠  WAZ < 0 (momentum below universe mean): AVGO, NVDA
+  COST        6      01-Oct-21   425.5       505.5       2956   ₹236,473      +18.8%    
+  VRTX        1      01-Feb-22   245.7       290.2       4677   ₹208,314      +18.1%    
+  EXC         19     01-Feb-22   35.4        39.1        32428  ₹117,782      +10.3%    
+  ORLY        3      01-Feb-22   43.8        47.1        26233  ₹86,534       +7.5%     
+  PEP         5      01-Feb-22   150.7       154.2       7625   ₹26,897       +2.3%     
+  MDLZ        28     01-Feb-22   59.6        56.0        19291  ₹-69,076      -6.0%     
+  GOOG        65     03-May-21   118.8       109.6       8972   ₹-81,946      -7.7% ⚠   
+  AVGO        58     03-Jan-22   61.3        46.2        21194  ₹-321,056     -24.7% ⚠  
+  NVDA        81     01-Dec-21   31.4        13.9        40743  ₹-711,288     -55.6% ⚠  
+  ⚠  WAZ < 0 (momentum below universe mean): AVGO, GOOG, NVDA
 
-  AFTER: Invested ₹10,470,156 | Cash ₹943,146 | Total ₹11,413,302 | Positions 9/10 | Slot ₹1,141,330
+  AFTER: Invested ₹10,138,873 | Cash ₹919,586 | Total ₹11,058,459 | Positions 9/10 | Slot ₹1,105,846
 
 ========================================================================
   REBALANCE #94  —  03 Oct 2022
-  NAV: ₹10,789,790  |  Slot: ₹1,078,979  |  Cash: ₹943,146
+  NAV: ₹10,433,901  |  Slot: ₹1,043,390  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 267.7 < SMA200 317.9 — holding all, skipping exits & entries
@@ -2765,22 +2842,22 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  VRTX        1      01-Feb-22   245.7       297.4       4694   ₹243,008      +21.1%    
-  ORLY        4      01-Feb-22   43.8        47.9        26331  ₹107,431      +9.3%     
-  COST        17     01-Oct-21   426.2       457.1       2990   ₹92,388       +7.3%     
-  PEP         10     01-Feb-22   150.7       147.4       7653   ₹-24,895      -2.2%     
-  EXC         38     01-Feb-22   35.4        33.8        32549  ₹-52,552      -4.6%     
-  PAYX        18     03-Jan-22   118.5       103.1       11173  ₹-172,222     -13.0%    
-  MDLZ        69     01-Feb-22   59.6        51.2        19363  ₹-161,064     -14.0% ⚠  
-  AVGO        37     03-Jan-22   61.3        43.2        21595  ₹-390,758     -29.5%    
-  NVDA        76     01-Dec-21   31.4        12.5        41355  ₹-780,655     -60.2% ⚠  
-  ⚠  WAZ < 0 (momentum below universe mean): MDLZ, NVDA
+  VRTX        1      01-Feb-22   245.7       297.4       4677   ₹242,128      +21.1%    
+  ORLY        4      01-Feb-22   43.8        47.9        26233  ₹107,031      +9.3%     
+  COST        17     01-Oct-21   425.5       456.4       2956   ₹91,205       +7.3%     
+  PEP         10     01-Feb-22   150.7       147.4       7625   ₹-24,804      -2.2%     
+  EXC         38     01-Feb-22   35.4        33.8        32428  ₹-52,357      -4.6%     
+  MDLZ        69     01-Feb-22   59.6        51.2        19291  ₹-160,465     -14.0% ⚠  
+  GOOG        82     03-May-21   118.8       98.5        8972   ₹-182,059     -17.1% ⚠  
+  AVGO        37     03-Jan-22   61.3        43.2        21194  ₹-383,502     -29.5%    
+  NVDA        76     01-Dec-21   31.4        12.5        40743  ₹-769,102     -60.2% ⚠  
+  ⚠  WAZ < 0 (momentum below universe mean): MDLZ, NVDA, GOOG
 
-  AFTER: Invested ₹9,846,644 | Cash ₹943,146 | Total ₹10,789,790 | Positions 9/10 | Slot ₹1,078,979
+  AFTER: Invested ₹9,514,315 | Cash ₹919,586 | Total ₹10,433,901 | Positions 9/10 | Slot ₹1,043,390
 
 ========================================================================
   REBALANCE #95  —  01 Nov 2022
-  NAV: ₹11,446,470  |  Slot: ₹1,144,647  |  Cash: ₹943,146
+  NAV: ₹10,976,460  |  Slot: ₹1,097,646  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 269.3 < SMA200 306.1 — holding all, skipping exits & entries
@@ -2794,22 +2871,22 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  VRTX        2      01-Feb-22   245.7       314.2       4694   ₹321,727      +27.9%    
-  ORLY        4      01-Feb-22   43.8        55.6        26331  ₹310,723      +26.9%    
-  COST        26     01-Oct-21   426.2       479.2       2990   ₹158,562      +12.4%    
-  PEP         8      01-Feb-22   150.7       161.3       7653   ₹81,002       +7.0%     
-  EXC         39     01-Feb-22   35.4        34.1        32549  ₹-44,543      -3.9%     
-  MDLZ        22     01-Feb-22   59.6        56.3        19363  ₹-63,869      -5.5%     
-  PAYX        32     03-Jan-22   118.5       106.0       11173  ₹-140,132     -10.6%    
-  AVGO        45     03-Jan-22   61.3        44.3        21595  ₹-368,036     -27.8% ⚠  
-  NVDA        75     01-Dec-21   31.4        13.5        41355  ₹-738,074     -56.9% ⚠  
-  ⚠  WAZ < 0 (momentum below universe mean): AVGO, NVDA
+  VRTX        2      01-Feb-22   245.7       314.2       4677   ₹320,562      +27.9%    
+  ORLY        4      01-Feb-22   43.8        55.6        26233  ₹309,567      +26.9%    
+  COST        27     01-Oct-21   425.5       478.5       2956   ₹156,532      +12.4%    
+  PEP         8      01-Feb-22   150.7       161.3       7625   ₹80,705       +7.0%     
+  EXC         39     01-Feb-22   35.4        34.1        32428  ₹-44,377      -3.9%     
+  MDLZ        22     01-Feb-22   59.6        56.3        19291  ₹-63,631      -5.5%     
+  GOOG        88     03-May-21   118.8       89.8        8972   ₹-260,370     -24.4% ⚠  
+  AVGO        46     03-Jan-22   61.3        44.3        21194  ₹-361,202     -27.8% ⚠  
+  NVDA        75     01-Dec-21   31.4        13.5        40743  ₹-727,151     -56.9% ⚠  
+  ⚠  WAZ < 0 (momentum below universe mean): AVGO, NVDA, GOOG
 
-  AFTER: Invested ₹10,503,324 | Cash ₹943,146 | Total ₹11,446,470 | Positions 9/10 | Slot ₹1,144,647
+  AFTER: Invested ₹10,056,874 | Cash ₹919,586 | Total ₹10,976,460 | Positions 9/10 | Slot ₹1,097,646
 
 ========================================================================
   REBALANCE #96  —  01 Dec 2022
-  NAV: ₹12,176,408  |  Slot: ₹1,217,641  |  Cash: ₹943,146
+  NAV: ₹11,708,356  |  Slot: ₹1,170,836  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 287.5 < SMA200 298.4 — holding all, skipping exits & entries
@@ -2823,22 +2900,22 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  VRTX        6      01-Feb-22   245.7       320.8       4694   ₹352,519      +30.6%    
-  ORLY        5      01-Feb-22   43.8        57.1        26331  ₹351,414      +30.5%    
-  COST        60     01-Oct-21   426.2       482.9       2990   ₹169,739      +13.3% ⚠  
-  PEP         10     01-Feb-22   150.7       166.9       7653   ₹124,013      +10.8%    
-  MDLZ        9      01-Feb-22   59.6        61.9        19363  ₹45,653       +4.0%     
-  EXC         47     01-Feb-22   35.4        36.8        32549  ₹45,050       +3.9% ⚠   
-  PAYX        40     03-Jan-22   118.5       113.8       11173  ₹-52,805      -4.0%     
-  AVGO        28     03-Jan-22   61.3        52.1        21595  ₹-198,744     -15.0%    
-  NVDA        53     01-Dec-21   31.4        17.1        41355  ₹-589,540     -45.4% ⚠  
-  ⚠  WAZ < 0 (momentum below universe mean): EXC, NVDA, COST
+  VRTX        6      01-Feb-22   245.7       320.8       4677   ₹351,243      +30.6%    
+  ORLY        5      01-Feb-22   43.8        57.1        26233  ₹350,106      +30.5%    
+  COST        60     01-Oct-21   425.5       482.2       2956   ₹167,565      +13.3% ⚠  
+  PEP         10     01-Feb-22   150.7       166.9       7625   ₹123,559      +10.8%    
+  MDLZ        9      01-Feb-22   59.6        61.9        19291  ₹45,483       +4.0%     
+  EXC         47     01-Feb-22   35.4        36.8        32428  ₹44,883       +3.9% ⚠   
+  AVGO        28     03-Jan-22   61.3        52.1        21194  ₹-195,053     -15.0%    
+  GOOG        80     03-May-21   118.8       100.5       8972   ₹-164,439     -15.4% ⚠  
+  NVDA        53     01-Dec-21   31.4        17.1        40743  ₹-580,815     -45.4% ⚠  
+  ⚠  WAZ < 0 (momentum below universe mean): EXC, NVDA, COST, GOOG
 
-  AFTER: Invested ₹11,233,262 | Cash ₹943,146 | Total ₹12,176,408 | Positions 9/10 | Slot ₹1,217,641
+  AFTER: Invested ₹10,788,769 | Cash ₹919,586 | Total ₹11,708,356 | Positions 9/10 | Slot ₹1,170,836
 
 ========================================================================
   REBALANCE #97  —  03 Jan 2023
-  NAV: ₹11,612,931  |  Slot: ₹1,161,293  |  Cash: ₹943,146
+  NAV: ₹11,147,796  |  Slot: ₹1,114,780  |  Cash: ₹919,586
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 259.5 < SMA200 292.3 — holding all, skipping exits & entries
@@ -2852,695 +2929,695 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  ORLY        7      01-Feb-22   43.8        56.0        26331  ₹322,520      +28.0%    
-  VRTX        15     01-Feb-22   245.7       286.0       4694   ₹189,450      +16.4%    
-  EXC         10     01-Feb-22   35.4        38.3        32549  ₹92,084       +8.0%     
-  PEP         11     01-Feb-22   150.7       161.1       7653   ₹79,425       +6.9%     
-  COST        70     01-Oct-21   426.2       434.5       2990   ₹24,786       +1.9% ⚠   
-  MDLZ        8      01-Feb-22   59.6        60.6        19363  ₹20,013       +1.7%     
-  PAYX        53     03-Jan-22   118.5       104.7       11173  ₹-154,689     -11.7% ⚠  
-  AVGO        23     03-Jan-22   61.3        52.8        21595  ₹-183,729     -13.9%    
-  NVDA        58     01-Dec-21   31.4        14.3        41355  ₹-706,038     -54.4% ⚠  
-  ⚠  WAZ < 0 (momentum below universe mean): PAYX, NVDA, COST
+  ORLY        7      01-Feb-22   43.8        56.0        26233  ₹321,319      +28.0%    
+  VRTX        15     01-Feb-22   245.7       286.0       4677   ₹188,764      +16.4%    
+  EXC         10     01-Feb-22   35.4        38.3        32428  ₹91,741       +8.0%     
+  PEP         11     01-Feb-22   150.7       161.1       7625   ₹79,135       +6.9%     
+  COST        70     01-Oct-21   425.5       433.8       2956   ₹24,469       +1.9% ⚠   
+  MDLZ        8      01-Feb-22   59.6        60.6        19291  ₹19,939       +1.7%     
+  AVGO        23     03-Jan-22   61.3        52.8        21194  ₹-180,317     -13.9%    
+  GOOG        85     03-May-21   118.8       89.0        8972   ₹-267,489     -25.1% ⚠  
+  NVDA        58     01-Dec-21   31.4        14.3        40743  ₹-695,590     -54.4% ⚠  
+  ⚠  WAZ < 0 (momentum below universe mean): NVDA, COST, GOOG
 
-  AFTER: Invested ₹10,669,784 | Cash ₹943,146 | Total ₹11,612,931 | Positions 9/10 | Slot ₹1,161,293
+  AFTER: Invested ₹10,228,210 | Cash ₹919,586 | Total ₹11,147,796 | Positions 9/10 | Slot ₹1,114,780
 
 ========================================================================
   REBALANCE #98  —  01 Feb 2023
-  NAV: ₹12,211,543  |  Slot: ₹1,221,154  |  Cash: ₹943,146
+  NAV: ₹11,823,240  |  Slot: ₹1,182,324  |  Cash: ₹919,586
 ========================================================================
 
   EXITS (7)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ORLY        35     01-Feb-22   43.8        53.9        26331  ₹264,960      +23.0%    365d  
-  COST        51     01-Oct-21   426.2       496.4       2990   ₹210,003      +16.5%    488d  
-  EXC         30     01-Feb-22   35.4        37.5        32549  ₹67,268       +5.8%     365d  
-  MDLZ        36     01-Feb-22   59.6        61.0        19363  ₹28,514       +2.5%     365d  
-  PEP         71     01-Feb-22   150.7       154.0       7653   ₹25,494       +2.2%     365d  
-  PAYX        58     03-Jan-22   118.5       106.4       11173  ₹-135,503     -10.2%    394d  
-  NVDA        23     01-Dec-21   31.4        20.9        41355  ₹-432,226     -33.3%    427d  
+  ORLY        34     01-Feb-22   43.8        53.9        26233  ₹263,974      +23.0%    365d  
+  COST        51     01-Oct-21   425.5       495.7       2956   ₹207,314      +16.5%    488d  
+  EXC         30     01-Feb-22   35.4        37.5        32428  ₹67,018       +5.8%     365d  
+  MDLZ        36     01-Feb-22   59.6        61.0        19291  ₹28,408       +2.5%     365d  
+  PEP         71     01-Feb-22   150.7       154.0       7625   ₹25,401       +2.2%     365d  
+  GOOG        78     03-May-21   118.8       100.6       8972   ₹-163,104     -15.3%    639d  
+  NVDA        23     01-Dec-21   31.4        20.9        40743  ₹-425,830     -33.3%    427d  
 
   ENTRIES (7)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  PDD         1      2.496    1.34   +72.1%    +87.8%    103.0       11858  ₹1,221,137  
-  PCAR        2      2.465    0.53   +24.9%    +18.7%    66.2        18438  ₹1,221,105  
-  BIDU        3      2.437    1.16   -4.7%     +98.8%    152.2       8020   ₹1,221,045  
-  ODFL        4      2.188    0.95   +22.3%    +34.0%    180.5       6765   ₹1,221,140  
-  GILD        5      2.181    0.33   +27.9%    +7.9%     75.2        16247  ₹1,221,137  
-  SBUX        6      2.098    0.81   +14.5%    +27.8%    101.6       12016  ₹1,221,073  
-  CDNS        7      2.094    1.01   +24.2%    +24.8%    188.9       6464   ₹1,220,985  
+  PDD         1      2.486    1.34   +72.1%    +87.8%    103.0       11481  ₹1,182,313  
+  PCAR        2      2.457    0.53   +24.9%    +18.7%    66.2        17852  ₹1,182,296  
+  BIDU        3      2.422    1.16   -4.7%     +98.8%    152.2       7765   ₹1,182,221  
+  ODFL        4      2.178    0.95   +22.3%    +34.0%    180.5       6549   ₹1,182,150  
+  GILD        5      2.175    0.33   +27.9%    +7.9%     75.2        15730  ₹1,182,278  
+  SBUX        6      2.088    0.81   +14.5%    +27.8%    101.6       11634  ₹1,182,254  
+  CDNS        7      2.086    1.01   +24.2%    +24.8%    188.9       6259   ₹1,182,263  
 
   HOLDS (2)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  VRTX        17     01-Feb-22   245.7       317.3       4694   ₹336,137      +29.2%    
-  AVGO        11     03-Jan-22   61.3        57.5        21595  ₹-82,213      -6.2%     
+  VRTX        17     01-Feb-22   245.7       317.3       4677   ₹334,920      +29.2%    
+  AVGO        11     03-Jan-22   61.3        57.5        21194  ₹-80,686      -6.2%     
 
-  AFTER: Invested ₹11,278,795 | Cash ₹922,599 | Total ₹12,201,394 | Positions 9/10 | Slot ₹1,221,154
+  AFTER: Invested ₹10,978,494 | Cash ₹834,920 | Total ₹11,813,414 | Positions 9/10 | Slot ₹1,182,324
 
 ========================================================================
   REBALANCE #99  —  01 Mar 2023
-  NAV: ₹11,602,200  |  Slot: ₹1,160,220  |  Cash: ₹922,599
+  NAV: ₹11,229,592  |  Slot: ₹1,122,959  |  Cash: ₹834,920
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  VRTX        22     01-Feb-22   245.7       291.2       4694   ₹213,906      +18.6%    393d  
+  VRTX        22     01-Feb-22   245.7       291.2       4677   ₹213,131      +18.6%    393d  
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  BKNG        1      2.468    0.90   +17.5%    +28.6%    100.2       11576  ₹1,160,153  
+  BKNG        1      2.457    0.90   +17.5%    +28.6%    100.2       11204  ₹1,122,871  
 
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  CDNS        3      01-Feb-23   188.9       191.4       6464   ₹16,419       +1.3%     
-  PCAR        2      01-Feb-23   66.2        65.4        18438  ₹-15,444      -1.3%     
-  GILD        5      01-Feb-23   75.2        71.2        16247  ₹-64,110      -5.3%     
-  BIDU        7      01-Feb-23   152.2       143.7       8020   ₹-68,892      -5.6%     
-  SBUX        20     01-Feb-23   101.6       94.2        12016  ₹-89,388      -7.3%     
-  AVGO        16     03-Jan-22   61.3        56.6        21595  ₹-101,128     -7.6%     
-  ODFL        12     01-Feb-23   180.5       166.5       6765   ₹-95,048      -7.8%     
-  PDD         6      01-Feb-23   103.0       91.0        11858  ₹-141,585     -11.6%    
+  CDNS        3      01-Feb-23   188.9       191.4       6259   ₹15,898       +1.3%     
+  PCAR        2      01-Feb-23   66.2        65.4        17852  ₹-14,953      -1.3%     
+  GILD        5      01-Feb-23   75.2        71.2        15730  ₹-62,070      -5.3%     
+  BIDU        7      01-Feb-23   152.2       143.7       7765   ₹-66,701      -5.6%     
+  SBUX        20     01-Feb-23   101.6       94.2        11634  ₹-86,546      -7.3%     
+  AVGO        16     03-Jan-22   61.3        56.6        21194  ₹-99,250      -7.6%     
+  ODFL        12     01-Feb-23   180.5       166.5       6549   ₹-92,014      -7.8%     
+  PDD         6      01-Feb-23   103.0       91.0        11481  ₹-137,083     -11.6%    
 
-  AFTER: Invested ₹10,472,721 | Cash ₹1,128,102 | Total ₹11,600,822 | Positions 9/10 | Slot ₹1,160,220
+  AFTER: Invested ₹10,155,461 | Cash ₹1,072,798 | Total ₹11,228,259 | Positions 9/10 | Slot ₹1,122,959
 
 ========================================================================
   REBALANCE #100  —  03 Apr 2023
-  NAV: ₹11,831,626  |  Slot: ₹1,183,163  |  Cash: ₹1,128,102
+  NAV: ₹11,453,176  |  Slot: ₹1,145,318  |  Cash: ₹1,072,798
 ========================================================================
 
   EXITS (4)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AVGO        28     03-Jan-22   61.3        61.7        21595  ₹9,154        +0.7%     455d  
-  SBUX        27     01-Feb-23   101.6       97.4        12016  ₹-51,230      -4.2%     61d   
-  ODFL        21     01-Feb-23   180.5       164.3       6765   ₹-109,681     -9.0%     61d   
-  PDD         22     01-Feb-23   103.0       74.8        11858  ₹-333,684     -27.3%    61d   
+  AVGO        28     03-Jan-22   61.3        61.7        21194  ₹8,984        +0.7%     455d  
+  SBUX        27     01-Feb-23   101.6       97.4        11634  ₹-49,601      -4.2%     61d   
+  ODFL        21     01-Feb-23   180.5       164.3       6549   ₹-106,179     -9.0%     61d   
+  PDD         22     01-Feb-23   103.0       74.8        11481  ₹-323,075     -27.3%    61d   
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  NVDA        1      2.684    1.72   +2.6%     +91.4%    27.9        42346  ₹1,183,158  
-  CPRT        3      2.345    0.81   +20.3%    +24.0%    37.7        31350  ₹1,183,149  
-  META        5      2.235    1.43   -4.2%     +77.1%    211.4       5596   ₹1,183,056  
-  MNST        7      2.215    0.49   +34.1%    +5.5%     53.6        22082  ₹1,183,154  
+  NVDA        1      2.675    1.72   +2.6%     +91.4%    27.9        40991  ₹1,145,300  
+  CPRT        3      2.339    0.81   +20.3%    +24.0%    37.7        30347  ₹1,145,296  
+  META        5      2.227    1.43   -4.2%     +77.1%    211.4       5417   ₹1,145,213  
+  MNST        7      2.213    0.49   +34.1%    +5.5%     53.6        21375  ₹1,145,273  
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  CDNS        2      01-Feb-23   188.9       211.4       6464   ₹145,440      +11.9%    
-  BKNG        8      01-Mar-23   100.2       104.7       11576  ₹51,305       +4.4%     
-  GILD        6      01-Feb-23   75.2        75.2        16247  ₹475          +0.0%     
-  PCAR        4      01-Feb-23   66.2        65.4        18438  ₹-15,609      -1.3%     
-  BIDU        20     01-Feb-23   152.2       149.2       8020   ₹-24,541      -2.0%     
+  CDNS        2      01-Feb-23   188.9       211.4       6259   ₹140,828      +11.9%    
+  BKNG        8      01-Mar-23   100.2       104.7       11204  ₹49,656       +4.4%     
+  GILD        6      01-Feb-23   75.2        75.2        15730  ₹460          +0.0%     
+  PCAR        4      01-Feb-23   66.2        65.4        17852  ₹-15,113      -1.3%     
+  BIDU        20     01-Feb-23   152.2       149.2       7765   ₹-23,761      -2.0%     
 
-  AFTER: Invested ₹10,934,011 | Cash ₹891,995 | Total ₹11,826,006 | Positions 9/10 | Slot ₹1,183,163
+  AFTER: Invested ₹10,585,080 | Cash ₹862,656 | Total ₹11,447,736 | Positions 9/10 | Slot ₹1,145,318
 
 ========================================================================
   REBALANCE #101  —  01 May 2023
-  NAV: ₹11,936,254  |  Slot: ₹1,193,625  |  Cash: ₹891,995
+  NAV: ₹11,554,410  |  Slot: ₹1,155,441  |  Cash: ₹862,656
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  BKNG        24     01-Mar-23   100.2       105.7       11576  ₹63,078       +5.4%     61d   
-  BIDU        71     01-Feb-23   152.2       121.3       8020   ₹-248,379     -20.3%    89d   
+  BKNG        24     01-Mar-23   100.2       105.7       11204  ₹61,051       +5.4%     61d   
+  BIDU        70     01-Feb-23   152.2       121.3       7765   ₹-240,482     -20.3%    89d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ORLY        1      3.486    0.40   +49.1%    +17.7%    62.0        19260  ₹1,193,606  
-  MDLZ        2      2.988    0.37   +19.4%    +19.7%    71.0        16807  ₹1,193,565  
+  ORLY        1      3.477    0.40   +49.1%    +17.7%    62.0        18644  ₹1,155,431  
+  MDLZ        2      2.980    0.37   +19.4%    +19.7%    71.0        16270  ₹1,155,429  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  META        5      03-Apr-23   211.4       241.3       5596   ₹167,183      +14.1%    
-  CDNS        10     01-Feb-23   188.9       210.6       6464   ₹140,657      +11.5%    
-  MNST        7      03-Apr-23   53.6        56.8        22082  ₹71,987       +6.1%     
-  CPRT        4      03-Apr-23   37.7        39.2        31350  ₹45,771       +3.9%     
-  NVDA        3      03-Apr-23   27.9        28.9        42346  ₹39,981       +3.4%     
-  PCAR        11     01-Feb-23   66.2        66.9        18438  ₹13,274       +1.1%     
-  GILD        15     01-Feb-23   75.2        73.5        16247  ₹-26,235      -2.1%     
+  META        5      03-Apr-23   211.4       241.3       5417   ₹161,836      +14.1%    
+  CDNS        10     01-Feb-23   188.9       210.6       6259   ₹136,196      +11.5%    
+  MNST        7      03-Apr-23   53.6        56.8        21375  ₹69,682       +6.1%     
+  CPRT        4      03-Apr-23   37.7        39.2        30347  ₹44,307       +3.9%     
+  NVDA        3      03-Apr-23   27.9        28.9        40991  ₹38,702       +3.4%     
+  PCAR        11     01-Feb-23   66.2        66.9        17852  ₹12,853       +1.1%     
+  GILD        15     01-Feb-23   75.2        73.5        15730  ₹-25,400      -2.1%     
 
-  AFTER: Invested ₹11,235,534 | Cash ₹697,886 | Total ₹11,933,420 | Positions 9/10 | Slot ₹1,193,625
+  AFTER: Invested ₹10,876,953 | Cash ₹674,713 | Total ₹11,551,666 | Positions 9/10 | Slot ₹1,155,441
 
 ========================================================================
   REBALANCE #102  —  01 Jun 2023
-  NAV: ₹12,648,590  |  Slot: ₹1,264,859  |  Cash: ₹697,886
+  NAV: ₹12,243,959  |  Slot: ₹1,224,396  |  Cash: ₹674,713
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  PCAR        45     01-Feb-23   66.2        62.9        18438  ₹-61,470      -5.0%     120d  
-  GILD        43     01-Feb-23   75.2        68.8        16247  ₹-102,696     -8.4%     120d  
+  PCAR        44     01-Feb-23   66.2        62.9        17852  ₹-59,517      -5.0%     120d  
+  GILD        42     01-Feb-23   75.2        68.8        15730  ₹-99,428      -8.4%     120d  
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  NFLX        3      2.793    1.25   +104.2%   +29.3%    40.3        31375  ₹1,264,820  
-  AVGO        4      2.663    0.97   +40.6%    +32.9%    75.9        16662  ₹1,264,854  
+  NFLX        3      2.801    1.25   +104.2%   +29.3%    40.3        30372  ₹1,224,386  
+  AVGO        4      2.681    0.97   +40.6%    +32.9%    75.9        16129  ₹1,224,393  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      03-Apr-23   27.9        39.7        42346  ₹499,452      +42.2%    
-  META        12     03-Apr-23   211.4       270.5       5596   ₹330,591      +27.9%    
-  CDNS        7      01-Feb-23   188.9       232.4       6464   ₹281,184      +23.0%    
-  CPRT        2      03-Apr-23   37.7        43.9        31350  ₹192,959      +16.3%    
-  MNST        6      03-Apr-23   53.6        59.4        22082  ₹127,634      +10.8%    
-  ORLY        9      01-May-23   62.0        59.7        19260  ₹-44,067      -3.7%     
-  MDLZ        13     01-May-23   71.0        67.7        16807  ₹-55,799      -4.7%     
+  NVDA        1      03-Apr-23   27.9        39.7        40991  ₹483,470      +42.2%    
+  META        12     03-Apr-23   211.4       270.5       5417   ₹320,016      +27.9%    
+  CDNS        7      01-Feb-23   188.9       232.4       6259   ₹272,266      +23.0%    
+  CPRT        2      03-Apr-23   37.7        43.9        30347  ₹186,786      +16.3%    
+  MNST        6      03-Apr-23   53.6        59.4        21375  ₹123,547      +10.8%    
+  ORLY        9      01-May-23   62.0        59.7        18644  ₹-42,657      -3.7%     
+  MDLZ        13     01-May-23   71.0        67.7        16270  ₹-54,016      -4.7%     
 
-  AFTER: Invested ₹12,202,302 | Cash ₹443,283 | Total ₹12,645,586 | Positions 9/10 | Slot ₹1,264,859
+  AFTER: Invested ₹11,812,396 | Cash ₹428,656 | Total ₹12,241,052 | Positions 9/10 | Slot ₹1,224,396
 
 ========================================================================
   REBALANCE #103  —  03 Jul 2023
-  NAV: ₹13,173,982  |  Slot: ₹1,317,398  |  Cash: ₹443,283
+  NAV: ₹12,752,554  |  Slot: ₹1,275,255  |  Cash: ₹428,656
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MNST        40     03-Apr-23   53.6        57.0        22082  ₹74,416       +6.3%     91d   
-  MDLZ        30     01-May-23   71.0        68.0        16807  ₹-51,338      -4.3%     63d   
+  MNST        40     03-Apr-23   53.6        57.0        21375  ₹72,034       +6.3%     91d   
+  MDLZ        30     01-May-23   71.0        68.0        16270  ₹-49,698      -4.3%     63d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ISRG        5      2.727    0.92   +67.4%    +31.5%    336.0       3920   ₹1,317,238  
-  PCAR        6      2.504    0.48   +58.9%    +14.7%    75.1        17535  ₹1,317,362  
+  ISRG        5      2.722    0.92   +67.4%    +31.5%    336.0       3795   ₹1,275,234  
+  PCAR        6      2.500    0.48   +58.9%    +14.7%    75.1        16974  ₹1,275,216  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      03-Apr-23   27.9        42.4        42346  ₹611,459      +51.7%    
-  META        11     03-Apr-23   211.4       283.8       5596   ₹405,049      +34.2%    
-  CDNS        14     01-Feb-23   188.9       235.4       6464   ₹300,641      +24.6%    
-  CPRT        4      03-Apr-23   37.7        45.1        31350  ₹231,520      +19.6%    
-  AVGO        2      01-Jun-23   75.9        84.7        16662  ₹145,963      +11.5%    
-  NFLX        3      01-Jun-23   40.3        44.1        31375  ₹120,198      +9.5%     
-  ORLY        7      01-May-23   62.0        63.1        19260  ₹22,444       +1.9%     
+  NVDA        1      03-Apr-23   27.9        42.4        40991  ₹591,894      +51.7%    
+  META        11     03-Apr-23   211.4       283.8       5417   ₹392,093      +34.2%    
+  CDNS        14     01-Feb-23   188.9       235.4       6259   ₹291,106      +24.6%    
+  CPRT        4      03-Apr-23   37.7        45.1        30347  ₹224,113      +19.6%    
+  AVGO        2      01-Jun-23   75.9        84.7        16129  ₹141,293      +11.5%    
+  NFLX        3      01-Jun-23   40.3        44.1        30372  ₹116,355      +9.5%     
+  ORLY        7      01-May-23   62.0        63.1        18644  ₹21,727       +1.9%     
 
-  AFTER: Invested ₹12,965,503 | Cash ₹205,351 | Total ₹13,170,854 | Positions 9/10 | Slot ₹1,317,398
+  AFTER: Invested ₹12,551,311 | Cash ₹198,215 | Total ₹12,749,526 | Positions 9/10 | Slot ₹1,275,255
 
 ========================================================================
   REBALANCE #104  —  01 Aug 2023
-  NAV: ₹13,551,537  |  Slot: ₹1,355,154  |  Cash: ₹205,351
+  NAV: ₹13,118,023  |  Slot: ₹1,311,802  |  Cash: ₹198,215
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CDNS        41     01-Feb-23   188.9       233.6       6464   ₹289,199      +23.7%    181d  
-  ORLY        33     01-May-23   62.0        62.1        19260  ₹1,862        +0.2%     92d   
-  ISRG        34     03-Jul-23   336.0       324.0       3920   ₹-47,354      -3.6%     29d   
+  CDNS        40     01-Feb-23   188.9       233.6       6259   ₹280,028      +23.7%    181d  
+  ORLY        33     01-May-23   62.0        62.1        18644  ₹1,802        +0.2%     92d   
+  ISRG        34     03-Jul-23   336.0       324.0       3795   ₹-45,844      -3.6%     29d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  PANW        5      2.308    0.80   +52.2%    +38.1%    126.6       10705  ₹1,355,092  
-  CEG         6      2.234    0.59   +47.2%    +25.4%    94.5        14339  ₹1,355,087  
-  ADBE        8      2.155    1.21   +33.9%    +46.8%    549.1       2467   ₹1,354,630  
+  PANW        5      2.305    0.80   +52.2%    +38.1%    126.6       10363  ₹1,311,800  
+  CEG         6      2.232    0.59   +47.2%    +25.4%    94.5        13880  ₹1,311,710  
+  ADBE        8      2.154    1.21   +33.9%    +46.8%    549.1       2389   ₹1,311,800  
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        2      03-Apr-23   27.9        46.5        42346  ₹784,689      +66.3%    
-  META        7      03-Apr-23   211.4       320.2       5596   ₹608,768      +51.5%    
-  CPRT        13     03-Apr-23   37.7        44.4        31350  ₹209,418      +17.7%    
-  AVGO        1      01-Jun-23   75.9        88.9        16662  ₹216,082      +17.1%    
-  NFLX        3      01-Jun-23   40.3        43.9        31375  ₹111,350      +8.8%     
-  PCAR        4      03-Jul-23   75.1        77.6        17535  ₹43,943       +3.3%     
+  NVDA        2      03-Apr-23   27.9        46.5        40991  ₹759,580      +66.3%    
+  META        7      03-Apr-23   211.4       320.2       5417   ₹589,295      +51.5%    
+  CPRT        13     03-Apr-23   37.7        44.4        30347  ₹202,718      +17.7%    
+  AVGO        1      01-Jun-23   75.9        88.9        16129  ₹209,169      +17.1%    
+  NFLX        3      01-Jun-23   40.3        43.9        30372  ₹107,790      +8.8%     
+  PCAR        4      03-Jul-23   75.1        77.6        16974  ₹42,538       +3.3%     
 
-  AFTER: Invested ₹13,435,458 | Cash ₹111,252 | Total ₹13,546,711 | Positions 9/10 | Slot ₹1,355,154
+  AFTER: Invested ₹13,006,204 | Cash ₹107,146 | Total ₹13,113,350 | Positions 9/10 | Slot ₹1,311,802
 
 ========================================================================
   REBALANCE #105  —  01 Sep 2023
-  NAV: ₹13,526,221  |  Slot: ₹1,352,622  |  Cash: ₹111,252
+  NAV: ₹13,093,521  |  Slot: ₹1,309,352  |  Cash: ₹107,146
 ========================================================================
 
   EXITS (4)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  META        29     03-Apr-23   211.4       294.1       5596   ₹462,573      +39.1%    151d  
-  CPRT        24     03-Apr-23   37.7        45.0        31350  ₹226,974      +19.2%    151d  
-  NFLX        13     01-Jun-23   40.3        44.0        31375  ₹115,303      +9.1%     92d   
-  PANW        40     01-Aug-23   126.6       121.4       10705  ₹-55,934      -4.1%     31d   
+  META        29     03-Apr-23   211.4       294.1       5417   ₹447,776      +39.1%    151d  
+  CPRT        24     03-Apr-23   37.7        45.0        30347  ₹219,712      +19.2%    151d  
+  NFLX        13     01-Jun-23   40.3        44.0        30372  ₹111,617      +9.1%     92d   
+  PANW        40     01-Aug-23   126.6       121.4       10363  ₹-54,147      -4.1%     31d   
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ODFL        2      2.840    0.88   +61.3%    +36.5%    214.5       6304   ₹1,352,489  
-  BKNG        3      2.574    0.73   +66.1%    +18.6%    122.3       11058  ₹1,352,511  
-  CSCO        5      2.405    0.57   +33.6%    +16.5%    53.6        25217  ₹1,352,580  
-  ROST        6      2.313    0.61   +43.2%    +18.5%    118.6       11402  ₹1,352,621  
+  ODFL        2      2.833    0.88   +61.3%    +36.5%    214.5       6102   ₹1,309,151  
+  BKNG        3      2.568    0.73   +66.1%    +18.6%    122.3       10705  ₹1,309,336  
+  CSCO        5      2.400    0.57   +33.6%    +16.5%    53.6        24411  ₹1,309,348  
+  ROST        6      2.308    0.61   +43.2%    +18.5%    118.6       11037  ₹1,309,321  
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      03-Apr-23   27.9        48.5        42346  ₹869,399      +73.5%    
-  CEG         9      01-Aug-23   94.5        105.6       14339  ₹158,684      +11.7%    
-  AVGO        10     01-Jun-23   75.9        84.3        16662  ₹139,652      +11.0%    
-  ADBE        8      01-Aug-23   549.1       563.2       2467   ₹34,809       +2.6%     
-  PCAR        4      03-Jul-23   75.1        75.3        17535  ₹2,298        +0.2%     
+  NVDA        1      03-Apr-23   27.9        48.5        40991  ₹841,580      +73.5%    
+  CEG         9      01-Aug-23   94.5        105.6       13880  ₹153,604      +11.7%    
+  AVGO        10     01-Jun-23   75.9        84.3        16129  ₹135,185      +11.0%    
+  ADBE        8      01-Aug-23   549.1       563.2       2389   ₹33,709       +2.6%     
+  PCAR        4      03-Jul-23   75.1        75.3        16974  ₹2,225        +0.2%     
 
-  AFTER: Invested ₹13,090,135 | Cash ₹429,661 | Total ₹13,519,797 | Positions 9/10 | Slot ₹1,352,622
+  AFTER: Invested ₹12,671,875 | Cash ₹415,427 | Total ₹13,087,302 | Positions 9/10 | Slot ₹1,309,352
 
 ========================================================================
   REBALANCE #106  —  02 Oct 2023
-  NAV: ₹12,918,293  |  Slot: ₹1,291,829  |  Cash: ₹429,661
+  NAV: ₹12,505,008  |  Slot: ₹1,250,501  |  Cash: ₹415,427
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CEG         14     01-Aug-23   94.5        103.1       14339  ₹122,564      +9.0%     62d   
-  AVGO        13     01-Jun-23   75.9        81.1        16662  ₹86,496       +6.8%     123d  
-  ROST        24     01-Sep-23   118.6       111.6       11402  ₹-80,357      -5.9%     31d   
+  CEG         13     01-Aug-23   94.5        103.1       13880  ₹118,641      +9.0%     62d   
+  AVGO        14     01-Jun-23   75.9        81.1        16129  ₹83,729       +6.8%     123d  
+  ROST        23     01-Sep-23   118.6       111.6       11037  ₹-77,785      -5.9%     31d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AMGN        3      2.566    0.17   +20.5%    +19.3%    246.7       5236   ₹1,291,658  
-  BKR         5      2.266    0.57   +67.8%    +10.0%    32.7        39535  ₹1,291,809  
-  CMCSA       6      2.178    0.63   +50.8%    +6.5%     37.9        34118  ₹1,291,793  
+  AMGN        3      2.579    0.17   +20.5%    +19.3%    246.7       5069   ₹1,250,461  
+  BKR         5      2.273    0.57   +67.8%    +10.0%    32.7        38270  ₹1,250,475  
+  CMCSA       6      2.185    0.63   +50.8%    +6.5%     37.9        33027  ₹1,250,485  
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      03-Apr-23   27.9        44.8        42346  ₹711,855      +60.2%    
-  PCAR        11     03-Jul-23   75.1        76.4        17535  ₹21,891       +1.7%     
-  BKNG        2      01-Sep-23   122.3       121.5       11058  ₹-9,175       -0.7%     
-  ADBE        4      01-Aug-23   549.1       521.1       2467   ₹-69,002      -5.1%     
-  CSCO        9      01-Sep-23   53.6        50.4        25217  ₹-80,678      -6.0%     
-  ODFL        12     01-Sep-23   214.5       198.6       6304   ₹-100,256     -7.4%     
+  NVDA        1      03-Apr-23   27.9        44.8        40991  ₹689,077      +60.2%    
+  PCAR        11     03-Jul-23   75.1        76.4        16974  ₹21,191       +1.7%     
+  BKNG        2      01-Sep-23   122.3       121.5       10705  ₹-8,882       -0.7%     
+  ADBE        4      01-Aug-23   549.1       521.1       2389   ₹-66,820      -5.1%     
+  CSCO        9      01-Sep-23   53.6        50.4        24411  ₹-78,099      -6.0%     
+  ODFL        12     01-Sep-23   214.5       198.6       6102   ₹-97,043      -7.4%     
 
-  AFTER: Invested ₹12,262,626 | Cash ₹651,065 | Total ₹12,913,691 | Positions 9/10 | Slot ₹1,291,829
+  AFTER: Invested ₹11,870,994 | Cash ₹629,559 | Total ₹12,500,553 | Positions 9/10 | Slot ₹1,250,501
 
 ========================================================================
   REBALANCE #107  —  01 Nov 2023
-  NAV: ₹12,532,517  |  Slot: ₹1,253,252  |  Cash: ₹651,065
+  NAV: ₹12,131,582  |  Slot: ₹1,213,158  |  Cash: ₹629,559
 ========================================================================
 
   EXITS (5)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  BKR         34     02-Oct-23   32.7        32.9        39535  ₹10,466       +0.8%     30d   
-  PCAR        22     03-Jul-23   75.1        74.9        17535  ₹-3,548       -0.3%     121d  
-  CMCSA       40     02-Oct-23   37.9        35.8        34118  ₹-69,558      -5.4%     30d   
-  CSCO        35     01-Sep-23   53.6        48.7        25217  ₹-123,310     -9.1%     61d   
-  ODFL        36     01-Sep-23   214.5       192.5       6304   ₹-139,203     -10.3%    61d   
+  BKR         33     02-Oct-23   32.7        32.9        38270  ₹10,131       +0.8%     30d   
+  PCAR        22     03-Jul-23   75.1        74.9        16974  ₹-3,435       -0.3%     121d  
+  CMCSA       39     02-Oct-23   37.9        35.8        33027  ₹-67,334      -5.4%     30d   
+  CSCO        34     01-Sep-23   53.6        48.7        24411  ₹-119,369     -9.1%     61d   
+  ODFL        35     01-Sep-23   214.5       192.5       6102   ₹-134,742     -10.3%    61d   
 
   ENTRIES (5)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  META        1      3.705    1.46   +234.7%   -0.4%     309.4       4050   ₹1,253,158  
-  SNPS        3      2.489    1.06   +62.5%    +8.0%     475.4       2636   ₹1,253,102  
-  CDNS        4      2.428    1.07   +61.8%    +7.1%     244.9       5117   ₹1,253,051  
-  MSFT        5      2.270    1.07   +50.5%    +6.2%     339.5       3691   ₹1,253,170  
-  CEG         7      2.227    0.57   +22.9%    +13.9%    113.0       11089  ₹1,253,157  
+  META        1      3.700    1.46   +234.7%   -0.4%     309.4       3920   ₹1,212,934  
+  SNPS        3      2.488    1.06   +62.5%    +8.0%     475.4       2551   ₹1,212,694  
+  CDNS        4      2.427    1.07   +61.8%    +7.1%     244.9       4954   ₹1,213,136  
+  MSFT        5      2.271    1.07   +50.5%    +6.2%     339.5       3573   ₹1,213,106  
+  CEG         7      2.227    0.57   +22.9%    +13.9%    113.0       10735  ₹1,213,152  
 
   HOLDS (4)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        2      03-Apr-23   27.9        42.3        42346  ₹607,884      +51.4%    
-  ADBE        6      01-Aug-23   549.1       544.5       2467   ₹-11,348      -0.8%     
-  AMGN        10     02-Oct-23   246.7       241.6       5236   ₹-26,530      -2.1%     
-  BKNG        16     01-Sep-23   122.3       108.6       11058  ₹-151,391     -11.2%    
+  NVDA        2      03-Apr-23   27.9        42.3        40991  ₹588,432      +51.4%    
+  ADBE        6      01-Aug-23   549.1       544.5       2389   ₹-10,989      -0.8%     
+  AMGN        10     02-Oct-23   246.7       241.6       5069   ₹-25,685      -2.1%     
+  BKNG        16     01-Sep-23   122.3       108.6       10705  ₹-146,558     -11.2%    
 
-  AFTER: Invested ₹11,866,209 | Cash ₹658,868 | Total ₹12,525,077 | Positions 9/10 | Slot ₹1,253,252
+  AFTER: Invested ₹11,487,118 | Cash ₹637,263 | Total ₹12,124,381 | Positions 9/10 | Slot ₹1,213,158
 
 ========================================================================
   REBALANCE #108  —  01 Dec 2023
-  NAV: ₹13,650,283  |  Slot: ₹1,365,028  |  Cash: ₹658,868
+  NAV: ₹13,213,640  |  Slot: ₹1,321,364  |  Cash: ₹637,263
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CEG         17     01-Nov-23   113.0       118.2       11089  ₹57,914       +4.6%     30d   
-  AMGN        44     02-Oct-23   246.7       254.4       5236   ₹40,170       +3.1%     60d   
-  BKNG        20     01-Sep-23   122.3       124.1       11058  ₹19,396       +1.4%     91d   
+  CEG         17     01-Nov-23   113.0       118.2       10735  ₹56,065       +4.6%     30d   
+  AMGN        44     02-Oct-23   246.7       254.4       5069   ₹38,889       +3.1%     60d   
+  BKNG        20     01-Sep-23   122.3       124.1       10705  ₹18,777       +1.4%     91d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CRWD        1      3.241    1.42   +99.8%    +45.8%    235.0       5807   ₹1,364,819  
-  CPRT        4      2.481    0.75   +50.6%    +11.4%    50.1        27229  ₹1,364,990  
-  PANW        5      2.373    0.97   +74.3%    +22.0%    148.1       9218   ₹1,365,001  
+  CRWD        1      3.232    1.42   +99.8%    +45.8%    235.0       5622   ₹1,321,339  
+  CPRT        4      2.474    0.75   +50.6%    +11.4%    50.1        26358  ₹1,321,327  
+  PANW        5      2.366    0.97   +74.3%    +22.0%    148.1       8923   ₹1,321,318  
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        8      03-Apr-23   27.9        46.7        42346  ₹795,769      +67.3%    
-  SNPS        3      01-Nov-23   475.4       546.0       2636   ₹186,049      +14.8%    
-  ADBE        9      01-Aug-23   549.1       612.5       2467   ₹156,334      +11.5%    
-  CDNS        10     01-Nov-23   244.9       270.4       5117   ₹130,330      +10.4%    
-  MSFT        6      01-Nov-23   339.5       368.2       3691   ₹105,738      +8.4%     
-  META        2      01-Nov-23   309.4       322.3       4050   ₹52,120       +4.2%     
+  NVDA        8      03-Apr-23   27.9        46.7        40991  ₹770,305      +67.3%    
+  SNPS        3      01-Nov-23   475.4       546.0       2551   ₹180,050      +14.8%    
+  ADBE        9      01-Aug-23   549.1       612.5       2389   ₹151,391      +11.5%    
+  CDNS        10     01-Nov-23   244.9       270.4       4954   ₹126,178      +10.4%    
+  MSFT        6      01-Nov-23   339.5       368.2       3573   ₹102,357      +8.4%     
+  META        2      01-Nov-23   309.4       322.3       3920   ₹50,446       +4.2%     
 
-  AFTER: Invested ₹13,071,418 | Cash ₹574,002 | Total ₹13,645,421 | Positions 9/10 | Slot ₹1,365,028
+  AFTER: Invested ₹12,653,680 | Cash ₹555,253 | Total ₹13,208,933 | Positions 9/10 | Slot ₹1,321,364
 
 ========================================================================
   REBALANCE #109  —  02 Jan 2024
-  NAV: ₹13,500,281  |  Slot: ₹1,350,028  |  Cash: ₹574,002
+  NAV: ₹13,068,433  |  Slot: ₹1,306,843  |  Cash: ₹555,253
 ========================================================================
 
   EXITS (4)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CDNS        33     01-Nov-23   244.9       262.9       5117   ₹92,208       +7.4%     62d   
-  ADBE        35     01-Aug-23   549.1       580.1       2467   ₹76,403       +5.6%     154d  
-  SNPS        38     01-Nov-23   475.4       499.0       2636   ₹62,183       +5.0%     62d   
-  CPRT        23     01-Dec-23   50.1        47.5        27229  ₹-71,340      -5.2%     32d   
+  CDNS        33     01-Nov-23   244.9       262.9       4954   ₹89,271       +7.4%     62d   
+  ADBE        35     01-Aug-23   549.1       580.1       2389   ₹73,987       +5.6%     154d  
+  SNPS        38     01-Nov-23   475.4       499.0       2551   ₹60,178       +5.0%     62d   
+  CPRT        23     01-Dec-23   50.1        47.5        26358  ₹-69,058      -5.2%     32d   
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AVGO        2      2.659    1.16   +99.0%    +30.6%    105.9       12746  ₹1,349,983  
-  CTAS        5      2.285    0.58   +30.9%    +22.4%    145.3       9293   ₹1,349,975  
-  COST        6      2.248    0.58   +46.9%    +16.7%    642.6       2100   ₹1,349,536  
-  INTC        7      2.201    1.11   +86.6%    +35.2%    47.2        28621  ₹1,350,003  
+  AVGO        2      2.654    1.16   +99.0%    +30.6%    105.9       12338  ₹1,306,770  
+  CTAS        5      2.282    0.58   +30.9%    +22.4%    145.3       8996   ₹1,306,830  
+  COST        6      2.244    0.58   +46.9%    +16.7%    641.7       2036   ₹1,306,512  
+  INTC        7      2.198    1.11   +86.6%    +35.2%    47.2        27705  ₹1,306,797  
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        4      03-Apr-23   27.9        48.1        42346  ₹855,318      +72.3%    
-  META        3      01-Nov-23   309.4       343.6       4050   ₹138,396      +11.0%    
-  MSFT        15     01-Nov-23   339.5       364.6       3691   ₹92,530       +7.4%     
-  CRWD        1      01-Dec-23   235.0       246.9       5807   ₹68,871       +5.0%     
-  PANW        11     01-Dec-23   148.1       144.5       9218   ₹-33,369      -2.4%     
+  NVDA        4      03-Apr-23   27.9        48.1        40991  ₹827,949      +72.3%    
+  META        3      01-Nov-23   309.4       343.6       3920   ₹133,953      +11.0%    
+  MSFT        15     01-Nov-23   339.5       364.6       3573   ₹89,572       +7.4%     
+  CRWD        1      01-Dec-23   235.0       246.9       5622   ₹66,677       +5.0%     
+  PANW        11     01-Dec-23   148.1       144.5       8923   ₹-32,301      -2.4%     
 
-  AFTER: Invested ₹12,940,550 | Cash ₹553,321 | Total ₹13,493,870 | Positions 9/10 | Slot ₹1,350,028
+  AFTER: Invested ₹12,526,754 | Cash ₹535,472 | Total ₹13,062,227 | Positions 9/10 | Slot ₹1,306,843
 
 ========================================================================
   REBALANCE #110  —  01 Feb 2024
-  NAV: ₹15,166,446  |  Slot: ₹1,516,645  |  Cash: ₹553,321
+  NAV: ₹14,681,323  |  Slot: ₹1,468,132  |  Cash: ₹535,472
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  INTC        52     02-Jan-24   47.2        42.8        28621  ₹-125,398     -9.3%     30d   
+  INTC        52     02-Jan-24   47.2        42.8        27705  ₹-121,384     -9.3%     30d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AMD         5      2.667    1.85   +126.9%   +73.1%    170.5       8896   ₹1,516,590  
+  AMD         5      2.660    1.85   +126.9%   +73.1%    170.5       8611   ₹1,468,003  
 
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        2      03-Apr-23   27.9        63.0        42346  ₹1,484,152    +125.4%   
-  CRWD        1      01-Dec-23   235.0       299.4       5807   ₹373,622      +27.4%    
-  META        6      01-Nov-23   309.4       391.7       4050   ₹333,251      +26.6%    
-  MSFT        16     01-Nov-23   339.5       396.9       3691   ₹211,944      +16.9%    
-  PANW        8      01-Dec-23   148.1       170.0       9218   ₹201,920      +14.8%    
-  AVGO        4      02-Jan-24   105.9       117.1       12746  ₹142,576      +10.6%    
-  COST        3      02-Jan-24   642.6       696.8       2100   ₹113,799      +8.4%     
-  CTAS        11     02-Jan-24   145.3       151.6       9293   ₹58,454       +4.3%     
+  NVDA        2      03-Apr-23   27.9        63.0        40991  ₹1,436,662    +125.4%   
+  CRWD        1      01-Dec-23   235.0       299.4       5622   ₹361,719      +27.4%    
+  META        6      01-Nov-23   309.4       391.7       3920   ₹322,554      +26.6%    
+  MSFT        16     01-Nov-23   339.5       396.9       3573   ₹205,168      +16.9%    
+  PANW        8      01-Dec-23   148.1       170.0       8923   ₹195,458      +14.8%    
+  AVGO        4      02-Jan-24   105.9       117.1       12338  ₹138,011      +10.6%    
+  COST        3      02-Jan-24   641.7       695.8       2036   ₹110,171      +8.4%     
+  CTAS        11     02-Jan-24   145.3       151.6       8996   ₹56,587       +4.3%     
 
-  AFTER: Invested ₹14,905,110 | Cash ₹259,535 | Total ₹15,164,645 | Positions 9/10 | Slot ₹1,516,645
+  AFTER: Invested ₹14,428,441 | Cash ₹251,139 | Total ₹14,679,580 | Positions 9/10 | Slot ₹1,468,132
 
 ========================================================================
   REBALANCE #111  —  01 Mar 2024
-  NAV: ₹17,029,269  |  Slot: ₹1,702,927  |  Cash: ₹259,535
+  NAV: ₹16,484,508  |  Slot: ₹1,648,451  |  Cash: ₹251,139
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MSFT        21     01-Nov-23   339.5       409.2       3691   ₹257,258      +20.5%    121d  
-  PANW        63     01-Dec-23   148.1       151.2       9218   ₹28,760       +2.1%     91d   
+  MSFT        21     01-Nov-23   339.5       409.2       3573   ₹249,033      +20.5%    121d  
+  PANW        62     01-Dec-23   148.1       151.2       8923   ₹27,840       +2.1%     91d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CEG         5      2.895    0.44   +130.6%   +41.0%    167.7       10157  ₹1,702,848  
+  CEG         5      2.887    0.44   +130.6%   +41.0%    167.7       9832   ₹1,648,361  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      03-Apr-23   27.9        82.2        42346  ₹2,298,899    +194.3%   
-  META        2      01-Nov-23   309.4       498.9       4050   ₹767,458      +61.2%    
-  CRWD        8      01-Dec-23   235.0       314.6       5807   ₹462,063      +33.9%    
-  AVGO        4      02-Jan-24   105.9       136.5       12746  ₹390,289      +28.9%    
-  AMD         6      01-Feb-24   170.5       202.6       8896   ₹286,095      +18.9%    
-  COST        3      02-Jan-24   642.6       741.3       2100   ₹207,189      +15.4%    
-  CTAS        17     02-Jan-24   145.3       154.6       9293   ₹86,332       +6.4%     
+  NVDA        1      03-Apr-23   27.9        82.2        40991  ₹2,225,338    +194.3%   
+  META        2      01-Nov-23   309.4       498.9       3920   ₹742,824      +61.2%    
+  CRWD        8      01-Dec-23   235.0       314.6       5622   ₹447,343      +33.9%    
+  AVGO        4      02-Jan-24   105.9       136.5       12338  ₹377,795      +28.9%    
+  AMD         6      01-Feb-24   170.5       202.6       8611   ₹276,930      +18.9%    
+  COST        3      02-Jan-24   641.7       740.2       2036   ₹200,583      +15.4%    
+  CTAS        17     02-Jan-24   145.3       154.6       8996   ₹83,573       +6.4%     
 
-  AFTER: Invested ₹15,568,393 | Cash ₹1,458,854 | Total ₹17,027,247 | Positions 8/10 | Slot ₹1,702,927
+  AFTER: Invested ₹15,070,433 | Cash ₹1,412,118 | Total ₹16,482,551 | Positions 8/10 | Slot ₹1,648,451
 
 ========================================================================
   REBALANCE #112  —  01 Apr 2024
-  NAV: ₹17,353,631  |  Slot: ₹1,735,363  |  Cash: ₹1,458,854
+  NAV: ₹16,798,505  |  Slot: ₹1,679,851  |  Cash: ₹1,412,118
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  COST        21     02-Jan-24   642.6       713.4       2100   ₹148,612      +11.0%    90d   
-  AMD         25     01-Feb-24   170.5       183.3       8896   ₹114,403      +7.5%     60d   
+  COST        21     02-Jan-24   641.7       712.4       2036   ₹143,874      +11.0%    90d   
+  AMD         25     01-Feb-24   170.5       183.3       8611   ₹110,737      +7.5%     60d   
 
   ENTRIES (2)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  PCAR        3      3.057    0.44   +78.1%    +26.2%    115.3       15048  ₹1,735,253  
-  DASH        5      2.648    1.26   +131.0%   +38.0%    138.2       12552  ₹1,735,314  
+  PCAR        3      3.054    0.44   +78.1%    +26.2%    115.3       14567  ₹1,679,787  
+  DASH        5      2.646    1.26   +131.0%   +38.0%    138.2       12150  ₹1,679,738  
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      03-Apr-23   27.9        90.3        42346  ₹2,641,195    +223.2%   
-  META        4      01-Nov-23   309.4       488.0       4050   ₹723,409      +57.7%    
-  CRWD        8      01-Dec-23   235.0       319.6       5807   ₹491,040      +36.0%    
-  AVGO        9      02-Jan-24   105.9       132.3       12746  ₹336,607      +24.9%    
-  CTAS        14     02-Jan-24   145.3       167.4       9293   ₹205,605      +15.2%    
-  CEG         2      01-Mar-24   167.7       183.8       10157  ₹163,839      +9.6%     
+  NVDA        1      03-Apr-23   27.9        90.3        40991  ₹2,556,681    +223.2%   
+  META        4      01-Nov-23   309.4       488.0       3920   ₹700,189      +57.7%    
+  CRWD        8      01-Dec-23   235.0       319.6       5622   ₹475,396      +36.0%    
+  AVGO        9      02-Jan-24   105.9       132.3       12338  ₹325,832      +24.9%    
+  CTAS        14     02-Jan-24   145.3       167.4       8996   ₹199,034      +15.2%    
+  CEG         2      01-Mar-24   167.7       183.8       9832   ₹158,596      +9.6%     
 
-  AFTER: Invested ₹16,236,203 | Cash ₹1,113,307 | Total ₹17,349,510 | Positions 8/10 | Slot ₹1,735,363
+  AFTER: Invested ₹15,716,785 | Cash ₹1,077,731 | Total ₹16,794,516 | Positions 8/10 | Slot ₹1,679,851
 
 ========================================================================
   REBALANCE #113  —  01 May 2024
-  NAV: ₹16,130,724  |  Slot: ₹1,613,072  |  Cash: ₹1,113,307
+  NAV: ₹15,614,726  |  Slot: ₹1,561,473  |  Cash: ₹1,077,731
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  PCAR        18     01-Apr-24   115.3       99.6        15048  ₹-236,254     -13.6%    30d   
+  PCAR        17     01-Apr-24   115.3       99.6        14567  ₹-228,702     -13.6%    30d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  FANG        3      2.785    0.12   +45.2%    +29.7%    184.5       8744   ₹1,612,891  
+  FANG        3      2.801    0.12   +45.2%    +29.7%    184.5       8465   ₹1,561,427  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        2      03-Apr-23   27.9        83.0        42346  ₹2,331,312    +197.0%   
-  META        14     01-Nov-23   309.4       436.2       4050   ₹513,584      +41.0%    
-  CRWD        8      01-Dec-23   235.0       295.4       5807   ₹350,801      +25.7%    
-  AVGO        17     02-Jan-24   105.9       121.8       12746  ₹202,455      +15.0%    
-  CTAS        7      02-Jan-24   145.3       163.2       9293   ₹166,861      +12.4%    
-  CEG         1      01-Mar-24   167.7       182.4       10157  ₹149,586      +8.8%     
-  DASH        4      01-Apr-24   138.2       127.5       12552  ₹-135,436     -7.8%     
+  NVDA        2      03-Apr-23   27.9        83.0        40991  ₹2,256,714    +197.0%   
+  META        13     01-Nov-23   309.4       436.2       3920   ₹497,098      +41.0%    
+  CRWD        8      01-Dec-23   235.0       295.4       5622   ₹339,625      +25.7%    
+  AVGO        16     02-Jan-24   105.9       121.8       12338  ₹195,974      +15.0%    
+  CTAS        7      02-Jan-24   145.3       163.2       8996   ₹161,528      +12.4%    
+  CEG         1      01-Mar-24   167.7       182.4       9832   ₹144,800      +8.8%     
+  DASH        4      01-Apr-24   138.2       127.5       12150  ₹-131,099     -7.8%     
 
-  AFTER: Invested ₹15,131,309 | Cash ₹997,500 | Total ₹16,128,809 | Positions 8/10 | Slot ₹1,613,072
+  AFTER: Invested ₹14,647,338 | Cash ₹965,534 | Total ₹15,612,872 | Positions 8/10 | Slot ₹1,561,473
 
 ========================================================================
   REBALANCE #114  —  03 Jun 2024
-  NAV: ₹17,843,344  |  Slot: ₹1,784,334  |  Cash: ₹997,500
+  NAV: ₹17,272,545  |  Slot: ₹1,727,254  |  Cash: ₹965,534
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  META        27     01-Nov-23   309.4       474.3       4050   ₹667,655      +53.3%    215d  
-  AVGO        30     02-Jan-24   105.9       129.5       12746  ₹301,183      +22.3%    153d  
-  DASH        48     01-Apr-24   138.2       110.8       12552  ₹-344,301     -19.8%    63d   
+  META        26     01-Nov-23   309.4       474.3       3920   ₹646,223      +53.3%    215d  
+  AVGO        29     02-Jan-24   105.9       129.5       12338  ₹291,542      +22.3%    153d  
+  DASH        49     01-Apr-24   138.2       110.8       12150  ₹-333,275     -19.8%    63d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  MU          3      2.738    1.23   +86.6%    +34.0%    127.3       14019  ₹1,784,299  
-  COST        4      2.737    0.57   +63.8%    +7.6%     807.8       2208   ₹1,783,679  
-  QCOM        5      2.714    1.13   +81.8%    +24.1%    198.1       9009   ₹1,784,250  
+  MU          3      2.772    1.23   +86.6%    +34.0%    127.3       13570  ₹1,727,152  
+  COST        4      2.757    0.57   +63.8%    +7.6%     806.7       2141   ₹1,727,049  
+  QCOM        5      2.745    1.13   +81.8%    +24.1%    198.1       8721   ₹1,727,211  
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      03-Apr-23   27.9        114.9       42346  ₹3,683,885    +311.4%   
-  CRWD        20     01-Dec-23   235.0       308.7       5807   ₹427,744      +31.3%    
-  CEG         2      01-Mar-24   167.7       206.1       10157  ₹390,659      +22.9%    
-  CTAS        9      02-Jan-24   145.3       166.2       9293   ₹194,935      +14.4%    
-  FANG        10     01-May-24   184.5       181.2       8744   ₹-28,061      -1.7%     
+  NVDA        1      03-Apr-23   27.9        114.9       40991  ₹3,566,007    +311.4%   
+  CRWD        19     01-Dec-23   235.0       308.7       5622   ₹414,117      +31.3%    
+  CEG         2      01-Mar-24   167.7       206.1       9832   ₹378,159      +22.9%    
+  CTAS        8      02-Jan-24   145.3       166.2       8996   ₹188,705      +14.4%    
+  FANG        9      01-May-24   184.5       181.2       8465   ₹-27,165      -1.7%     
 
-  AFTER: Invested ₹17,235,081 | Cash ₹601,908 | Total ₹17,836,989 | Positions 8/10 | Slot ₹1,784,334
+  AFTER: Invested ₹16,684,490 | Cash ₹581,902 | Total ₹17,266,392 | Positions 8/10 | Slot ₹1,727,254
 
 ========================================================================
   REBALANCE #115  —  01 Jul 2024
-  NAV: ₹18,898,132  |  Slot: ₹1,889,813  |  Cash: ₹601,908
+  NAV: ₹18,293,673  |  Slot: ₹1,829,367  |  Cash: ₹581,902
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CTAS        23     02-Jan-24   145.3       171.1       9293   ₹239,710      +17.8%    181d  
+  CTAS        22     02-Jan-24   145.3       171.1       8996   ₹232,049      +17.8%    181d  
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  TMUS        4      2.513    0.16   +32.5%    +10.5%    174.3       10843  ₹1,889,790  
+  TMUS        4      2.528    0.16   +32.5%    +10.5%    174.3       10496  ₹1,829,312  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        1      03-Apr-23   27.9        124.2       42346  ₹4,077,913    +344.7%   
-  CRWD        3      01-Dec-23   235.0       392.1       5807   ₹912,396      +66.9%    
-  CEG         5      01-Mar-24   167.7       202.9       10157  ₹358,391      +21.0%    
-  FANG        14     01-May-24   184.5       193.6       8744   ₹79,971       +5.0%     
-  COST        2      03-Jun-24   807.8       837.8       2208   ₹66,238       +3.7%     
-  MU          15     03-Jun-24   127.3       130.6       14019  ₹46,637       +2.6%     
-  QCOM        9      03-Jun-24   198.1       192.4       9009   ₹-50,951      -2.9%     
+  NVDA        1      03-Apr-23   27.9        124.2       40991  ₹3,947,426    +344.7%   
+  CRWD        3      01-Dec-23   235.0       392.1       5622   ₹883,329      +66.9%    
+  CEG         5      01-Mar-24   167.7       202.9       9832   ₹346,924      +21.0%    
+  FANG        13     01-May-24   184.5       193.6       8465   ₹77,420       +5.0%     
+  COST        2      03-Jun-24   806.7       836.6       2141   ₹64,135       +3.7%     
+  MU          14     03-Jun-24   127.3       130.6       13570  ₹45,143       +2.6%     
+  QCOM        9      03-Jun-24   198.1       192.4       8721   ₹-49,323      -2.9%     
 
-  AFTER: Invested ₹18,596,329 | Cash ₹299,559 | Total ₹18,895,888 | Positions 8/10 | Slot ₹1,889,813
+  AFTER: Invested ₹18,002,204 | Cash ₹289,296 | Total ₹18,291,501 | Positions 8/10 | Slot ₹1,829,367
 
 ========================================================================
   REBALANCE #116  —  01 Aug 2024
-  NAV: ₹16,255,316  |  Slot: ₹1,625,532  |  Cash: ₹299,559
+  NAV: ₹15,735,269  |  Slot: ₹1,573,527  |  Cash: ₹289,296
 ========================================================================
 
   EXITS (5)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CEG         23     01-Mar-24   167.7       175.7       10157  ₹82,152       +4.8%     153d  
-  FANG        22     01-May-24   184.5       188.4       8744   ₹34,348       +2.1%     92d   
-  CRWD        79     01-Dec-23   235.0       224.2       5807   ₹-62,774      -4.6%     244d  
-  QCOM        52     03-Jun-24   198.1       157.7       9009   ₹-363,158     -20.4%    59d   
-  MU          56     03-Jun-24   127.3       100.9       14019  ₹-369,907     -20.7%    59d   
+  CEG         23     01-Mar-24   167.7       175.7       9832   ₹79,523       +4.8%     153d  
+  FANG        21     01-May-24   184.5       188.4       8465   ₹33,253       +2.1%     92d   
+  CRWD        78     01-Dec-23   235.0       224.2       5622   ₹-60,774      -4.6%     244d  
+  QCOM        51     03-Jun-24   198.1       157.7       8721   ₹-351,549     -20.4%    59d   
+  MU          55     03-Jun-24   127.3       100.9       13570  ₹-358,060     -20.7%    59d   
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  REGN        1      3.454    0.26   +47.9%    +21.0%    1,085.8     1497   ₹1,625,450  
-  CTAS        3      3.035    0.48   +52.7%    +15.0%    187.8       8656   ₹1,625,376  
-  VRTX        4      2.964    0.27   +45.4%    +25.8%    505.8       3213   ₹1,625,071  
-  AMGN        7      2.701    0.28   +49.1%    +21.8%    317.9       5112   ₹1,625,322  
+  REGN        1      3.447    0.26   +47.9%    +21.0%    1,085.8     1449   ₹1,573,331  
+  CTAS        3      3.031    0.48   +52.7%    +15.0%    187.8       8379   ₹1,573,363  
+  VRTX        4      2.959    0.27   +45.4%    +25.8%    505.8       3111   ₹1,573,482  
+  AMGN        7      2.697    0.28   +49.1%    +21.8%    317.9       4949   ₹1,573,497  
 
   HOLDS (3)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NVDA        6      03-Apr-23   27.9        109.2       42346  ₹3,439,219    +290.7%   
-  TMUS        2      01-Jul-24   174.3       182.1       10843  ₹84,317       +4.5%     
-  COST        5      03-Jun-24   807.8       810.5       2208   ₹5,825        +0.3%     
+  NVDA        6      03-Apr-23   27.9        109.2       40991  ₹3,329,170    +290.7%   
+  TMUS        2      01-Jul-24   174.3       182.1       10496  ₹81,618       +4.5%     
+  COST        5      03-Jun-24   806.7       809.3       2141   ₹5,640        +0.3%     
 
-  AFTER: Invested ₹14,887,207 | Cash ₹1,360,389 | Total ₹16,247,596 | Positions 7/10 | Slot ₹1,625,532
+  AFTER: Invested ₹14,411,762 | Cash ₹1,316,034 | Total ₹15,727,796 | Positions 7/10 | Slot ₹1,573,527
 
 ========================================================================
   REBALANCE #117  —  03 Sep 2024
-  NAV: ₹16,566,610  |  Slot: ₹1,656,661  |  Cash: ₹1,360,389
+  NAV: ₹16,036,600  |  Slot: ₹1,603,660  |  Cash: ₹1,316,034
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  NVDA        21     03-Apr-23   27.9        107.9       42346  ₹3,388,005    +286.4%   519d  
-  AMGN        23     01-Aug-24   317.9       315.4       5112   ₹-13,169      -0.8%     33d   
-  VRTX        29     01-Aug-24   505.8       475.7       3213   ₹-96,647      -5.9%     33d   
+  NVDA        21     03-Apr-23   27.9        107.9       40991  ₹3,279,595    +286.4%   519d  
+  AMGN        23     01-Aug-24   317.9       315.4       4949   ₹-12,749      -0.8%     33d   
+  VRTX        29     01-Aug-24   505.8       475.7       3111   ₹-93,579      -5.9%     33d   
 
   ENTRIES (5)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  ISRG        5      2.372    0.80   +54.6%    +19.7%    483.4       3426   ₹1,656,265  
-  AEP         6      2.195    -0.00  +35.0%    +13.8%    96.4        17178  ₹1,656,636  
-  ORLY        7      2.078    0.14   +21.0%    +18.8%    75.8        21859  ₹1,656,635  
-  CCEP        8      2.013    0.25   +29.5%    +9.2%     77.1        21487  ₹1,656,595  
-  LIN         9      1.980    0.25   +24.0%    +9.5%     463.4       3574   ₹1,656,239  
+  ISRG        5      2.363    0.80   +54.6%    +19.7%    483.4       3317   ₹1,603,570  
+  AEP         6      2.186    -0.00  +35.0%    +13.8%    96.4        16628  ₹1,603,595  
+  ORLY        7      2.071    0.14   +21.0%    +18.8%    75.8        21160  ₹1,603,660  
+  CCEP        8      2.004    0.25   +29.5%    +9.2%     77.1        20800  ₹1,603,629  
+  LIN         9      1.972    0.25   +24.0%    +9.5%     463.4       3460   ₹1,603,410  
 
   HOLDS (4)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TMUS        1      01-Jul-24   174.3       195.8       10843  ₹233,254      +12.3%    
-  COST        4      03-Jun-24   807.8       871.7       2208   ₹140,944      +7.9%     
-  REGN        3      01-Aug-24   1,085.8     1,161.0     1497   ₹112,518      +6.9%     
-  CTAS        2      01-Aug-24   187.8       197.4       8656   ₹83,471       +5.1%     
+  TMUS        1      01-Jul-24   174.3       195.8       10496  ₹225,789      +12.3%    
+  COST        4      03-Jun-24   806.7       870.4       2141   ₹136,468      +7.9%     
+  REGN        3      01-Aug-24   1,085.8     1,161.0     1449   ₹108,910      +6.9%     
+  CTAS        2      01-Aug-24   187.8       197.4       8379   ₹80,799       +5.1%     
 
-  AFTER: Invested ₹15,776,851 | Cash ₹779,924 | Total ₹16,556,775 | Positions 9/10 | Slot ₹1,656,661
+  AFTER: Invested ₹15,272,885 | Cash ₹754,194 | Total ₹16,027,080 | Positions 9/10 | Slot ₹1,603,660
 
 ========================================================================
   REBALANCE #118  —  01 Oct 2024
-  NAV: ₹16,463,077  |  Slot: ₹1,646,308  |  Cash: ₹779,924
+  NAV: ₹15,936,392  |  Slot: ₹1,593,639  |  Cash: ₹754,194
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  ORLY        20     03-Sep-24   75.8        77.5        21859  ₹36,694       +2.2%     28d   
-  CCEP        23     03-Sep-24   77.1        74.2        21487  ₹-63,177      -3.8%     28d   
-  REGN        35     01-Aug-24   1,085.8     1,039.9     1497   ₹-68,742      -4.2%     61d   
+  ORLY        20     03-Sep-24   75.8        77.5        21160  ₹35,521       +2.2%     28d   
+  CCEP        23     03-Sep-24   77.1        74.2        20800  ₹-61,157      -3.8%     28d   
+  REGN        35     01-Aug-24   1,085.8     1,039.9     1449   ₹-66,538      -4.2%     61d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  CEG         3      2.639    1.13   +145.4%   +29.1%    263.4       6251   ₹1,646,286  
-  MELI        5      2.367    0.86   +63.0%    +29.4%    2,066.1     796    ₹1,644,632  
-  DASH        6      2.329    1.00   +78.6%    +32.1%    141.9       11599  ₹1,646,246  
+  CEG         3      2.629    1.13   +145.4%   +29.1%    263.4       6051   ₹1,593,613  
+  MELI        5      2.359    0.86   +63.0%    +29.4%    2,066.1     771    ₹1,592,979  
+  DASH        6      2.322    1.00   +78.6%    +32.1%    141.9       11228  ₹1,593,590  
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TMUS        2      01-Jul-24   174.3       201.2       10843  ₹292,224      +15.5%    
-  COST        9      03-Jun-24   807.8       870.5       2208   ₹138,337      +7.8%     
-  CTAS        1      01-Aug-24   187.8       201.4       8656   ₹117,758      +7.2%     
-  AEP         4      03-Sep-24   96.4        97.1        17178  ₹10,602       +0.6%     
-  LIN         10     03-Sep-24   463.4       465.7       3574   ₹8,270        +0.5%     
-  ISRG        11     03-Sep-24   483.4       484.8       3426   ₹4,522        +0.3%     
+  TMUS        2      01-Jul-24   174.3       201.2       10496  ₹282,873      +15.5%    
+  COST        9      03-Jun-24   806.7       869.2       2141   ₹133,944      +7.8%     
+  CTAS        1      01-Aug-24   187.8       201.4       8379   ₹113,990      +7.2%     
+  AEP         4      03-Sep-24   96.4        97.1        16628  ₹10,262       +0.6%     
+  LIN         10     03-Sep-24   463.4       465.7       3460   ₹8,006        +0.5%     
+  ISRG        11     03-Sep-24   483.4       484.8       3317   ₹4,378        +0.3%     
 
-  AFTER: Invested ₹15,776,862 | Cash ₹680,353 | Total ₹16,457,215 | Positions 9/10 | Slot ₹1,646,308
+  AFTER: Invested ₹15,273,934 | Cash ₹656,782 | Total ₹15,930,716 | Positions 9/10 | Slot ₹1,593,639
 
 ========================================================================
   REBALANCE #119  —  01 Nov 2024
-  NAV: ₹16,691,141  |  Slot: ₹1,669,114  |  Cash: ₹680,353
+  NAV: ₹16,157,162  |  Slot: ₹1,615,716  |  Cash: ₹656,782
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  MELI        27     01-Oct-24   2,066.1     2,054.9     796    ₹-8,931       -0.5%     31d   
-  LIN         43     03-Sep-24   463.4       448.4       3574   ₹-53,788      -3.2%     59d   
-  AEP         44     03-Sep-24   96.4        92.3        17178  ₹-70,460      -4.3%     59d   
+  MELI        27     01-Oct-24   2,066.1     2,054.9     771    ₹-8,651       -0.5%     31d   
+  LIN         42     03-Sep-24   463.4       448.4       3460   ₹-52,072      -3.2%     59d   
+  AEP         43     03-Sep-24   96.4        92.3        16628  ₹-68,204      -4.3%     59d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  BKNG        2      3.193    0.76   +72.9%    +40.7%    187.8       8886   ₹1,668,994  
-  NVDA        3      3.002    2.23   +220.0%   +34.8%    135.3       12332  ₹1,669,091  
-  NFLX        6      2.481    0.90   +79.9%    +26.3%    75.6        22075  ₹1,669,091  
+  BKNG        2      3.185    0.76   +72.9%    +40.7%    187.8       8602   ₹1,615,652  
+  NVDA        3      2.995    2.23   +220.0%   +34.8%    135.3       11937  ₹1,615,629  
+  NFLX        6      2.475    0.90   +79.9%    +26.3%    75.6        21369  ₹1,615,710  
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TMUS        1      01-Jul-24   174.3       218.0       10843  ₹474,112      +25.1%    
-  DASH        9      01-Oct-24   141.9       155.7       11599  ₹159,254      +9.7%     
-  CTAS        5      01-Aug-24   187.8       203.1       8656   ₹132,808      +8.2%     
-  COST        11     03-Jun-24   807.8       871.6       2208   ₹140,737      +7.9%     
-  ISRG        8      03-Sep-24   483.4       506.3       3426   ₹78,455       +4.7%     
-  CEG         4      01-Oct-24   263.4       255.9       6251   ₹-46,548      -2.8%     
+  TMUS        1      01-Jul-24   174.3       218.0       10496  ₹458,939      +25.1%    
+  DASH        9      01-Oct-24   141.9       155.7       11228  ₹154,161      +9.7%     
+  CTAS        5      01-Aug-24   187.8       203.1       8379   ₹128,558      +8.2%     
+  COST        11     03-Jun-24   806.7       870.3       2141   ₹136,269      +7.9%     
+  ISRG        8      03-Sep-24   483.4       506.3       3317   ₹75,959       +4.7%     
+  CEG         4      01-Oct-24   263.4       255.9       6051   ₹-45,059      -2.8%     
 
-  AFTER: Invested ₹16,193,636 | Cash ₹491,560 | Total ₹16,685,196 | Positions 9/10 | Slot ₹1,669,114
+  AFTER: Invested ₹15,676,315 | Cash ₹475,092 | Total ₹16,151,407 | Positions 9/10 | Slot ₹1,615,716
 
 ========================================================================
   REBALANCE #120  —  02 Dec 2024
-  NAV: ₹18,120,229  |  Slot: ₹1,812,023  |  Cash: ₹491,560
+  NAV: ₹17,540,610  |  Slot: ₹1,754,061  |  Cash: ₹475,092
 ========================================================================
 
   EXITS (0)
@@ -3552,111 +3629,111 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TMUS        2      01-Jul-24   174.3       239.9       10843  ₹711,506      +37.6%    
-  DASH        5      01-Oct-24   141.9       176.4       11599  ₹399,470      +24.3%    
-  COST        7      03-Jun-24   807.8       968.6       2208   ₹355,024      +19.9%    
-  NFLX        4      01-Nov-24   75.6        89.8        22075  ₹312,670      +18.7%    
-  CTAS        8      01-Aug-24   187.8       220.3       8656   ₹281,766      +17.3%    
-  ISRG        14     03-Sep-24   483.4       542.8       3426   ₹203,539      +12.3%    
-  BKNG        3      01-Nov-24   187.8       206.6       8886   ₹166,990      +10.0%    
-  NVDA        6      01-Nov-24   135.3       138.6       12332  ₹39,816       +2.4%     
-  CEG         15     01-Oct-24   263.4       247.9       6251   ₹-96,929      -5.9%     
+  TMUS        2      01-Jul-24   174.3       239.9       10496  ₹688,736      +37.7%    
+  DASH        5      01-Oct-24   141.9       176.4       11228  ₹386,692      +24.3%    
+  COST        7      03-Jun-24   806.7       967.2       2141   ₹343,752      +19.9%    
+  NFLX        4      01-Nov-24   75.6        89.8        21369  ₹302,671      +18.7%    
+  CTAS        8      01-Aug-24   187.8       220.3       8379   ₹272,749      +17.3%    
+  ISRG        14     03-Sep-24   483.4       542.8       3317   ₹197,063      +12.3%    
+  BKNG        3      01-Nov-24   187.8       206.6       8602   ₹161,654      +10.0%    
+  NVDA        6      01-Nov-24   135.3       138.6       11937  ₹38,541       +2.4%     
+  CEG         15     01-Oct-24   263.4       247.9       6051   ₹-93,828      -5.9%     
 
-  AFTER: Invested ₹17,628,669 | Cash ₹491,560 | Total ₹18,120,229 | Positions 9/10 | Slot ₹1,812,023
+  AFTER: Invested ₹17,065,518 | Cash ₹475,092 | Total ₹17,540,610 | Positions 9/10 | Slot ₹1,754,061
 
 ========================================================================
   REBALANCE #121  —  02 Jan 2025
-  NAV: ₹17,056,673  |  Slot: ₹1,705,667  |  Cash: ₹491,560
+  NAV: ₹16,511,034  |  Slot: ₹1,651,103  |  Cash: ₹475,092
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  COST        19     03-Jun-24   807.8       903.9       2208   ₹212,027      +11.9%    213d  
-  CTAS        59     01-Aug-24   187.8       180.2       8656   ₹-65,586      -4.0%     154d  
-  CEG         32     01-Oct-24   263.4       240.9       6251   ₹-140,260     -8.5%     93d   
+  COST        18     03-Jun-24   806.7       902.5       2141   ₹205,295      +11.9%    213d  
+  CTAS        58     01-Aug-24   187.8       180.2       8379   ₹-63,488      -4.0%     154d  
+  CEG         31     01-Oct-24   263.4       240.9       6051   ₹-135,773     -8.5%     93d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  APP         1      6.498    1.91   +781.3%   +160.2%   341.8       4990   ₹1,705,482  
-  AXON        2      2.932    0.65   +137.1%   +47.5%    596.5       2859   ₹1,705,365  
-  MRVL        5      2.289    2.09   +95.9%    +57.8%    113.1       15085  ₹1,705,629  
+  APP         1      6.490    1.91   +781.3%   +160.2%   341.8       4830   ₹1,650,797  
+  AXON        2      2.934    0.65   +137.1%   +47.5%    596.5       2768   ₹1,651,084  
+  MRVL        5      2.293    2.09   +95.9%    +57.8%    113.1       14602  ₹1,651,017  
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TMUS        11     01-Jul-24   174.3       215.1       10843  ₹442,791      +23.4%    
-  DASH        7      01-Oct-24   141.9       170.6       11599  ₹333,123      +20.2%    
-  NFLX        3      01-Nov-24   75.6        88.7        22075  ₹288,366      +17.3%    
-  ISRG        13     03-Sep-24   483.4       524.0       3426   ₹139,061      +8.4%     
-  BKNG        8      01-Nov-24   187.8       195.1       8886   ₹64,784       +3.9%     
-  NVDA        4      01-Nov-24   135.3       138.3       12332  ₹35,989       +2.2%     
+  TMUS        11     01-Jul-24   174.3       215.1       10496  ₹428,621      +23.4%    
+  DASH        7      01-Oct-24   141.9       170.6       11228  ₹322,468      +20.2%    
+  NFLX        3      01-Nov-24   75.6        88.7        21369  ₹279,143      +17.3%    
+  ISRG        13     03-Sep-24   483.4       524.0       3317   ₹134,637      +8.4%     
+  BKNG        8      01-Nov-24   187.8       195.1       8602   ₹62,714       +3.9%     
+  NVDA        4      01-Nov-24   135.3       138.3       11937  ₹34,837       +2.2%     
 
-  AFTER: Invested ₹16,620,067 | Cash ₹430,530 | Total ₹17,050,597 | Positions 9/10 | Slot ₹1,705,667
+  AFTER: Invested ₹16,088,782 | Cash ₹416,371 | Total ₹16,505,153 | Positions 9/10 | Slot ₹1,651,103
 
 ========================================================================
   REBALANCE #122  —  03 Feb 2025
-  NAV: ₹17,818,365  |  Slot: ₹1,781,836  |  Cash: ₹430,530
+  NAV: ₹17,248,421  |  Slot: ₹1,724,842  |  Cash: ₹416,371
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  BKNG        36     01-Nov-24   187.8       185.9       8886   ₹-17,021      -1.0%     94d   
-  NVDA        50     01-Nov-24   135.3       116.6       12332  ₹-230,911     -13.8%    94d   
+  BKNG        35     01-Nov-24   187.8       185.9       8602   ₹-16,476      -1.0%     94d   
+  NVDA        49     01-Nov-24   135.3       116.6       11937  ₹-223,515     -13.8%    94d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  BKR         4      2.553    0.36   +70.6%    +27.1%    46.2        38539  ₹1,781,793  
+  BKR         4      2.558    0.36   +70.6%    +27.1%    46.2        37307  ₹1,724,834  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  DASH        6      01-Oct-24   141.9       190.8       11599  ₹566,843      +34.4%    
-  TMUS        11     01-Jul-24   174.3       233.3       10843  ₹640,103      +33.9%    
-  NFLX        3      01-Nov-24   75.6        97.9        22075  ₹491,919      +29.5%    
-  ISRG        14     03-Sep-24   483.4       578.5       3426   ₹325,847      +19.7%    
-  AXON        2      02-Jan-25   596.5       658.1       2859   ₹176,172      +10.3%    
-  APP         1      02-Jan-25   341.8       365.4       4990   ₹118,063      +6.9%     
-  MRVL        20     02-Jan-25   113.1       113.1       15085  ₹866          +0.1%     
+  DASH        6      01-Oct-24   141.9       190.8       11228  ₹548,712      +34.4%    
+  TMUS        11     01-Jul-24   174.3       233.3       10496  ₹619,619      +33.9%    
+  NFLX        3      01-Nov-24   75.6        97.9        21369  ₹476,187      +29.5%    
+  ISRG        14     03-Sep-24   483.4       578.5       3317   ₹315,480      +19.7%    
+  AXON        2      02-Jan-25   596.5       658.1       2768   ₹170,564      +10.3%    
+  APP         1      02-Jan-25   341.8       365.4       4830   ₹114,278      +6.9%     
+  MRVL        19     02-Jan-25   113.1       113.1       14602  ₹838          +0.1%     
 
-  AFTER: Invested ₹16,079,475 | Cash ₹1,736,774 | Total ₹17,816,249 | Positions 8/10 | Slot ₹1,781,836
+  AFTER: Invested ₹15,565,593 | Cash ₹1,680,779 | Total ₹17,246,373 | Positions 8/10 | Slot ₹1,724,842
 
 ========================================================================
   REBALANCE #123  —  03 Mar 2025
-  NAV: ₹17,158,226  |  Slot: ₹1,715,823  |  Cash: ₹1,736,774
+  NAV: ₹16,609,347  |  Slot: ₹1,660,935  |  Cash: ₹1,680,779
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  BKR         21     03-Feb-25   46.2        42.7        38539  ₹-134,855     -7.6%     28d   
-  AXON        43     02-Jan-25   596.5       525.8       2859   ₹-202,246     -11.9%    60d   
-  MRVL        48     02-Jan-25   113.1       85.5        15085  ₹-415,840     -24.4%    60d   
+  BKR         21     03-Feb-25   46.2        42.7        37307  ₹-130,543     -7.6%     28d   
+  AXON        42     02-Jan-25   596.5       525.8       2768   ₹-195,808     -11.9%    60d   
+  MRVL        47     02-Jan-25   113.1       85.5        14602  ₹-402,525     -24.4%    60d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  GILD        2      3.637    0.02   +66.1%    +28.0%    112.2       15292  ₹1,715,737  
-  EXC         4      2.649    -0.20  +30.8%    +13.9%    43.0        39885  ₹1,715,809  
-  CCEP        5      2.530    0.15   +28.4%    +11.5%    84.7        20260  ₹1,715,755  
+  GILD        2      3.626    0.02   +66.1%    +28.0%    112.2       14803  ₹1,660,872  
+  EXC         4      2.643    -0.20  +30.8%    +13.9%    43.0        38609  ₹1,660,917  
+  CCEP        5      2.524    0.15   +28.4%    +11.5%    84.7        19612  ₹1,660,878  
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TMUS        3      01-Jul-24   174.3       268.2       10843  ₹1,018,810    +53.9%    
-  DASH        12     01-Oct-24   141.9       198.1       11599  ₹651,516      +39.6%    
-  NFLX        7      01-Nov-24   75.6        97.4        22075  ₹480,352      +28.8%    
-  ISRG        18     03-Sep-24   483.4       567.0       3426   ₹286,208      +17.3%    
-  APP         1      02-Jan-25   341.8       337.3       4990   ₹-22,156      -1.3%     
+  TMUS        3      01-Jul-24   174.3       268.2       10496  ₹986,206      +53.9%    
+  DASH        12     01-Oct-24   141.9       198.1       11228  ₹630,677      +39.6%    
+  NFLX        7      01-Nov-24   75.6        97.4        21369  ₹464,989      +28.8%    
+  ISRG        18     03-Sep-24   483.4       567.0       3317   ₹277,102      +17.3%    
+  APP         1      02-Jan-25   341.8       337.3       4830   ₹-21,445      -1.3%     
 
-  AFTER: Invested ₹16,128,905 | Cash ₹1,023,209 | Total ₹17,152,114 | Positions 8/10 | Slot ₹1,715,823
+  AFTER: Invested ₹15,613,177 | Cash ₹990,254 | Total ₹16,603,431 | Positions 8/10 | Slot ₹1,660,935
 
 ========================================================================
   REBALANCE #124  —  01 Apr 2025
-  NAV: ₹16,309,645  |  Slot: ₹1,630,964  |  Cash: ₹1,023,209
+  NAV: ₹15,787,887  |  Slot: ₹1,578,789  |  Cash: ₹990,254
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 470.4 < SMA200 490.6 — holding all, skipping exits & entries
@@ -3670,20 +3747,20 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  TMUS        1      01-Jul-24   174.3       264.0       10843  ₹973,076      +51.5%    
-  DASH        25     01-Oct-24   141.9       182.4       11599  ₹469,644      +28.5%    
-  NFLX        19     01-Nov-24   75.6        92.8        22075  ₹380,308      +22.8%    
-  EXC         2      03-Mar-25   43.0        44.3        39885  ₹52,764       +3.1%     
-  ISRG        38     03-Sep-24   483.4       496.4       3426   ₹44,264       +2.7%     
-  CCEP        6      03-Mar-25   84.7        84.9        20260  ₹5,132        +0.3%     
-  GILD        3      03-Mar-25   112.2       108.4       15292  ₹-58,118      -3.4%     
-  APP         7      02-Jan-25   341.8       282.7       4990   ₹-294,809     -17.3%    
+  TMUS        1      01-Jul-24   174.3       264.0       10496  ₹941,935      +51.5%    
+  DASH        25     01-Oct-24   141.9       182.4       11228  ₹454,622      +28.5%    
+  NFLX        19     01-Nov-24   75.6        92.8        21369  ₹368,145      +22.8%    
+  EXC         2      03-Mar-25   43.0        44.3        38609  ₹51,076       +3.1%     
+  ISRG        38     03-Sep-24   483.4       496.4       3317   ₹42,856       +2.7%     
+  CCEP        6      03-Mar-25   84.7        84.9        19612  ₹4,968        +0.3%     
+  GILD        3      03-Mar-25   112.2       108.4       14803  ₹-56,260      -3.4%     
+  APP         7      02-Jan-25   341.8       282.7       4830   ₹-285,356     -17.3%    
 
-  AFTER: Invested ₹15,286,436 | Cash ₹1,023,209 | Total ₹16,309,645 | Positions 8/10 | Slot ₹1,630,964
+  AFTER: Invested ₹14,797,633 | Cash ₹990,254 | Total ₹15,787,887 | Positions 8/10 | Slot ₹1,578,789
 
 ========================================================================
   REBALANCE #125  —  01 May 2025
-  NAV: ₹16,701,052  |  Slot: ₹1,670,105  |  Cash: ₹1,023,209
+  NAV: ₹16,166,793  |  Slot: ₹1,616,679  |  Cash: ₹990,254
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 479.4 < SMA200 487.5 — holding all, skipping exits & entries
@@ -3697,51 +3774,51 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NFLX        1      01-Nov-24   75.6        113.3       22075  ₹833,044      +49.9%    
-  TMUS        10     01-Jul-24   174.3       242.9       10843  ₹743,441      +39.3%    
-  DASH        23     01-Oct-24   141.9       196.2       11599  ₹629,478      +38.2%    
-  ISRG        36     03-Sep-24   483.4       517.2       3426   ₹115,593      +7.0%     
-  EXC         3      03-Mar-25   43.0        45.0        39885  ₹78,954       +4.6%     
-  CCEP        5      03-Mar-25   84.7        87.2        20260  ₹51,717       +3.0%     
-  GILD        4      03-Mar-25   112.2       100.6       15292  ₹-177,732     -10.4%    
-  APP         8      02-Jan-25   341.8       279.5       4990   ₹-310,827     -18.2%    
+  NFLX        1      01-Nov-24   75.6        113.3       21369  ₹806,402      +49.9%    
+  TMUS        10     01-Jul-24   174.3       242.9       10496  ₹719,649      +39.3%    
+  DASH        23     01-Oct-24   141.9       196.2       11228  ₹609,344      +38.2%    
+  ISRG        36     03-Sep-24   483.4       517.2       3317   ₹111,916      +7.0%     
+  EXC         3      03-Mar-25   43.0        45.0        38609  ₹76,428       +4.6%     
+  CCEP        5      03-Mar-25   84.7        87.2        19612  ₹50,063       +3.0%     
+  GILD        4      03-Mar-25   112.2       100.6       14803  ₹-172,049     -10.4%    
+  APP         8      02-Jan-25   341.8       279.5       4830   ₹-300,861     -18.2%    
 
-  AFTER: Invested ₹15,677,844 | Cash ₹1,023,209 | Total ₹16,701,052 | Positions 8/10 | Slot ₹1,670,105
+  AFTER: Invested ₹15,176,539 | Cash ₹990,254 | Total ₹16,166,793 | Positions 8/10 | Slot ₹1,616,679
 
 ========================================================================
   REBALANCE #126  —  02 Jun 2025
-  NAV: ₹17,834,122  |  Slot: ₹1,783,412  |  Cash: ₹1,023,209
+  NAV: ₹17,263,598  |  Slot: ₹1,726,360  |  Cash: ₹990,254
 ========================================================================
 
   EXITS (4)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  TMUS        51     01-Jul-24   174.3       239.9       10843  ₹711,001      +37.6%    336d  
-  ISRG        41     03-Sep-24   483.4       553.3       3426   ₹239,306      +14.4%    272d  
-  EXC         40     03-Mar-25   43.0        42.7        39885  ₹-14,216      -0.8%     91d   
-  GILD        24     03-Mar-25   112.2       106.1       15292  ₹-93,421      -5.4%     91d   
+  TMUS        51     01-Jul-24   174.3       239.9       10496  ₹688,247      +37.6%    336d  
+  ISRG        41     03-Sep-24   483.4       553.3       3317   ₹231,692      +14.4%    272d  
+  EXC         40     03-Mar-25   43.0        42.7        38609  ₹-13,761      -0.8%     91d   
+  GILD        24     03-Mar-25   112.2       106.1       14803  ₹-90,434      -5.4%     91d   
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  PLTR        1      4.919    1.70   +530.6%   +58.3%    132.0       13506  ₹1,783,332  
-  AXON        2      3.087    0.89   +166.9%   +44.3%    758.6       2351   ₹1,783,398  
-  ZS          3      3.053    1.15   +78.4%    +55.3%    293.2       6082   ₹1,783,121  
-  INTU        6      2.198    0.78   +28.7%    +27.5%    758.8       2350   ₹1,783,217  
+  PLTR        1      4.901    1.70   +530.6%   +58.3%    132.0       13074  ₹1,726,291  
+  AXON        2      3.076    0.89   +166.9%   +44.3%    758.6       2275   ₹1,725,747  
+  ZS          3      3.041    1.15   +78.4%    +55.3%    293.2       5888   ₹1,726,244  
+  INTU        6      2.189    0.78   +28.7%    +27.5%    758.8       2275   ₹1,726,306  
 
   HOLDS (4)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NFLX        4      01-Nov-24   75.6        121.9       22075  ₹1,021,808    +61.2%    
-  DASH        11     01-Oct-24   141.9       212.8       11599  ₹821,905      +49.9%    
-  APP         5      02-Jan-25   341.8       401.9       4990   ₹300,049      +17.6%    
-  CCEP        14     03-Mar-25   84.7        90.1        20260  ₹110,307      +6.4%     
+  NFLX        4      01-Nov-24   75.6        121.9       21369  ₹989,128      +61.2%    
+  DASH        11     01-Oct-24   141.9       212.8       11228  ₹795,616      +49.9%    
+  APP         5      02-Jan-25   341.8       401.9       4830   ₹290,428      +17.6%    
+  CCEP        14     03-Mar-25   84.7        90.1        19612  ₹106,779      +6.4%     
 
-  AFTER: Invested ₹16,123,711 | Cash ₹1,701,942 | Total ₹17,825,653 | Positions 8/10 | Slot ₹1,783,412
+  AFTER: Invested ₹15,607,514 | Cash ₹1,647,885 | Total ₹17,255,399 | Positions 8/10 | Slot ₹1,726,360
 
 ========================================================================
   REBALANCE #127  —  01 Jul 2025
-  NAV: ₹18,130,796  |  Slot: ₹1,813,080  |  Cash: ₹1,701,942
+  NAV: ₹17,550,805  |  Slot: ₹1,755,081  |  Cash: ₹1,647,885
 ========================================================================
 
   EXITS (0)
@@ -3753,254 +3830,255 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   HOLDS (8)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  NFLX        2      01-Nov-24   75.6        129.4       22075  ₹1,186,531    +71.1%    
-  DASH        4      01-Oct-24   141.9       238.0       11599  ₹1,114,432    +67.7%    
-  CCEP        18     03-Mar-25   84.7        91.7        20260  ₹142,417      +8.3%     
-  ZS          5      02-Jun-25   293.2       307.3       6082   ₹86,000       +4.8%     
-  AXON        3      02-Jun-25   758.6       775.4       2351   ₹39,520       +2.2%     
-  INTU        14     02-Jun-25   758.8       773.3       2350   ₹34,080       +1.9%     
-  PLTR        1      02-Jun-25   132.0       130.7       13506  ₹-18,368      -1.0%     
-  APP         6      02-Jan-25   341.8       336.7       4990   ₹-25,399      -1.5%     
+  NFLX        2      01-Nov-24   75.6        129.4       21369  ₹1,148,584    +71.1%    
+  DASH        4      01-Oct-24   141.9       238.0       11228  ₹1,078,786    +67.7%    
+  CCEP        18     03-Mar-25   84.7        91.7        19612  ₹137,862      +8.3%     
+  ZS          5      02-Jun-25   293.2       307.3       5888   ₹83,256       +4.8%     
+  AXON        3      02-Jun-25   758.6       775.4       2275   ₹38,243       +2.2%     
+  INTU        14     02-Jun-25   758.8       773.3       2275   ₹32,992       +1.9%     
+  PLTR        1      02-Jun-25   132.0       130.7       13074  ₹-17,781      -1.0%     
+  APP         6      02-Jan-25   341.8       336.7       4830   ₹-24,585      -1.5%     
 
-  AFTER: Invested ₹16,428,854 | Cash ₹1,701,942 | Total ₹18,130,796 | Positions 8/10 | Slot ₹1,813,080
+  AFTER: Invested ₹15,902,920 | Cash ₹1,647,885 | Total ₹17,550,805 | Positions 8/10 | Slot ₹1,755,081
 
 ========================================================================
   REBALANCE #128  —  01 Aug 2025
-  NAV: ₹18,317,563  |  Slot: ₹1,831,756  |  Cash: ₹1,701,942
+  NAV: ₹17,731,592  |  Slot: ₹1,773,159  |  Cash: ₹1,647,885
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  NFLX        19     01-Nov-24   75.6        115.9       22075  ₹888,519      +53.2%    273d  
-  ZS          17     02-Jun-25   293.2       280.3       6082   ₹-78,519      -4.4%     60d   
+  NFLX        19     01-Nov-24   75.6        115.9       21369  ₹860,102      +53.2%    273d  
+  ZS          17     02-Jun-25   293.2       280.3       5888   ₹-76,014      -4.4%     60d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  AMD         4      2.529    1.65   +24.0%    +77.7%    171.7       10668  ₹1,831,696  
-  META        5      2.263    1.11   +62.5%    +31.2%    748.3       2448   ₹1,831,723  
-  NVDA        6      2.239    1.80   +67.5%    +55.7%    173.7       10546  ₹1,831,747  
+  AMD         4      2.530    1.65   +24.0%    +77.7%    171.7       10327  ₹1,773,146  
+  META        5      2.263    1.11   +62.5%    +31.2%    748.3       2369   ₹1,772,611  
+  NVDA        6      2.239    1.80   +67.5%    +55.7%    173.7       10208  ₹1,773,039  
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  DASH        3      01-Oct-24   141.9       248.4       11599  ₹1,234,366    +75.0%    
-  PLTR        1      02-Jun-25   132.0       154.3       13506  ₹300,239      +16.8%    
-  CCEP        12     03-Mar-25   84.7        95.8        20260  ₹224,187      +13.1%    
-  APP         2      02-Jan-25   341.8       379.2       4990   ₹186,576      +10.9%    
-  INTU        15     02-Jun-25   758.8       770.9       2350   ₹28,462       +1.6%     
-  AXON        10     02-Jun-25   758.6       742.5       2351   ₹-37,851      -2.1%     
+  DASH        3      01-Oct-24   141.9       248.4       11228  ₹1,194,884    +75.0%    
+  PLTR        1      02-Jun-25   132.0       154.3       13074  ₹290,635      +16.8%    
+  CCEP        12     03-Mar-25   84.7        95.8        19612  ₹217,016      +13.1%    
+  APP         2      02-Jan-25   341.8       379.2       4830   ₹180,594      +10.9%    
+  INTU        15     02-Jun-25   758.8       770.9       2275   ₹27,554       +1.6%     
+  AXON        10     02-Jun-25   758.6       742.5       2275   ₹-36,628      -2.1%     
 
-  AFTER: Invested ₹17,848,574 | Cash ₹462,464 | Total ₹18,311,038 | Positions 9/10 | Slot ₹1,831,756
+  AFTER: Invested ₹17,276,460 | Cash ₹448,816 | Total ₹17,725,276 | Positions 9/10 | Slot ₹1,773,159
 
 ========================================================================
   REBALANCE #129  —  02 Sep 2025
-  NAV: ₹18,184,062  |  Slot: ₹1,818,406  |  Cash: ₹462,464
+  NAV: ₹17,602,312  |  Slot: ₹1,760,231  |  Cash: ₹448,816
 ========================================================================
 
   EXITS (5)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  CCEP        66     03-Mar-25   84.7        86.1        20260  ₹27,939       +1.6%     183d  
-  NVDA        22     01-Aug-25   173.7       170.8       10546  ₹-31,000      -1.7%     32d   
-  AXON        26     02-Jun-25   758.6       743.6       2351   ₹-35,218      -2.0%     92d   
-  META        24     01-Aug-25   748.3       733.4       2448   ₹-36,390      -2.0%     32d   
-  INTU        82     02-Jun-25   758.8       657.5       2350   ₹-238,008     -13.3%    92d   
+  CCEP        66     03-Mar-25   84.7        86.1        19612  ₹27,045       +1.6%     183d  
+  NVDA        21     01-Aug-25   173.7       170.8       10208  ₹-30,007      -1.7%     32d   
+  AXON        25     02-Jun-25   758.6       743.6       2275   ₹-34,079      -2.0%     92d   
+  META        24     01-Aug-25   748.3       733.4       2369   ₹-35,216      -2.0%     32d   
+  INTU        81     02-Jun-25   758.8       657.5       2275   ₹-230,412     -13.3%    92d   
 
   ENTRIES (4)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  FAST        3      2.710    0.48   +49.0%    +20.8%    48.7        37364  ₹1,818,370  
-  ORLY        4      2.362    0.14   +35.9%    +12.9%    103.2       17621  ₹1,818,311  
-  GOOGL       6      2.208    0.88   +30.4%    +25.2%    210.9       8623   ₹1,818,372  
-  GOOG        7      2.183    0.88   +29.5%    +24.6%    211.5       8597   ₹1,818,383  
+  FAST        3      2.733    0.48   +49.0%    +20.8%    48.4        36362  ₹1,760,227  
+  ORLY        4      2.382    0.14   +35.9%    +12.9%    103.2       17058  ₹1,760,215  
+  GOOG        6      2.208    0.88   +29.5%    +24.6%    211.5       8322   ₹1,760,216  
+  SHOP        7      2.092    1.75   +91.7%    +30.5%    139.0       12659  ₹1,760,107  
 
   HOLDS (4)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  DASH        5      01-Oct-24   141.9       244.1       11599  ₹1,185,070    +72.0%    
-  APP         2      02-Jan-25   341.8       481.7       4990   ₹698,351      +40.9%    
-  PLTR        1      02-Jun-25   132.0       157.1       13506  ₹338,325      +19.0%    
-  AMD         13     01-Aug-25   171.7       162.3       10668  ₹-100,066     -5.5%     
+  DASH        5      01-Oct-24   141.9       244.1       11228  ₹1,147,165    +72.0%    
+  APP         2      02-Jan-25   341.8       481.7       4830   ₹675,959      +40.9%    
+  PLTR        1      02-Jun-25   132.0       157.1       13074  ₹327,504      +19.0%    
+  AMD         12     01-Aug-25   171.7       162.3       10327  ₹-96,867      -5.5%     
 
-  AFTER: Invested ₹16,361,872 | Cash ₹1,813,553 | Total ₹18,175,425 | Positions 8/10 | Slot ₹1,818,406
+  AFTER: Invested ₹15,838,349 | Cash ₹1,755,602 | Total ₹17,593,952 | Positions 8/10 | Slot ₹1,760,231
 
 ========================================================================
   REBALANCE #130  —  01 Oct 2025
-  NAV: ₹20,522,083  |  Slot: ₹2,052,208  |  Cash: ₹1,813,553
+  NAV: ₹19,717,521  |  Slot: ₹1,971,752  |  Cash: ₹1,755,602
 ========================================================================
 
   EXITS (1)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  AMD         42     01-Aug-25   171.7       164.0       10668  ₹-82,037      -4.5%     61d   
+  AMD         41     01-Aug-25   171.7       164.0       10327  ₹-79,415      -4.5%     61d   
 
   ENTRIES (1)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  WBD         3      2.913    1.36   +130.9%   +74.0%    19.4        106057  ₹2,052,203  
+  WBD         3      2.953    1.36   +130.9%   +74.0%    19.4        101899  ₹1,971,746  
 
   HOLDS (7)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  APP         1      02-Jan-25   341.8       704.1       4990   ₹1,807,927    +106.0%   
-  DASH        11     01-Oct-24   141.9       267.6       11599  ₹1,458,111    +88.6%    
-  PLTR        2      02-Jun-25   132.0       184.9       13506  ₹714,603      +40.1%    
-  GOOGL       4      02-Sep-25   210.9       244.6       8623   ₹290,535      +16.0%    
-  GOOG        5      02-Sep-25   211.5       245.2       8597   ₹289,663      +15.9%    
-  ORLY        6      02-Sep-25   103.2       105.7       17621  ₹43,876       +2.4%     
-  FAST        17     02-Sep-25   48.7        47.2        37364  ₹-54,340      -3.0%     
+  APP         1      02-Jan-25   341.8       704.1       4830   ₹1,749,957    +106.0%   
+  DASH        10     01-Oct-24   141.9       267.6       11228  ₹1,411,472    +88.6%    
+  PLTR        2      02-Jun-25   132.0       184.9       13074  ₹691,745      +40.1%    
+  GOOG        4      02-Sep-25   211.5       245.2       8322   ₹280,398      +15.9%    
+  SHOP        14     02-Sep-25   139.0       149.6       12659  ₹133,299      +7.6%     
+  ORLY        5      02-Sep-25   103.2       105.7       17058  ₹42,474       +2.4%     
+  FAST        16     02-Sep-25   48.4        47.0        36362  ₹-52,603      -3.0%     
 
-  AFTER: Invested ₹19,011,074 | Cash ₹1,508,572 | Total ₹20,519,646 | Positions 8/10 | Slot ₹2,052,208
+  AFTER: Invested ₹18,239,933 | Cash ₹1,475,247 | Total ₹19,715,180 | Positions 8/10 | Slot ₹1,971,752
 
 ========================================================================
   REBALANCE #131  —  03 Nov 2025
-  NAV: ₹20,655,967  |  Slot: ₹2,065,597  |  Cash: ₹1,508,572
+  NAV: ₹19,817,148  |  Slot: ₹1,981,715  |  Cash: ₹1,475,247
 ========================================================================
 
   EXITS (3)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  DASH        36     01-Oct-24   141.9       242.1       11599  ₹1,161,292    +70.5%    398d  
-  ORLY        58     02-Sep-25   103.2       91.7        17621  ₹-202,465     -11.1%    62d   
-  FAST        73     02-Sep-25   48.7        40.8        37364  ₹-293,388     -16.1%    62d   
+  DASH        35     01-Oct-24   141.9       242.1       11228  ₹1,124,147    +70.5%    398d  
+  ORLY        57     02-Sep-25   103.2       91.7        17058  ₹-195,997     -11.1%    62d   
+  FAST        72     02-Sep-25   48.4        40.6        36362  ₹-284,007     -16.1%    62d   
 
   ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  MU          2      3.287    1.82   +126.4%   +115.3%   234.5       8808   ₹2,065,535  
-  LRCX        4      3.048    1.56   +113.1%   +67.1%    160.8       12847  ₹2,065,571  
-  ASML        8      2.633    1.15   +57.5%    +55.0%    1,065.4     1938   ₹2,064,774  
+  MU          2      3.342    1.82   +126.4%   +115.3%   234.5       8450   ₹1,981,582  
+  LRCX        4      3.095    1.56   +113.1%   +67.1%    160.8       12325  ₹1,981,642  
+  ASML        7      2.678    1.15   +57.5%    +55.0%    1,063.1     1864   ₹1,981,605  
 
   HOLDS (5)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  APP         7      02-Jan-25   341.8       632.1       4990   ₹1,448,896    +85.0%    
-  PLTR        1      02-Jun-25   132.0       207.2       13506  ₹1,014,841    +56.9%    
-  GOOGL       6      02-Sep-25   210.9       283.3       8623   ₹624,826      +34.4%    
-  GOOG        5      02-Sep-25   211.5       283.7       8597   ₹620,886      +34.1%    
-  WBD         3      01-Oct-25   19.4        22.3        106057  ₹311,808      +15.2%    
+  APP         6      02-Jan-25   341.8       632.1       4830   ₹1,402,439    +85.0%    
+  PLTR        1      02-Jun-25   132.0       207.2       13074  ₹982,380      +56.9%    
+  GOOG        5      02-Sep-25   211.5       283.7       8322   ₹601,026      +34.1%    
+  SHOP        10     02-Sep-25   139.0       172.9       12659  ₹429,140      +24.4%    
+  WBD         3      01-Oct-25   19.4        22.3        101899  ₹299,583      +15.2%    
 
-  AFTER: Invested ₹19,394,909 | Cash ₹1,253,701 | Total ₹20,648,610 | Positions 8/10 | Slot ₹2,065,597
+  AFTER: Invested ₹18,528,554 | Cash ₹1,281,535 | Total ₹19,810,089 | Positions 8/10 | Slot ₹1,981,715
 
 ========================================================================
   REBALANCE #132  —  01 Dec 2025
-  NAV: ₹20,781,060  |  Slot: ₹2,078,106  |  Cash: ₹1,253,701
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  APP         23     02-Jan-25   341.8       623.6       4990   ₹1,406,232    +82.5%    333d  
-
-  ENTRIES (2)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  KLAC        7      2.590    1.41   +84.8%    +37.0%    1,155.7     1798   ₹2,077,910  
-  AMAT        8      2.522    1.37   +48.6%    +62.0%    254.4       8167   ₹2,077,952  
-
-  HOLDS (7)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  GOOGL       3      02-Sep-25   210.9       314.5       8623   ₹893,240      +49.1%    
-  GOOG        1      02-Sep-25   211.5       314.7       8597   ₹887,032      +48.8%    
-  PLTR        12     02-Jun-25   132.0       167.5       13506  ₹478,788      +26.8%    
-  WBD         2      01-Oct-25   19.4        23.9        106057  ₹479,378      +23.4%    
-  MU          4      03-Nov-25   234.5       240.3       8808   ₹50,693       +2.5%     
-  ASML        6      03-Nov-25   1,065.4     1,086.6     1938   ₹40,973       +2.0%     
-  LRCX        5      03-Nov-25   160.8       154.4       12847  ₹-82,628      -4.0%     
-
-  AFTER: Invested ₹20,571,506 | Cash ₹204,619 | Total ₹20,776,125 | Positions 9/10 | Slot ₹2,078,106
-
-========================================================================
-  REBALANCE #133  —  02 Jan 2026
-  NAV: ₹22,805,704  |  Slot: ₹2,280,570  |  Cash: ₹204,619
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  PLTR        28     02-Jun-25   132.0       167.9       13506  ₹483,785      +27.1%    214d  
-
-  ENTRIES (1)
-  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
-  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  WDC         1      4.354    1.48   +318.1%   +43.1%    187.6       12155  ₹2,280,402  
-
-  HOLDS (8)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  GOOGL       5      02-Sep-25   210.9       314.9       8623   ₹897,254      +49.3%    
-  GOOG        6      02-Sep-25   211.5       315.1       8597   ₹890,515      +49.0%    
-  WBD         3      01-Oct-25   19.4        28.5        106057  ₹971,482      +47.3%    
-  MU          2      03-Nov-25   234.5       315.3       8808   ₹711,518      +34.4%    
-  LRCX        4      03-Nov-25   160.8       184.8       12847  ₹309,050      +15.0%    
-  KLAC        8      01-Dec-25   1,155.7     1,272.8     1798   ₹210,614      +10.1%    
-  ASML        14     03-Nov-25   1,065.4     1,162.2     1938   ₹187,661      +9.1%     
-  AMAT        12     01-Dec-25   254.4       268.5       8167   ₹115,174      +5.5%     
-
-  AFTER: Invested ₹22,614,370 | Cash ₹188,626 | Total ₹22,802,996 | Positions 9/10 | Slot ₹2,280,570
-
-========================================================================
-  REBALANCE #134  —  02 Feb 2026
-  NAV: ₹27,218,130  |  Slot: ₹2,721,813  |  Cash: ₹188,626
-========================================================================
-
-  EXITS (1)
-  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  KLAC        20     01-Dec-25   1,155.7     1,408.6     1798   ₹454,788      +21.9%    63d   
-
-  ENTRIES (0)
-    —
-
-  HOLDS (8)
-  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
-  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MU          2      03-Nov-25   234.5       437.6       8808   ₹1,788,988    +86.6%    
-  GOOG        7      02-Sep-25   211.5       344.7       8597   ₹1,144,635    +62.9%    
-  GOOGL       9      02-Sep-25   210.9       343.4       8623   ₹1,143,182    +62.9%    
-  LRCX        4      03-Nov-25   160.8       237.2       12847  ₹981,940      +47.5%    
-  WDC         1      02-Jan-26   187.6       270.1       12155  ₹1,002,673    +44.0%    
-  WBD         10     01-Oct-25   19.4        27.5        106057  ₹866,486      +42.2%    
-  ASML        6      03-Nov-25   1,065.4     1,439.5     1938   ₹724,961      +35.1%    
-  AMAT        8      01-Dec-25   254.4       328.0       8167   ₹600,750      +28.9%    
-
-  AFTER: Invested ₹24,496,806 | Cash ₹2,721,324 | Total ₹27,218,130 | Positions 8/10 | Slot ₹2,721,813
-
-========================================================================
-  REBALANCE #135  —  02 Mar 2026
-  NAV: ₹26,694,177  |  Slot: ₹2,669,418  |  Cash: ₹2,721,324
+  NAV: ₹19,377,691  |  Slot: ₹1,937,769  |  Cash: ₹1,281,535
 ========================================================================
 
   EXITS (2)
   Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
-  GOOGL       28     02-Sep-25   210.9       306.3       8623   ₹822,890      +45.3%    181d  
-  GOOG        29     02-Sep-25   211.5       306.1       8597   ₹813,540      +44.7%    181d  
+  APP         22     02-Jan-25   341.8       623.6       4830   ₹1,361,142    +82.5%    333d  
+  SHOP        39     02-Sep-25   139.0       149.3       12659  ₹129,628      +7.4%     90d   
 
-  ENTRIES (2)
+  ENTRIES (3)
   Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
   ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
-  STX         4      2.866    1.34   +284.3%   +39.8%    378.9       7045   ₹2,669,062  
-  HON         7      2.187    0.56   +27.3%    +31.2%    248.0       10762  ₹2,669,406  
+  KLAC        6      2.659    1.41   +84.8%    +37.0%    1,155.7     1676   ₹1,936,917  
+  AMAT        7      2.586    1.37   +48.6%    +62.0%    254.4       7616   ₹1,937,759  
+  AVGO        8      2.541    1.71   +136.7%   +29.7%    384.5       5039   ₹1,937,677  
 
   HOLDS (6)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  MU          2      03-Nov-25   234.5       412.5       8808   ₹1,567,736    +75.9%    
-  WBD         15     01-Oct-25   19.4        28.5        106057  ₹970,422      +47.3%    
-  AMAT        5      01-Dec-25   254.4       372.2       8167   ₹961,642      +46.3%    
-  WDC         1      02-Jan-26   187.6       270.0       12155  ₹1,000,850    +43.9%    
-  LRCX        3      03-Nov-25   160.8       230.7       12847  ₹898,535      +43.5%    
-  ASML        6      03-Nov-25   1,065.4     1,423.5     1938   ₹694,047      +33.6%    
+  GOOG        1      02-Sep-25   211.5       314.7       8322   ₹858,658      +48.8%    
+  PLTR        11     02-Jun-25   132.0       167.5       13074  ₹463,473      +26.8%    
+  WBD         2      01-Oct-25   19.4        23.9        101899  ₹460,584      +23.4%    
+  MU          3      03-Nov-25   234.5       240.3       8450   ₹48,632       +2.5%     
+  ASML        5      03-Nov-25   1,063.1     1,084.2     1864   ₹39,323       +2.0%     
+  LRCX        4      03-Nov-25   160.8       154.4       12325  ₹-79,271      -4.0%     
 
-  AFTER: Invested ₹24,038,137 | Cash ₹2,649,702 | Total ₹26,687,838 | Positions 8/10 | Slot ₹2,669,418
+  AFTER: Invested ₹19,006,834 | Cash ₹363,955 | Total ₹19,370,789 | Positions 9/10 | Slot ₹1,937,769
+
+========================================================================
+  REBALANCE #133  —  02 Jan 2026
+  NAV: ₹21,116,358  |  Slot: ₹2,111,636  |  Cash: ₹363,955
+========================================================================
+
+  EXITS (2)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  PLTR        27     02-Jun-25   132.0       167.9       13074  ₹468,311      +27.1%    214d  
+  AVGO        31     01-Dec-25   384.5       346.9       5039   ₹-189,687     -9.8%     32d   
+
+  ENTRIES (2)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  WDC         1      4.401    1.48   +318.1%   +43.1%    187.6       11255  ₹2,111,553  
+  MNST        6      2.354    0.22   +45.0%    +12.7%    76.2        27726  ₹2,111,612  
+
+  HOLDS (7)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  GOOG        5      02-Sep-25   211.5       315.1       8322   ₹862,030      +49.0%    
+  WBD         3      01-Oct-25   19.4        28.5        101899  ₹933,395      +47.3%    
+  MU          2      03-Nov-25   234.5       315.3       8450   ₹682,598      +34.4%    
+  LRCX        4      03-Nov-25   160.8       184.8       12325  ₹296,493      +15.0%    
+  KLAC        7      01-Dec-25   1,155.7     1,272.8     1676   ₹196,323      +10.1%    
+  ASML        13     03-Nov-25   1,063.1     1,159.7     1864   ₹180,102      +9.1%     
+  AMAT        11     01-Dec-25   254.4       268.5       7616   ₹107,404      +5.5%     
+
+  AFTER: Invested ₹21,032,976 | Cash ₹78,367 | Total ₹21,111,344 | Positions 9/10 | Slot ₹2,111,636
+
+========================================================================
+  REBALANCE #134  —  02 Feb 2026
+  NAV: ₹25,197,158  |  Slot: ₹2,519,716  |  Cash: ₹78,367
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (9)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  MU          2      03-Nov-25   234.5       437.6       8450   ₹1,716,275    +86.6%    
+  GOOG        7      02-Sep-25   211.5       344.7       8322   ₹1,108,021    +62.9%    
+  LRCX        4      03-Nov-25   160.8       237.2       12325  ₹942,042      +47.5%    
+  WDC         1      02-Jan-26   187.6       270.1       11255  ₹928,431      +44.0%    
+  WBD         9      01-Oct-25   19.4        27.5        101899  ₹832,515      +42.2%    
+  ASML        6      03-Nov-25   1,063.1     1,436.4     1864   ₹695,759      +35.1%    
+  AMAT        8      01-Dec-25   254.4       328.0       7616   ₹560,220      +28.9%    
+  KLAC        19     01-Dec-25   1,155.7     1,408.6     1676   ₹423,930      +21.9%    
+  MNST        5      02-Jan-26   76.2        81.1        27726  ₹136,966      +6.5%     
+
+  AFTER: Invested ₹25,118,790 | Cash ₹78,367 | Total ₹25,197,158 | Positions 9/10 | Slot ₹2,519,716
+
+========================================================================
+  REBALANCE #135  —  02 Mar 2026
+  NAV: ₹25,200,047  |  Slot: ₹2,520,005  |  Cash: ₹78,367
+========================================================================
+
+  EXITS (1)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  GOOG        28     02-Sep-25   211.5       306.1       8322   ₹787,517      +44.7%    181d  
+
+  ENTRIES (1)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  STX         4      2.877    1.34   +284.3%   +39.8%    378.9       6651   ₹2,519,792  
+
+  HOLDS (8)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  MU          2      03-Nov-25   234.5       412.5       8450   ₹1,504,016    +75.9%    
+  WBD         15     01-Oct-25   19.4        28.5        101899  ₹932,376      +47.3%    
+  AMAT        5      01-Dec-25   254.4       372.2       7616   ₹896,764      +46.3%    
+  WDC         1      02-Jan-26   187.6       270.0       11255  ₹926,743      +43.9%    
+  LRCX        3      03-Nov-25   160.8       230.7       12325  ₹862,026      +43.5%    
+  ASML        6      03-Nov-25   1,063.1     1,420.4     1864   ₹666,091      +33.6%    
+  KLAC        8      01-Dec-25   1,155.7     1,534.9     1676   ₹635,659      +32.8%    
+  MNST        17     02-Jan-26   76.2        81.1        27726  ₹135,857      +6.4%     
+
+  AFTER: Invested ₹25,093,739 | Cash ₹103,317 | Total ₹25,197,055 | Positions 9/10 | Slot ₹2,520,005
 
 ========================================================================
   REBALANCE #136  —  01 Apr 2026
-  NAV: ₹26,237,770  |  Slot: ₹2,623,777  |  Cash: ₹2,649,702
+  NAV: ₹24,702,730  |  Slot: ₹2,470,273  |  Cash: ₹103,317
 ========================================================================
 
   [REGIME OFF] QQQ (Nasdaq-100) 584.3 < SMA200 593.3 — holding all, skipping exits & entries
@@ -4011,49 +4089,84 @@ Fetching QQQ (Nasdaq-100) (regime filter)...
   ENTRIES (0)
     —
 
-  HOLDS (8)
+  HOLDS (9)
   Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
   ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
-  WDC         1      02-Jan-26   187.6       297.7       12155  ₹1,338,506    +58.7%    
-  MU          3      03-Nov-25   234.5       367.9       8808   ₹1,174,488    +56.9%    
-  WBD         25     01-Oct-25   19.4        27.5        106057  ₹863,304      +42.1%    
-  AMAT        6      01-Dec-25   254.4       353.8       8167   ₹811,533      +39.1%    
-  LRCX        4      03-Nov-25   160.8       222.0       12847  ₹786,591      +38.1%    
-  ASML        7      03-Nov-25   1,065.4     1,359.8     1938   ₹570,441      +27.6%    
-  STX         2      02-Mar-26   378.9       423.1       7045   ₹311,818      +11.7%    
-  HON         18     02-Mar-26   248.0       228.2       10762  ₹-213,518     -8.0%     
+  WDC         1      02-Jan-26   187.6       297.7       11255  ₹1,239,398    +58.7%    
+  MU          3      03-Nov-25   234.5       367.9       8450   ₹1,126,751    +56.9%    
+  WBD         23     01-Oct-25   19.4        27.5        101899  ₹829,458      +42.1%    
+  AMAT        6      01-Dec-25   254.4       353.8       7616   ₹756,781      +39.1%    
+  LRCX        4      03-Nov-25   160.8       222.0       12325  ₹754,631      +38.1%    
+  KLAC        8      01-Dec-25   1,155.7     1,519.8     1676   ₹610,335      +31.5%    
+  ASML        7      03-Nov-25   1,063.1     1,356.8     1864   ₹547,464      +27.6%    
+  STX         2      02-Mar-26   378.9       423.1       6651   ₹294,379      +11.7%    
+  MNST        46     02-Jan-26   76.2        72.8        27726  ₹-93,991      -4.5% ⚠   
+  ⚠  WAZ < 0 (momentum below universe mean): MNST
 
-  AFTER: Invested ₹23,588,069 | Cash ₹2,649,702 | Total ₹26,237,770 | Positions 8/10 | Slot ₹2,623,777
+  AFTER: Invested ₹24,599,414 | Cash ₹103,317 | Total ₹24,702,730 | Positions 9/10 | Slot ₹2,470,273
+
+========================================================================
+  REBALANCE #137  —  01 May 2026
+  NAV: ₹30,943,489  |  Slot: ₹3,094,349  |  Cash: ₹103,317
+========================================================================
+
+  EXITS (6)
+  Ticker      Rank   Entry       Entry₹      Exit₹       Qty    Gross P&L     P&L%      Hold  
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ────────  ──────
+  LRCX        22     03-Nov-25   160.8       256.7       12325  ₹1,182,432    +59.7%    179d  
+  AMAT        21     01-Dec-25   254.4       389.1       7616   ₹1,025,474    +52.9%    151d  
+  KLAC        23     01-Dec-25   1,155.7     1,726.3     1676   ₹956,295      +49.4%    151d  
+  WBD         33     01-Oct-25   19.4        27.0        101899  ₹776,470      +39.4%    212d  
+  ASML        38     03-Nov-25   1,063.1     1,427.0     1864   ₹678,361      +34.2%    179d  
+  MNST        60     02-Jan-26   76.2        77.1        27726  ₹26,617       +1.3%     119d  
+
+  ENTRIES (5)
+  Ticker      Rank   Score    Beta   Ret12m    Ret3m     Entry₹      Qty    Capital     
+  ──────────  ─────  ───────  ─────  ────────  ────────  ──────────  ─────  ────────────
+  SNDK        1      5.960    2.85   +3596.7%  +106.0%   1,187.0     2606   ₹3,093,322  
+  INTC        4      2.861    1.83   +395.6%   +114.4%   99.6        31061  ₹3,094,297  
+  MRVL        5      2.703    1.83   +183.4%   +109.1%   164.9       18759  ₹3,094,297  
+  ARM         6      2.445    1.95   +85.2%    +100.4%   211.2       14652  ₹3,094,209  
+  AMD         8      1.979    2.10   +270.4%   +52.3%    360.5       8582   ₹3,094,154  
+
+  HOLDS (3)
+  Ticker      Rank   Since       Entry₹      Now₹        Qty    Unreal P&L    P&L%      
+  ──────────  ─────  ──────────  ──────────  ──────────  ─────  ────────────  ──────────
+  MU          7      03-Nov-25   234.5       542.2       8450   ₹2,600,093    +131.2%   
+  WDC         2      02-Jan-26   187.6       431.5       11255  ₹2,745,205    +130.0%   
+  STX         3      02-Mar-26   378.9       726.9       6651   ₹2,315,020    +91.9%    
+
+  AFTER: Invested ₹29,743,523 | Cash ₹1,181,597 | Total ₹30,925,120 | Positions 8/10 | Slot ₹3,094,349
 
 ========================================================================
   FINAL SUMMARY
 ========================================================================
-  Period        : 2015-01-02 → 2026-04-24  (11.3 years)
+  Period        : 2015-01-02 → 2026-05-04  (11.3 years)
   Starting Cap  : ₹2,000,000
-  Final Value   : ₹30,901,819
-  Total Return  : +1445.1%
+  Final Value   : ₹31,170,544
+  Total Return  : +1458.5%
   CAGR          : +27.4%
 
-  Closed Trades : 265  |  Open: 8
-  Win Rate      : 57.0%  (151W / 114L)
-  Profit Factor : 3.05
-  Avg hold      : 130 days
-  Total charges : ₹817,615
-  Closed net P&L: ₹18,360,180
-  Open unreal   : ₹10,307,212
+  Closed Trades : 267  |  Open: 8
+  Win Rate      : 57.3%  (153W / 114L)
+  Profit Factor : 3.41
+  Avg hold      : 132 days
+  Total charges : ₹833,048
+  Closed net P&L: ₹21,030,158
+  Open unreal   : ₹7,905,741
 
   YEAR-BY-YEAR:
-  2015  + 12.8%  ████████████
-  2016  + 18.4%  ██████████████████
+  2015  + 12.0%  ███████████
+  2016  + 16.0%  ████████████████
   2017  + 62.1%  ████████████████████████████████████████
   2018  + 15.6%  ███████████████
   2019  +  6.1%  ██████
   2020  + 91.3%  ████████████████████████████████████████
-  2021  + 27.8%  ███████████████████████████
-  2022  -  6.1%  ░░░░░░
-  2023  + 12.1%  ████████████
+  2021  + 29.4%  █████████████████████████████
+  2022  -  8.4%  ░░░░░░░░
+  2023  + 12.9%  ████████████
   2024  + 32.7%  ████████████████████████████████
-  2025  + 14.7%  ██████████████
-  2026  + 26.3%  ██████████████████████████
+  2025  + 10.5%  ██████████
+  2026  + 59.7%  ████████████████████████████████████████
 
-  Rebalance NAV exported → qqq_rebal.csv (136 rows)
+  Rebalance NAV exported → qqq_rebal.csv (137 rows)

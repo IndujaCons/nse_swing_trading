@@ -2315,6 +2315,7 @@
                     <button class="add-user-btn" onclick="openAddUserModal()">+ Add User</button>
                     <button id="mom20-basket-refresh-btn" onclick="mom20LoadBasket()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">↺ Refresh Basket</button>
                     <button id="mom20-delete-user-btn" onclick="deleteSelectedUser('mom20')" style="display:none;padding:4px 10px;font-size:11px;background:rgba(220,53,69,0.12);color:#dc3545;border:1px solid rgba(220,53,69,0.4);border-radius:5px;cursor:pointer;">✕ Delete User</button>
+                    <button id="mom20-history-btn" onclick="mom20ToggleHistory()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">📋 History</button>
                 </div>
 
                 <!-- Basket preview section -->
@@ -6492,100 +6493,97 @@
         let _mom20HistoryLoaded = false;
         function mom20ToggleHistory() {
             const panel = document.getElementById('mom20-history-panel');
+            const btn   = document.getElementById('mom20-history-btn');
             const visible = panel.style.display !== 'none';
             panel.style.display = visible ? 'none' : 'block';
+            if (btn) btn.textContent = visible ? '📋 History' : '📋 Hide History';
             if (!visible && !_mom20HistoryLoaded) mom20LoadHistory();
         }
 
         async function mom20LoadHistory() {
+            const uid = _mom20SelectedUser?.id;
             const body = document.getElementById('mom20-history-body');
+            if (!uid) { body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">Select a user first.</div>'; return; }
             body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">Loading…</div>';
             try {
-                const r = await fetch('/api/mom20-portfolio/history');
+                const r = await fetch(`/api/portfolio-users/${uid}/mom20-history`);
                 const d = await r.json();
                 if (!d.success) { body.innerHTML = '<div style="color:var(--red);">Failed to load history</div>'; return; }
                 _mom20HistoryLoaded = true;
                 const history = d.history || [];
                 document.getElementById('mom20-history-count').textContent = `${history.length} rebalance${history.length !== 1 ? 's' : ''}`;
-                if (!history.length) { body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances recorded yet. History is saved when you click Confirm Investment.</div>'; return; }
-                body.innerHTML = history.slice().reverse().map(r => mom20RenderRebalance(r)).join('');
+                if (!history.length) { body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances recorded yet. Upload a trade book after each rebalance to record history.</div>'; return; }
+                body.innerHTML = history.map((rb, i) => mom20RenderRebalance(rb, history.length - i)).join('');
             } catch(e) { body.innerHTML = `<div style="color:var(--red);">${e.message}</div>`; }
         }
 
-        function mom20RenderRebalance(rb) {
-            const fmt = n => n != null ? Number(n).toLocaleString('en-IN', {maximumFractionDigits: 0}) : '—';
-            const fmtP = n => n != null ? (n > 0 ? '+' : '') + Number(n).toFixed(1) + '%' : '—';
-            const fmtPnl = n => n != null ? (n > 0 ? '+' : '') + Number(n).toFixed(1) + '%' : '—';
-            const capital = rb.capital || 0;
-            const slot = rb.slot || 0;
+        function mom20RenderRebalance(rb, num) {
+            const fmt  = n => n != null ? Number(n).toLocaleString('en-IN', {maximumFractionDigits: 0}) : '—';
+            const fmtP = n => n != null ? '₹' + Number(n).toFixed(2) : '—';
             const color = {g: 'var(--green)', r: 'var(--red)', m: 'var(--text-muted)', t: 'var(--text-primary)'};
+            const divider = `<div style="color:#1e4d8c;margin:4px 0;letter-spacing:0;">${'═'.repeat(60)}</div>`;
 
-            const divider = `<div style="color:#1e4d8c;margin:4px 0;">${'═'.repeat(72)}</div>`;
+            const date = rb.rebalance_date || rb.confirmed_date || rb.date || '—';
+            const uploaded = rb.trade_book_uploaded ? new Date(rb.trade_book_uploaded).toLocaleString('en-IN', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
 
-            // Header
+            // Support both old rich format (exits/entries) and new trade-book format (sells/buys)
+            const sells  = rb.sells  || rb.exits   || [];
+            const buys   = rb.buys   || rb.entries  || [];
+
             const header = `
-                <div style="color:#4a9eff;font-weight:700;">REBALANCE #${String(rb.rebalance_num).padStart(2,'0')} — ${rb.confirmed_date || rb.date}</div>
-                <div style="color:${color.m};">NAV: ₹${fmt(capital)} &nbsp;|&nbsp; Slot: ₹${fmt(slot)} &nbsp;|&nbsp; Positions: ${(rb.holds||[]).length + (rb.entries||[]).length}/${(rb.summary||{}).max_slots || 20}</div>`;
+                <div style="color:#4a9eff;font-weight:700;">REBALANCE #${String(num).padStart(2,'0')} — ${date}${uploaded ? `  <span style="color:${color.m};font-size:10px;font-weight:400;">uploaded ${uploaded}</span>` : ''}</div>`;
 
-            // Exits
-            const exits = rb.exits || [];
-            const exitsHtml = exits.length === 0
-                ? `<div style="color:${color.m};">| —</div>`
-                : exits.map(e => {
-                    const pnlColor = e.pnl_pct >= 0 ? color.g : color.r;
-                    return `<div style="display:grid;grid-template-columns:120px 80px 80px 70px 50px;gap:4px;">
-                        <span>${e.ticker}</span>
-                        <span style="color:${color.m};">₹${e.entry_price ? Number(e.entry_price).toFixed(1) : '—'}</span>
-                        <span style="color:${color.m};">₹${e.exit_price ? Number(e.exit_price).toFixed(1) : '—'}</span>
-                        <span style="color:${pnlColor};font-weight:600;">${fmtPnl(e.pnl_pct)}</span>
-                        <span style="color:${color.m};">${e.hold_days}d</span>
+            // Sells / Exits
+            const sellsHtml = sells.length === 0
+                ? `<div style="color:${color.m};padding-left:4px;">—</div>`
+                : `<div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+                       <span>Stock</span><span>Qty</span><span>Fill ₹</span><span>Value ₹</span></div>` +
+                  sells.map(e => {
+                    const ticker = e.ticker || '';
+                    const qty    = e.qty || 0;
+                    const price  = e.price || e.fill_price || e.exit_price || 0;
+                    const val    = qty && price ? Math.round(qty * price) : null;
+                    return `<div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;">
+                        <span style="color:${color.r};">${ticker}</span>
+                        <span style="color:${color.m};">${qty}</span>
+                        <span style="color:${color.m};">${price ? price.toFixed(2) : '—'}</span>
+                        <span style="color:${color.m};">${val != null ? fmt(val) : '—'}</span>
                     </div>`;
                   }).join('');
-            const exitsSection = `
-                <div style="margin-top:10px;color:${color.t};font-weight:700;">EXITS (${exits.length})</div>
-                ${exits.length > 0 ? `<div style="display:grid;grid-template-columns:120px 80px 80px 70px 50px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;"><span>Stock</span><span>Entry₹</span><span>Exit₹</span><span>P&L%</span><span>Hold</span></div>` : ''}
-                ${exitsHtml}`;
+            const sellsSection = `
+                <div style="margin-top:10px;color:${color.t};font-weight:700;">EXITS / SELLS (${sells.length})</div>
+                ${sellsHtml}`;
 
-            // Entries
-            const entries = rb.entries || [];
-            const entriesHtml = entries.length === 0
-                ? `<div style="color:${color.m};">| —</div>`
-                : entries.map(e => {
-                    const r12 = e.ret12m != null ? (e.ret12m > 0 ? '+' : '') + Number(e.ret12m).toFixed(1) + '%' : '—';
-                    const r3  = e.ret3m  != null ? (e.ret3m  > 0 ? '+' : '') + Number(e.ret3m ).toFixed(1) + '%' : '—';
-                    return `<div style="display:grid;grid-template-columns:120px 40px 60px 50px 65px 60px 70px 90px;gap:4px;">
-                        <span>${e.ticker}</span>
-                        <span style="color:${color.m};">${e.rank != null ? e.rank : '—'}</span>
-                        <span>${e.score != null ? Number(e.score).toFixed(3) : '—'}</span>
-                        <span style="color:${color.m};">${e.beta != null ? Number(e.beta).toFixed(2) : '—'}</span>
-                        <span style="color:${e.ret12m >= 0 ? color.g : color.r};">${r12}</span>
-                        <span style="color:${e.ret3m >= 0 ? color.g : color.r};">${r3}</span>
-                        <span style="color:${color.m};">₹${e.entry_price ? Number(e.entry_price).toFixed(1) : '—'}</span>
-                        <span style="color:${color.g};">₹+${fmt(e.capital)}</span>
+            // Buys / Entries
+            let totalDeployed = 0;
+            const buysHtml = buys.length === 0
+                ? `<div style="color:${color.m};padding-left:4px;">—</div>`
+                : `<div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+                       <span>Stock</span><span>Qty</span><span>Fill ₹</span><span>Value ₹</span></div>` +
+                  buys.map(e => {
+                    const ticker = e.ticker || '';
+                    const qty    = e.qty || 0;
+                    const price  = e.price || e.fill_price || e.entry_price || 0;
+                    const val    = qty && price ? Math.round(qty * price) : null;
+                    if (val) totalDeployed += val;
+                    return `<div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;">
+                        <span style="color:${color.g};">${ticker}</span>
+                        <span style="color:${color.m};">${qty}</span>
+                        <span style="color:${color.m};">${price ? price.toFixed(2) : '—'}</span>
+                        <span style="color:${color.m};">${val != null ? fmt(val) : '—'}</span>
                     </div>`;
                   }).join('');
-            const entriesSection = `
-                <div style="margin-top:10px;color:${color.t};font-weight:700;">ENTRIES (${entries.length})</div>
-                ${entries.length > 0 ? `<div style="display:grid;grid-template-columns:120px 40px 60px 50px 65px 60px 70px 90px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;"><span>Stock</span><span>Rank</span><span>Score</span><span>Beta</span><span>Ret12m</span><span>Ret3m</span><span>Entry₹</span><span>Capital</span></div>` : ''}
-                ${entriesHtml}`;
-
-            // Holds
-            const holds = rb.holds || [];
-            const holdsHtml = holds.length === 0
-                ? `<div style="color:${color.m};">| —</div>`
-                : holds.map(h => `<span style="margin-right:12px;">${h.ticker}</span>`).join('');
-            const holdsSection = `
-                <div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holds.length})</div>
-                <div style="color:${color.m};padding-left:4px;">${holds.length > 0 ? holdsHtml : '| —'}</div>`;
+            const buysSection = `
+                <div style="margin-top:10px;color:${color.t};font-weight:700;">ENTRIES / BUYS (${buys.length})${totalDeployed > 0 ? `  <span style="color:${color.m};font-weight:400;font-size:11px;">₹${fmt(totalDeployed)} deployed</span>` : ''}</div>
+                ${buysHtml}`;
 
             return `
-            <div style="margin-bottom:8px;">
+            <div style="margin-bottom:8px;font-family:monospace;font-size:12px;">
                 ${divider}
-                <div style="padding:10px 0 6px 0;">
+                <div style="padding:8px 0 6px 0;">
                     ${header}
-                    ${exitsSection}
-                    ${entriesSection}
-                    ${holdsSection}
+                    ${sellsSection}
+                    ${buysSection}
                 </div>
             </div>`;
         }
@@ -7870,12 +7868,16 @@ function mom20OnUserChange() {
     const refreshBtn = document.getElementById('mom20-basket-refresh-btn');
     const section = document.getElementById('mom20-basket-section');
     const delBtn = document.getElementById('mom20-delete-user-btn');
+    const histBtn = document.getElementById('mom20-history-btn');
     const trackerCard = document.getElementById('mom20-tracker-card');
+    const historyPanel = document.getElementById('mom20-history-panel');
     if (!_mom20SelectedUser) {
         refreshBtn.style.display = 'none';
         if (delBtn) delBtn.style.display = 'none';
+        if (histBtn) histBtn.style.display = 'none';
         section.style.display = 'none';
         if (trackerCard) trackerCard.style.display = 'none';
+        if (historyPanel) historyPanel.style.display = 'none';
         return;
     }
     if (trackerCard) trackerCard.style.display = 'block';
@@ -7884,6 +7886,9 @@ function mom20OnUserChange() {
     if (capInput) { capInput.value = ''; capInput.dataset.userEdited = 'false'; }
     refreshBtn.style.display = 'inline';
     if (delBtn) delBtn.style.display = 'inline';
+    if (histBtn) histBtn.style.display = 'inline';
+    _mom20HistoryLoaded = false;
+    if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
     mom20LoadBasket();
     mom20LoadPerformance();
 }
@@ -8406,23 +8411,43 @@ function mom20DownloadSIPBasket() {
     const holds = d.holds || [];
     if (holds.length === 0) { alert('No holds to SIP into'); return; }
 
-    const capital  = _mom20ParseCapitalInput() || d.total_capital;
-    const perSlot  = capital / 20;
+    const capital = _mom20ParseCapitalInput() || d.total_capital;
+    const perSlot = capital / 20;
 
-    const rows = [['Tradingsymbol','Exchange','Transaction type','Order type','Quantity','Price','Product']];
+    const items = [];
+    let weight  = 0;
     for (const h of holds) {
         if (!h.price || h.price <= 0) continue;
         const qty = Math.floor(perSlot / h.price);
-        if (qty > 0) rows.push([h.ticker, 'NSE', 'BUY', 'MARKET', qty, 0, 'CNC']);
+        if (qty <= 0) continue;
+        const ticker = h.ticker;
+        items.push({
+            id: 0,
+            instrument: {
+                tradingsymbol: ticker, type: "EQ", symbol: ticker,
+                segment: "NSE", exchange: "NSE", tickSize: 0.05, lotSize: 1,
+                company: ticker, tradable: true, precision: 2,
+                fullName: ticker, niceName: ticker, niceNameHTML: ticker,
+                stockWidget: true, exchangeToken: 0, instrumentToken: 0,
+                isin: "", related: [], underlying: null,
+                auctionNumber: null, isEquity: true, isWeekly: false
+            },
+            weight: weight++,
+            params: {
+                transactionType: "BUY", product: "CNC", orderType: "MARKET",
+                validity: "DAY", validityTTL: 1, quantity: qty, price: 0,
+                triggerPrice: 0, disclosedQuantity: 0, lastPrice: 0,
+                variety: "regular", tags: []
+            }
+        });
     }
-    if (rows.length <= 1) { alert('No stocks qualify (check capital / prices)'); return; }
+    if (items.length === 0) { alert('No stocks qualify (check capital / prices)'); return; }
 
-    const csv  = rows.map(r => r.join(',')).join('\n');
-    const blob = new Blob([csv], {type: 'text/csv'});
+    const blob = new Blob([JSON.stringify(items, null, 2)], {type: 'application/json'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `mom20_sip_${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `mom20_sip_${new Date().toISOString().slice(0,10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
 }
