@@ -2755,20 +2755,30 @@ def api_mom20_chart(user_id):
     if not port_values:
         return jsonify({"success": False, "error": "could not compute portfolio values"})
 
-    # Append today's value using cached signal prices if market is open (today not in yfinance yet)
+    # Append today's intraday value via yfinance if today not yet in daily data (market open)
     import datetime as _dt
     today_str = _dt.date.today().isoformat()
     last_yf_date = all_dates[-1].strftime("%Y-%m-%d") if len(all_dates) else ""
     if last_yf_date < today_str:
         try:
-            sig = live_signals_scanner.scan_entry_signals(force_refresh=False)
+            intra_syms = [f"{t}.NS" for t in tickers] + ["^CRSLDX", "^CNX200"]
+            intra_raw  = yf.download(intra_syms, period="1d", interval="5m",
+                                     progress=False, auto_adjust=True,
+                                     group_by="ticker", threads=True)
+            def last_price(sym):
+                try:
+                    if len(intra_syms) == 1:
+                        return float(intra_raw["Close"].dropna().iloc[-1])
+                    return float(intra_raw[sym]["Close"].dropna().iloc[-1])
+                except Exception:
+                    return None
+
             live_price_map = {}
-            for s in sig.get("mom20_signals", []) + sig.get("mom20_overflow", []):
-                if s.get("price"):
-                    live_price_map[s["ticker"]] = s["price"]
-            # Also use all_prices if available
-            for tk, pr in sig.get("mom20_all_prices", {}).items():
-                live_price_map.setdefault(tk, pr)
+            for t, sym in zip(tickers, intra_syms[:-2]):
+                p = last_price(sym)
+                if p:
+                    live_price_map[t] = p
+
             today_val = 0.0
             for t in tickers:
                 qty = qty_map.get(t, 0)
@@ -2779,12 +2789,15 @@ def api_mom20_chart(user_id):
                     today_val += qty * ep
                 else:
                     today_val += qty * live_price_map.get(t, ep)
+
             if today_val > 0:
                 port_values.append(today_val)
                 all_dates = list(all_dates) + [pd.Timestamp(today_str)]
-                # Extend benchmarks with last known value (no intraday index data)
-                bench_n500 = bench_n500.copy() if not bench_n500.empty else bench_n500
-                bench_n200 = bench_n200.copy() if not bench_n200.empty else bench_n200
+                # Extend benchmarks using their latest intraday price
+                for sym, bench_s in [("^CRSLDX", bench_n500), ("^CNX200", bench_n200)]:
+                    p = last_price(sym)
+                    if p is not None and not bench_s.empty:
+                        bench_s.loc[pd.Timestamp(today_str)] = p
         except Exception:
             pass
 
