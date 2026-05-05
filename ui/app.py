@@ -2755,8 +2755,8 @@ def api_mom20_chart(user_id):
     if not port_values:
         return jsonify({"success": False, "error": "could not compute portfolio values"})
 
-    # Rebase both to 0% from day 0
-    base_port  = port_values[0]
+    # Rebase from entry prices (matches tracker P&L); day-1 close diverges from fills
+    base_port  = total_invested
     base_n500  = float(bench_n500.iloc[0]) if not bench_n500.empty else None
     base_n200  = float(bench_n200.iloc[0]) if not bench_n200.empty else None
     dates_out  = [d.strftime("%Y-%m-%d") for d in all_dates]
