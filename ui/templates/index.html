@@ -2343,6 +2343,9 @@
                                 <div class="basket-stat-label">To Deploy</div>
                                 <div id="basket-to-deploy" class="basket-stat-value">—</div>
                             </div>
+                            <div class="basket-stat" style="justify-content:flex-end;align-self:center;">
+                                <button onclick="mom20DownloadSIPBasket()" style="padding:6px 14px;font-size:11px;font-weight:700;background:var(--blue,#3b82f6);color:white;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">⬇ Download SIP Basket</button>
+                            </div>
                         </div>
                         <div class="basket-badges">
                             <span id="basket-badge-exits" class="basket-badge basket-badge-exits">0 Exits</span>
@@ -2394,7 +2397,7 @@
 
                     <!-- Action buttons -->
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                        <button onclick="mom20DownloadBasket()" style="padding:7px 18px;font-size:12px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⬇ Download Basket</button>
+                        <button onclick="mom20DownloadBasket()" style="padding:7px 18px;font-size:12px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">⬇ Download Rebalance Basket</button>
                         <label style="padding:7px 14px;font-size:12px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">
                             ⬆ Upload Trade Book
                             <input type="file" accept=".csv" onchange="mom20UploadTradeBook(event)" style="display:none;">
@@ -8392,6 +8395,33 @@ async function mom20DownloadBasket() {
     if (!uid) { alert('Select a user first'); return; }
     const cap = _mom20ParseCapitalInput();
     window.location.href = `/api/portfolio-users/${uid}/mom20-basket/download?capital=${cap}`;
+}
+
+function mom20DownloadSIPBasket() {
+    const d = _mom20BasketData;
+    if (!d) { alert('Load basket first'); return; }
+    const holds = d.holds || [];
+    if (holds.length === 0) { alert('No holds to SIP into'); return; }
+
+    const capital  = _mom20ParseCapitalInput() || d.total_capital;
+    const perSlot  = capital / 20;
+
+    const rows = [['Tradingsymbol','Exchange','Transaction type','Order type','Quantity','Price','Product']];
+    for (const h of holds) {
+        if (!h.price || h.price <= 0) continue;
+        const qty = Math.floor(perSlot / h.price);
+        if (qty > 0) rows.push([h.ticker, 'NSE', 'BUY', 'MARKET', qty, 0, 'CNC']);
+    }
+    if (rows.length <= 1) { alert('No stocks qualify (check capital / prices)'); return; }
+
+    const csv  = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `mom20_sip_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 async function mom20UploadTradeBook(event) {
