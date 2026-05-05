@@ -23,7 +23,8 @@ N_SLOTS    = 20   # Mom20 top-N
 BUFFER_OUT = 40   # hold if rank <= this
 
 
-def generate_basket(user: dict, signals: list, current_portfolio: dict) -> dict:
+def generate_basket(user: dict, signals: list, current_portfolio: dict,
+                    unfiltered_ranks: dict = None) -> dict:
     """
     Compute exits + entries for a Mom20 rebalance and return basket data.
 
@@ -64,9 +65,12 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict) -> dict:
     holds  = []
     entries = []
 
+    # Exits: use unfiltered rank (no beta cap) so held high-beta stocks rank normally
+    exit_rank_map = unfiltered_ranks if unfiltered_ranks else rank_map
+
     # Exits: currently held but rank > buffer_out OR not in signals at all
     for ticker in current_tickers:
-        rank = rank_map.get(ticker, 999)
+        rank = exit_rank_map.get(ticker, rank_map.get(ticker, 999))
         price = price_map.get(ticker, 0)
         qty = current_qty_map.get(ticker, 0)
         if rank > BUFFER_OUT:

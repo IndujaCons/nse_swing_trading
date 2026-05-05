@@ -8208,12 +8208,14 @@ function _renderMom20Basket(d) {
         capInput.value = Math.round(d.total_capital).toLocaleString('en-IN');
     }
 
-    // Stats — SIP mode when no entries: min = sum of 1 share per hold
+    // Stats — SIP mode when no entries: min = 20 × max(hold price)
+    // ensures 5% per-slot allocation can buy ≥1 share of most expensive hold
     const holds  = d.holds  || [];
     let displayMin = d.min_capital;
     let minLabel   = 'Min Needed';
     if ((d.n_entries === 0 || d.entries.length === 0) && holds.length > 0) {
-        displayMin = Math.round(holds.reduce((s, h) => s + (h.price || 0), 0));
+        const maxHoldPrice = Math.max(...holds.map(h => h.price || 0), 0);
+        displayMin = Math.round(20 * maxHoldPrice);
         minLabel   = 'Min Needed (SIP)';
     }
     const ok = d.total_capital >= displayMin;

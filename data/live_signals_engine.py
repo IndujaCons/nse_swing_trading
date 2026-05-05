@@ -991,6 +991,7 @@ class LiveSignalsEngine:
 
         # Mom20 overflow: top-40 uncapped minus capped — high-beta RS63 candidates
         mom20_overflow = []
+        mom20_unfiltered_ranks = {}
         if len(mom20_raw) >= 5:
             capped_tickers = {s["ticker"] for s in mom20_signals}
             mr_12_uc = np.array([d["mr_12"] for d in mom20_raw])
@@ -1009,11 +1010,16 @@ class LiveSignalsEngine:
                         "ticker": d["ticker"],
                         "price": d["price"],
                         "ret_12m": round(d["ret_12m"] * 100, 1),
-                        "ret_3m": round(d["ret_3m"] * 100, 1) if d.get("ret_3m") is not None else round(d["ret_6m"] * 100, 1),
+                        "ret_3m": round(d["ret_3m"] * 100, 1) if d.get("mr_3") is not None else round(d["ret_6m"] * 100, 1),
                         "momentum_score": round(d["norm_score_uc"], 3),
                         "beta": round(abs(d["beta"]), 2),
                         "rank": ov_rank,
                     })
+            # Unfiltered rank map (no beta cap) — used for exit decisions on held stocks
+            mom20_unfiltered_ranks = {
+                d["ticker"]: rank + 1
+                for rank, d in enumerate(sorted(mom20_raw, key=lambda d: -d.get("norm_score_uc", 0)))
+            }
 
         # Mom15: same scoring as Mom20 but beta cap 1.0, top 15
         # Load EPS data for TTM growth column + filtered view
@@ -1138,6 +1144,7 @@ class LiveSignalsEngine:
             "mom15_signals": mom15_signals,
             "mom20_signals": mom20_signals,
             "mom20_overflow": mom20_overflow,
+            "mom20_unfiltered_ranks": mom20_unfiltered_ranks,
             "alpha20_signals": alpha20_signals,
             "rs63_signals": rs63_signals[:25],
             "nifty_regime": "ON" if nifty_regime_on else "OFF",

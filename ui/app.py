@@ -2348,6 +2348,7 @@ def api_mom20_basket_preview(user_id):
     try:
         result = live_signals_scanner.scan_entry_signals(force_refresh=False)
         signals = result.get("mom20_signals", [])
+        unfiltered_ranks = result.get("mom20_unfiltered_ranks", {})
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
 
@@ -2359,7 +2360,7 @@ def api_mom20_basket_preview(user_id):
     except Exception:
         portfolio = {"status": "empty", "basket": []}
 
-    basket_data = generate_basket(user, signals, portfolio)
+    basket_data = generate_basket(user, signals, portfolio, unfiltered_ranks=unfiltered_ranks)
     return jsonify({"success": True, **basket_data})
 
 
@@ -2381,6 +2382,7 @@ def api_mom20_basket_download(user_id):
     try:
         result = live_signals_scanner.scan_entry_signals(force_refresh=False)
         signals = result.get("mom20_signals", [])
+        unfiltered_ranks = result.get("mom20_unfiltered_ranks", {})
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
 
@@ -2391,7 +2393,7 @@ def api_mom20_basket_download(user_id):
     except Exception:
         portfolio = {"status": "empty", "basket": []}
 
-    basket_data = generate_basket(user, signals, portfolio)
+    basket_data = generate_basket(user, signals, portfolio, unfiltered_ranks=unfiltered_ranks)
     from data.mom20_basket import to_zerodha_json
     json_content = to_zerodha_json(basket_data)
 
@@ -2557,6 +2559,11 @@ def api_mom20_performance(user_id):
             rank_map[s["ticker"]] = s.get("rank")
             if s.get("price"):
                 signal_price_map[s["ticker"]] = s["price"]
+        # Use unfiltered rank for held stocks with beta > 1.2 (e.g. CGPOWER)
+        unfiltered_ranks = sig_result.get("mom20_unfiltered_ranks", {})
+        for ticker, urank in unfiltered_ranks.items():
+            if ticker not in rank_map:
+                rank_map[ticker] = urank
     except Exception:
         pass
 
@@ -2565,7 +2572,8 @@ def api_mom20_performance(user_id):
         try:
             user = get_user(user_id)
             signals = list(sig_result.get("mom20_signals", [])) if 'sig_result' in dir() else []
-            basket_data = generate_basket(user, signals, pf)
+            unfiltered_ranks = sig_result.get("mom20_unfiltered_ranks", {}) if 'sig_result' in dir() else {}
+            basket_data = generate_basket(user, signals, pf, unfiltered_ranks=unfiltered_ranks)
             holds = basket_data.get("holds", [])
             if holds:
                 basket = [{"ticker": h["ticker"], "qty": 0,
