@@ -73,7 +73,7 @@ UNIVERSE = [
     ("GOLDBEES",    "Gold",                 "GOLDBEES.NS"),
     ("SILVERBEES",  "Silver",               "SILVERBEES.NS"),
     # International (US-listed, priced in USD — yfinance daily data available)
-    ("SPY",         "S&P 500",              "SPY"),
+    ("VOO",         "S&P 500",              "VOO"),
     ("QQQ",         "Nasdaq 100",           "QQQ"),
     ("XLE",         "US Energy",            "XLE"),
     ("GDX",         "Gold Miners",          "GDX"),
