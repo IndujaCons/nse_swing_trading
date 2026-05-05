@@ -2349,6 +2349,7 @@ def api_mom20_basket_preview(user_id):
         result = live_signals_scanner.scan_entry_signals(force_refresh=False)
         signals = result.get("mom20_signals", [])
         unfiltered_ranks = result.get("mom20_unfiltered_ranks", {})
+        all_prices = result.get("mom20_all_prices", {})
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
 
@@ -2360,7 +2361,7 @@ def api_mom20_basket_preview(user_id):
     except Exception:
         portfolio = {"status": "empty", "basket": []}
 
-    basket_data = generate_basket(user, signals, portfolio, unfiltered_ranks=unfiltered_ranks)
+    basket_data = generate_basket(user, signals, portfolio, unfiltered_ranks=unfiltered_ranks, all_prices=all_prices)
     return jsonify({"success": True, **basket_data})
 
 
@@ -2383,6 +2384,7 @@ def api_mom20_basket_download(user_id):
         result = live_signals_scanner.scan_entry_signals(force_refresh=False)
         signals = result.get("mom20_signals", [])
         unfiltered_ranks = result.get("mom20_unfiltered_ranks", {})
+        all_prices = result.get("mom20_all_prices", {})
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
 
@@ -2393,7 +2395,7 @@ def api_mom20_basket_download(user_id):
     except Exception:
         portfolio = {"status": "empty", "basket": []}
 
-    basket_data = generate_basket(user, signals, portfolio, unfiltered_ranks=unfiltered_ranks)
+    basket_data = generate_basket(user, signals, portfolio, unfiltered_ranks=unfiltered_ranks, all_prices=all_prices)
     from data.mom20_basket import to_zerodha_json
     json_content = to_zerodha_json(basket_data)
 
@@ -2573,7 +2575,8 @@ def api_mom20_performance(user_id):
             user = get_user(user_id)
             signals = list(sig_result.get("mom20_signals", [])) if 'sig_result' in dir() else []
             unfiltered_ranks = sig_result.get("mom20_unfiltered_ranks", {}) if 'sig_result' in dir() else {}
-            basket_data = generate_basket(user, signals, pf, unfiltered_ranks=unfiltered_ranks)
+            all_prices = sig_result.get("mom20_all_prices", {}) if 'sig_result' in dir() else {}
+            basket_data = generate_basket(user, signals, pf, unfiltered_ranks=unfiltered_ranks, all_prices=all_prices)
             holds = basket_data.get("holds", [])
             if holds:
                 basket = [{"ticker": h["ticker"], "qty": 0,

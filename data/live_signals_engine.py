@@ -992,6 +992,7 @@ class LiveSignalsEngine:
         # Mom20 overflow: top-40 uncapped minus capped — high-beta RS63 candidates
         mom20_overflow = []
         mom20_unfiltered_ranks = {}
+        mom20_all_prices = {}
         if len(mom20_raw) >= 5:
             capped_tickers = {s["ticker"] for s in mom20_signals}
             mr_12_uc = np.array([d["mr_12"] for d in mom20_raw])
@@ -1020,6 +1021,8 @@ class LiveSignalsEngine:
                 d["ticker"]: rank + 1
                 for rank, d in enumerate(sorted(mom20_raw, key=lambda d: -d.get("norm_score_uc", 0)))
             }
+            # All N200 prices (no beta filter) — used for SIP min capital on held stocks
+            mom20_all_prices = {d["ticker"]: d["price"] for d in mom20_raw}
 
         # Mom15: same scoring as Mom20 but beta cap 1.0, top 15
         # Load EPS data for TTM growth column + filtered view
@@ -1145,6 +1148,7 @@ class LiveSignalsEngine:
             "mom20_signals": mom20_signals,
             "mom20_overflow": mom20_overflow,
             "mom20_unfiltered_ranks": mom20_unfiltered_ranks,
+            "mom20_all_prices": mom20_all_prices,
             "alpha20_signals": alpha20_signals,
             "rs63_signals": rs63_signals[:25],
             "nifty_regime": "ON" if nifty_regime_on else "OFF",
