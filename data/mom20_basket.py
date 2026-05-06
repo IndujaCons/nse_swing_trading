@@ -70,12 +70,16 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     holds  = []
     entries = []
 
-    # Exits: use unfiltered rank (no beta cap) so held high-beta stocks rank normally
-    exit_rank_map = unfiltered_ranks if unfiltered_ranks else rank_map
+    # Exits: prefer the filtered (β-capped) rank for currently held stocks.
+    # Fall back to unfiltered rank only when a stock isn't in the filtered list
+    # (i.e. it got dropped by the β cap, e.g. CGPOWER) so held high-beta names
+    # don't get force-exited just because the filter excluded them.
+    fallback_ranks = unfiltered_ranks or {}
 
-    # Exits: currently held but rank > buffer_out OR not in signals at all
     for ticker in current_tickers:
-        rank = exit_rank_map.get(ticker, rank_map.get(ticker, 999))
+        rank = rank_map.get(ticker)
+        if rank is None:
+            rank = fallback_ranks.get(ticker, 999)
         price = price_map.get(ticker, 0)
         qty = current_qty_map.get(ticker, 0)
         if rank > BUFFER_OUT:
