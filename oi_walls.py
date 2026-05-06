@@ -45,9 +45,10 @@ except Exception:
 # ── Kite session + instruments ────────────────────────────────────────────────
 
 def _connect_kite():
-    """Find an active Kite session from the configured users; return the
-    underlying KiteConnect instance. Raises with a clear message if none
-    is logged in."""
+    """Find an active Kite session from the configured users.
+    is_connected() only checks the token *exists*, not whether it's still
+    valid — so probe each user with a cheap kite.profile() call and pick
+    the first one that actually responds."""
     from broker.kite_broker import KiteBroker
     from config.settings import get_kite_users
 
@@ -56,16 +57,24 @@ def _connect_kite():
         raise RuntimeError(
             "No Kite users configured. Set KITE_USER1_API_KEY etc. in .env.")
 
+    failures = []
     for u in users:
         broker = KiteBroker(
             user_id=u["id"], name=u["name"],
             api_key=u["api_key"], api_secret=u["api_secret"])
-        if broker.is_connected() and broker._kite is not None:
+        if not broker.is_connected() or broker._kite is None:
+            failures.append(f"{u['name']}: no session file")
+            continue
+        try:
+            broker._kite.profile()  # cheap auth check
             return broker._kite, u["name"]
+        except Exception as e:
+            failures.append(f"{u['name']}: {str(e).splitlines()[0]}")
+            continue
 
     raise RuntimeError(
-        "No active Kite session. Open the dashboard, click Login on a Kite "
-        "user, and re-run this script.")
+        "No active Kite session. Open the dashboard and re-login on one of "
+        "the Kite users, then re-run.\n  Tried: " + " | ".join(failures))
 
 
 def _load_nfo_instruments(kite):
