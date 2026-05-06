@@ -20,21 +20,37 @@ from config.settings import (
     LIVE_SIGNALS_CACHE_FILE, LIVE_POSITIONS_FILE, LIVE_SIGNALS_HISTORY_FILE,
     get_cache_ttl, load_config
 )
-from nifty500_tickers import NIFTY_500_TICKERS
 from sector_mapping import STOCK_SECTOR_MAP
 
 
 def _load_latest_pit_constituents(pit_filename: str):
-    """Return the most recent constituent list from an NSE PIT JSON file,
-    or None if the file is missing/unreadable (caller falls back to hardcoded).
+    """Return the most recent constituent list from an NSE PIT JSON file.
+    Raises if missing/unreadable — the live scanner has no business falling
+    back to a stale hardcoded list.
     """
-    try:
-        path = os.path.join(os.path.dirname(__file__), "..", "nse_const", pit_filename)
-        with open(path) as f:
-            pit = json.load(f)
-        return list(pit[max(pit.keys())])
-    except Exception:
-        return None
+    path = os.path.join(os.path.dirname(__file__), "..", "nse_const", pit_filename)
+    with open(path) as f:
+        pit = json.load(f)
+    return list(pit[max(pit.keys())])
+
+
+def get_scan_tickers(universe: int):
+    """Return the live-scan ticker universe for a given universe size.
+
+    Sourced from the latest entry in the NSE PIT JSONs so reconstitutions
+    flow through automatically. Used by both LiveSignalsEngine.scan_entry_signals
+    and the /api/live-signals/refresh endpoint (Zerodha LTP fetch).
+    """
+    if universe <= 50:
+        return NIFTY_50_TICKERS
+    if universe <= 100:
+        return NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
+    if universe <= 200:
+        return _load_latest_pit_constituents("nifty200_pit.json")
+    # >200: alphabetical first 150 of current Nifty 500 minus current Nifty 100
+    n500 = _load_latest_pit_constituents("nifty500_pit.json")
+    nifty100_set = set(NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS)
+    return [t for t in n500 if t not in nifty100_set][:150]
 
 # Sectoral Indices (Yahoo Finance symbols) for RS momentum
 SECTORAL_INDICES = {
@@ -84,30 +100,9 @@ NIFTY_NEXT50_TICKERS = [
     "TRENT", "TVSMOTOR", "UNITDSPR", "VEDL", "ZOMATO",
 ]
 
-# Nifty 200 constituents (next 100 beyond Nifty 100)
-NIFTY_200_NEXT100_TICKERS = [
-    "360ONE", "ABCAPITAL", "ALKEM", "APLAPOLLO", "ASHOKLEY",
-    "ASTRAL", "AUBANK", "BAJAJHFL", "BANKINDIA", "BDL",
-    "BHARATFORG", "BHARTIHEXA", "BIOCON", "BLUESTARCO", "BSE",
-    "CGPOWER", "COCHINSHIP", "COFORGE", "CONCOR", "COROMANDEL",
-    "CUMMINSIND", "DIVISLAB", "DIXON", "DMART", "ENRIN",
-    "EXIDEIND", "FEDERALBNK", "FORTIS", "GLENMARK", "GMRAIRPORT",
-    "GODFRYPHLP", "GODREJPROP", "HDFCAMC", "HINDZINC", "HUDCO",
-    "HYUNDAI", "IDEA", "IDFCFIRSTB", "IGL", "INDHOTEL",
-    "INDIANB", "IRCTC", "IREDA", "ITCHOTELS", "JINDALSTEL",
-    "JUBLFOOD", "KALYANKJIL", "KEI", "KPITTECH", "LICHSGFIN",
-    "LTF", "LTM", "M&MFIN", "MAXHEALTH", "MAZDOCK",
-    "MFSL", "MOTILALOFS", "MPHASIS", "MRF", "MUTHOOTFIN",
-    "NATIONALUM", "NMDC", "NTPCGREEN", "NYKAA", "OBEROIRLTY",
-    "OFSS", "OIL", "PAGEIND", "PATANJALI", "PAYTM",
-    "PERSISTENT", "PHOENIXLTD", "PIIND", "POLICYBZR", "POWERINDIA",
-    "PREMIERENE", "PRESTIGE", "HINDPETRO", "IRB", "RVNL",
-    "SAIL", "SBICARD", "SHRIRAMFIN", "SOLARINDS", "SONACOMS",
-    "SUPREMEIND", "SUZLON", "SWIGGY", "TATACOMM", "TATAELXSI",
-    "TATATECH", "TIINDIA", "TMPV", "TORNTPOWER", "UNIONBANK",
-    "UPL", "VBL", "VMM", "VOLTAS", "WAAREEENER",
-    "YESBANK", "ZYDUSLIFE",
-]
+# Nifty 200 / 500 universes are sourced from nse_const/nifty{200,500}_pit.json
+# via get_scan_tickers() above — no hardcoded list, so NSE reconstitutions
+# flow through automatically (see commit removing NIFTY_200_NEXT100_TICKERS).
 
 
 def _calculate_rsi_series(closes: pd.Series, period: int) -> pd.Series:
@@ -358,23 +353,7 @@ class LiveSignalsEngine:
 
         config = load_config()
         universe = config.get("live_signals_universe", 50)
-
-        if universe <= 50:
-            tickers = NIFTY_50_TICKERS
-        elif universe <= 100:
-            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
-        elif universe <= 200:
-            # Source the current Nifty 200 from PIT JSON so reconstitutions
-            # (e.g. NTPCGREEN removed 2026-03-30) flow through automatically.
-            n200 = _load_latest_pit_constituents("nifty200_pit.json")
-            tickers = n200 if n200 else (
-                NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
-            )
-        else:
-            # Midcap-ish 150: alphabetical first 150 of current Nifty 500 minus Nifty 100
-            n500 = _load_latest_pit_constituents("nifty500_pit.json") or NIFTY_500_TICKERS
-            nifty100_set = set(NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS)
-            tickers = [t for t in n500 if t not in nifty100_set][:150]
+        tickers = get_scan_tickers(universe)
 
         total = len(tickers)
         if is_historical:

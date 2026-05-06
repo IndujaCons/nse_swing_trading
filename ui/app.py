@@ -332,17 +332,10 @@ def refresh_live_signals():
 
     try:
         # Fetch real-time LTP from Zerodha if connected
-        from data.live_signals_engine import (NIFTY_50_TICKERS, NIFTY_NEXT50_TICKERS,
-                                              NIFTY_200_NEXT100_TICKERS)
+        from data.live_signals_engine import get_scan_tickers
         from config.settings import load_config
-        config = load_config()
-        universe = config.get("live_signals_universe", 50)
-        if universe <= 50:
-            scan_tickers = NIFTY_50_TICKERS
-        elif universe <= 100:
-            scan_tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
-        else:
-            scan_tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+        universe = load_config().get("live_signals_universe", 50)
+        scan_tickers = get_scan_tickers(universe)
 
         ltp_map = _fetch_zerodha_ltp(scan_tickers)
 
