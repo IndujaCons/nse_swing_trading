@@ -2619,7 +2619,8 @@ def api_mom20_performance(user_id):
     tickers = [h["ticker"] for h in basket]
 
     if want_live:
-        import yfinance as yf, datetime as _dt
+        import yfinance as yf
+        from datetime import datetime as _dt, timezone as _tz, timedelta as _td
         yf_syms = [f"{t}.NS" for t in tickers]
         try:
             df = yf.download(yf_syms, period="1d", interval="5m", progress=False,
@@ -2635,7 +2636,8 @@ def api_mom20_performance(user_id):
 
         # Live Prices touches only prices — ranks require a full Nifty 200 scan
         # which lives behind the Live Signals refresh path, not this endpoint.
-        prices_updated_at = _dt.datetime.now().isoformat(timespec="seconds")
+        IST = _tz(_td(hours=5, minutes=30))
+        prices_updated_at = _dt.now(IST).isoformat(timespec="seconds")
         try:
             os.makedirs(os.path.dirname(lp_path), exist_ok=True)
             with open(lp_path, "w") as f:
