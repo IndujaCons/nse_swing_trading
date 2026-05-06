@@ -369,21 +369,30 @@ def print_signal(fires, strikes, spot, spot_chg_pct, lot_size):
 
 # ── Top-level ─────────────────────────────────────────────────────────────────
 
-def analyze(symbol, expiry_arg, kite_for_prev_close=None):
-    print(f"\n{'═' * 64}")
-    print(f" {symbol}  Option Chain Analysis")
-    print(f"{'═' * 64}")
+def analyze(symbol, expiry_arg, kite_for_prev_close=None, summary_mode=False):
+    """Run analysis on one symbol. Returns a metrics dict for summary mode.
+    Also prints the detailed per-stock block unless summary_mode=True."""
+    metrics = {"ticker": symbol, "ok": False, "error": None}
+
+    if not summary_mode:
+        print(f"\n{'═' * 64}")
+        print(f" {symbol}  Option Chain Analysis")
+        print(f"{'═' * 64}")
 
     try:
         expiry, spot, strikes, _, lot_size = fetch_chain_kite(symbol, expiry_arg)
     except Exception as e:
-        print(f"  ERROR fetching {symbol}: {e}", file=sys.stderr)
-        return False
+        metrics["error"] = str(e).splitlines()[0]
+        if not summary_mode:
+            print(f"  ERROR fetching {symbol}: {e}", file=sys.stderr)
+        return metrics
 
     if not strikes:
-        print(f"  {symbol} not in F&O segment (or no data for chosen expiry).",
-              file=sys.stderr)
-        return False
+        metrics["error"] = "not in F&O"
+        if not summary_mode:
+            print(f"  {symbol} not in F&O segment (or no data for chosen expiry).",
+                  file=sys.stderr)
+        return metrics
 
     if kite_for_prev_close is None:
         kite_for_prev_close, _ = _connect_kite()
@@ -394,14 +403,8 @@ def analyze(symbol, expiry_arg, kite_for_prev_close=None):
     atm = min(ks, key=lambda K: abs(K - spot))
     dte = days_to_expiry(expiry)
 
-    chg_str = f"  ({spot_chg_pct:+.2f}% today)" if spot_chg_pct is not None else ""
-    print(f"\nExpiry {expiry}")
-    print(f"Spot ₹{spot:,.2f}{chg_str}    ATM {int(atm)}    "
-          f"Days to expiry {dte}    Lot {lot_size}")
-
     mp = compute_max_pain(strikes)
     mp_dist = (mp - spot) / spot * 100 if spot else 0
-    print(f"\nMax Pain  : ₹{int(mp):,}   ({mp_dist:+.2f}% from spot)")
 
     total_ce_oi  = sum(s["ce"]["oi"]  for s in strikes.values())
     total_pe_oi  = sum(s["pe"]["oi"]  for s in strikes.values())
@@ -409,25 +412,96 @@ def analyze(symbol, expiry_arg, kite_for_prev_close=None):
     total_pe_vol = sum(s["pe"]["vol"] for s in strikes.values())
     pcr_oi  = total_pe_oi  / total_ce_oi  if total_ce_oi  else 0
     pcr_vol = total_pe_vol / total_ce_vol if total_ce_vol else 0
+
+    fires = detect_signal(strikes, spot, spot_chg_pct)
+    top_call_K = max(strikes.items(), key=lambda kv: kv[1]["ce"]["oi"])[0]
+    top_put_K  = max(strikes.items(), key=lambda kv: kv[1]["pe"]["oi"])[0]
+
+    metrics.update({
+        "ok": True,
+        "spot": spot,
+        "spot_chg_pct": spot_chg_pct,
+        "expiry": expiry,
+        "dte": dte,
+        "lot_size": lot_size,
+        "max_pain": mp,
+        "max_pain_dist_pct": mp_dist,
+        "pcr_oi": pcr_oi,
+        "pcr_vol": pcr_vol,
+        "top_call_K": top_call_K,
+        "top_put_K": top_put_K,
+        "signal_strike": fires[0][0] if fires else None,
+    })
+
+    if summary_mode:
+        return metrics
+
+    chg_str = f"  ({spot_chg_pct:+.2f}% today)" if spot_chg_pct is not None else ""
+    print(f"\nExpiry {expiry}")
+    print(f"Spot ₹{spot:,.2f}{chg_str}    ATM {int(atm)}    "
+          f"Days to expiry {dte}    Lot {lot_size}")
+
+    print(f"\nMax Pain  : ₹{int(mp):,}   ({mp_dist:+.2f}% from spot)")
     print(f"PCR (OI)  : {pcr_oi:.2f}")
     print(f"PCR (Vol) : {pcr_vol:.2f}")
 
     print_walls(strikes, spot, "ce", "CALL OI WALLS (resistance)")
     print_walls(strikes, spot, "pe", "PUT OI WALLS (support)")
 
-    fires = detect_signal(strikes, spot, spot_chg_pct)
     if fires:
         print_signal(fires, strikes, spot, spot_chg_pct, lot_size)
 
-    top_call_K = max(strikes.items(), key=lambda kv: kv[1]["ce"]["oi"])[0]
-    top_put_K  = max(strikes.items(), key=lambda kv: kv[1]["pe"]["oi"])[0]
     bias = "downward" if mp_dist < 0 else "upward"
     print("\nInference")
     print(f"  Range bracket : {int(top_put_K):,} (put wall) ↔ "
           f"{int(top_call_K):,} (call wall)")
     print(f"  Pinning bias  : Max Pain at ₹{int(mp):,} → "
           f"mild {bias} pull into expiry")
-    return True
+    return metrics
+
+
+def print_summary_table(results):
+    """One row per symbol, fixed-width columns."""
+    print(f"\n{'═' * 90}")
+    print(f" Portfolio OI-Walls Summary  ({len(results)} symbols)")
+    print(f"{'═' * 90}\n")
+
+    hdr = (f"{'Ticker':<14} {'Spot':>10} {'Δ%':>6} {'MaxPain':>10} "
+           f"{'PCR':>5} {'TopCall':>9} {'TopPut':>9}  Signal")
+    print(hdr)
+    print("─" * len(hdr))
+
+    # Failures last; OK rows sorted by ticker
+    ok_rows = sorted([r for r in results if r["ok"]],
+                     key=lambda r: r["ticker"])
+    err_rows = sorted([r for r in results if not r["ok"]],
+                      key=lambda r: r["ticker"])
+
+    for r in ok_rows:
+        spot = r["spot"]
+        chg = r["spot_chg_pct"]
+        chg_str = f"{chg:+.1f}" if chg is not None else "—"
+        sig = (f"SHORT-CALL@{int(r['signal_strike'])}"
+               if r["signal_strike"] else "—")
+        print(f"{r['ticker']:<14} {spot:>10,.0f} {chg_str:>6} "
+              f"{int(r['max_pain']):>10,} {r['pcr_oi']:>5.2f} "
+              f"{int(r['top_call_K']):>9,} {int(r['top_put_K']):>9,}  {sig}")
+
+    if err_rows:
+        print()
+        for r in err_rows:
+            print(f"{r['ticker']:<14}  ({r.get('error', 'unknown error')})")
+
+    # Quick portfolio-level read
+    n_signals = sum(1 for r in ok_rows if r["signal_strike"])
+    n_below_mp = sum(1 for r in ok_rows
+                     if r["max_pain_dist_pct"] < -1.0)
+    n_above_mp = sum(1 for r in ok_rows
+                     if r["max_pain_dist_pct"] >  1.0)
+    print(f"\nPortfolio read:")
+    print(f"  {n_signals} signal(s) firing across {len(ok_rows)} F&O names")
+    print(f"  {n_below_mp} stocks with Max Pain >1% below spot (downward gravity)")
+    print(f"  {n_above_mp} stocks with Max Pain >1% above spot (upward gravity)")
 
 
 def main():
@@ -436,9 +510,11 @@ def main():
                    help="NSE symbols (e.g. POWERINDIA RELIANCE)")
     p.add_argument("--expiry", default=None,
                    help="Expiry (DD-Mon-YYYY or YYYY-MM-DD); defaults to nearest")
+    p.add_argument("--summary", action="store_true",
+                   help="Print one-row-per-stock summary table only "
+                        "(no per-stock detail / signal / spread blocks)")
     args = p.parse_args()
 
-    # Single Kite connection reused for all symbols
     try:
         kite, user_name = _connect_kite()
         print(f"\n[Kite session: {user_name}]", file=sys.stderr)
@@ -446,10 +522,23 @@ def main():
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
+    # Brief progress in summary mode so the user knows it's working
+    if args.summary:
+        print(f"\nProcessing {len(args.symbols)} symbols...", file=sys.stderr)
+
+    results = []
     for i, sym in enumerate(args.symbols):
         if i > 0:
             time.sleep(0.5)
-        analyze(sym.upper().strip(), args.expiry, kite_for_prev_close=kite)
+        sym = sym.upper().strip()
+        if args.summary:
+            print(f"  [{i+1}/{len(args.symbols)}] {sym}", file=sys.stderr)
+        r = analyze(sym, args.expiry, kite_for_prev_close=kite,
+                    summary_mode=args.summary)
+        results.append(r)
+
+    if args.summary:
+        print_summary_table(results)
     print()
 
 
