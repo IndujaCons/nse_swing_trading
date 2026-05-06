@@ -2288,7 +2288,7 @@ def _etf_signal_scheduler():
 
 from data.user_registry import (
     load_users, add_user, get_user, update_user, delete_user, ensure_all_dirs,
-    mom20_portfolio_path, mom20_history_path,
+    mom20_portfolio_path, mom20_history_path, mom20_live_prices_path,
     etf_positions_path, etf_history_path,
     baskets_dir, trade_books_dir,
 )
@@ -2552,8 +2552,8 @@ def api_mom20_portfolio_get(user_id):
 @app.route("/api/portfolio-users/<user_id>/mom20-performance", methods=["GET"])
 def api_mom20_performance(user_id):
     """Return holdings with live prices and P&L for portfolio tracker.
-    ?live=1  → fetch fresh Kite/yfinance prices (slow)
-    default  → use cached signal prices (fast)
+    ?live=1  → fetch fresh yfinance prices, persist to mom20_live_prices.json, return them
+    default  → read persisted prices from mom20_live_prices.json (instant, no network)
     """
     if not get_user(user_id):
         return jsonify({"success": False, "error": "user not found"})
@@ -2565,53 +2565,40 @@ def api_mom20_performance(user_id):
 
     basket = pf.get("basket", [])
 
-    # Get current ranks + prices from cached live signals (no network call)
+    # Ranks come from cached live signals (display-only, no price source)
     rank_map = {}
-    signal_price_map = {}
     try:
         sig_result = live_signals_scanner.scan_entry_signals(force_refresh=False)
         for s in sig_result.get("mom20_signals", []):
             rank_map[s["ticker"]] = s.get("rank")
-            if s.get("price"):
-                signal_price_map[s["ticker"]] = s["price"]
-        # Use unfiltered rank for held stocks with beta > 1.2 (e.g. CGPOWER)
-        unfiltered_ranks = sig_result.get("mom20_unfiltered_ranks", {})
-        for ticker, urank in unfiltered_ranks.items():
+        for ticker, urank in sig_result.get("mom20_unfiltered_ranks", {}).items():
             if ticker not in rank_map:
                 rank_map[ticker] = urank
     except Exception:
         pass
 
-    # Fallback: if portfolio basket is empty, synthesise from basket holds
-    if not basket:
-        try:
-            user = get_user(user_id)
-            signals = list(sig_result.get("mom20_signals", [])) if 'sig_result' in dir() else []
-            unfiltered_ranks = sig_result.get("mom20_unfiltered_ranks", {}) if 'sig_result' in dir() else {}
-            all_prices = sig_result.get("mom20_all_prices", {}) if 'sig_result' in dir() else {}
-            basket_data = generate_basket(user, signals, pf, unfiltered_ranks=unfiltered_ranks, all_prices=all_prices)
-            holds = basket_data.get("holds", [])
-            if holds:
-                basket = [{"ticker": h["ticker"], "qty": 0,
-                           "entry_price": h.get("price", 0),
-                           "entry_date": None} for h in holds]
-        except Exception:
-            pass
-
     if not basket:
         return jsonify({"success": True, "holdings": [], "total_entry_value": 0,
                         "total_current_value": 0, "total_return_pct": 0,
-                        "tracking_since": None})
+                        "tracking_since": None, "prices_updated_at": None})
 
     tickers = [h["ticker"] for h in basket]
-
-    # Default: use cached signal prices (instant)
-    # ?live=1: fetch fresh Kite LTP + yfinance (slow, explicit request)
     want_live = request.args.get("live") == "1"
-    price_map = dict(signal_price_map)  # start with cached prices
+    lp_path = mom20_live_prices_path(user_id)
+
+    # Load persisted live prices (single source of truth for current prices)
+    price_map = {}
+    prices_updated_at = None
+    try:
+        with open(lp_path) as f:
+            lp = json.load(f)
+        price_map = {k: float(v) for k, v in (lp.get("prices") or {}).items()}
+        prices_updated_at = lp.get("updated_at")
+    except Exception:
+        pass
 
     if want_live:
-        import yfinance as yf
+        import yfinance as yf, datetime as _dt
         yf_syms = [f"{t}.NS" for t in tickers]
         try:
             df = yf.download(yf_syms, period="1d", interval="5m", progress=False,
@@ -2622,6 +2609,16 @@ def api_mom20_performance(user_id):
                                    else float(df[sym]["Close"].dropna().iloc[-1])
                 except Exception:
                     pass
+        except Exception:
+            pass
+        # Persist whatever we got (merged with prior file contents already in price_map)
+        prices_updated_at = _dt.datetime.now().isoformat(timespec="seconds")
+        try:
+            os.makedirs(os.path.dirname(lp_path), exist_ok=True)
+            with open(lp_path, "w") as f:
+                json.dump({"updated_at": prices_updated_at,
+                           "prices": {k: round(v, 4) for k, v in price_map.items()}},
+                          f, indent=2)
         except Exception:
             pass
 
@@ -2667,6 +2664,7 @@ def api_mom20_performance(user_id):
         "total_current_value": round(total_current, 2),
         "total_return_pct":   total_return_pct,
         "tracking_since":     earliest_date,
+        "prices_updated_at":  prices_updated_at,
     })
 
 
@@ -2763,20 +2761,19 @@ def api_mom20_chart(user_id):
     if not port_values:
         return jsonify({"success": False, "error": "could not compute portfolio values"})
 
-    # Append today using the SAME cached signal prices the tracker uses
+    # Append today using the SAME persisted live prices the tracker uses
     # so chart return matches RETURNS header exactly
     import datetime as _dt
     today_str = _dt.date.today().isoformat()
     last_yf_date = all_dates[-1].strftime("%Y-%m-%d") if len(all_dates) else ""
     if last_yf_date < today_str:
         try:
-            sig = live_signals_scanner.scan_entry_signals(force_refresh=False)
-            cached_prices = {}
-            for s in sig.get("mom20_signals", []) + sig.get("mom20_overflow", []):
-                if s.get("price"):
-                    cached_prices[s["ticker"]] = s["price"]
-            for tk, pr in sig.get("mom20_all_prices", {}).items():
-                cached_prices.setdefault(tk, pr)
+            live_prices = {}
+            try:
+                with open(mom20_live_prices_path(user_id)) as f:
+                    live_prices = {k: float(v) for k, v in (json.load(f).get("prices") or {}).items()}
+            except Exception:
+                pass
 
             today_val = 0.0
             for t in tickers:
@@ -2787,9 +2784,9 @@ def api_mom20_chart(user_id):
                 if today_str < entry_date_map.get(t, ""):
                     today_val += qty * ep
                 else:
-                    today_val += qty * cached_prices.get(t, ep)
+                    today_val += qty * live_prices.get(t, ep)
 
-            if today_val > 0:
+            if today_val > 0 and live_prices:
                 port_values.append(today_val)
                 all_dates = list(all_dates) + [pd.Timestamp(today_str)]
         except Exception:

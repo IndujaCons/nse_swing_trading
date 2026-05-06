@@ -122,6 +122,10 @@ def mom20_history_path(user_id: str) -> str:
     return os.path.join(user_dir(user_id), "mom20_history.json")
 
 
+def mom20_live_prices_path(user_id: str) -> str:
+    return os.path.join(user_dir(user_id), "mom20_live_prices.json")
+
+
 def etf_positions_path(user_id: str) -> str:
     return os.path.join(user_dir(user_id), "etf_positions.json")
 
