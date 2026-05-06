@@ -22,7 +22,7 @@ from config.settings import (
     FLASK_HOST, FLASK_PORT, DEBUG_MODE,
     PAPER_TRADING_ONLY, load_config, save_config, get_cache_ttl,
     get_kite_users, DATA_STORE_PATH, LIVE_POSITIONS_FILE,
-    WATCHLIST_FILE,
+    WATCHLIST_FILE, LIVE_SIGNALS_CACHE_FILE,
 )
 from data.screener_engine import ScreenerEngine
 from data.live_signals_engine import LiveSignalsEngine
@@ -2549,11 +2549,28 @@ def api_mom20_portfolio_get(user_id):
     return jsonify({"success": True, "portfolio": pf})
 
 
+def _read_live_signals_cache_if_fresh():
+    """Peek at the live-signals cache without triggering a scan.
+    Returns (mom20_signals, mom20_unfiltered_ranks) if cache fresh, else (None, None).
+    """
+    try:
+        from datetime import datetime as _dt
+        with open(LIVE_SIGNALS_CACHE_FILE) as f:
+            data = json.load(f)
+        last = _dt.fromisoformat(data["last_updated"])
+        ttl = get_cache_ttl()
+        if (_dt.now() - last).total_seconds() < ttl * 60:
+            return data.get("mom20_signals", []), data.get("mom20_unfiltered_ranks", {})
+    except Exception:
+        pass
+    return None, None
+
+
 @app.route("/api/portfolio-users/<user_id>/mom20-performance", methods=["GET"])
 def api_mom20_performance(user_id):
     """Return holdings with live prices and P&L for portfolio tracker.
     ?live=1  → fetch fresh yfinance prices, persist to mom20_live_prices.json, return them
-    default  → read persisted prices from mom20_live_prices.json (instant, no network)
+    default  → read persisted prices+ranks from mom20_live_prices.json (instant, no network)
     """
     if not get_user(user_id):
         return jsonify({"success": False, "error": "user not found"})
@@ -2564,38 +2581,28 @@ def api_mom20_performance(user_id):
         pf = {"status": "empty", "basket": []}
 
     basket = pf.get("basket", [])
+    want_live = request.args.get("live") == "1"
+    lp_path = mom20_live_prices_path(user_id)
 
-    # Ranks come from cached live signals (display-only, no price source)
+    # Load persisted prices + ranks (DB is the single source of truth)
+    price_map = {}
     rank_map = {}
+    prices_updated_at = None
     try:
-        sig_result = live_signals_scanner.scan_entry_signals(force_refresh=False)
-        for s in sig_result.get("mom20_signals", []):
-            rank_map[s["ticker"]] = s.get("rank")
-        for ticker, urank in sig_result.get("mom20_unfiltered_ranks", {}).items():
-            if ticker not in rank_map:
-                rank_map[ticker] = urank
+        with open(lp_path) as f:
+            lp = json.load(f)
+        price_map = {k: float(v) for k, v in (lp.get("prices") or {}).items()}
+        rank_map  = dict(lp.get("ranks") or {})
+        prices_updated_at = lp.get("updated_at")
     except Exception:
         pass
 
     if not basket:
         return jsonify({"success": True, "holdings": [], "total_entry_value": 0,
                         "total_current_value": 0, "total_return_pct": 0,
-                        "tracking_since": None, "prices_updated_at": None})
+                        "tracking_since": None, "prices_updated_at": prices_updated_at})
 
     tickers = [h["ticker"] for h in basket]
-    want_live = request.args.get("live") == "1"
-    lp_path = mom20_live_prices_path(user_id)
-
-    # Load persisted live prices (single source of truth for current prices)
-    price_map = {}
-    prices_updated_at = None
-    try:
-        with open(lp_path) as f:
-            lp = json.load(f)
-        price_map = {k: float(v) for k, v in (lp.get("prices") or {}).items()}
-        prices_updated_at = lp.get("updated_at")
-    except Exception:
-        pass
 
     if want_live:
         import yfinance as yf, datetime as _dt
@@ -2611,13 +2618,23 @@ def api_mom20_performance(user_id):
                     pass
         except Exception:
             pass
-        # Persist whatever we got (merged with prior file contents already in price_map)
+
+        # Refresh ranks ONLY if the live-signals cache is already fresh
+        # (don't trigger a slow Nifty 200 scan from this endpoint).
+        sigs, urank = _read_live_signals_cache_if_fresh()
+        if sigs is not None:
+            new_ranks = {s["ticker"]: s.get("rank") for s in sigs}
+            for t, r in (urank or {}).items():
+                new_ranks.setdefault(t, r)
+            rank_map = new_ranks
+
         prices_updated_at = _dt.datetime.now().isoformat(timespec="seconds")
         try:
             os.makedirs(os.path.dirname(lp_path), exist_ok=True)
             with open(lp_path, "w") as f:
                 json.dump({"updated_at": prices_updated_at,
-                           "prices": {k: round(v, 4) for k, v in price_map.items()}},
+                           "prices": {k: round(v, 4) for k, v in price_map.items()},
+                           "ranks":  {k: v for k, v in rank_map.items() if v is not None}},
                           f, indent=2)
         except Exception:
             pass
