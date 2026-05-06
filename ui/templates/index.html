@@ -2936,7 +2936,7 @@
             }
 
             try {
-                const res = await fetch(`/api/watchlist/chart?ticker=${wlSelectedTicker}&period=${wlChartPeriod}`);
+                const res = await fetch(`/api/watchlist/chart?ticker=${encodeURIComponent(wlSelectedTicker)}&period=${encodeURIComponent(wlChartPeriod)}`);
                 const data = await res.json();
                 if (!data.success || !data.prices || data.prices.length < 2) {
                     chartBody.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">No chart data available.</div>';
@@ -4013,7 +4013,7 @@
                 }
             });
 
-            fetch(`/api/watchlist/chart?ticker=${lsSelectedTicker}&period=${lsChartPeriod}`)
+            fetch(`/api/watchlist/chart?ticker=${encodeURIComponent(lsSelectedTicker)}&period=${encodeURIComponent(lsChartPeriod)}`)
                 .then(r => r.json())
                 .then(data => {
                     if (!data.success || !data.prices || data.prices.length < 2) {
@@ -7299,7 +7299,7 @@
         body.innerHTML = '<div class="etf-chart-placeholder">Loading chart...</div>';
 
         try {
-            const res = await fetch(`/api/watchlist/chart?ticker=${_etfChartTicker}&period=${_etfChartPeriod}`);
+            const res = await fetch(`/api/watchlist/chart?ticker=${encodeURIComponent(_etfChartTicker)}&period=${encodeURIComponent(_etfChartPeriod)}`);
             const data = await res.json();
             if (!data.success || !data.prices || data.prices.length < 2) {
                 body.innerHTML = '<div class="etf-chart-placeholder">No chart data available.</div>';
@@ -8091,7 +8091,7 @@ function openTrackerChart(ticker, period) {
     const body = document.getElementById('mom20-tracker-chart-body');
     body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">Loading…</div>';
 
-    fetch(`/api/watchlist/chart?ticker=${_trackerChartTicker}&period=${_trackerChartPeriod}`)
+    fetch(`/api/watchlist/chart?ticker=${encodeURIComponent(_trackerChartTicker)}&period=${encodeURIComponent(_trackerChartPeriod)}`)
         .then(r => r.json())
         .then(data => {
             if (!data.dates || !data.dates.length) {
