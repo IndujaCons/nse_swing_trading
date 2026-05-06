@@ -74,15 +74,26 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     # Fall back to unfiltered rank only when a stock isn't in the filtered list
     # (i.e. it got dropped by the β cap, e.g. CGPOWER) so held high-beta names
     # don't get force-exited just because the filter excluded them.
+    # If absent from BOTH, it's no longer in the live N200 universe (NSE
+    # reconstitution) → exit with a clearer reason.
     fallback_ranks = unfiltered_ranks or {}
 
     for ticker in current_tickers:
         rank = rank_map.get(ticker)
         if rank is None:
-            rank = fallback_ranks.get(ticker, 999)
+            rank = fallback_ranks.get(ticker)
         price = price_map.get(ticker, 0)
         qty = current_qty_map.get(ticker, 0)
-        if rank > BUFFER_OUT:
+
+        if rank is None:
+            exits.append({
+                "ticker": ticker,
+                "rank": None,
+                "current_price": price,
+                "qty": qty,
+                "reason": "removed from Nifty 200",
+            })
+        elif rank > BUFFER_OUT:
             exits.append({
                 "ticker": ticker,
                 "rank": rank,
