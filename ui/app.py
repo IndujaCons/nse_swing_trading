@@ -2292,6 +2292,15 @@ from data.mom20_basket import generate_basket, to_zerodha_csv, parse_trade_book,
 ensure_all_dirs()
 
 
+def _load_user_live_prices(user_id):
+    """Read prices map from a user's mom20_live_prices.json. Returns {} on miss."""
+    try:
+        with open(mom20_live_prices_path(user_id)) as f:
+            return {k: float(v) for k, v in (json.load(f).get("prices") or {}).items()}
+    except Exception:
+        return {}
+
+
 def _persist_mom20_ranks_to_users(scan_result):
     """After a Live Signals scan, write fresh mom20 ranks into each user's
     mom20_live_prices.json. Preserves prices and updated_at; only ranks change.
@@ -2373,9 +2382,15 @@ def api_mom20_basket_preview(user_id):
         result = live_signals_scanner.scan_entry_signals(force_refresh=False)
         signals = result.get("mom20_signals", [])
         unfiltered_ranks = result.get("mom20_unfiltered_ranks", {})
-        all_prices = result.get("mom20_all_prices", {})
+        all_prices = dict(result.get("mom20_all_prices", {}))
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
+
+    # Merge user's persisted live prices for held tickers no longer in the live
+    # N200 universe (e.g. TORNTPOWER after the 2026-03-30 reconstitution) so
+    # the exit row in the basket shows a real price instead of ₹0.
+    for _t, _p in _load_user_live_prices(user_id).items():
+        all_prices.setdefault(_t, _p)
 
     # Load user's current portfolio
     pf_path = mom20_portfolio_path(user_id)
@@ -2408,9 +2423,15 @@ def api_mom20_basket_download(user_id):
         result = live_signals_scanner.scan_entry_signals(force_refresh=False)
         signals = result.get("mom20_signals", [])
         unfiltered_ranks = result.get("mom20_unfiltered_ranks", {})
-        all_prices = result.get("mom20_all_prices", {})
+        all_prices = dict(result.get("mom20_all_prices", {}))
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
+
+    # Merge user's persisted live prices for held tickers no longer in the live
+    # N200 universe (e.g. TORNTPOWER after the 2026-03-30 reconstitution) so
+    # the exit row in the basket shows a real price instead of ₹0.
+    for _t, _p in _load_user_live_prices(user_id).items():
+        all_prices.setdefault(_t, _p)
 
     pf_path = mom20_portfolio_path(user_id)
     try:
