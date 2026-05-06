@@ -23,6 +23,19 @@ from config.settings import (
 from nifty500_tickers import NIFTY_500_TICKERS
 from sector_mapping import STOCK_SECTOR_MAP
 
+
+def _load_latest_pit_constituents(pit_filename: str):
+    """Return the most recent constituent list from an NSE PIT JSON file,
+    or None if the file is missing/unreadable (caller falls back to hardcoded).
+    """
+    try:
+        path = os.path.join(os.path.dirname(__file__), "..", "nse_const", pit_filename)
+        with open(path) as f:
+            pit = json.load(f)
+        return list(pit[max(pit.keys())])
+    except Exception:
+        return None
+
 # Sectoral Indices (Yahoo Finance symbols) for RS momentum
 SECTORAL_INDICES = {
     "NIFTY PVT BANK": "NIFTY_PVT_BANK.NS",
@@ -351,12 +364,17 @@ class LiveSignalsEngine:
         elif universe <= 100:
             tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS
         elif universe <= 200:
-            tickers = NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+            # Source the current Nifty 200 from PIT JSON so reconstitutions
+            # (e.g. NTPCGREEN removed 2026-03-30) flow through automatically.
+            n200 = _load_latest_pit_constituents("nifty200_pit.json")
+            tickers = n200 if n200 else (
+                NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS + NIFTY_200_NEXT100_TICKERS
+            )
         else:
-            # Midcap 150: Nifty 500 tickers 101-250 (by market cap ranking)
+            # Midcap-ish 150: alphabetical first 150 of current Nifty 500 minus Nifty 100
+            n500 = _load_latest_pit_constituents("nifty500_pit.json") or NIFTY_500_TICKERS
             nifty100_set = set(NIFTY_50_TICKERS + NIFTY_NEXT50_TICKERS)
-            midcap = [t for t in NIFTY_500_TICKERS if t not in nifty100_set][:150]
-            tickers = midcap
+            tickers = [t for t in n500 if t not in nifty100_set][:150]
 
         total = len(tickers)
         if is_historical:
