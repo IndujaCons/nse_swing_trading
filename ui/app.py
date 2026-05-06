@@ -351,6 +351,7 @@ def refresh_live_signals():
             progress_callback=update_live_signals_progress,
             ltp_map=ltp_map
         )
+        _persist_mom20_ranks_to_users(data)
 
         return jsonify({
             "success": True,
@@ -2222,6 +2223,7 @@ def _etf_signal_scheduler():
                         mom20_result = _fut.result(timeout=180)
                     except _FutTimeout:
                         raise RuntimeError("scan_entry_signals() timed out after 3 minutes")
+                _persist_mom20_ranks_to_users(mom20_result)
 
                 # Mom20 top-40 — dedup by ticker+score (rounded 1dp)
                 mom20_msg = format_mom20_alert(mom20_result)
@@ -2295,6 +2297,35 @@ from data.user_registry import (
 from data.mom20_basket import generate_basket, to_zerodha_csv, parse_trade_book, sync_portfolio_from_trades
 
 ensure_all_dirs()
+
+
+def _persist_mom20_ranks_to_users(scan_result):
+    """After a Live Signals scan, write fresh mom20 ranks into each user's
+    mom20_live_prices.json. Preserves prices and updated_at; only ranks change.
+    """
+    if not scan_result:
+        return
+    rank_map = {s["ticker"]: s.get("rank")
+                for s in scan_result.get("mom20_signals", [])
+                if s.get("rank") is not None}
+    for t, r in (scan_result.get("mom20_unfiltered_ranks") or {}).items():
+        rank_map.setdefault(t, r)
+    if not rank_map:
+        return
+    for u in load_users():
+        path = mom20_live_prices_path(u["id"])
+        try:
+            try:
+                with open(path) as f:
+                    cur = json.load(f)
+            except Exception:
+                cur = {}
+            cur["ranks"] = rank_map
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as f:
+                json.dump(cur, f, indent=2)
+        except Exception:
+            pass
 
 
 @app.route("/api/portfolio-users", methods=["GET"])
