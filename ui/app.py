@@ -22,7 +22,7 @@ from config.settings import (
     FLASK_HOST, FLASK_PORT, DEBUG_MODE,
     PAPER_TRADING_ONLY, load_config, save_config, get_cache_ttl,
     get_kite_users, DATA_STORE_PATH, LIVE_POSITIONS_FILE,
-    WATCHLIST_FILE, LIVE_SIGNALS_CACHE_FILE,
+    WATCHLIST_FILE,
 )
 from data.screener_engine import ScreenerEngine
 from data.live_signals_engine import LiveSignalsEngine
@@ -2549,23 +2549,6 @@ def api_mom20_portfolio_get(user_id):
     return jsonify({"success": True, "portfolio": pf})
 
 
-def _read_live_signals_cache_if_fresh():
-    """Peek at the live-signals cache without triggering a scan.
-    Returns (mom20_signals, mom20_unfiltered_ranks) if cache fresh, else (None, None).
-    """
-    try:
-        from datetime import datetime as _dt
-        with open(LIVE_SIGNALS_CACHE_FILE) as f:
-            data = json.load(f)
-        last = _dt.fromisoformat(data["last_updated"])
-        ttl = get_cache_ttl()
-        if (_dt.now() - last).total_seconds() < ttl * 60:
-            return data.get("mom20_signals", []), data.get("mom20_unfiltered_ranks", {})
-    except Exception:
-        pass
-    return None, None
-
-
 @app.route("/api/portfolio-users/<user_id>/mom20-performance", methods=["GET"])
 def api_mom20_performance(user_id):
     """Return holdings with live prices and P&L for portfolio tracker.
@@ -2619,15 +2602,8 @@ def api_mom20_performance(user_id):
         except Exception:
             pass
 
-        # Refresh ranks ONLY if the live-signals cache is already fresh
-        # (don't trigger a slow Nifty 200 scan from this endpoint).
-        sigs, urank = _read_live_signals_cache_if_fresh()
-        if sigs is not None:
-            new_ranks = {s["ticker"]: s.get("rank") for s in sigs}
-            for t, r in (urank or {}).items():
-                new_ranks.setdefault(t, r)
-            rank_map = new_ranks
-
+        # Live Prices touches only prices — ranks require a full Nifty 200 scan
+        # which lives behind the Live Signals refresh path, not this endpoint.
         prices_updated_at = _dt.datetime.now().isoformat(timespec="seconds")
         try:
             os.makedirs(os.path.dirname(lp_path), exist_ok=True)
