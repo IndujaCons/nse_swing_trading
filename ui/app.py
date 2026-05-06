@@ -2780,20 +2780,21 @@ def api_mom20_chart(user_id):
     if not port_values:
         return jsonify({"success": False, "error": "could not compute portfolio values"})
 
-    # Append today using the SAME persisted live prices the tracker uses
-    # so chart return matches RETURNS header exactly
+    # Today bar: prefer live_prices over yfinance's intraday-formed daily bar
+    # so the chart's last point matches the RETURNS header exactly. yfinance
+    # returns a forming "today" daily during market hours; replace it.
     import datetime as _dt
     today_str = _dt.date.today().isoformat()
     last_yf_date = all_dates[-1].strftime("%Y-%m-%d") if len(all_dates) else ""
-    if last_yf_date < today_str:
+    try:
+        live_prices = {}
         try:
-            live_prices = {}
-            try:
-                with open(mom20_live_prices_path(user_id)) as f:
-                    live_prices = {k: float(v) for k, v in (json.load(f).get("prices") or {}).items()}
-            except Exception:
-                pass
+            with open(mom20_live_prices_path(user_id)) as f:
+                live_prices = {k: float(v) for k, v in (json.load(f).get("prices") or {}).items()}
+        except Exception:
+            pass
 
+        if live_prices:
             today_val = 0.0
             for t in tickers:
                 qty = qty_map.get(t, 0)
@@ -2805,11 +2806,14 @@ def api_mom20_chart(user_id):
                 else:
                     today_val += qty * live_prices.get(t, ep)
 
-            if today_val > 0 and live_prices:
-                port_values.append(today_val)
-                all_dates = list(all_dates) + [pd.Timestamp(today_str)]
-        except Exception:
-            pass
+            if today_val > 0:
+                if last_yf_date == today_str:
+                    port_values[-1] = today_val
+                elif last_yf_date < today_str:
+                    port_values.append(today_val)
+                    all_dates = list(all_dates) + [pd.Timestamp(today_str)]
+    except Exception:
+        pass
 
     # Rebase from entry prices (matches tracker P&L); day-1 close diverges from fills
     base_port  = total_invested
