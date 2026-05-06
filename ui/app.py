@@ -1877,49 +1877,142 @@ def etf_core():
 
 @app.route("/api/etf/scan", methods=["POST"])
 def etf_scan():
-    """Scan all ETFs: compute Z-score ranking + entry/exit signals."""
+    """ETF scan — Z-score ranking from score_live() (same engine the
+    Telegram scheduler uses). Universe is Z-score's UNIVERSE (47 symbols);
+    UCITS-only names are listed unranked at the bottom. Position/watchlist
+    state and iNAV are layered on top for display."""
     try:
-        broker = _get_connected_broker()
-        kite = broker._kite if broker else None
-        result = etf_engine.scan(kite=kite)
-        if "error" in result:
-            return jsonify({"success": False, "error": result["error"]})
+        from data.etf_core_zscore_backtest import score_live, UNIVERSE as Z_UNIVERSE
+        from data.etf_engine import ETF_UNIVERSE as ETF_META
 
-        # Merge Z-score fields and re-rank by Z-score (authoritative strategy ranking)
+        # Authoritative ranking — fail loudly instead of falling back silently
         try:
-            from data.etf_core_zscore_backtest import score_live
             zscore_list = score_live()
-            zscore_map = {d["symbol"]: d for d in zscore_list}
-            watchlist = result.get("watchlist", [])
-            for item in watchlist:
-                zd = zscore_map.get(item["symbol"], {})
-                item["mom_score"] = zd.get("score")
-                item["beta"]      = zd.get("beta")
-                item["ret_12m"]   = zd.get("ret_12m")
-                item["ret_3m"]    = zd.get("ret_3m")
+        except Exception as e:
+            return jsonify({"success": False,
+                            "error": f"score_live() raised: {e}"})
+        if not zscore_list:
+            return jsonify({"success": False,
+                            "error": "score_live() returned no data — yfinance fetch likely timed out. Retry in a moment."})
 
-            # Re-sort by Z-score rank so UI matches Telegram (strategy uses Z-score)
-            scored   = [x for x in watchlist if x.get("mom_score") is not None]
-            unscored = [x for x in watchlist if x.get("mom_score") is None]
-            scored.sort(key=lambda x: -x["mom_score"])
-            for i, item in enumerate(scored):
-                item["rank"] = i + 1
-                # Recompute signal for non-position items based on Z-score rank
-                if not item.get("in_position") and not item.get("in_watchlist"):
-                    item["signal"] = "ENTRY" if item["rank"] <= 5 else "RANKED"
-            for item in unscored:
-                item["rank"] = None
-            result["watchlist"] = scored + unscored
-            result["ucits_prices"] = {}
+        # Display metadata: prefer etf_engine's name+category for the 40
+        # overlapping symbols; fall back to Z-score UNIVERSE's name (no category)
+        # for the 7 globals/UCITS that are Z-only.
+        meta = {}
+        for sym, name, _yf in Z_UNIVERSE:
+            meta[sym] = {"name": name, "category": ""}
+        for e in ETF_META:
+            meta[e["symbol"]] = {"name": e["name"], "category": e["category"]}
+
+        # State (positions + manual watchlist) from etf_engine — no scan needed
+        try:
+            state = etf_engine._load_state()
         except Exception:
-            pass
+            state = {}
+        positions = state.get("positions", {}) or {}
+        wl_state  = state.get("watchlist", {}) or {}
 
-        # Remove RS63/RSI/IBS-based signals — Z-score rank is the only signal now
-        result["entry_signals"]   = []
-        result["exit_signals"]    = []
-        result["reentry_signals"] = []
+        # iNAV (Kite-only, optional)
+        broker = _get_connected_broker()
+        inav_map = {}
+        if broker and broker._kite:
+            try:
+                inav_map = etf_engine._fetch_inav(broker._kite) or {}
+            except Exception:
+                inav_map = {}
 
-        return jsonify({"success": True, **result})
+        # VIX (display only)
+        try:
+            vix_val = etf_engine._fetch_vix()
+        except Exception:
+            vix_val = None
+
+        # Build watchlist: scored items in Z-rank order, then UCITS unscored
+        scored_syms = {z["symbol"] for z in zscore_list}
+        watchlist = []
+
+        for z in zscore_list:
+            sym = z["symbol"]
+            m = meta.get(sym, {})
+            in_pos = sym in positions
+            in_wl  = sym in wl_state
+            rank = z["rank"]
+
+            # Signal logic on Z-rank only (same buffer as Mom20 spirit: top-5
+            # entry, top-9 hold-buffer, beyond = drop)
+            if in_pos:
+                sig = "HOLD" if rank <= 9 else "EXIT_X3"
+            elif in_wl:
+                sig = "WATCHLIST"
+            elif rank <= 5:
+                sig = "ENTRY"
+            elif rank <= 9:
+                sig = "BUFFER"
+            else:
+                sig = "RANKED"
+
+            inav = inav_map.get(sym)
+            inav_prem = (round((z["price"] - inav) / inav * 100, 2)
+                         if inav and z["price"] else None)
+
+            watchlist.append({
+                "symbol":      sym,
+                "name":        m.get("name", ""),
+                "category":    m.get("category", ""),
+                "rank":        rank,
+                "price":       z["price"],
+                "mom_score":   z["score"],
+                "ret_12m":     z["ret_12m"],
+                "ret_3m":      z["ret_3m"],
+                "beta":        z["beta"],
+                "inav":        round(inav, 4) if inav else None,
+                "inav_prem":   inav_prem,
+                "in_position": in_pos,
+                "in_watchlist": in_wl,
+                "signal":      sig,
+                # legacy RS63 columns — null since Z-score doesn't use them
+                "sma63":       None,
+                "rs63":        None,
+                "trend_ok":    None,
+                "no_data":     False,
+            })
+
+        for sym, name, _yf in Z_UNIVERSE:
+            if sym in scored_syms:
+                continue
+            m = meta.get(sym, {"name": name, "category": ""})
+            watchlist.append({
+                "symbol":      sym,
+                "name":        m["name"],
+                "category":    m["category"],
+                "rank":        None,
+                "price":       None,
+                "mom_score":   None,
+                "ret_12m":     None,
+                "ret_3m":      None,
+                "beta":        None,
+                "inav":        None,
+                "inav_prem":   None,
+                "in_position": sym in positions,
+                "in_watchlist": sym in wl_state,
+                "signal":      "UCITS",
+                "sma63":       None,
+                "rs63":        None,
+                "trend_ok":    None,
+                "no_data":     True,
+            })
+
+        return jsonify({
+            "success":         True,
+            "watchlist":       watchlist,
+            "scan_time":       datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "vix":             vix_val,
+            "positions":       list(positions.values()),
+            "entry_signals":   [],
+            "exit_signals":    [],
+            "reentry_signals": [],
+            "ucits_prices":    {},
+        })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
