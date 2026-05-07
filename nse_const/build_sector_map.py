@@ -48,6 +48,7 @@ NIFTYINDICES_URLS = {
     "NIFTY CONSUMER DURABLES": "ind_niftyconsumerdurableslist.csv",
     "NIFTY REALTY":            "ind_niftyrealtylist.csv",
     "NIFTY MEDIA":             "ind_niftymedialist.csv",
+    "NIFTY INFRA":             "ind_niftyinfralist.csv",
     "NIFTY INDIA MFG":         "ind_niftyindiamanufacturing_list.csv",
     "NIFTY INDIA DEFENCE":     "ind_niftyindiadefence_list.csv",
     "NIFTY MNC":               "ind_niftymnclist.csv",
@@ -86,6 +87,7 @@ SECTOR_PRECEDENCE = [
     "NIFTY FMCG",              # consumer staples
     "NIFTY REALTY",
     "NIFTY MEDIA",
+    "NIFTY INFRA",             # infra/airports/ports/telecom/utilities (~30 stocks)
     "NIFTY INDIA MFG",         # broad catch-all manufacturing (~80 stocks)
     "NIFTY FIN SERVICE",       # from sector_mapping.STOCK_SECTOR_MAP fallback
     "NIFTY BANK",              # broader; rarely primary (PVT/PSU cover all)
