@@ -66,10 +66,10 @@ CACHE_DIR  = os.path.join(BASE_DIR, 'cache')
 # spec's additions. Tentatives marked — script silently drops any symbol that
 # returns < MIN_HISTORY days at probe.
 SECTOR_UNIVERSE = [
-    # 20-symbol universe — Phase 1 widened to match Phase 2 sector map.
-    # Sectors with no yfinance time series fall back to synthetic indices
-    # built from member stocks (data/synth_sector_index.py).
-    ("NIFTY BANK",              "^NSEBANK"),
+    # 19-symbol universe — Phase 1 widened to match Phase 2 sector map.
+    # NIFTY BANK dropped — strict superset of (PVT BANK ∪ PSU BANK).
+    # Keeping it would let the Z-score triple-count bank momentum and risk
+    # 60% slot concentration in banking on a strong-bank month.
     ("NIFTY PVT BANK",          "NIFTY_PVT_BANK.NS"),
     ("NIFTY PSU BANK",          "^CNXPSUBANK"),
     ("NIFTY FIN SERVICE",       "NIFTY_FIN_SERVICE.NS"),
