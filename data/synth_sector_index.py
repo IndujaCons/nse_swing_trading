@@ -35,7 +35,7 @@ UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit
 INDEX_URLS = {
     "NIFTY_HEALTHCARE":         "ind_niftyhealthcarelist.csv",
     "NIFTY_CONSUMER_DURABLES":  "ind_niftyconsumerdurableslist.csv",
-    "NIFTY_INDIA_MFG":          "ind_niftyindiamanufacturing_list.csv",
+    # NIFTY_INDIA_MFG moved to HARDCODED (clean 24-stock list, see below)
     "NIFTY_INDIA_DEFENCE":      "ind_niftyindiadefence_list.csv",
 }
 
@@ -43,6 +43,17 @@ INDEX_URLS = {
 HARDCODED = {
     "NIFTY_OIL_GAS": ["RELIANCE", "ONGC", "IOC", "BPCL", "GAIL", "HINDPETRO",
                       "PETRONET", "OIL", "ATGL", "MGL", "IGL", "GUJGASLTD"],
+    # NIFTY INDIA MFG — "clean" version: only the 24 stocks unique to MFG
+    # (excluded from NIFTY AUTO/METAL/PHARMA/HEALTHCARE/DEFENCE/ENERGY/
+    # OIL&GAS/CONS DURABLES/FMCG). Captures chemicals + capital goods +
+    # specialty industrials. Removes 68% overlap with other sectors that
+    # the broad 80-stock index has — see commit log.
+    "NIFTY_INDIA_MFG": [
+        "AIAENG", "ANTHEM", "ASTRAL", "BALKRISIND", "COROMANDEL", "CUMMINSIND",
+        "ESCORTS", "HONAUT", "HSCL", "HYUNDAI", "KAYNES", "KEI", "KPRMILL",
+        "LINDEINDIA", "MRF", "NAVINFLUOR", "PAGEIND", "PIDILITIND", "PIIND",
+        "POLYCAB", "SRF", "SUPREMEIND", "TMCV", "UPL",
+    ],
 }
 
 
