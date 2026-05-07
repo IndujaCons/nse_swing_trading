@@ -95,6 +95,14 @@ MANUAL_OVERRIDES = {
     "IDEA":      ("NIFTY CONSUMPTION", "Vodafone Idea — telecom; alongside BHARTIARTL/INDUSTOWER"),
     "TATACOMM":  ("NIFTY CONSUMPTION", "Tata Communications — telecom; alongside BHARTIARTL/INDUSTOWER"),
     "GODFRYPHLP": ("NIFTY FMCG",       "Godfrey Phillips — tobacco/FMCG (alongside ITC)"),
+    "GMRAIRPORT": ("NIFTY INFRA",      "GMR Airports — infrastructure (alongside LT, ADANIPORTS)"),
+    "PREMIERENE": ("NIFTY ENERGY",     "Premier Energies — solar; energy (alongside CGPOWER, SUZLON)"),
+    "SWIGGY":     ("NIFTY CONSUMPTION","Swiggy — food delivery (alongside ETERNAL/Zomato)"),
+    "VMM":        ("NIFTY FMCG",       "Vishal Mega Mart — value retail (alongside DMART)"),
+    "LENSKART":   ("NIFTY CONSUMPTION","Lenskart — eyewear retail; consumption"),
+    "IREDA":      ("NIFTY ENERGY",     "Indian Renewable Energy Dev Agency — green energy financier"),
+    "WAAREEENER": ("NIFTY ENERGY",     "Waaree Energies — solar; energy"),
+    "NYKAA":      ("NIFTY CONSUMPTION","Nykaa (FSN E-commerce) — beauty/online retail; consumption"),
 }
 
 # Precedence: first match wins → encodes "most specific first"
