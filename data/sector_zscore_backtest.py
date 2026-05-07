@@ -503,6 +503,7 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
             if ema is not None and px is not None and px < ema:
                 reasons.append("ema200")
             # Trailing-DD exit: 20% below peak close since entry
+            # (15% tested — fired more but caused whipsaws; CAGR -0.3pp)
             peak = peak_price_since(sym, pos["entry_date"], rebal_day)
             if peak is not None and px is not None and px <= peak * 0.80:
                 reasons.append("trail20")
