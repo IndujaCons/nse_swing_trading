@@ -54,7 +54,9 @@ CACHE_DIR  = os.path.join(BASE_DIR, 'cache')
 # spec's additions. Tentatives marked — script silently drops any symbol that
 # returns < MIN_HISTORY days at probe.
 SECTOR_UNIVERSE = [
-    # Confirmed (yf-resolvable)
+    # True sectors only — factor blends (MNC, PSE, Commodities,
+    # Consumption) dropped: they overlap heavily with the rest of the
+    # universe and aren't clean sector bets.
     ("NIFTY BANK",              "^NSEBANK"),
     ("NIFTY PVT BANK",          "NIFTY_PVT_BANK.NS"),
     ("NIFTY PSU BANK",          "^CNXPSUBANK"),
@@ -68,10 +70,6 @@ SECTOR_UNIVERSE = [
     ("NIFTY REALTY",            "^CNXREALTY"),
     ("NIFTY MEDIA",             "^CNXMEDIA"),
     ("NIFTY INFRA",             "^CNXINFRA"),
-    ("NIFTY CONSUMPTION",       "^CNXCONSUM"),
-    ("NIFTY COMMODITIES",       "^CNXCMDT"),
-    ("NIFTY MNC",               "^CNXMNC"),
-    ("NIFTY PSE",               "^CNXPSE"),
     # Tentative (newer indices — verify yfinance returns data)
     ("NIFTY OIL & GAS",         "NIFTY_OIL_AND_GAS.NS"),
     ("NIFTY CONSUMER DURABLES", "NIFTY_CONSUMER_DURABLES.NS"),
@@ -292,8 +290,14 @@ def evaluate_gate(metrics, avg_turnover):
 def run(refresh=False, start_override=None, no_liquidbees=False):
     closes, opens, bench = fetch_all(refresh=refresh)
 
-    universe_syms = list(closes.keys())
-    print(f"\nUniverse: {len(universe_syms)} sectoral indices loaded")
+    # Filter cache against the *current* SECTOR_UNIVERSE constant — so
+    # dropping symbols from the constant takes effect without --refresh.
+    defined_syms = {sym for sym, _ in SECTOR_UNIVERSE}
+    universe_syms = [sym for sym in closes.keys() if sym in defined_syms]
+    dropped_from_cache = [sym for sym in closes.keys() if sym not in defined_syms]
+    if dropped_from_cache:
+        print(f"  (excluding from cached snapshot: {', '.join(dropped_from_cache)})")
+    print(f"\nUniverse: {len(universe_syms)} sectoral indices in scope")
 
     # All trading days = union of all symbol dates ∪ bench dates
     all_dates = sorted(set.union(
