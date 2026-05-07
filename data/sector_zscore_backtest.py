@@ -35,8 +35,8 @@ warnings.filterwarnings('ignore')
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 EARLIEST_START = date(2010, 1, 1)   # don't probe data older than this
 MAX_SLOTS      = 5
-BUFFER_IN      = 4       # enter if rank ≤ 4 (top 5: 0..4)
-BUFFER_OUT     = 10      # hold if rank ≤ 10 (top 5 + small buffer)
+BUFFER_IN      = 5       # enter if rank ≤ 5 (top 5)
+BUFFER_OUT     = 7       # hold if rank ≤ 7  (exit when rank ≥ 8 — 2-rank hysteresis)
 W12, W3        = 0.50, 0.50
 LONG_PD        = 252     # 12m
 SHORT_PD       = 63      # 3m
