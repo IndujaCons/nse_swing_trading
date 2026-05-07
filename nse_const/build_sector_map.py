@@ -59,6 +59,15 @@ NIFTYINDICES_URLS = {
 OIL_GAS_HARDCODED = {"RELIANCE", "ONGC", "IOC", "BPCL", "GAIL", "HINDPETRO",
                      "PETRONET", "OIL", "ATGL", "MGL", "IGL", "GUJGASLTD"}
 
+# Manual primary-sector overrides — apply AFTER auto-classification.
+# Use for N200 stocks with no clean home in the niftyindices universe but
+# where we want to assign a sensible primary anyway (typically retail /
+# new-age tech / cement / paint / telecom / etc.).
+# Format: { ticker: ("PRIMARY SECTOR LABEL", "rationale") }
+MANUAL_OVERRIDES = {
+    "DMART":         ("NIFTY FMCG", "Avenue Supermarts — consumer-staples retailer; treated as FMCG-adjacent"),
+}
+
 # Precedence: first match wins → encodes "most specific first"
 SECTOR_PRECEDENCE = [
     "NIFTY PVT BANK",          # derived BANK \ PSU BANK
@@ -85,20 +94,24 @@ OUTPUT_CSV = os.path.join(HERE, "nifty200_sector_map.csv")
 PIT_JSON   = os.path.join(HERE, "nifty200_pit.json")
 
 
-def fetch_constituents(sector: str, fname: str) -> set:
-    """Fetch one sector's constituent symbol set from niftyindices.com."""
+def fetch_constituents(sector: str, fname: str, retries: int = 3) -> set:
+    """Fetch one sector's constituent symbol set from niftyindices.com.
+    Retries on timeout — niftyindices' endpoint rate-limits aggressively."""
     url = f"https://www.niftyindices.com/IndexConstituent/{fname}"
-    try:
-        r = requests.get(url, headers=UA, timeout=15)
-        if r.status_code != 200 or r.text[:50].startswith("<"):
-            print(f"  ERR  {sector:18s} HTTP {r.status_code} (URL not a CSV)")
-            return set()
-        rdr = csv.DictReader(r.text.splitlines())
-        syms = {row["Symbol"].strip() for row in rdr if row.get("Symbol")}
-        return syms
-    except Exception as e:
-        print(f"  ERR  {sector:18s} {e}")
-        return set()
+    last_err = None
+    for attempt in range(retries):
+        try:
+            r = requests.get(url, headers=UA, timeout=30)
+            if r.status_code != 200 or r.text[:50].startswith("<"):
+                last_err = f"HTTP {r.status_code} (URL not a CSV)"
+                continue
+            rdr = csv.DictReader(r.text.splitlines())
+            return {row["Symbol"].strip() for row in rdr if row.get("Symbol")}
+        except Exception as e:
+            last_err = str(e)
+        time.sleep(2 * (attempt + 1))   # 2s, 4s, 6s
+    print(f"  ERR  {sector:18s} {last_err} (after {retries} retries)")
+    return set()
 
 
 def latest_n200():
@@ -137,14 +150,26 @@ def main():
     print(f"  HRD  NIFTY OIL & GAS        {len(sec_to_syms['NIFTY OIL & GAS']):3d} stocks  (hardcoded — no public CSV)")
 
     rows = []
+    overrides_applied = []
     for ticker in sorted(n200):
         listed = [sec for sec in SECTOR_PRECEDENCE if ticker in sec_to_syms.get(sec, set())]
         primary = listed[0] if listed else "OTHER"
+        # Manual override beats auto-detection — but listed_in_indices keeps the
+        # actual niftyindices membership (empty if stock isn't in any index)
+        if ticker in MANUAL_OVERRIDES:
+            new_primary, _rationale = MANUAL_OVERRIDES[ticker]
+            overrides_applied.append((ticker, primary, new_primary))
+            primary = new_primary
         rows.append({
             "ticker":            ticker,
             "primary_sector":    primary,
             "listed_in_indices": ";".join(listed) if listed else "",
         })
+
+    if overrides_applied:
+        print(f"\n  Manual overrides applied ({len(overrides_applied)}):")
+        for t, was, now in overrides_applied:
+            print(f"    {t:14s}  {was:22s} → {now}")
 
     with open(OUTPUT_CSV, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["ticker", "primary_sector", "listed_in_indices"])
