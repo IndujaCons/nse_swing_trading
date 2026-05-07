@@ -249,6 +249,171 @@ def compute_metrics(rebal_nav, bench_series, start_date, end_date):
     }
 
 
+def write_md_report(closes, universe_syms, dropped_syms, start_date, last_day, n_years,
+                    metrics, gate_pass, gate_fail, avg_turnover, rebal_log, rebal_nav,
+                    all_trades, total_charges, liquidbees_income, total_net,
+                    final_nav, total_ret, cagr, neg_years, year_navs,
+                    initial, no_liquidbees, output_path):
+    """Emit a comprehensive markdown report at output_path."""
+    from datetime import datetime as _dt
+
+    closed = [t for t in all_trades if not t.get("open")]
+    open_p = [t for t in all_trades if t.get("open")]
+    winners = sorted([t for t in closed if t["gross_pnl"] > 0],
+                     key=lambda t: -t["gross_pnl"])[:10]
+    losers  = sorted([t for t in closed if t["gross_pnl"] <= 0],
+                     key=lambda t: t["gross_pnl"])[:10]
+
+    cagr_excess  = (metrics["cagr"] - metrics["bench_cagr"]) * 100 if metrics else None
+    dd_widening  = (metrics["bench_max_dd"] - metrics["max_dd"]) * 100 if metrics else None
+    worst_rel_pp = metrics["worst_monthly_rel"] * 100 if metrics else None
+
+    lines = []
+    a = lines.append
+
+    a(f"# Sector Z-Score V3 Phase 1 — Backtest Report\n")
+    a(f"_Generated {_dt.now().strftime('%Y-%m-%d %H:%M IST')}_\n")
+    a(f"_Script: `data/sector_zscore_backtest.py`_\n")
+    a("")
+
+    # ── Configuration
+    a("## Configuration\n")
+    a("| Parameter | Value |")
+    a("|---|---|")
+    a(f"| Universe | {len(universe_syms)} sectoral indices "
+      f"({len(dropped_syms)} skipped from yfinance / dropped from cache) |")
+    a(f"| Slots | {MAX_SLOTS} × {100/MAX_SLOTS:.0f}% equal-weight |")
+    a(f"| Hysteresis | Entry rank ≤ {BUFFER_IN}, Exit rank ≥ {BUFFER_OUT + 1} |")
+    a(f"| Z-score windows | {LONG_PD}d (12m) + {SHORT_PD}d "
+      f"({SHORT_PD/21:.0f}m), {W12*100:.0f}% / {W3*100:.0f}% weighted |")
+    a(f"| Benchmark | Nifty 200 (`{BENCH_SYM}`) |")
+    a(f"| Initial capital | ₹{initial/1e5:.0f}L compounding |")
+    a(f"| LIQUIDBEES idle | {LIQUIDBEES_PA*100:.1f}% p.a. "
+      f"{'(disabled via --no-liquidbees)' if no_liquidbees else ''} |")
+    a(f"| Charges | Zerodha equity (STT 0.1%, exchange 0.00307%, etc.) |")
+    a(f"| Period | {start_date} → {last_day}  ({n_years:.2f} yr) |")
+    a("")
+
+    # ── Universe
+    a("## Universe\n")
+    a("| Sector | yfinance symbol | Data range | Rows |")
+    a("|---|---|---|---|")
+    for sym in universe_syms:
+        s = closes[sym]
+        yf_sym = next((y for sn, y in SECTOR_UNIVERSE if sn == sym), "")
+        a(f"| {sym} | `{yf_sym}` | {s.index[0].date()} → {s.index[-1].date()} | {len(s)} |")
+    if dropped_syms:
+        a("")
+        a(f"_Skipped from cache: {', '.join(dropped_syms)}_")
+    a("")
+
+    # ── Headline metrics
+    a("## Headline metrics\n")
+    if metrics:
+        a("| Metric | Strategy | Nifty 200 | Δ |")
+        a("|---|---|---|---|")
+        a(f"| CAGR | **{metrics['cagr']*100:+.2f}%** | {metrics['bench_cagr']*100:+.2f}% | "
+          f"{cagr_excess:+.2f}pp |")
+        a(f"| MaxDD | {metrics['max_dd']*100:.1f}% | {metrics['bench_max_dd']*100:.1f}% | "
+          f"{(metrics['max_dd']-metrics['bench_max_dd'])*100:+.1f}pp |")
+        a(f"| Sharpe (monthly→ann) | {metrics['sharpe']:.2f} | — | — |")
+        a(f"| Information Ratio | {metrics['ir']:.2f} | — | — |")
+        a(f"| Win rate vs N200 (monthly) | {metrics['win_rate_vs_bench']:.1f}% | — | — |")
+        a(f"| Worst monthly relative | {worst_rel_pp:+.2f}pp | — | — |")
+        a(f"| Avg sector turnover / rebal | {avg_turnover:.2f} of {MAX_SLOTS} | — | — |")
+        a("")
+    a(f"- **Total return**: {total_ret:+.1f}%   (final NAV ₹{final_nav/1e5:.2f}L "
+      f"from ₹{initial/1e5:.0f}L initial)")
+    a(f"- **Net P&L** (trades + LIQUIDBEES − charges): ₹{total_net:+,.0f}")
+    a(f"- **Closed trades**: {len(closed)} ({sum(1 for t in closed if t['gross_pnl']>0)}W / "
+      f"{sum(1 for t in closed if t['gross_pnl']<=0)}L) | **Open**: {len(open_p)}")
+    a(f"- **Total charges**: ₹{total_charges:,.0f}")
+    a(f"- **LIQUIDBEES income**: ₹{liquidbees_income:,.0f}")
+    a(f"- **Negative years**: {neg_years}")
+    a("")
+
+    # ── V3 Phase 1 Gate
+    a("## V3 Phase 1 — Pass-Criteria Gate\n")
+    if metrics:
+        a("| Criterion | Threshold | Actual | Result |")
+        a("|---|---|---|---|")
+        rows = [
+            ("CAGR vs Nifty 200",          "≥ +4pp",     f"{cagr_excess:+.2f}pp", cagr_excess >= 4.0),
+            ("Sharpe (monthly→annualised)", "≥ 0.85",    f"{metrics['sharpe']:.2f}", metrics['sharpe'] >= 0.85),
+            ("Information Ratio vs N200",  "≥ 0.40",     f"{metrics['ir']:.2f}",     metrics['ir'] >= 0.40),
+            ("MaxDD widening vs N200",     "≤ +5pp",     f"{dd_widening:+.2f}pp", dd_widening <= 5.0),
+            ("Worst monthly relative",     "≥ -8pp",     f"{worst_rel_pp:+.2f}pp", worst_rel_pp >= -8.0),
+        ]
+        for label, threshold, actual, ok in rows:
+            mark = "✅ PASS" if ok else "❌ FAIL"
+            a(f"| {label} | {threshold} | {actual} | {mark} |")
+        a("")
+        verdict = (f"**GATE FAILED — {gate_pass}/5 pass — DO NOT proceed to Layer 2**"
+                   if gate_fail >= 3 else
+                   f"**GATE PASSED — {gate_pass}/5 pass — proceed to Layer 2 (stock picking within sectors)**")
+        a(f"### Verdict: {verdict}\n")
+    else:
+        a("_Gate not evaluated — insufficient data._\n")
+
+    # ── Year-by-year
+    a("## Year-by-year returns\n")
+    a("| Year | Return | End-of-year NAV | Rebals |")
+    a("|---|---|---|---|")
+    prev = initial
+    for yr in sorted(year_navs):
+        end = year_navs[yr][-1]
+        ret = (end / prev - 1) * 100
+        tag = " ◄ NEG" if ret < 0 else ""
+        a(f"| {yr} | {ret:+.1f}%{tag} | ₹{end/1e5:.2f}L | {len(year_navs[yr])} |")
+        prev = end
+    a("")
+
+    # ── Per-rebalance summary
+    a("## Per-rebalance summary\n")
+    a("| # | Date | Eligible | Entries | Exits | NAV (after) | Top holdings |")
+    a("|---|---|---|---|---|---|---|")
+    for r in rebal_log:
+        entries_str = ", ".join(f"{s} (#{rk})" for s, rk, _ in r["entries"]) or "—"
+        exits_str   = ", ".join(f"{s} (#{rk}, {pl})" for s, rk, _, pl in r["exits"]) or "—"
+        holds_str   = ", ".join(f"{s} (#{rk})" for s, rk, _ in r["holds"]) or "—"
+        a(f"| {r['idx']} | {r['date']} | {r['eligible']} | {entries_str} | "
+          f"{exits_str} | ₹{r['nav_after']/1e5:.2f}L | {holds_str} |")
+    a("")
+
+    # ── Top winners / losers
+    a("## Top 10 winning trades (gross P&L)\n")
+    if winners:
+        a("| Sector | Entry | Exit | Entry₹ | Exit₹ | Gross P&L | Hold |")
+        a("|---|---|---|---|---|---|---|")
+        for t in winners:
+            a(f"| {t['sym']} | {t['entry']} | {t['exit']} | "
+              f"{t['entry_px']:,.1f} | {t['exit_px']:,.1f} | "
+              f"₹{t['gross_pnl']:+,.0f} | {t['hold_days']}d |")
+    else:
+        a("_No winning trades._")
+    a("")
+
+    a("## Top 10 losing trades (gross P&L)\n")
+    if losers:
+        a("| Sector | Entry | Exit | Entry₹ | Exit₹ | Gross P&L | Hold |")
+        a("|---|---|---|---|---|---|---|")
+        for t in losers:
+            a(f"| {t['sym']} | {t['entry']} | {t['exit']} | "
+              f"{t['entry_px']:,.1f} | {t['exit_px']:,.1f} | "
+              f"₹{t['gross_pnl']:+,.0f} | {t['hold_days']}d |")
+    else:
+        a("_No losing trades._")
+    a("")
+
+    a("---")
+    a("_Audit log of parameter sweeps lives in git history. "
+      "Frozen config: 17 sectors · entry≤5 / exit≥8 hysteresis · 12m+3m Z-score._")
+
+    with open(output_path, "w") as f:
+        f.write("\n".join(lines))
+    return output_path
+
+
 def evaluate_gate(metrics, avg_turnover):
     """Print pass-criteria gate verdict. Returns (n_pass, n_fail)."""
     if not metrics:
@@ -402,6 +567,7 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
     rebal_nav     = []
     liquidbees_income = 0.0
     turnover_per_rebal = []      # number of entries+exits per rebal
+    rebal_log     = []           # structured per-rebal data for the .md report
 
     slot_capital = SLOT_START
     cash         = float(SLOT_START * MAX_SLOTS)
@@ -570,6 +736,19 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
               f"Total ₹{nav_after:,.0f} | Positions {len(portfolio)}/{MAX_SLOTS}")
         rebal_nav.append({"date": rebal_day.date(), "nav": nav_after})
 
+        # Structured per-rebal record for the markdown report
+        rebal_log.append({
+            "idx":       rebal_idx + 1,
+            "date":      rebal_day.date(),
+            "eligible":  len(eligible_set),
+            "nav_before": nav,
+            "nav_after":  nav_after,
+            "entries":   [(sym, rank_map[sym], score_data.get(sym, {}).get("score", 0))
+                          for sym in [r[0] for r in entry_rows]],
+            "exits":     [(r[0], r[1], r[5], r[6]) for r in exit_rows],   # sym, rank, gross_pnl_str, pnl_pct_str
+            "holds":     [(r[0], r[1], r[6]) for r in hold_rows],          # sym, rank, pnl%
+        })
+
     # ── Close all open positions at last price ────────────────────────────────
     last_day = rebal_dates[-1] if rebal_dates else pd.Timestamp(date.today())
     for sym, pos in list(portfolio.items()):
@@ -651,13 +830,27 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
         print(f"  Strategy CAGR      : {metrics['cagr']*100:+.1f}%")
 
     avg_turnover = np.mean(turnover_per_rebal) if turnover_per_rebal else 0
-    evaluate_gate(metrics, avg_turnover)
+    n_pass, n_fail = evaluate_gate(metrics, avg_turnover)
 
     # Export NAV CSV for correlation analysis
     if rebal_nav:
         nav_csv = os.path.join(os.path.dirname(BASE_DIR), "sector_zscore_rebal.csv")
         pd.DataFrame(rebal_nav).rename(columns={"date": "Date", "nav": "NAV"}).to_csv(nav_csv, index=False)
         print(f"\n  Rebalance NAV exported → sector_zscore_rebal.csv ({len(rebal_nav)} rows)")
+
+    # Markdown report
+    md_path = os.path.join(os.path.dirname(BASE_DIR), "sector_zscore_report.md")
+    write_md_report(
+        closes=closes, universe_syms=universe_syms, dropped_syms=dropped_from_cache,
+        start_date=START_DATE, last_day=last_day.date(), n_years=n_years,
+        metrics=metrics, gate_pass=n_pass, gate_fail=n_fail, avg_turnover=avg_turnover,
+        rebal_log=rebal_log, rebal_nav=rebal_nav, all_trades=all_trades,
+        total_charges=total_charges, liquidbees_income=liquidbees_income,
+        total_net=total_net, final_nav=final_nav, total_ret=total_ret,
+        cagr=cagr, neg_years=neg_years, year_navs=year_navs,
+        initial=initial, no_liquidbees=no_liquidbees, output_path=md_path,
+    )
+    print(f"  Markdown report written → sector_zscore_report.md")
 
 
 if __name__ == "__main__":
