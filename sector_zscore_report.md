@@ -1,29 +1,4 @@
-Fetching Nifty 200 benchmark...
-  Bench: 4320 rows  (2008-10-08 → 2026-05-06)
-
-Fetching 20 sectoral indices...
-  OK   NIFTY BANK                     ^NSEBANK                        4321 rows  (2008-10-08 → 2026-05-06)
-  OK   NIFTY PVT BANK                 NIFTY_PVT_BANK.NS               2484 rows  (2016-03-14 → 2026-05-06)
-  OK   NIFTY PSU BANK                 ^CNXPSUBANK                     3742 rows  (2011-01-31 → 2026-05-06)
-  OK   NIFTY FIN SERVICE              NIFTY_FIN_SERVICE.NS            3591 rows  (2011-09-07 → 2026-05-06)
-  OK   NIFTY IT                       ^CNXIT                          4321 rows  (2008-10-08 → 2026-05-06)
-  OK   NIFTY AUTO                     ^CNXAUTO                        3630 rows  (2011-07-12 → 2026-05-06)
-  OK   NIFTY METAL                    ^CNXMETAL                       3630 rows  (2011-07-12 → 2026-05-06)
-  OK   NIFTY ENERGY                   ^CNXENERGY                      3742 rows  (2011-01-31 → 2026-05-06)
-  OK   NIFTY FMCG                     ^CNXFMCG                        3741 rows  (2011-01-31 → 2026-05-06)
-  OK   NIFTY REALTY                   ^CNXREALTY                      3877 rows  (2010-07-19 → 2026-05-06)
-  OK   NIFTY MEDIA                    ^CNXMEDIA                       3613 rows  (2011-08-04 → 2026-05-06)
-  OK   NIFTY MNC                      ^CNXMNC                         3742 rows  (2011-01-31 → 2026-05-06)
-  OK   NIFTY PSE                      ^CNXPSE                         3742 rows  (2011-01-31 → 2026-05-06)
-  OK   NIFTY CONSUMPTION              ^CNXCONSUM                      3628 rows  (2011-07-12 → 2026-05-06)
-  OK   NIFTY INFRA                    ^CNXINFRA                       3877 rows  (2010-07-19 → 2026-05-06)
-  SYN  NIFTY HEALTHCARE               synth_nifty_healthcare_2026-05-07.pkl 3045 rows  (2014-01-01 → 2026-05-07)
-  SYN  NIFTY OIL & GAS                synth_nifty_oil_gas_2026-05-07.pkl  3045 rows  (2014-01-01 → 2026-05-07)
-  SYN  NIFTY INDIA DEFENCE            synth_nifty_india_defence_2026-05-07.pkl 3045 rows  (2014-01-01 → 2026-05-07)
-  SYN  NIFTY INDIA MFG                synth_nifty_india_mfg_2026-05-07.pkl 3045 rows  (2014-01-01 → 2026-05-07)
-  SYN  NIFTY CONSUMER DURABLES        synth_nifty_consumer_durables_2026-05-07.pkl 3045 rows  (2014-01-01 → 2026-05-07)
-
-Cached to /Users/jay/Desktop/relative_strength/data/cache/sector_zscore_daily_2026-05-07.pkl
+Loading cache from /Users/jay/Desktop/relative_strength/data/cache/sector_zscore_daily_2026-05-07.pkl...
 
 Universe: 20 sectoral indices in scope
 START_DATE auto-detected: 2012-03-01 (first month-start with ≥6 eligible sectors)

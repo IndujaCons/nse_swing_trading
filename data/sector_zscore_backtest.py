@@ -550,6 +550,11 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
             print("    —")
 
         # ── Entries ──────────────────────────────────────────────────────────
+        # Rank-only entry (no EMA200 entry filter). The asymmetric rule is
+        # tested vs symmetric; reverted because symmetric cost ~2pp CAGR and
+        # worsened worst-monthly. The "buy below EMA200, hope trend recovers"
+        # asymmetry actually catches enough early-trend pickups to outweigh
+        # the occasional same-month whipsaw exit cost.
         to_buy = {s for s in ranked if s not in current and rank_map.get(s, 9999) <= BUFFER_IN}
         slots_free = MAX_SLOTS - len(portfolio)
 
