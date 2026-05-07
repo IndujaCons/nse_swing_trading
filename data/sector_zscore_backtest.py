@@ -66,10 +66,8 @@ CACHE_DIR  = os.path.join(BASE_DIR, 'cache')
 # spec's additions. Tentatives marked — script silently drops any symbol that
 # returns < MIN_HISTORY days at probe.
 SECTOR_UNIVERSE = [
-    # Run 2 frozen universe — 17 yfinance-resolvable sectors including the
-    # factor blends (MNC, PSE, Commodities, Consumption). Run 3 trimmed
-    # those out and the gate didn't move (CAGR -0.1pp, IR flat) so kept
-    # them in for breadth.
+    # 14-symbol universe: 12 true sectors + 2 factor blends (MNC, PSE).
+    # Dropped: INFRA, CONSUMPTION, COMMODITIES (broad/overlapping aggregates).
     ("NIFTY BANK",              "^NSEBANK"),
     ("NIFTY PVT BANK",          "NIFTY_PVT_BANK.NS"),
     ("NIFTY PSU BANK",          "^CNXPSUBANK"),
@@ -78,13 +76,10 @@ SECTOR_UNIVERSE = [
     ("NIFTY AUTO",              "^CNXAUTO"),
     ("NIFTY METAL",             "^CNXMETAL"),
     ("NIFTY ENERGY",            "^CNXENERGY"),
-    ("NIFTY PHARMA",            "^CNXPHARMA"),   # also Healthcare proxy
+    ("NIFTY PHARMA",            "^CNXPHARMA"),
     ("NIFTY FMCG",              "^CNXFMCG"),
     ("NIFTY REALTY",            "^CNXREALTY"),
     ("NIFTY MEDIA",             "^CNXMEDIA"),
-    ("NIFTY INFRA",             "^CNXINFRA"),
-    ("NIFTY CONSUMPTION",       "^CNXCONSUM"),
-    ("NIFTY COMMODITIES",       "^CNXCMDT"),
     ("NIFTY MNC",               "^CNXMNC"),
     ("NIFTY PSE",               "^CNXPSE"),
     # Tentative (newer indices — yfinance probe-and-skip)
