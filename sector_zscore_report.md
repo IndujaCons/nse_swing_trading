@@ -414,7 +414,7 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
   NIFTY MEDIA             4      04-Sep-12   1,310.7     1,633.6     ₹+50,612      +24.6%    331d    ema200          
   NIFTY MNC               6      03-May-13   5,801.9     5,552.1     ₹-4,930       -4.3%     90d     ema200          
-  NIFTY FIN SERVICE       8      02-Apr-13   4,753.0     4,350.7     ₹-17,695      -8.5%     121d    rank>7+ema200   
+  NIFTY FIN SERVICE       8      02-Apr-13   4,753.0     4,350.7     ₹-17,695      -8.5%     121d    rank>7+ema200+trail20
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
@@ -1751,7 +1751,7 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY REALTY            6      04-Dec-17   321.7       295.9       ₹-31,944      -8.0%     119d    ema200          
+  NIFTY REALTY            6      04-Dec-17   321.7       295.9       ₹-31,944      -8.0%     119d    ema200+trail20  
   NIFTY METAL             10     05-Mar-18   3,911.9     3,508.1     ₹-45,872      -10.3%    28d     rank>7+ema200   
 
   ENTRIES (2)
@@ -2914,7 +2914,7 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                10     02-Jun-20   14,358.0    31,260.4    ₹+558,988     +117.7%   699d    rank>7+ema200   
+  NIFTY IT                10     02-Jun-20   14,358.0    31,260.4    ₹+558,988     +117.7%   699d    rank>7+ema200+trail20
   NIFTY PSU BANK          8      02-Feb-22   2,983.1     2,760.1     ₹-67,722      -7.5%     89d     rank>7          
 
   ENTRIES (2)
@@ -2940,7 +2940,7 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             9      02-Sep-20   2,512.8     5,344.5     ₹+559,355     +112.7%   637d    rank>7+ema200   
+  NIFTY METAL             9      02-Sep-20   2,512.8     5,344.5     ₹+559,355     +112.7%   637d    rank>7+ema200+trail20
   NIFTY MEDIA             5      04-May-22   2,171.5     2,037.1     ₹-56,317      -6.2%     28d     ema200          
 
   ENTRIES (1)
@@ -3157,7 +3157,7 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             10     02-Dec-22   6,663.0     5,464.9     ₹-163,332     -18.0%    89d     rank>7+ema200   
+  NIFTY METAL             10     02-Dec-22   6,663.0     5,464.9     ₹-163,332     -18.0%    89d     rank>7+ema200+trail20
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
@@ -4109,7 +4109,7 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   Win Rate (trades) : 55.9%  (85W / 67L)
   Profit Factor : 3.55
   Avg hold      : 158 days
-  Exit reasons  : rank>7: 68  |  ema200: 59  |  rank>7+ema200: 25
+  Exit reasons  : rank>7: 68  |  ema200: 58  |  rank>7+ema200: 21  |  rank>7+ema200+trail20: 4  |  ema200+trail20: 1
   Total charges : ₹217,550
   LIQUIDBEES    : ₹92,365  (6.5% p.a. on idle slots)
   Net P&L       : ₹+7,565,711
