@@ -24,7 +24,10 @@ BUFFER_OUT = 40   # hold if rank <= this
 
 
 def generate_basket(user: dict, signals: list, current_portfolio: dict,
-                    unfiltered_ranks: dict = None, all_prices: dict = None) -> dict:
+                    unfiltered_ranks: dict = None, all_prices: dict = None,
+                    sector_map: dict = None,
+                    top5_sectors: list = None,
+                    etf_prices: dict = None) -> dict:
     """
     Compute exits + entries for a Mom20 rebalance and return basket data.
 
@@ -119,6 +122,44 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
             })
 
     entries.sort(key=lambda x: x["rank"])
+
+    # ── Sector-ETF top-up (Q2) ────────────────────────────────────────────
+    # For each top-5 sector with <4 stocks among entries+holds, append one
+    # sector-ETF entry. Mom20 stock picks themselves are unchanged.
+    etf_entries = []
+    if sector_map and top5_sectors:
+        from data.sector_etf_map import SECTOR_TO_ETF
+        # Count stocks per sector across both entries (new) and holds (kept)
+        sector_count = {}
+        for item in list(entries) + list(holds):
+            sec = sector_map.get(item["ticker"])
+            if sec:
+                sector_count[sec] = sector_count.get(sec, 0) + 1
+        for sec in top5_sectors:
+            if sector_count.get(sec, 0) >= 4:
+                continue
+            mapping = SECTOR_TO_ETF.get(sec)
+            if not mapping:
+                continue
+            etf_sym, etf_name = mapping
+            etf_price = (etf_prices or {}).get(etf_sym, 0)
+            if etf_price <= 0:
+                continue   # skip if price unavailable
+            qty = int(math.floor(capital_per_slot / etf_price))
+            if qty <= 0:
+                continue
+            etf_entries.append({
+                "ticker":            etf_sym,
+                "rank":              "ETF",
+                "price":             round(etf_price, 2),
+                "qty":               qty,
+                "capital_allocated": round(qty * etf_price, 2),
+                "score":             None,
+                "is_etf_topup":      True,
+                "etf_for_sector":    sec,
+                "etf_name":          etf_name,
+            })
+    entries.extend(etf_entries)
 
     # Min capital = need at least 1 share per slot for the most expensive entry
     max_entry_price = max((e["price"] for e in entries if e["price"] > 0), default=0)

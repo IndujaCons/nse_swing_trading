@@ -2385,6 +2385,67 @@ from data.mom20_basket import generate_basket, to_zerodha_csv, parse_trade_book,
 ensure_all_dirs()
 
 
+def _fetch_etf_ltp(symbols):
+    """Fetch live close for a list of NSE ETF symbols (no .NS suffix needed
+    in input). Returns {symbol: price}, missing symbols simply absent.
+    Uses yfinance 1-day intraday."""
+    if not symbols:
+        return {}
+    import yfinance as yf
+    yf_syms = [s if "." in s else f"{s}.NS" for s in symbols]
+    try:
+        df = yf.download(yf_syms, period="5d", progress=False,
+                         auto_adjust=True, group_by="ticker",
+                         threads=True, timeout=30)
+    except Exception:
+        return {}
+    out = {}
+    for orig, ysym in zip(symbols, yf_syms):
+        try:
+            s = (df[ysym]["Close"] if len(yf_syms) > 1 else df["Close"]).dropna()
+            if len(s):
+                out[orig] = float(s.iloc[-1])
+        except Exception:
+            pass
+    return out
+
+
+# Sector → ETF map cache for the basket flow (computed lazily)
+_SECTOR_TOP5_CACHE = {"data": None, "timestamp": 0}
+
+
+def _get_top5_sectors(force_refresh=False):
+    """Return today's top-5 sector names (Phase 1 V1.2-revised ranking).
+    15-min in-memory TTL — same shape as live signals cache."""
+    import time as _t
+    if (not force_refresh and _SECTOR_TOP5_CACHE["data"]
+            and (_t.time() - _SECTOR_TOP5_CACHE["timestamp"]) < 900):
+        return _SECTOR_TOP5_CACHE["data"]
+    try:
+        from data.score_live_sectors import score_live_sectors
+        ranking = score_live_sectors()
+        top5 = [r["symbol"] for r in ranking[:5]]
+        _SECTOR_TOP5_CACHE["data"] = top5
+        _SECTOR_TOP5_CACHE["timestamp"] = _t.time()
+        return top5
+    except Exception as e:
+        print(f"[mom20] sector ranking failed: {e}")
+        return []
+
+
+def _load_sector_map():
+    """ticker → primary_sector for current N200 (from Phase 2 sector map CSV)."""
+    import csv as _csv
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "nse_const", "nifty200_sector_map.csv")
+    try:
+        with open(path) as f:
+            return {row["ticker"]: row["primary_sector"]
+                    for row in _csv.DictReader(f)}
+    except Exception:
+        return {}
+
+
 def _load_user_live_prices(user_id):
     """Read prices map from a user's mom20_live_prices.json. Returns {} on miss."""
     try:
@@ -2493,7 +2554,19 @@ def api_mom20_basket_preview(user_id):
     except Exception:
         portfolio = {"status": "empty", "basket": []}
 
-    basket_data = generate_basket(user, signals, portfolio, unfiltered_ranks=unfiltered_ranks, all_prices=all_prices)
+    # ETF top-up inputs (Q2): today's top-5 sectors + sector classifier + ETF prices
+    _top5     = _get_top5_sectors()
+    _sec_map  = _load_sector_map()
+    from data.sector_etf_map import SECTOR_TO_ETF
+    _need_etfs = [SECTOR_TO_ETF[s][0] for s in _top5
+                  if SECTOR_TO_ETF.get(s)]
+    _etf_prices = _fetch_etf_ltp(_need_etfs) if _need_etfs else {}
+    basket_data = generate_basket(user, signals, portfolio,
+                                  unfiltered_ranks=unfiltered_ranks,
+                                  all_prices=all_prices,
+                                  sector_map=_sec_map,
+                                  top5_sectors=_top5,
+                                  etf_prices=_etf_prices)
     return jsonify({"success": True, **basket_data})
 
 
@@ -2533,7 +2606,19 @@ def api_mom20_basket_download(user_id):
     except Exception:
         portfolio = {"status": "empty", "basket": []}
 
-    basket_data = generate_basket(user, signals, portfolio, unfiltered_ranks=unfiltered_ranks, all_prices=all_prices)
+    # ETF top-up inputs (Q2): today's top-5 sectors + sector classifier + ETF prices
+    _top5     = _get_top5_sectors()
+    _sec_map  = _load_sector_map()
+    from data.sector_etf_map import SECTOR_TO_ETF
+    _need_etfs = [SECTOR_TO_ETF[s][0] for s in _top5
+                  if SECTOR_TO_ETF.get(s)]
+    _etf_prices = _fetch_etf_ltp(_need_etfs) if _need_etfs else {}
+    basket_data = generate_basket(user, signals, portfolio,
+                                  unfiltered_ranks=unfiltered_ranks,
+                                  all_prices=all_prices,
+                                  sector_map=_sec_map,
+                                  top5_sectors=_top5,
+                                  etf_prices=_etf_prices)
     from data.mom20_basket import to_zerodha_json
     json_content = to_zerodha_json(basket_data)
 
