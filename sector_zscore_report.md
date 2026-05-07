@@ -1,12 +1,36 @@
-Loading cache from /Users/jay/Desktop/relative_strength/data/cache/sector_zscore_daily_2026-05-07.pkl...
-  (excluding from cached snapshot: NIFTY INFRA, NIFTY CONSUMPTION, NIFTY COMMODITIES)
+Fetching Nifty 200 benchmark...
+  Bench: 4320 rows  (2008-10-08 → 2026-05-06)
 
-Universe: 14 sectoral indices in scope
+Fetching 20 sectoral indices...
+  OK   NIFTY BANK                     ^NSEBANK                        4321 rows  (2008-10-08 → 2026-05-06)
+  OK   NIFTY PVT BANK                 NIFTY_PVT_BANK.NS               2484 rows  (2016-03-14 → 2026-05-06)
+  OK   NIFTY PSU BANK                 ^CNXPSUBANK                     3742 rows  (2011-01-31 → 2026-05-06)
+  OK   NIFTY FIN SERVICE              NIFTY_FIN_SERVICE.NS            3591 rows  (2011-09-07 → 2026-05-06)
+  OK   NIFTY IT                       ^CNXIT                          4321 rows  (2008-10-08 → 2026-05-06)
+  OK   NIFTY AUTO                     ^CNXAUTO                        3630 rows  (2011-07-12 → 2026-05-06)
+  OK   NIFTY METAL                    ^CNXMETAL                       3630 rows  (2011-07-12 → 2026-05-06)
+  OK   NIFTY ENERGY                   ^CNXENERGY                      3742 rows  (2011-01-31 → 2026-05-06)
+  OK   NIFTY FMCG                     ^CNXFMCG                        3741 rows  (2011-01-31 → 2026-05-06)
+  OK   NIFTY REALTY                   ^CNXREALTY                      3877 rows  (2010-07-19 → 2026-05-06)
+  OK   NIFTY MEDIA                    ^CNXMEDIA                       3613 rows  (2011-08-04 → 2026-05-06)
+  OK   NIFTY MNC                      ^CNXMNC                         3742 rows  (2011-01-31 → 2026-05-06)
+  OK   NIFTY PSE                      ^CNXPSE                         3742 rows  (2011-01-31 → 2026-05-06)
+  OK   NIFTY CONSUMPTION              ^CNXCONSUM                      3628 rows  (2011-07-12 → 2026-05-06)
+  OK   NIFTY INFRA                    ^CNXINFRA                       3877 rows  (2010-07-19 → 2026-05-06)
+  SYN  NIFTY HEALTHCARE               synth_nifty_healthcare_2026-05-07.pkl 3045 rows  (2014-01-01 → 2026-05-07)
+  SYN  NIFTY OIL & GAS                synth_nifty_oil_gas_2026-05-07.pkl  3045 rows  (2014-01-01 → 2026-05-07)
+  SYN  NIFTY INDIA DEFENCE            synth_nifty_india_defence_2026-05-07.pkl 3045 rows  (2014-01-01 → 2026-05-07)
+  SYN  NIFTY INDIA MFG                synth_nifty_india_mfg_2026-05-07.pkl 3045 rows  (2014-01-01 → 2026-05-07)
+  SYN  NIFTY CONSUMER DURABLES        synth_nifty_consumer_durables_2026-05-07.pkl 3045 rows  (2014-01-01 → 2026-05-07)
+
+Cached to /Users/jay/Desktop/relative_strength/data/cache/sector_zscore_daily_2026-05-07.pkl
+
+Universe: 20 sectoral indices in scope
 START_DATE auto-detected: 2012-03-01 (first month-start with ≥6 eligible sectors)
-Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
+Rebalance schedule: 171 months  (2012-03-01 → 2026-05-01)
 
 ========================================================================
-  REBALANCE #01  —  01 Mar 2012  (eligible: 9/14)
+  REBALANCE #01  —  01 Mar 2012  (eligible: 9/20)
   NAV: ₹1,000,000  |  Slot: ₹200,000  |  Cash: ₹1,000,000
 ========================================================================
 
@@ -16,11 +40,11 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   ENTRIES (5)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               1      2.231    +9.4%     +12.8%    5,210.6     ₹+200,000   
-  NIFTY BANK              2      1.360    -5.1%     +20.1%    10,337.6    ₹+200,000   
-  NIFTY FMCG              3      1.351    +24.9%    +2.4%     10,520.8    ₹+200,000   
-  NIFTY REALTY            4      0.978    -6.6%     +21.1%    252.6       ₹+200,000   
-  NIFTY PSU BANK          5      0.898    -16.3%    +19.1%    3,545.1     ₹+200,000   
+  NIFTY MNC               1      2.358    +9.4%     +12.8%    5,210.6     ₹+200,000   
+  NIFTY BANK              2      1.456    -5.1%     +20.1%    10,337.6    ₹+200,000   
+  NIFTY FMCG              3      1.354    +24.9%    +2.4%     10,520.8    ₹+200,000   
+  NIFTY REALTY            4      1.041    -6.6%     +21.1%    252.6       ₹+200,000   
+  NIFTY PSU BANK          5      0.963    -16.3%    +19.1%    3,545.1     ₹+200,000   
 
   HOLDS (0)
     —
@@ -28,125 +52,127 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   AFTER: Invested ₹998,800 | Cash ₹0 | Total ₹998,800 | Positions 5/5
 
 ========================================================================
-  REBALANCE #02  —  02 Apr 2012  (eligible: 9/14)
+  REBALANCE #02  —  02 Apr 2012  (eligible: 9/20)
   NAV: ₹1,003,011  |  Slot: ₹200,602  |  Cash: ₹0
 ========================================================================
 
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSU BANK          5      02-Mar-12   3,545.1     3,425.8     ₹-6,736       -3.4%     31d     ema200          
-  NIFTY REALTY            6      02-Mar-12   252.6       243.6       ₹-7,165       -3.6%     31d     ema200          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PHARMA            3      1.439    +12.7%    +9.9%     5,048.8     ₹+200,602   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.095       10,520.8    11,438.7    +8.7%   
-  NIFTY MNC               2      02-Mar-12   1.986       5,210.6     5,235.1     +0.5%   
-  NIFTY BANK              4      02-Mar-12   1.394       10,337.6    10,305.2    -0.3%   
-
-  AFTER: Invested ₹817,548 | Cash ₹185,496 | Total ₹1,003,045 | Positions 4/5
-
-========================================================================
-  REBALANCE #03  —  02 May 2012  (eligible: 9/14)
-  NAV: ₹1,021,667  |  Slot: ₹204,333  |  Cash: ₹186,588
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY IT                5      0.744    -10.4%    -0.2%     6,101.5     ₹+186,588   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   3.243       10,520.8    12,168.5    +15.7%  
-  NIFTY PHARMA            2      03-Apr-12   1.942       5,048.8     5,163.5     +2.3%   
-  NIFTY MNC               3      02-Mar-12   1.419       5,210.6     5,218.1     +0.1%   
-  NIFTY BANK              4      02-Mar-12   0.856 ⚠     10,337.6    10,306.5    -0.3%   
-
-  AFTER: Invested ₹1,023,472 | Cash ₹0 | Total ₹1,023,472 | Positions 5/5
-
-========================================================================
-  REBALANCE #04  —  01 Jun 2012  (eligible: 9/14)
-  NAV: ₹967,229  |  Slot: ₹200,000  |  Cash: ₹0
-========================================================================
-
-  EXITS (3)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                4      03-May-12   6,101.5     5,855.4     ₹-7,529       -4.0%     29d     ema200          
-  NIFTY MNC               3      02-Mar-12   5,210.6     4,851.2     ₹-13,793      -6.9%     91d     ema200          
-  NIFTY BANK              5      02-Mar-12   10,337.6    9,174.4     ₹-22,503      -11.3%    91d     ema200          
+  NIFTY PSU BANK          4      02-Mar-12   3,545.1     3,425.8     ₹-6,736       -3.4%     31d     ema200          
+  NIFTY REALTY            5      02-Mar-12   252.6       243.6       ₹-7,165       -3.6%     31d     ema200          
 
   ENTRIES (0)
     —
 
-  HOLDS (2)
+  HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   3.191       10,520.8    11,687.4    +11.1%  
-  NIFTY PHARMA            2      03-Apr-12   2.213       5,048.8     4,978.2     -1.4%   
+  NIFTY FMCG              1      02-Mar-12   2.210       10,520.8    11,438.7    +8.7%   
+  NIFTY MNC               2      02-Mar-12   2.076       5,210.6     5,235.1     +0.5%   
+  NIFTY BANK              3      02-Mar-12   1.457       10,337.6    10,305.2    -0.3%   
 
-  AFTER: Invested ₹419,975 | Cash ₹542,763 | Total ₹962,738 | Positions 2/5
+  AFTER: Invested ₹617,763 | Cash ₹386,099 | Total ₹1,003,861 | Positions 3/5
 
 ========================================================================
-  REBALANCE #05  —  02 Jul 2012  (eligible: 9/14)
-  NAV: ₹987,502  |  Slot: ₹200,000  |  Cash: ₹546,075
+  REBALANCE #03  —  02 May 2012  (eligible: 9/20)
+  NAV: ₹1,017,109  |  Slot: ₹203,422  |  Cash: ₹388,272
 ========================================================================
 
   EXITS (0)
     —
 
-  ENTRIES (3)
+  ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               3      1.054    +8.4%     -0.7%     5,237.3     ₹+200,000   
-  NIFTY BANK              4      0.903    -1.1%     +2.0%     10,459.9    ₹+200,000   
-  NIFTY PSE               5      0.666    -9.8%     +0.9%     2,932.5     ₹+146,075   
+  NIFTY IT                4      0.900    -10.4%    -0.2%     6,101.5     ₹+203,422   
+  NIFTY REALTY            5      0.741    -28.0%    -1.8%     225.4       ₹+184,850   
 
-  HOLDS (2)
+  HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   3.204       10,520.8    12,456.0    +18.4%  
-  NIFTY PHARMA            2      03-Apr-12   2.087       5,048.8     5,233.8     +3.7%   
+  NIFTY FMCG              1      02-Mar-12   3.485       10,520.8    12,168.5    +15.7%  
+  NIFTY MNC               2      02-Mar-12   1.662       5,210.6     5,218.1     +0.1%   
+  NIFTY BANK              3      02-Mar-12   1.055       10,337.6    10,306.5    -0.3%   
 
-  AFTER: Invested ₹989,060 | Cash ₹0 | Total ₹989,060 | Positions 5/5
+  AFTER: Invested ₹1,020,717 | Cash ₹0 | Total ₹1,020,717 | Positions 5/5
 
 ========================================================================
-  REBALANCE #06  —  01 Aug 2012  (eligible: 11/14)
-  NAV: ₹1,010,186  |  Slot: ₹202,037  |  Cash: ₹0
+  REBALANCE #04  —  01 Jun 2012  (eligible: 9/20)
+  NAV: ₹953,549  |  Slot: ₹200,000  |  Cash: ₹0
+========================================================================
+
+  EXITS (4)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY IT                3      03-May-12   6,101.5     5,855.4     ₹-8,208       -4.0%     29d     ema200          
+  NIFTY MNC               2      02-Mar-12   5,210.6     4,851.2     ₹-13,793      -6.9%     91d     ema200          
+  NIFTY REALTY            6      03-May-12   225.4       203.8       ₹-17,755      -9.6%     29d     ema200          
+  NIFTY BANK              4      02-Mar-12   10,337.6    9,174.4     ₹-22,503      -11.3%    91d     ema200          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY PSU BANK          5      0.785    -18.8%    -15.4%    2,981.9     ₹+200,000   
+
+  HOLDS (1)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FMCG              1      02-Mar-12   3.579       10,520.8    11,687.4    +11.1%  
+
+  AFTER: Invested ₹424,376 | Cash ₹526,013 | Total ₹950,389 | Positions 2/5
+
+========================================================================
+  REBALANCE #05  —  02 Jul 2012  (eligible: 9/20)
+  NAV: ₹983,024  |  Slot: ₹200,000  |  Cash: ₹529,325
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSE               5      03-Jul-12   2,932.5     2,887.1     ₹-2,261       -1.5%     29d     ema200          
+  NIFTY PSU BANK          6      04-Jun-12   2,981.9     3,299.9     ₹+21,332      +10.7%    28d     ema200          
+
+  ENTRIES (4)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY MNC               2      1.284    +8.4%     -0.7%     5,237.3     ₹+200,000   
+  NIFTY BANK              3      1.128    -1.1%     +2.0%     10,459.9    ₹+200,000   
+  NIFTY PSE               4      0.784    -9.8%     +0.9%     2,932.5     ₹+200,000   
+  NIFTY ENERGY            5      0.774    -9.0%     +0.0%     7,590.2     ₹+150,657   
+
+  HOLDS (1)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FMCG              1      02-Mar-12   3.531       10,520.8    12,456.0    +18.4%  
+
+  AFTER: Invested ₹984,978 | Cash ₹0 | Total ₹984,978 | Positions 5/5
+
+========================================================================
+  REBALANCE #06  —  01 Aug 2012  (eligible: 11/20)
+  NAV: ₹995,942  |  Slot: ₹200,000  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY ENERGY            5      03-Jul-12   7,590.2     7,535.2     ₹-1,092       -0.7%     29d     ema200          
+  NIFTY PSE               4      03-Jul-12   2,932.5     2,887.1     ₹-3,096       -1.5%     29d     ema200          
 
   ENTRIES (0)
     —
 
-  HOLDS (4)
+  HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.844       10,520.8    12,945.2    +23.0%  
-  NIFTY PHARMA            2      03-Apr-12   2.333       5,048.8     5,476.5     +8.5%   
-  NIFTY MNC               3      03-Jul-12   1.506       5,237.3     5,321.4     +1.6%   
-  NIFTY BANK              4      03-Jul-12   1.133       10,459.9    10,419.8    -0.4%   
+  NIFTY FMCG              1      02-Mar-12   3.147       10,520.8    12,945.2    +23.0%  
+  NIFTY MNC               2      03-Jul-12   1.712       5,237.3     5,321.4     +1.6%   
+  NIFTY BANK              3      03-Jul-12   1.314       10,459.9    10,419.8    -0.4%   
 
-  AFTER: Invested ₹866,129 | Cash ₹143,814 | Total ₹1,009,942 | Positions 4/5
+  AFTER: Invested ₹648,532 | Cash ₹346,469 | Total ₹995,002 | Positions 3/5
 
 ========================================================================
-  REBALANCE #07  —  03 Sep 2012  (eligible: 12/14)
-  NAV: ₹1,027,179  |  Slot: ₹205,436  |  Cash: ₹145,021
+  REBALANCE #07  —  03 Sep 2012  (eligible: 13/20)
+  NAV: ₹1,005,559  |  Slot: ₹201,112  |  Cash: ₹348,833
 ========================================================================
 
   EXITS (1)
@@ -154,24 +180,24 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
   NIFTY BANK              8      03-Jul-12   10,459.9    9,967.3     ₹-9,418       -4.7%     62d     rank>7+ema200   
 
-  ENTRIES (2)
+  ENTRIES (3)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MEDIA             4      1.326    +4.4%     +17.9%    1,310.7     ₹+205,436   
-  NIFTY AUTO              5      0.911    +12.2%    +5.7%     3,900.1     ₹+130,168   
+  NIFTY MEDIA             3      1.589    +4.4%     +17.9%    1,310.7     ₹+201,112   
+  NIFTY CONSUMPTION       4      1.528    +9.0%     +8.7%     1,937.2     ₹+201,112   
+  NIFTY AUTO              5      1.099    +12.2%    +5.7%     3,900.1     ₹+137,192   
 
-  HOLDS (3)
+  HOLDS (2)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.750       10,520.8    13,670.4    +29.9%  
-  NIFTY PHARMA            2      03-Apr-12   2.747       5,048.8     5,644.5     +11.8%  
-  NIFTY MNC               3      03-Jul-12   1.798       5,237.3     5,465.6     +4.4%   
+  NIFTY FMCG              1      02-Mar-12   3.269       10,520.8    13,670.4    +29.9%  
+  NIFTY MNC               2      03-Jul-12   2.148       5,237.3     5,465.6     +4.4%   
 
-  AFTER: Invested ₹1,028,087 | Cash ₹0 | Total ₹1,028,087 | Positions 5/5
+  AFTER: Invested ₹1,007,899 | Cash ₹0 | Total ₹1,007,899 | Positions 5/5
 
 ========================================================================
-  REBALANCE #08  —  01 Oct 2012  (eligible: 13/14)
-  NAV: ₹1,106,997  |  Slot: ₹221,399  |  Cash: ₹0
+  REBALANCE #08  —  01 Oct 2012  (eligible: 14/20)
+  NAV: ₹1,105,602  |  Slot: ₹221,120  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
@@ -183,17 +209,17 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   HOLDS (5)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.558       10,520.8    14,167.5    +34.7%  
-  NIFTY MEDIA             2      04-Sep-12   2.507       1,310.7     1,581.2     +20.6%  
-  NIFTY PHARMA            3      03-Apr-12   2.080       5,048.8     5,635.4     +11.6%  
-  NIFTY MNC               4      03-Jul-12   1.682       5,237.3     5,736.9     +9.5%   
-  NIFTY AUTO              5      04-Sep-12   1.266       3,900.1     4,400.0     +12.8%  
+  NIFTY FMCG              1      02-Mar-12   2.785       10,520.8    14,167.5    +34.7%  
+  NIFTY MEDIA             2      04-Sep-12   2.693       1,310.7     1,581.2     +20.6%  
+  NIFTY MNC               3      03-Jul-12   1.844       5,237.3     5,736.9     +9.5%   
+  NIFTY CONSUMPTION       4      04-Sep-12   1.511       1,937.2     2,117.4     +9.3%   
+  NIFTY AUTO              5      04-Sep-12   1.405       3,900.1     4,400.0     +12.8%  
 
-  AFTER: Invested ₹1,106,997 | Cash ₹0 | Total ₹1,106,997 | Positions 5/5
+  AFTER: Invested ₹1,105,602 | Cash ₹0 | Total ₹1,105,602 | Positions 5/5
 
 ========================================================================
-  REBALANCE #09  —  01 Nov 2012  (eligible: 13/14)
-  NAV: ₹1,108,511  |  Slot: ₹221,702  |  Cash: ₹0
+  REBALANCE #09  —  01 Nov 2012  (eligible: 14/20)
+  NAV: ₹1,106,907  |  Slot: ₹221,381  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
@@ -205,17 +231,17 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   HOLDS (5)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.743       10,520.8    14,414.2    +37.0%  
-  NIFTY PHARMA            2      03-Apr-12   1.987       5,048.8     5,713.3     +13.2%  
-  NIFTY MEDIA             3      04-Sep-12   1.959       1,310.7     1,539.3     +17.4%  
-  NIFTY AUTO              4      04-Sep-12   1.849       3,900.1     4,427.6     +13.5%  
-  NIFTY MNC               5      03-Jul-12   1.755       5,237.3     5,720.3     +9.2%   
+  NIFTY FMCG              1      02-Mar-12   2.860       10,520.8    14,414.2    +37.0%  
+  NIFTY CONSUMPTION       2      04-Sep-12   2.092       1,937.2     2,143.4     +10.6%  
+  NIFTY MEDIA             3      04-Sep-12   2.004       1,310.7     1,539.3     +17.4%  
+  NIFTY AUTO              4      04-Sep-12   1.880       3,900.1     4,427.6     +13.5%  
+  NIFTY MNC               5      03-Jul-12   1.827       5,237.3     5,720.3     +9.2%   
 
-  AFTER: Invested ₹1,108,511 | Cash ₹0 | Total ₹1,108,511 | Positions 5/5
+  AFTER: Invested ₹1,106,907 | Cash ₹0 | Total ₹1,106,907 | Positions 5/5
 
 ========================================================================
-  REBALANCE #10  —  03 Dec 2012  (eligible: 13/14)
-  NAV: ₹1,167,642  |  Slot: ₹233,528  |  Cash: ₹0
+  REBALANCE #10  —  03 Dec 2012  (eligible: 14/20)
+  NAV: ₹1,179,065  |  Slot: ₹235,813  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
@@ -226,21 +252,21 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY BANK              3      1.473    +44.1%    +19.2%    12,092.6    ₹+221,135   
+  NIFTY BANK              4      1.397    +44.1%    +19.2%    12,092.6    ₹+221,135   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.667       10,520.8    15,514.8    +47.5%  
-  NIFTY MEDIA             2      04-Sep-12   2.297       1,310.7     1,702.6     +29.9%  
-  NIFTY PHARMA            5      03-Apr-12   1.365       5,048.8     5,854.9     +16.0%  
-  NIFTY AUTO              6      04-Sep-12   1.338       3,900.1     4,568.5     +17.1%  
+  NIFTY FMCG              1      02-Mar-12   2.595       10,520.8    15,514.8    +47.5%  
+  NIFTY CONSUMPTION       2      04-Sep-12   2.348       1,937.2     2,325.8     +20.1%  
+  NIFTY MEDIA             3      04-Sep-12   2.179       1,310.7     1,702.6     +29.9%  
+  NIFTY AUTO              6      04-Sep-12   1.268       3,900.1     4,568.5     +17.1%  
 
-  AFTER: Invested ₹1,168,247 | Cash ₹0 | Total ₹1,168,247 | Positions 5/5
+  AFTER: Invested ₹1,179,670 | Cash ₹0 | Total ₹1,179,670 | Positions 5/5
 
 ========================================================================
-  REBALANCE #11  —  01 Jan 2013  (eligible: 13/14)
-  NAV: ₹1,204,689  |  Slot: ₹240,938  |  Cash: ₹0
+  REBALANCE #11  —  01 Jan 2013  (eligible: 14/20)
+  NAV: ₹1,212,975  |  Slot: ₹242,595  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
@@ -252,67 +278,67 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   HOLDS (5)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.286       10,520.8    15,259.2    +45.0%  
-  NIFTY MEDIA             2      04-Sep-12   2.243       1,310.7     1,786.7     +36.3%  
-  NIFTY PHARMA            3      03-Apr-12   2.133       5,048.8     6,056.6     +20.0%  
-  NIFTY AUTO              4      04-Sep-12   1.691       3,900.1     4,869.5     +24.9%  
-  NIFTY BANK              6      04-Dec-12   1.345       12,092.6    12,654.0    +4.6%   
+  NIFTY CONSUMPTION       1      04-Sep-12   2.730       1,937.2     2,370.2     +22.3%  
+  NIFTY FMCG              2      02-Mar-12   2.224       10,520.8    15,259.2    +45.0%  
+  NIFTY MEDIA             3      04-Sep-12   2.176       1,310.7     1,786.7     +36.3%  
+  NIFTY AUTO              4      04-Sep-12   1.653       3,900.1     4,869.5     +24.9%  
+  NIFTY BANK              6      04-Dec-12   1.327       12,092.6    12,654.0    +4.6%   
 
-  AFTER: Invested ₹1,204,689 | Cash ₹0 | Total ₹1,204,689 | Positions 5/5
-
-========================================================================
-  REBALANCE #12  —  01 Feb 2013  (eligible: 13/14)
-  NAV: ₹1,199,762  |  Slot: ₹239,952  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY AUTO              9      04-Sep-12   3,900.1     4,647.3     ₹+24,936      +19.2%    150d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY REALTY            4      1.282    +23.2%    +24.4%    291.8       ₹+155,104   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MEDIA             1      04-Sep-12   2.456       1,310.7     1,831.8     +39.8%  
-  NIFTY FMCG              2      02-Mar-12   1.943       10,520.8    15,302.6    +45.5%  
-  NIFTY PHARMA            3      03-Apr-12   1.648       5,048.8     5,989.6     +18.6%  
-  NIFTY BANK              5      04-Dec-12   1.256       12,092.6    12,606.1    +4.2%   
-
-  AFTER: Invested ₹1,201,400 | Cash ₹0 | Total ₹1,201,400 | Positions 5/5
+  AFTER: Invested ₹1,212,975 | Cash ₹0 | Total ₹1,212,975 | Positions 5/5
 
 ========================================================================
-  REBALANCE #13  —  01 Mar 2013  (eligible: 13/14)
-  NAV: ₹1,113,951  |  Slot: ₹222,790  |  Cash: ₹0
+  REBALANCE #12  —  01 Feb 2013  (eligible: 14/20)
+  NAV: ₹1,205,375  |  Slot: ₹241,075  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY REALTY            11     04-Feb-13   291.8       246.7       ₹-23,972      -15.5%    25d     rank>7+ema200   
+  NIFTY AUTO              8      04-Sep-12   3,900.1     4,647.3     ₹+26,282      +19.2%    150d    rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY IT                1      2.207    +6.2%     +13.5%    7,112.5     ₹+131,131   
+  NIFTY REALTY            4      1.290    +23.2%    +24.4%    291.8       ₹+163,473   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            2      03-Apr-12   1.882       5,048.8     5,807.0     +15.0%  
-  NIFTY FMCG              3      02-Mar-12   1.782       10,520.8    14,631.5    +39.1%  
-  NIFTY MEDIA             4      04-Sep-12   1.780       1,310.7     1,677.1     +28.0%  
-  NIFTY BANK              7      04-Dec-12   0.933 ⚠     12,092.6    11,539.9    -4.6%   
+  NIFTY MEDIA             1      04-Sep-12   2.405       1,310.7     1,831.8     +39.8%  
+  NIFTY CONSUMPTION       2      04-Sep-12   2.332       1,937.2     2,325.1     +20.0%  
+  NIFTY FMCG              3      02-Mar-12   1.941       10,520.8    15,302.6    +45.5%  
+  NIFTY BANK              5      04-Dec-12   1.275       12,092.6    12,606.1    +4.2%   
 
-  AFTER: Invested ₹1,113,993 | Cash ₹0 | Total ₹1,113,993 | Positions 5/5
+  AFTER: Invested ₹1,207,102 | Cash ₹0 | Total ₹1,207,102 | Positions 5/5
 
 ========================================================================
-  REBALANCE #14  —  01 Apr 2013  (eligible: 13/14)
-  NAV: ₹1,132,305  |  Slot: ₹226,461  |  Cash: ₹0
+  REBALANCE #13  —  01 Mar 2013  (eligible: 14/20)
+  NAV: ₹1,115,730  |  Slot: ₹223,146  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY REALTY            11     04-Feb-13   291.8       246.7       ₹-25,266      -15.5%    25d     rank>7+ema200   
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY IT                1      2.313    +6.2%     +13.5%    7,112.5     ₹+138,207   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FMCG              2      02-Mar-12   1.945       10,520.8    14,631.5    +39.1%  
+  NIFTY MEDIA             3      04-Sep-12   1.922       1,310.7     1,677.1     +28.0%  
+  NIFTY CONSUMPTION       4      04-Sep-12   1.423       1,937.2     2,224.8     +14.8%  
+  NIFTY BANK              7      04-Dec-12   1.054       12,092.6    11,539.9    -4.6%   
+
+  AFTER: Invested ₹1,115,775 | Cash ₹0 | Total ₹1,115,775 | Positions 5/5
+
+========================================================================
+  REBALANCE #14  —  01 Apr 2013  (eligible: 14/20)
+  NAV: ₹1,123,372  |  Slot: ₹224,674  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
@@ -323,68 +349,46 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FIN SERVICE       5      1.117    +15.3%    -7.2%     4,753.0     ₹+209,031   
+  NIFTY FIN SERVICE       5      1.245    +15.3%    -7.2%     4,753.0     ₹+209,031   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.422       10,520.8    15,323.8    +45.7%  
-  NIFTY IT                2      04-Mar-13   2.395       7,112.5     7,264.4     +2.1%   
-  NIFTY PHARMA            3      03-Apr-12   2.078       5,048.8     6,007.3     +19.0%  
-  NIFTY MEDIA             4      04-Sep-12   1.629       1,310.7     1,655.2     +26.3%  
+  NIFTY FMCG              1      02-Mar-12   2.618       10,520.8    15,323.8    +45.7%  
+  NIFTY IT                2      04-Mar-13   2.569       7,112.5     7,264.4     +2.1%   
+  NIFTY MEDIA             3      04-Sep-12   1.786       1,310.7     1,655.2     +26.3%  
+  NIFTY CONSUMPTION       4      04-Sep-12   1.425       1,937.2     2,196.1     +13.4%  
 
-  AFTER: Invested ₹1,132,246 | Cash ₹0 | Total ₹1,132,246 | Positions 5/5
+  AFTER: Invested ₹1,123,313 | Cash ₹0 | Total ₹1,123,313 | Positions 5/5
 
 ========================================================================
-  REBALANCE #15  —  02 May 2013  (eligible: 13/14)
-  NAV: ₹1,198,733  |  Slot: ₹239,747  |  Cash: ₹0
+  REBALANCE #15  —  02 May 2013  (eligible: 14/20)
+  NAV: ₹1,189,005  |  Slot: ₹237,801  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                9      04-Mar-13   7,112.5     6,211.8     ₹-16,606      -12.7%    59d     rank>7+ema200   
+  NIFTY IT                10     04-Mar-13   7,112.5     6,211.8     ₹-17,502      -12.7%    59d     rank>7+ema200   
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               4      1.415    +10.9%    +4.8%     5,801.9     ₹+114,525   
+  NIFTY MNC               3      1.601    +10.9%    +4.8%     5,801.9     ₹+120,705   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.737       10,520.8    16,988.4    +61.5%  
-  NIFTY PHARMA            2      03-Apr-12   2.718       5,048.8     6,574.5     +30.2%  
-  NIFTY MEDIA             3      04-Sep-12   1.503       1,310.7     1,732.7     +32.2%  
-  NIFTY FIN SERVICE       5      02-Apr-13   1.392       4,753.0     5,197.0     +9.3%   
+  NIFTY FMCG              1      02-Mar-12   3.050       10,520.8    16,988.4    +61.5%  
+  NIFTY CONSUMPTION       2      04-Sep-12   2.240       1,937.2     2,418.2     +24.8%  
+  NIFTY MEDIA             4      04-Sep-12   1.598       1,310.7     1,732.7     +32.2%  
+  NIFTY FIN SERVICE       5      02-Apr-13   1.527       4,753.0     5,197.0     +9.3%   
 
-  AFTER: Invested ₹1,198,868 | Cash ₹0 | Total ₹1,198,868 | Positions 5/5
-
-========================================================================
-  REBALANCE #16  —  03 Jun 2013  (eligible: 13/14)
-  NAV: ₹1,208,598  |  Slot: ₹241,720  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-12   2.739       10,520.8    17,412.8    +65.5%  
-  NIFTY PHARMA            2      03-Apr-12   2.643       5,048.8     6,715.2     +33.0%  
-  NIFTY MNC               3      03-May-13   1.665       5,801.9     5,845.0     +0.7%   
-  NIFTY MEDIA             4      04-Sep-12   1.532       1,310.7     1,728.8     +31.9%  
-  NIFTY FIN SERVICE       5      02-Apr-13   1.342       4,753.0     5,102.8     +7.4%   
-
-  AFTER: Invested ₹1,208,598 | Cash ₹0 | Total ₹1,208,598 | Positions 5/5
+  AFTER: Invested ₹1,189,147 | Cash ₹0 | Total ₹1,189,147 | Positions 5/5
 
 ========================================================================
-  REBALANCE #17  —  01 Jul 2013  (eligible: 13/14)
-  NAV: ₹1,191,296  |  Slot: ₹238,259  |  Cash: ₹0
+  REBALANCE #16  —  03 Jun 2013  (eligible: 14/20)
+  NAV: ₹1,196,354  |  Slot: ₹239,271  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
@@ -396,193 +400,217 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   HOLDS (5)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      03-Apr-12   2.839       5,048.8     6,838.9     +35.5%  
-  NIFTY FMCG              2      02-Mar-12   2.194       10,520.8    16,965.2    +61.3%  
-  NIFTY MNC               3      03-May-13   1.725       5,801.9     5,720.4     -1.4%   
-  NIFTY MEDIA             4      04-Sep-12   1.523       1,310.7     1,708.3     +30.3%  
-  NIFTY FIN SERVICE       7      02-Apr-13   1.158       4,753.0     4,920.0     +3.5%   
+  NIFTY FMCG              1      02-Mar-12   2.901       10,520.8    17,412.8    +65.5%  
+  NIFTY CONSUMPTION       2      04-Sep-12   2.560       1,937.2     2,447.2     +26.3%  
+  NIFTY MNC               3      03-May-13   1.800       5,801.9     5,845.0     +0.7%   
+  NIFTY MEDIA             4      04-Sep-12   1.582       1,310.7     1,728.8     +31.9%  
+  NIFTY FIN SERVICE       5      02-Apr-13   1.411       4,753.0     5,102.8     +7.4%   
 
-  AFTER: Invested ₹1,191,296 | Cash ₹0 | Total ₹1,191,296 | Positions 5/5
+  AFTER: Invested ₹1,196,354 | Cash ₹0 | Total ₹1,196,354 | Positions 5/5
 
 ========================================================================
-  REBALANCE #18  —  01 Aug 2013  (eligible: 13/14)
-  NAV: ₹1,168,775  |  Slot: ₹233,755  |  Cash: ₹0
+  REBALANCE #17  —  01 Jul 2013  (eligible: 14/20)
+  NAV: ₹1,173,557  |  Slot: ₹234,711  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMPTION       1      04-Sep-12   2.620       1,937.2     2,442.2     +26.1%  
+  NIFTY FMCG              2      02-Mar-12   2.346       10,520.8    16,965.2    +61.3%  
+  NIFTY MNC               3      03-May-13   1.855       5,801.9     5,720.4     -1.4%   
+  NIFTY MEDIA             4      04-Sep-12   1.613       1,310.7     1,708.3     +30.3%  
+  NIFTY FIN SERVICE       7      02-Apr-13   1.224       4,753.0     4,920.0     +3.5%   
+
+  AFTER: Invested ₹1,173,557 | Cash ₹0 | Total ₹1,173,557 | Positions 5/5
+
+========================================================================
+  REBALANCE #18  —  01 Aug 2013  (eligible: 14/20)
+  NAV: ₹1,141,748  |  Slot: ₹228,350  |  Cash: ₹0
 ========================================================================
 
   EXITS (3)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MEDIA             4      04-Sep-12   1,310.7     1,633.6     ₹+50,612      +24.6%    331d    ema200          
-  NIFTY MNC               6      03-May-13   5,801.9     5,552.1     ₹-4,930       -4.3%     90d     ema200          
+  NIFTY MEDIA             4      04-Sep-12   1,310.7     1,633.6     ₹+49,547      +24.6%    331d    ema200          
+  NIFTY MNC               6      03-May-13   5,801.9     5,552.1     ₹-5,196       -4.3%     90d     ema200          
   NIFTY FIN SERVICE       8      02-Apr-13   4,753.0     4,350.7     ₹-17,695      -8.5%     121d    rank>7+ema200   
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY IT                2      2.617    +39.6%    +22.6%    7,794.0     ₹+233,755   
-  NIFTY AUTO              5      1.324    +17.4%    -5.3%     4,421.5     ₹+233,755   
+  NIFTY IT                1      2.860    +39.6%    +22.6%    7,794.0     ₹+228,350   
+  NIFTY AUTO              5      1.431    +17.4%    -5.3%     4,421.5     ₹+228,350   
 
   HOLDS (2)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      03-Apr-12   2.657       5,048.8     7,102.5     +40.7%  
-  NIFTY FMCG              3      02-Mar-12   2.223       10,520.8    17,435.2    +65.7%  
+  NIFTY FMCG              2      02-Mar-12   2.413       10,520.8    17,435.2    +65.7%  
+  NIFTY CONSUMPTION       3      04-Sep-12   2.275       1,937.2     2,452.9     +26.6%  
 
-  AFTER: Invested ₹1,080,121 | Cash ₹89,470 | Total ₹1,169,591 | Positions 4/5
+  AFTER: Invested ₹1,041,775 | Cash ₹100,805 | Total ₹1,142,580 | Positions 4/5
 
 ========================================================================
-  REBALANCE #19  —  02 Sep 2013  (eligible: 13/14)
-  NAV: ₹1,171,412  |  Slot: ₹234,282  |  Cash: ₹90,805
+  REBALANCE #19  —  02 Sep 2013  (eligible: 14/20)
+  NAV: ₹1,134,322  |  Slot: ₹226,864  |  Cash: ₹102,098
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY AUTO              6      02-Aug-13   4,421.5     4,367.4     ₹-2,863       -1.2%     31d     ema200          
+  NIFTY AUTO              6      02-Aug-13   4,421.5     4,367.4     ₹-2,797       -1.2%     31d     ema200          
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MEDIA             4      1.375    +17.4%    -8.2%     1,584.2     ₹+234,282   
-  NIFTY MNC               5      1.186    +1.6%     -2.7%     5,701.5     ₹+87,415    
+  NIFTY MEDIA             4      1.510    +17.4%    -8.2%     1,584.2     ₹+226,864   
+  NIFTY MNC               5      1.308    +1.6%     -2.7%     5,701.5     ₹+100,787   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Aug-13   3.005       7,794.0     8,396.9     +7.7%   
-  NIFTY PHARMA            2      03-Apr-12   2.435       5,048.8     7,046.6     +39.6%  
-  NIFTY FMCG              3      02-Mar-12   1.819       10,520.8    16,828.3    +60.0%  
+  NIFTY IT                1      02-Aug-13   3.281       7,794.0     8,396.9     +7.7%   
+  NIFTY FMCG              2      02-Mar-12   1.990       10,520.8    16,828.3    +60.0%  
+  NIFTY CONSUMPTION       3      04-Sep-12   1.852       1,937.2     2,337.9     +20.7%  
 
-  AFTER: Invested ₹1,173,655 | Cash ₹0 | Total ₹1,173,655 | Positions 5/5
-
-========================================================================
-  REBALANCE #20  —  01 Oct 2013  (eligible: 13/14)
-  NAV: ₹1,198,653  |  Slot: ₹239,731  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MEDIA             6      03-Sep-13   1,584.2     1,609.6     ₹+3,749       +1.6%     28d     ema200          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY AUTO              4      1.442    +9.5%     +2.1%     4,750.8     ₹+238,031   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Aug-13   2.757       7,794.0     8,181.6     +5.0%   
-  NIFTY PHARMA            2      03-Apr-12   2.718       5,048.8     7,382.5     +46.2%  
-  NIFTY FMCG              3      02-Mar-12   2.037       10,520.8    17,667.1    +67.9%  
-  NIFTY MNC               5      03-Sep-13   1.119       5,701.5     5,711.5     +0.2%   
-
-  AFTER: Invested ₹1,198,974 | Cash ₹0 | Total ₹1,198,974 | Positions 5/5
+  AFTER: Invested ₹1,136,454 | Cash ₹0 | Total ₹1,136,454 | Positions 5/5
 
 ========================================================================
-  REBALANCE #21  —  01 Nov 2013  (eligible: 13/14)
-  NAV: ₹1,247,405  |  Slot: ₹249,481  |  Cash: ₹0
+  REBALANCE #20  —  01 Oct 2013  (eligible: 14/20)
+  NAV: ₹1,160,708  |  Slot: ₹232,142  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              10     02-Mar-12   10,520.8    17,402.7    ₹+130,822     +65.4%    609d    rank>7          
+  NIFTY MEDIA             6      03-Sep-13   1,584.2     1,609.6     ₹+3,630       +1.6%     28d     ema200          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY METAL             4      1.768    -14.4%    +35.6%    2,312.1     ₹+249,481   
+  NIFTY AUTO              4      1.631    +9.5%     +2.1%     4,750.8     ₹+230,494   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      03-Oct-13   2.065       4,750.8     5,228.9     +10.1%  
-  NIFTY IT                2      02-Aug-13   2.036       7,794.0     8,799.5     +12.9%  
-  NIFTY PHARMA            3      03-Apr-12   1.938       5,048.8     7,502.8     +48.6%  
-  NIFTY MNC               5      03-Sep-13   1.052       5,701.5     6,059.0     +6.3%   
+  NIFTY IT                1      02-Aug-13   3.114       7,794.0     8,181.6     +5.0%   
+  NIFTY FMCG              2      02-Mar-12   2.332       10,520.8    17,667.1    +67.9%  
+  NIFTY CONSUMPTION       3      04-Sep-12   1.974       1,937.2     2,457.8     +26.9%  
+  NIFTY MNC               5      03-Sep-13   1.255       5,701.5     5,711.5     +0.2%   
 
-  AFTER: Invested ₹1,166,336 | Cash ₹81,341 | Total ₹1,247,677 | Positions 5/5
+  AFTER: Invested ₹1,161,019 | Cash ₹0 | Total ₹1,161,019 | Positions 5/5
 
 ========================================================================
-  REBALANCE #22  —  02 Dec 2013  (eligible: 13/14)
-  NAV: ₹1,258,528  |  Slot: ₹251,706  |  Cash: ₹81,341
+  REBALANCE #21  —  01 Nov 2013  (eligible: 14/20)
+  NAV: ₹1,220,445  |  Slot: ₹244,089  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               9      03-Sep-13   5,701.5     5,944.2     ₹+3,722       +4.3%     90d     rank>7          
+  NIFTY FMCG              11     02-Mar-12   10,520.8    17,402.7    ₹+130,822     +65.4%    609d    rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FIN SERVICE       3      1.338    +0.0%     +27.6%    4,719.9     ₹+172,478   
+  NIFTY METAL             3      1.806    -14.4%    +35.6%    2,312.1     ₹+244,089   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      03-Oct-13   2.366       4,750.8     5,311.0     +11.8%  
-  NIFTY PHARMA            2      03-Apr-12   2.057       5,048.8     7,502.1     +48.6%  
-  NIFTY IT                5      02-Aug-13   1.212       7,794.0     8,854.0     +13.6%  
-  NIFTY METAL             7      05-Nov-13   0.916 ⚠     2,312.1     2,374.1     +2.7%   
+  NIFTY IT                1      02-Aug-13   2.234       7,794.0     8,799.5     +12.9%  
+  NIFTY AUTO              2      03-Oct-13   2.218       4,750.8     5,228.9     +10.1%  
+  NIFTY CONSUMPTION       4      04-Sep-12   1.609       1,937.2     2,613.7     +34.9%  
+  NIFTY MNC               6      03-Sep-13   1.113       5,701.5     6,059.0     +6.3%   
 
-  AFTER: Invested ₹1,259,076 | Cash ₹0 | Total ₹1,259,076 | Positions 5/5
-
-========================================================================
-  REBALANCE #23  —  01 Jan 2014  (eligible: 13/14)
-  NAV: ₹1,295,851  |  Slot: ₹259,170  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FIN SERVICE       9      03-Dec-13   4,719.9     4,735.0     ₹+552         +0.3%     29d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               4      1.360    +8.8%     +8.9%     6,234.9     ₹+173,030   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Aug-13   2.728       7,794.0     9,462.8     +21.4%  
-  NIFTY PHARMA            2      03-Apr-12   1.518       5,048.8     7,667.3     +51.9%  
-  NIFTY AUTO              3      03-Oct-13   1.508       4,750.8     5,292.6     +11.4%  
-  NIFTY METAL             5      05-Nov-13   1.133       2,312.1     2,493.8     +7.9%   
-
-  AFTER: Invested ₹1,296,125 | Cash ₹0 | Total ₹1,296,125 | Positions 5/5
+  AFTER: Invested ₹1,133,984 | Cash ₹86,733 | Total ₹1,220,718 | Positions 5/5
 
 ========================================================================
-  REBALANCE #24  —  03 Feb 2014  (eligible: 13/14)
-  NAV: ₹1,248,283  |  Slot: ₹249,657  |  Cash: ₹0
+  REBALANCE #22  —  02 Dec 2013  (eligible: 14/20)
+  NAV: ₹1,224,341  |  Slot: ₹244,868  |  Cash: ₹86,733
 ========================================================================
 
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             7      05-Nov-13   2,312.1     2,182.6     ₹-13,963      -5.6%     90d     ema200          
-  NIFTY MNC               4      02-Jan-14   6,234.9     5,739.4     ₹-13,750      -7.9%     32d     ema200          
+  NIFTY MNC               10     03-Sep-13   5,701.5     5,944.2     ₹+4,291       +4.3%     90d     rank>7          
+  NIFTY METAL             9      05-Nov-13   2,312.1     2,367.1     ₹+5,817       +2.4%     27d     rank>7          
 
-  ENTRIES (1)
+  ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              3      1.327    +10.8%    -3.9%     16,633.2    ₹+249,657   
+  NIFTY INFRA             3      1.547    -1.5%     +29.5%    2,449.9     ₹+244,868   
+  NIFTY FIN SERVICE       5      1.260    +0.0%     +27.6%    4,719.9     ₹+196,849   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Aug-13   3.286       7,794.0     9,792.1     +25.6%  
-  NIFTY PHARMA            2      03-Apr-12   2.843       5,048.8     7,788.0     +54.3%  
-  NIFTY AUTO              5      03-Oct-13   0.965 ⚠     4,750.8     4,912.4     +3.4%   
+  NIFTY AUTO              1      03-Oct-13   2.399       4,750.8     5,311.0     +11.8%  
+  NIFTY CONSUMPTION       2      04-Sep-12   1.687       1,937.2     2,549.2     +31.6%  
+  NIFTY IT                4      02-Aug-13   1.494       7,794.0     8,854.0     +13.6%  
 
-  AFTER: Invested ₹1,100,059 | Cash ₹145,142 | Total ₹1,245,201 | Positions 4/5
+  AFTER: Invested ₹1,225,075 | Cash ₹0 | Total ₹1,225,075 | Positions 5/5
 
 ========================================================================
-  REBALANCE #25  —  03 Mar 2014  (eligible: 13/14)
-  NAV: ₹1,297,580  |  Slot: ₹259,516  |  Cash: ₹146,436
+  REBALANCE #23  —  01 Jan 2014  (eligible: 14/20)
+  NAV: ₹1,249,669  |  Slot: ₹249,934  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY FIN SERVICE       10     03-Dec-13   4,719.9     4,735.0     ₹+630         +0.3%     29d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY MNC               3      1.433    +8.8%     +8.9%     6,234.9     ₹+197,479   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY IT                1      02-Aug-13   2.971       7,794.0     9,462.8     +21.4%  
+  NIFTY AUTO              2      03-Oct-13   1.586       4,750.8     5,292.6     +11.4%  
+  NIFTY INFRA             4      03-Dec-13   1.151       2,449.9     2,492.9     +1.8%   
+  NIFTY CONSUMPTION       7      04-Sep-12   0.963 ⚠     1,937.2     2,590.0     +33.7%  
+
+  AFTER: Invested ₹1,249,981 | Cash ₹0 | Total ₹1,249,981 | Positions 5/5
+
+========================================================================
+  REBALANCE #24  —  03 Feb 2014  (eligible: 14/20)
+  NAV: ₹1,183,087  |  Slot: ₹236,617  |  Cash: ₹0
+========================================================================
+
+  EXITS (3)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMPTION       6      04-Sep-12   1,937.2     2,417.9     ₹+49,898      +24.8%    517d    ema200          
+  NIFTY MNC               3      02-Jan-14   6,234.9     5,739.4     ₹-15,693      -7.9%     32d     ema200          
+  NIFTY INFRA             9      03-Dec-13   2,449.9     2,202.6     ₹-24,708      -10.1%    62d     rank>7+ema200   
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY FMCG              2      1.624    +10.8%    -3.9%     16,633.2    ₹+236,617   
+  NIFTY MEDIA             5      1.140    -6.5%     -4.3%     1,699.9     ₹+236,617   
+
+  HOLDS (2)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY IT                1      02-Aug-13   3.958       7,794.0     9,792.1     +25.6%  
+  NIFTY AUTO              4      03-Oct-13   1.187       4,750.8     4,912.4     +3.4%   
+
+  AFTER: Invested ₹1,000,179 | Cash ₹179,721 | Total ₹1,179,900 | Positions 4/5
+
+========================================================================
+  REBALANCE #25  —  03 Mar 2014  (eligible: 14/20)
+  NAV: ₹1,217,815  |  Slot: ₹243,563  |  Cash: ₹180,935
 ========================================================================
 
   EXITS (0)
@@ -591,756 +619,665 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               5      1.032    +9.8%     -2.7%     5,782.5     ₹+146,436   
+  NIFTY MNC               4      1.274    +9.8%     -2.7%     5,782.5     ₹+180,935   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Aug-13   3.068       7,794.0     10,209.1    +31.0%  
-  NIFTY PHARMA            2      03-Apr-12   2.953       5,048.8     8,123.0     +60.9%  
-  NIFTY AUTO              3      03-Oct-13   1.615       4,750.8     5,404.5     +13.8%  
-  NIFTY FMCG              4      04-Feb-14   1.279       16,633.2    16,837.1    +1.2%   
+  NIFTY IT                1      02-Aug-13   3.765       7,794.0     10,209.1    +31.0%  
+  NIFTY AUTO              2      03-Oct-13   1.986       4,750.8     5,404.5     +13.8%  
+  NIFTY FMCG              3      04-Feb-14   1.575       16,633.2    16,837.1    +1.2%   
+  NIFTY MEDIA             5      04-Feb-14   1.188       1,699.9     1,704.6     +0.3%   
 
-  AFTER: Invested ₹1,299,149 | Cash ₹0 | Total ₹1,299,149 | Positions 5/5
-
-========================================================================
-  REBALANCE #26  —  01 Apr 2014  (eligible: 13/14)
-  NAV: ₹1,313,046  |  Slot: ₹262,609  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                9      02-Aug-13   7,794.0     9,515.0     ₹+51,619      +22.1%    242d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FIN SERVICE       4      1.291    +12.7%    +10.2%    5,265.8     ₹+262,609   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      03-Oct-13   2.716       4,750.8     5,813.1     +22.4%  
-  NIFTY FMCG              2      04-Feb-14   1.499       16,633.2    18,102.3    +8.8%   
-  NIFTY MNC               3      04-Mar-14   1.441       5,782.5     6,418.8     +11.0%  
-  NIFTY PHARMA            7      03-Apr-12   1.182       5,048.8     7,661.5     +51.8%  
-
-  AFTER: Invested ₹1,290,689 | Cash ₹22,765 | Total ₹1,313,454 | Positions 5/5
+  AFTER: Invested ₹1,219,369 | Cash ₹0 | Total ₹1,219,369 | Positions 5/5
 
 ========================================================================
-  REBALANCE #27  —  02 May 2014  (eligible: 13/14)
-  NAV: ₹1,326,538  |  Slot: ₹265,308  |  Cash: ₹22,765
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              10     04-Feb-14   16,633.2    17,538.5    ₹+13,587      +5.4%     87d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PSU BANK          3      1.203    -12.8%    +25.3%    2,946.8     ₹+265,308   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      03-Oct-13   2.245       4,750.8     5,849.0     +23.1%  
-  NIFTY PHARMA            2      03-Apr-12   1.562       5,048.8     8,157.0     +61.6%  
-  NIFTY FIN SERVICE       4      02-Apr-14   1.155       5,265.8     5,322.4     +1.1%   
-  NIFTY MNC               6      04-Mar-14   1.096       5,782.5     6,236.8     +7.9%   
-
-  AFTER: Invested ₹1,305,438 | Cash ₹20,701 | Total ₹1,326,139 | Positions 5/5
-
-========================================================================
-  REBALANCE #28  —  02 Jun 2014  (eligible: 13/14)
-  NAV: ₹1,480,367  |  Slot: ₹296,073  |  Cash: ₹20,701
+  REBALANCE #26  —  01 Apr 2014  (eligible: 14/20)
+  NAV: ₹1,269,982  |  Slot: ₹253,996  |  Cash: ₹0
 ========================================================================
 
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PHARMA            12     03-Apr-12   5,048.8     7,610.8     ₹+101,796     +50.7%    790d    rank>7          
-  NIFTY FIN SERVICE       8      02-Apr-14   5,265.8     6,156.0     ₹+44,398      +16.9%    61d     rank>7          
+  NIFTY IT                10     02-Aug-13   7,794.0     9,515.0     ₹+50,425      +22.1%    242d    rank>7          
+  NIFTY MEDIA             11     04-Feb-14   1,699.9     1,828.7     ₹+17,914      +7.6%     56d     rank>7          
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY METAL             2      1.775    +45.7%    +42.4%    3,181.1     ₹+296,073   
-  NIFTY PSE               4      1.575    +26.7%    +43.1%    3,609.8     ₹+296,073   
+  NIFTY CONSUMPTION       4      1.392    +21.6%    +3.1%     2,669.4     ₹+253,996   
+  NIFTY FIN SERVICE       5      1.293    +12.7%    +10.2%    5,265.8     ₹+253,996   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      03-Oct-13   1.940       4,750.8     6,470.5     +36.2%  
-  NIFTY MNC               3      04-Mar-14   1.643       5,782.5     7,252.5     +25.4%  
-  NIFTY PSU BANK          6      05-May-14   1.320       2,946.8     3,812.1     +29.4%  
+  NIFTY AUTO              1      03-Oct-13   2.863       4,750.8     5,813.1     +22.4%  
+  NIFTY FMCG              2      04-Feb-14   1.525       16,633.2    18,102.3    +8.8%   
+  NIFTY MNC               3      04-Mar-14   1.465       5,782.5     6,418.8     +11.0%  
 
-  AFTER: Invested ₹1,439,879 | Cash ₹37,959 | Total ₹1,477,838 | Positions 5/5
-
-========================================================================
-  REBALANCE #29  —  01 Jul 2014  (eligible: 13/14)
-  NAV: ₹1,556,631  |  Slot: ₹311,326  |  Cash: ₹37,959
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      03-Jun-14   2.257       3,181.1     3,378.2     +6.2%   
-  NIFTY AUTO              2      03-Oct-13   2.202       4,750.8     6,989.2     +47.1%  
-  NIFTY MNC               3      04-Mar-14   1.850       5,782.5     7,749.1     +34.0%  
-  NIFTY PSE               4      03-Jun-14   1.594       3,609.8     3,779.4     +4.7%   
-  NIFTY PSU BANK          5      05-May-14   1.024       2,946.8     3,863.5     +31.1%  
-
-  AFTER: Invested ₹1,518,671 | Cash ₹37,959 | Total ₹1,556,631 | Positions 5/5
+  AFTER: Invested ₹1,245,266 | Cash ₹25,313 | Total ₹1,270,579 | Positions 5/5
 
 ========================================================================
-  REBALANCE #30  —  01 Aug 2014  (eligible: 13/14)
-  NAV: ₹1,480,770  |  Slot: ₹296,154  |  Cash: ₹37,959
+  REBALANCE #27  —  02 May 2014  (eligible: 14/20)
+  NAV: ₹1,258,862  |  Slot: ₹251,772  |  Cash: ₹25,313
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSU BANK          11     05-May-14   2,946.8     3,538.8     ₹+53,300      +20.1%    88d     rank>7          
+  NIFTY FMCG              11     04-Feb-14   16,633.2    17,538.5    ₹+12,878      +5.4%     87d     rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PHARMA            4      1.351    +26.8%    +13.6%    9,204.5     ₹+296,154   
+  NIFTY PSU BANK          2      1.190    -12.8%    +25.3%    2,946.8     ₹+251,772   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               1      04-Mar-14   2.566       5,782.5     7,810.2     +35.1%  
-  NIFTY METAL             2      03-Jun-14   2.261       3,181.1     3,227.6     +1.5%   
-  NIFTY AUTO              3      03-Oct-13   2.190       4,750.8     6,847.1     +44.1%  
-  NIFTY PSE               5      03-Jun-14   1.155       3,609.8     3,468.6     -3.9%   
+  NIFTY AUTO              1      03-Oct-13   2.344       4,750.8     5,849.0     +23.1%  
+  NIFTY CONSUMPTION       3      02-Apr-14   1.185       2,669.4     2,610.6     -2.2%   
+  NIFTY FIN SERVICE       5      02-Apr-14   1.162       5,265.8     5,322.4     +1.1%   
+  NIFTY MNC               7      04-Mar-14   1.137       5,782.5     6,236.8     +7.9%   
 
-  AFTER: Invested ₹1,421,094 | Cash ₹60,413 | Total ₹1,481,507 | Positions 5/5
+  AFTER: Invested ₹1,235,447 | Cash ₹23,036 | Total ₹1,258,483 | Positions 5/5
 
 ========================================================================
-  REBALANCE #31  —  01 Sep 2014  (eligible: 13/14)
-  NAV: ₹1,584,640  |  Slot: ₹316,928  |  Cash: ₹60,413
+  REBALANCE #28  —  02 Jun 2014  (eligible: 14/20)
+  NAV: ₹1,455,735  |  Slot: ₹291,147  |  Cash: ₹23,036
 ========================================================================
 
-  EXITS (1)
+  EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             8      03-Jun-14   3,181.1     3,170.9     ₹-949         -0.3%     90d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY IT                4      1.255    +41.0%    +19.3%    10,723.5    ₹+316,928   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      03-Oct-13   2.760       4,750.8     7,789.4     +64.0%  
-  NIFTY PHARMA            2      04-Aug-14   2.674       9,204.5     10,099.0    +9.7%   
-  NIFTY MNC               3      04-Mar-14   2.009       5,782.5     8,311.0     +43.7%  
-  NIFTY PSE               5      03-Jun-14   0.926 ⚠     3,609.8     3,701.6     +2.5%   
-
-  AFTER: Invested ₹1,545,667 | Cash ₹38,609 | Total ₹1,584,276 | Positions 5/5
-
-========================================================================
-  REBALANCE #32  —  01 Oct 2014  (eligible: 13/14)
-  NAV: ₹1,621,499  |  Slot: ₹324,300  |  Cash: ₹38,609
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSE               8      03-Jun-14   3,609.8     3,484.6     ₹-10,265      -3.5%     120d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FIN SERVICE       5      0.977    +45.0%    +0.7%     6,260.4     ₹+324,300   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      04-Aug-14   2.728       9,204.5     10,796.7    +17.3%  
-  NIFTY AUTO              2      03-Oct-13   2.510       4,750.8     7,895.2     +66.2%  
-  NIFTY MNC               3      04-Mar-14   1.986       5,782.5     8,398.2     +45.2%  
-  NIFTY IT                4      02-Sep-14   1.632       10,723.5    11,519.5    +7.4%   
-
-  AFTER: Invested ₹1,622,380 | Cash ₹118 | Total ₹1,622,498 | Positions 5/5
-
-========================================================================
-  REBALANCE #33  —  03 Nov 2014  (eligible: 13/14)
-  NAV: ₹1,673,761  |  Slot: ₹334,752  |  Cash: ₹118
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      03-Oct-13   2.532       4,750.8     8,172.9     +72.0%  
-  NIFTY PHARMA            2      04-Aug-14   2.384       9,204.5     10,877.7    +18.2%  
-  NIFTY MNC               3      04-Mar-14   2.193       5,782.5     8,649.9     +49.6%  
-  NIFTY FIN SERVICE       5      07-Oct-14   1.384       6,260.4     6,937.5     +10.8%  
-  NIFTY IT                6      02-Sep-14   0.914 ⚠     10,723.5    11,359.9    +5.9%   
-
-  AFTER: Invested ₹1,673,643 | Cash ₹118 | Total ₹1,673,761 | Positions 5/5
-
-========================================================================
-  REBALANCE #34  —  01 Dec 2014  (eligible: 13/14)
-  NAV: ₹1,758,422  |  Slot: ₹351,684  |  Cash: ₹118
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               1      04-Mar-14   2.204       5,782.5     9,036.0     +56.3%  
-  NIFTY AUTO              2      03-Oct-13   2.148       4,750.8     8,556.1     +80.1%  
-  NIFTY PHARMA            4      04-Aug-14   1.776       9,204.5     11,253.5    +22.3%  
-  NIFTY FIN SERVICE       5      07-Oct-14   1.688       6,260.4     7,424.6     +18.6%  
-  NIFTY IT                7      02-Sep-14   1.186       10,723.5    11,981.0    +11.7%  
-
-  AFTER: Invested ₹1,758,304 | Cash ₹118 | Total ₹1,758,422 | Positions 5/5
-
-========================================================================
-  REBALANCE #35  —  01 Jan 2015  (eligible: 13/14)
-  NAV: ₹1,711,505  |  Slot: ₹342,301  |  Cash: ₹118
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                10     02-Sep-14   10,723.5    11,214.7    ₹+14,517      +4.6%     121d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY BANK              1      2.174    +67.3%    +17.9%    18,752.0    ₹+331,564   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       2      07-Oct-14   2.039       6,260.4     7,450.0     +19.0%  
-  NIFTY MNC               3      04-Mar-14   1.768       5,782.5     8,913.8     +54.2%  
-  NIFTY AUTO              5      03-Oct-13   1.725       4,750.8     8,318.8     +75.1%  
-  NIFTY PHARMA            7      04-Aug-14   1.492       9,204.5     10,923.2    +18.7%  
-
-  AFTER: Invested ₹1,711,443 | Cash ₹0 | Total ₹1,711,443 | Positions 5/5
-
-========================================================================
-  REBALANCE #36  —  02 Feb 2015  (eligible: 13/14)
-  NAV: ₹1,836,453  |  Slot: ₹367,291  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               1      04-Mar-14   2.437       5,782.5     9,699.2     +67.7%  
-  NIFTY FIN SERVICE       2      07-Oct-14   2.090       6,260.4     8,025.2     +28.2%  
-  NIFTY BANK              3      02-Jan-15   2.058       18,752.0    19,865.7    +5.9%   
-  NIFTY AUTO              4      03-Oct-13   2.048       4,750.8     8,976.1     +88.9%  
-  NIFTY PHARMA            5      04-Aug-14   1.418       9,204.5     11,627.7    +26.3%  
-
-  AFTER: Invested ₹1,836,453 | Cash ₹0 | Total ₹1,836,453 | Positions 5/5
-
-========================================================================
-  REBALANCE #37  —  02 Mar 2015  (eligible: 13/14)
-  NAV: ₹1,869,062  |  Slot: ₹373,812  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               1      04-Mar-14   3.073       5,782.5     10,234.4    +77.0%  
-  NIFTY FIN SERVICE       2      07-Oct-14   1.966       6,260.4     8,153.0     +30.2%  
-  NIFTY BANK              3      02-Jan-15   1.875       18,752.0    20,007.9    +6.7%   
-  NIFTY AUTO              4      03-Oct-13   1.739       4,750.8     8,919.5     +87.7%  
-  NIFTY PHARMA            5      04-Aug-14   1.491       9,204.5     12,024.0    +30.6%  
-
-  AFTER: Invested ₹1,869,062 | Cash ₹0 | Total ₹1,869,062 | Positions 5/5
-
-========================================================================
-  REBALANCE #38  —  01 Apr 2015  (eligible: 13/14)
-  NAV: ₹1,837,460  |  Slot: ₹367,492  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      04-Aug-14   2.932       9,204.5     13,136.2    +42.7%  
-  NIFTY MNC               2      04-Mar-14   2.722       5,782.5     9,885.0     +70.9%  
-  NIFTY AUTO              3      03-Oct-13   1.693       4,750.8     8,710.8     +83.4%  
-  NIFTY FIN SERVICE       4      07-Oct-14   1.339       6,260.4     7,699.5     +23.0%  
-  NIFTY BANK              6      02-Jan-15   1.105       18,752.0    18,617.6    -0.7%   
-
-  AFTER: Invested ₹1,837,460 | Cash ₹0 | Total ₹1,837,460 | Positions 5/5
-
-========================================================================
-  REBALANCE #39  —  04 May 2015  (eligible: 13/14)
-  NAV: ₹1,776,186  |  Slot: ₹355,237  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      04-Aug-14   2.884       9,204.5     12,333.6    +34.0%  
-  NIFTY MNC               2      04-Mar-14   2.436       5,782.5     9,824.8     +69.9%  
-  NIFTY AUTO              4      03-Oct-13   1.059       4,750.8     8,330.2     +75.3%  
-  NIFTY BANK              5      02-Jan-15   0.973 ⚠     18,752.0    18,501.1    -1.3%   
-  NIFTY FIN SERVICE       6      07-Oct-14   0.925 ⚠     6,260.4     7,452.5     +19.0%  
-
-  AFTER: Invested ₹1,776,186 | Cash ₹0 | Total ₹1,776,186 | Positions 5/5
-
-========================================================================
-  REBALANCE #40  —  01 Jun 2015  (eligible: 13/14)
-  NAV: ₹1,786,274  |  Slot: ₹357,255  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      04-Aug-14   2.786       9,204.5     12,079.8    +31.2%  
-  NIFTY MNC               2      04-Mar-14   2.469       5,782.5     9,993.6     +72.8%  
-  NIFTY AUTO              3      03-Oct-13   1.424       4,750.8     8,509.3     +79.1%  
-  NIFTY BANK              4      02-Jan-15   1.412       18,752.0    18,616.8    -0.7%   
-  NIFTY FIN SERVICE       5      07-Oct-14   1.155       6,260.4     7,509.5     +20.0%  
-
-  AFTER: Invested ₹1,786,274 | Cash ₹0 | Total ₹1,786,274 | Positions 5/5
-
-========================================================================
-  REBALANCE #41  —  01 Jul 2015  (eligible: 13/14)
-  NAV: ₹1,795,579  |  Slot: ₹359,116  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               1      04-Mar-14   2.101       5,782.5     10,048.8    +73.8%  
-  NIFTY PHARMA            2      04-Aug-14   1.579       9,204.5     12,257.1    +33.2%  
-  NIFTY BANK              4      02-Jan-15   1.337       18,752.0    18,581.4    -0.9%   
-  NIFTY AUTO              6      03-Oct-13   1.293       4,750.8     8,482.5     +78.5%  
-  NIFTY FIN SERVICE       7      07-Oct-14   1.258       6,260.4     7,590.1     +21.2%  
-
-  AFTER: Invested ₹1,795,579 | Cash ₹0 | Total ₹1,795,579 | Positions 5/5
-
-========================================================================
-  REBALANCE #42  —  03 Aug 2015  (eligible: 13/14)
-  NAV: ₹1,826,641  |  Slot: ₹365,328  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               2      04-Mar-14   2.157       5,782.5     10,366.2    +79.3%  
-  NIFTY PHARMA            3      04-Aug-14   1.526       9,204.5     12,379.5    +34.5%  
-  NIFTY AUTO              4      03-Oct-13   1.511       4,750.8     8,609.7     +81.2%  
-  NIFTY FIN SERVICE       5      07-Oct-14   1.461       6,260.4     7,721.9     +23.3%  
-  NIFTY BANK              7      02-Jan-15   1.361       18,752.0    18,914.5    +0.9%   
-
-  AFTER: Invested ₹1,826,641 | Cash ₹0 | Total ₹1,826,641 | Positions 5/5
-
-========================================================================
-  REBALANCE #43  —  01 Sep 2015  (eligible: 13/14)
-  NAV: ₹1,691,722  |  Slot: ₹338,344  |  Cash: ₹0
-========================================================================
-
-  EXITS (4)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               3      04-Mar-14   5,782.5     9,613.0     ₹+97,005      +66.2%    546d    ema200          
-  NIFTY AUTO              8      03-Oct-13   4,750.8     7,780.5     ₹+151,796     +63.8%    698d    rank>7+ema200   
-  NIFTY FIN SERVICE       6      07-Oct-14   6,260.4     6,858.4     ₹+30,977      +9.6%     329d    ema200          
-  NIFTY BANK              7      02-Jan-15   18,752.0    16,703.8    ₹-36,216      -10.9%    242d    ema200          
-
-  ENTRIES (3)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MEDIA             2      2.107    +16.1%    +8.0%     2,277.4     ₹+338,344   
-  NIFTY FMCG              4      1.665    +5.3%     +3.6%     19,924.6    ₹+338,344   
-  NIFTY IT                5      1.624    +10.4%    +0.9%     11,564.0    ₹+338,344   
-
-  HOLDS (1)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      04-Aug-14   2.755       9,204.5     13,007.0    +41.3%  
-
-  AFTER: Invested ₹1,425,889 | Cash ₹268,860 | Total ₹1,694,749 | Positions 4/5
-
-========================================================================
-  REBALANCE #44  —  01 Oct 2015  (eligible: 13/14)
-  NAV: ₹1,736,937  |  Slot: ₹347,387  |  Cash: ₹270,716
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               4      1.454    +12.1%    -5.2%     9,595.7     ₹+270,716   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      04-Aug-14   2.483       9,204.5     13,140.8    +42.8%  
-  NIFTY MEDIA             2      02-Sep-15   2.259       2,277.4     2,412.6     +5.9%   
-  NIFTY IT                3      02-Sep-15   1.996       11,564.0    11,867.8    +2.6%   
-  NIFTY FMCG              5      02-Sep-15   1.400       19,924.6    19,998.3    +0.4%   
-
-  AFTER: Invested ₹1,737,575 | Cash ₹0 | Total ₹1,737,575 | Positions 5/5
-
-========================================================================
-  REBALANCE #45  —  02 Nov 2015  (eligible: 13/14)
-  NAV: ₹1,730,363  |  Slot: ₹346,073  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      04-Aug-14   2.804       9,204.5     13,029.7    +41.6%  
-  NIFTY IT                2      02-Sep-15   1.744       11,564.0    11,546.2    -0.2%   
-  NIFTY MEDIA             3      02-Sep-15   1.709       2,277.4     2,414.1     +6.0%   
-  NIFTY FMCG              4      02-Sep-15   1.386       19,924.6    20,214.5    +1.5%   
-  NIFTY MNC               6      05-Oct-15   1.217       9,595.7     9,618.9     +0.2%   
-
-  AFTER: Invested ₹1,730,363 | Cash ₹0 | Total ₹1,730,363 | Positions 5/5
-
-========================================================================
-  REBALANCE #46  —  01 Dec 2015  (eligible: 13/14)
-  NAV: ₹1,685,847  |  Slot: ₹337,169  |  Cash: ₹0
-========================================================================
-
-  EXITS (3)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PHARMA            12     04-Aug-14   9,204.5     11,681.5    ₹+79,697      +26.9%    484d    rank>7+ema200   
-  NIFTY MNC               5      05-Oct-15   9,595.7     9,540.3     ₹-1,562       -0.6%     57d     ema200          
-  NIFTY IT                9      02-Sep-15   11,564.0    11,298.9    ₹-7,755       -2.3%     90d     rank>7+ema200   
+  NIFTY FIN SERVICE       10     02-Apr-14   5,265.8     6,156.0     ₹+42,942      +16.9%    61d     rank>7          
+  NIFTY CONSUMPTION       8      02-Apr-14   2,669.4     2,851.8     ₹+17,350      +6.8%     61d     rank>7          
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY AUTO              2      1.683    +0.5%     +6.3%     8,429.8     ₹+337,169   
-  NIFTY ENERGY            3      1.480    -12.6%    +11.0%    8,303.1     ₹+337,169   
+  NIFTY INFRA             1      1.821    +41.0%    +44.0%    3,304.6     ₹+291,147   
+  NIFTY METAL             3      1.671    +45.7%    +42.4%    3,181.1     ₹+291,147   
 
-  HOLDS (2)
+  HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MEDIA             1      02-Sep-15   2.327       2,277.4     2,461.1     +8.1%   
-  NIFTY FMCG              4      02-Sep-15   1.443       19,924.6    20,560.4    +3.2%   
+  NIFTY AUTO              2      03-Oct-13   1.799       4,750.8     6,470.5     +36.2%  
+  NIFTY MNC               4      04-Mar-14   1.529       5,782.5     7,252.5     +25.4%  
+  NIFTY PSU BANK          7      05-May-14   1.281       2,946.8     3,812.1     +29.4%  
 
-  AFTER: Invested ₹1,388,094 | Cash ₹301,256 | Total ₹1,689,350 | Positions 4/5
+  AFTER: Invested ₹1,445,515 | Cash ₹9,027 | Total ₹1,454,543 | Positions 5/5
 
 ========================================================================
-  REBALANCE #47  —  01 Jan 2016  (eligible: 13/14)
-  NAV: ₹1,716,500  |  Slot: ₹343,300  |  Cash: ₹303,151
+  REBALANCE #29  —  01 Jul 2014  (eligible: 14/20)
+  NAV: ₹1,528,638  |  Slot: ₹305,728  |  Cash: ₹9,027
 ========================================================================
 
   EXITS (0)
     —
 
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY METAL             1      03-Jun-14   2.248       3,181.1     3,378.2     +6.2%   
+  NIFTY AUTO              2      03-Oct-13   2.192       4,750.8     6,989.2     +47.1%  
+  NIFTY MNC               3      04-Mar-14   1.829       5,782.5     7,749.1     +34.0%  
+  NIFTY INFRA             5      03-Jun-14   1.562       3,304.6     3,390.9     +2.6%   
+  NIFTY PSU BANK          6      05-May-14   0.981 ⚠     2,946.8     3,863.5     +31.1%  
+
+  AFTER: Invested ₹1,519,610 | Cash ₹9,027 | Total ₹1,528,638 | Positions 5/5
+
+========================================================================
+  REBALANCE #30  —  01 Aug 2014  (eligible: 14/20)
+  NAV: ₹1,456,944  |  Slot: ₹291,389  |  Cash: ₹9,027
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY PSU BANK          12     05-May-14   2,946.8     3,538.8     ₹+50,581      +20.1%    88d     rank>7          
+
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               4      1.649    +9.3%     +2.0%     9,586.5     ₹+303,151   
+  NIFTY CONSUMPTION       4      1.216    +15.7%    +14.9%    3,003.6     ₹+291,389   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MEDIA             1      02-Sep-15   2.238       2,277.4     2,627.4     +15.4%  
-  NIFTY ENERGY            2      02-Dec-15   1.957       8,303.1     8,594.7     +3.5%   
-  NIFTY AUTO              3      02-Dec-15   1.701       8,429.8     8,328.3     -1.2%   
-  NIFTY FMCG              5      02-Sep-15   1.180       19,924.6    20,184.9    +1.3%   
+  NIFTY MNC               1      04-Mar-14   2.596       5,782.5     7,810.2     +35.1%  
+  NIFTY METAL             2      03-Jun-14   2.298       3,181.1     3,227.6     +1.5%   
+  NIFTY AUTO              3      03-Oct-13   2.229       4,750.8     6,847.1     +44.1%  
+  NIFTY INFRA             5      03-Jun-14   1.196       3,304.6     3,121.8     -5.5%   
 
-  AFTER: Invested ₹1,718,847 | Cash ₹0 | Total ₹1,718,847 | Positions 5/5
+  AFTER: Invested ₹1,437,478 | Cash ₹19,992 | Total ₹1,457,469 | Positions 5/5
 
 ========================================================================
-  REBALANCE #48  —  01 Feb 2016  (eligible: 13/14)
-  NAV: ₹1,611,827  |  Slot: ₹322,365  |  Cash: ₹0
+  REBALANCE #31  —  01 Sep 2014  (eligible: 14/20)
+  NAV: ₹1,536,914  |  Slot: ₹307,383  |  Cash: ₹19,992
 ========================================================================
 
-  EXITS (3)
+  EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              5      02-Sep-15   19,924.6    19,301.3    ₹-10,584      -3.1%     152d    ema200          
-  NIFTY MNC               11     04-Jan-16   9,586.5     8,650.8     ₹-29,586      -9.8%     28d     rank>7+ema200   
-  NIFTY AUTO              7      02-Dec-15   8,429.8     7,595.4     ₹-33,374      -9.9%     61d     ema200          
+  NIFTY METAL             8      03-Jun-14   3,181.1     3,170.9     ₹-934         -0.3%     90d     rank>7          
+  NIFTY INFRA             9      03-Jun-14   3,304.6     3,200.4     ₹-9,185       -3.2%     90d     rank>7          
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY IT                3      1.764    -4.3%     -2.9%     11,325.8    ₹+322,365   
-  NIFTY PHARMA            4      1.612    +3.7%     -10.7%    11,793.7    ₹+322,365   
+  NIFTY IT                4      1.510    +41.0%    +19.3%    10,723.5    ₹+307,383   
+  NIFTY FIN SERVICE       5      1.010    +63.0%    +10.0%    6,554.0     ₹+284,785   
 
-  HOLDS (2)
+  HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Dec-15   2.571       8,303.1     8,470.8     +2.0%   
-  NIFTY MEDIA             2      02-Sep-15   2.422       2,277.4     2,458.4     +8.0%   
+  NIFTY AUTO              1      03-Oct-13   3.167       4,750.8     7,789.4     +64.0%  
+  NIFTY MNC               2      04-Mar-14   2.313       5,782.5     8,311.0     +43.7%  
+  NIFTY CONSUMPTION       3      04-Aug-14   1.857       3,003.6     3,169.1     +5.5%   
 
-  AFTER: Invested ₹1,351,975 | Cash ₹260,390 | Total ₹1,612,364 | Positions 4/5
+  AFTER: Invested ₹1,536,599 | Cash ₹0 | Total ₹1,536,599 | Positions 5/5
 
 ========================================================================
-  REBALANCE #49  —  01 Mar 2016  (eligible: 13/14)
-  NAV: ₹1,526,351  |  Slot: ₹305,270  |  Cash: ₹261,966
+  REBALANCE #32  —  01 Oct 2014  (eligible: 14/20)
+  NAV: ₹1,563,130  |  Slot: ₹312,626  |  Cash: ₹0
 ========================================================================
 
-  EXITS (4)
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY AUTO              1      03-Oct-13   2.825       4,750.8     7,895.2     +66.2%  
+  NIFTY MNC               2      04-Mar-14   2.241       5,782.5     8,398.2     +45.2%  
+  NIFTY CONSUMPTION       3      04-Aug-14   2.043       3,003.6     3,230.5     +7.6%   
+  NIFTY IT                4      02-Sep-14   1.887       10,723.5    11,519.5    +7.4%   
+  NIFTY FIN SERVICE       5      02-Sep-14   1.091       6,554.0     6,298.9     -3.9%   
+
+  AFTER: Invested ₹1,563,130 | Cash ₹0 | Total ₹1,563,130 | Positions 5/5
+
+========================================================================
+  REBALANCE #33  —  03 Nov 2014  (eligible: 14/20)
+  NAV: ₹1,614,492  |  Slot: ₹322,898  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY AUTO              1      03-Oct-13   2.757       4,750.8     8,172.9     +72.0%  
+  NIFTY MNC               2      04-Mar-14   2.382       5,782.5     8,649.9     +49.6%  
+  NIFTY CONSUMPTION       3      04-Aug-14   1.999       3,003.6     3,300.9     +9.9%   
+  NIFTY FIN SERVICE       5      02-Sep-14   1.489       6,554.0     6,937.5     +5.9%   
+  NIFTY IT                6      02-Sep-14   0.997 ⚠     10,723.5    11,359.9    +5.9%   
+
+  AFTER: Invested ₹1,614,492 | Cash ₹0 | Total ₹1,614,492 | Positions 5/5
+
+========================================================================
+  REBALANCE #34  —  01 Dec 2014  (eligible: 14/20)
+  NAV: ₹1,698,856  |  Slot: ₹339,771  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY MNC               1      04-Mar-14   2.249       5,782.5     9,036.0     +56.3%  
+  NIFTY AUTO              2      03-Oct-13   2.192       4,750.8     8,556.1     +80.1%  
+  NIFTY CONSUMPTION       3      04-Aug-14   2.043       3,003.6     3,452.7     +15.0%  
+  NIFTY FIN SERVICE       5      02-Sep-14   1.725       6,554.0     7,424.6     +13.3%  
+  NIFTY IT                7      02-Sep-14   1.210       10,723.5    11,981.0    +11.7%  
+
+  AFTER: Invested ₹1,698,856 | Cash ₹0 | Total ₹1,698,856 | Positions 5/5
+
+========================================================================
+  REBALANCE #35  —  01 Jan 2015  (eligible: 14/20)
+  NAV: ₹1,652,639  |  Slot: ₹330,528  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MEDIA             2      02-Sep-15   2,277.4     2,295.0     ₹+2,622       +0.8%     181d    ema200          
-  NIFTY PHARMA            1      02-Feb-16   11,793.7    11,402.4    ₹-10,696      -3.3%     28d     ema200          
-  NIFTY ENERGY            3      02-Dec-15   8,303.1     7,908.0     ₹-16,044      -4.8%     90d     ema200          
-  NIFTY IT                5      02-Feb-16   11,325.8    10,740.5    ₹-16,659      -5.2%     28d     ema200          
+  NIFTY IT                10     02-Sep-14   10,723.5    11,214.7    ₹+14,080      +4.6%     121d    rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              4      1.642    -11.8%    -6.0%     19,455.0    ₹+305,270   
+  NIFTY BANK              1      2.259    +67.3%    +17.9%    18,752.0    ₹+321,463   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FIN SERVICE       2      02-Sep-14   2.122       6,554.0     7,450.0     +13.7%  
+  NIFTY MNC               3      04-Mar-14   1.845       5,782.5     8,913.8     +54.2%  
+  NIFTY AUTO              5      03-Oct-13   1.802       4,750.8     8,318.8     +75.1%  
+  NIFTY CONSUMPTION       7      04-Aug-14   1.471       3,003.6     3,349.1     +11.5%  
+
+  AFTER: Invested ₹1,652,579 | Cash ₹0 | Total ₹1,652,579 | Positions 5/5
+
+========================================================================
+  REBALANCE #36  —  02 Feb 2015  (eligible: 19/20)
+  NAV: ₹1,766,342  |  Slot: ₹353,268  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMPTION       9      04-Aug-14   3,003.6     3,497.1     ₹+47,876      +16.4%    182d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INDIA DEFENCE     1      3.356    +282.3%   +35.1%    3,716.2     ₹+339,265   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY MNC               3      04-Mar-14   1.911       5,782.5     9,699.2     +67.7%  
+  NIFTY FIN SERVICE       4      02-Sep-14   1.671       6,554.0     8,025.2     +22.4%  
+  NIFTY BANK              5      02-Jan-15   1.614       18,752.0    19,865.7    +5.9%   
+  NIFTY AUTO              6      03-Oct-13   1.503       4,750.8     8,976.1     +88.9%  
+
+  AFTER: Invested ₹1,764,654 | Cash ₹0 | Total ₹1,764,654 | Positions 5/5
+
+========================================================================
+  REBALANCE #37  —  02 Mar 2015  (eligible: 19/20)
+  NAV: ₹1,847,071  |  Slot: ₹369,414  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY AUTO              8      03-Oct-13   4,750.8     8,890.8     ₹+200,860     +87.1%    515d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INDIA MFG         3      2.169    +118.3%   +10.4%    2,146.4     ₹+369,414   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      03-Feb-15   3.899       3,716.2     4,346.7     +17.0%  
+  NIFTY MNC               2      04-Mar-14   2.228       5,782.5     10,234.4    +77.0%  
+  NIFTY FIN SERVICE       5      02-Sep-14   1.392       6,554.0     8,153.0     +24.4%  
+  NIFTY BANK              7      02-Jan-15   1.305       18,752.0    20,007.9    +6.7%   
+
+  AFTER: Invested ₹1,779,598 | Cash ₹61,941 | Total ₹1,841,539 | Positions 5/5
+
+========================================================================
+  REBALANCE #38  —  01 Apr 2015  (eligible: 19/20)
+  NAV: ₹1,836,615  |  Slot: ₹367,323  |  Cash: ₹61,941
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY FIN SERVICE       8      02-Sep-14   6,554.0     7,750.4     ₹+51,983      +18.3%    211d    rank>7          
+  NIFTY BANK              11     02-Jan-15   18,752.0    18,702.4    ₹-850         -0.3%     89d     rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY HEALTHCARE        2      2.023    +69.9%    +15.8%    1,884.2     ₹+367,323   
+  NIFTY CONSUMER DURABLES  5      1.511    +72.4%    +14.4%    1,864.7     ₹+351,998   
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      03-Feb-15   4.138       3,716.2     4,864.8     +30.9%  
+  NIFTY INDIA MFG         3      03-Mar-15   2.002       2,146.4     2,135.4     -0.5%   
+  NIFTY MNC               4      04-Mar-14   1.806       5,782.5     9,885.0     +70.9%  
+
+  AFTER: Invested ₹1,818,993 | Cash ₹0 | Total ₹1,818,993 | Positions 5/5
+
+========================================================================
+  REBALANCE #39  —  04 May 2015  (eligible: 19/20)
+  NAV: ₹1,780,555  |  Slot: ₹356,111  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      03-Feb-15   3.511       3,716.2     4,406.9     +18.6%  
+  NIFTY HEALTHCARE        2      06-Apr-15   2.398       1,884.2     1,775.7     -5.8%   
+  NIFTY INDIA MFG         3      03-Mar-15   2.361       2,146.4     2,132.0     -0.7%   
+  NIFTY CONSUMER DURABLES  4      06-Apr-15   2.138       1,864.7     1,895.0     +1.6%   
+  NIFTY MNC               5      04-Mar-14   1.545       5,782.5     9,824.8     +69.9%  
+
+  AFTER: Invested ₹1,780,555 | Cash ₹0 | Total ₹1,780,555 | Positions 5/5
+
+========================================================================
+  REBALANCE #40  —  01 Jun 2015  (eligible: 19/20)
+  NAV: ₹1,794,233  |  Slot: ₹358,847  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      06-Apr-15   2.801       1,884.2     1,792.1     -4.9%   
+  NIFTY INDIA DEFENCE     2      03-Feb-15   2.359       3,716.2     4,359.5     +17.3%  
+  NIFTY INDIA MFG         3      03-Mar-15   2.227       2,146.4     2,151.2     +0.2%   
+  NIFTY CONSUMER DURABLES  4      06-Apr-15   2.024       1,864.7     1,927.8     +3.4%   
+  NIFTY MNC               5      04-Mar-14   1.689       5,782.5     9,993.6     +72.8%  
+
+  AFTER: Invested ₹1,794,233 | Cash ₹0 | Total ₹1,794,233 | Positions 5/5
+
+========================================================================
+  REBALANCE #41  —  01 Jul 2015  (eligible: 19/20)
+  NAV: ₹1,821,858  |  Slot: ₹364,372  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMER DURABLES  8      06-Apr-15   1,864.7     1,857.4     ₹-1,386       -0.4%     86d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY OIL & GAS         2      1.842    +14.8%    +10.4%    1,677.4     ₹+350,612   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      06-Apr-15   2.491       1,884.2     1,866.4     -0.9%   
+  NIFTY INDIA MFG         3      03-Mar-15   1.820       2,146.4     2,159.0     +0.6%   
+  NIFTY MNC               5      04-Mar-14   1.667       5,782.5     10,048.8    +73.8%  
+  NIFTY INDIA DEFENCE     6      03-Feb-15   1.657       3,716.2     4,601.2     +23.8%  
+
+  AFTER: Invested ₹1,817,326 | Cash ₹0 | Total ₹1,817,326 | Positions 5/5
+
+========================================================================
+  REBALANCE #42  —  03 Aug 2015  (eligible: 19/20)
+  NAV: ₹1,915,901  |  Slot: ₹383,180  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      03-Feb-15   2.493       3,716.2     5,167.1     +39.0%  
+  NIFTY HEALTHCARE        2      06-Apr-15   2.344       1,884.2     1,942.1     +3.1%   
+  NIFTY INDIA MFG         5      03-Mar-15   1.792       2,146.4     2,254.4     +5.0%   
+  NIFTY MNC               6      04-Mar-14   1.660       5,782.5     10,366.2    +79.3%  
+  NIFTY OIL & GAS         7      02-Jul-15   1.406       1,677.4     1,689.8     +0.7%   
+
+  AFTER: Invested ₹1,915,901 | Cash ₹0 | Total ₹1,915,901 | Positions 5/5
+
+========================================================================
+  REBALANCE #43  —  01 Sep 2015  (eligible: 19/20)
+  NAV: ₹1,779,777  |  Slot: ₹355,955  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY MNC               6      04-Mar-14   5,782.5     9,613.0     ₹+119,860     +66.2%    546d    ema200          
+  NIFTY OIL & GAS         10     02-Jul-15   1,677.4     1,538.8     ₹-28,972      -8.3%     61d     rank>7+ema200   
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY MEDIA             3      1.811    +16.1%    +8.0%     2,277.4     ₹+355,955   
+  NIFTY CONSUMER DURABLES  5      1.536    +18.8%    +2.1%     1,842.5     ₹+266,480   
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      06-Apr-15   3.297       1,884.2     2,012.4     +6.8%   
+  NIFTY INDIA DEFENCE     2      03-Feb-15   2.310       3,716.2     4,425.2     +19.1%  
+  NIFTY INDIA MFG         4      03-Mar-15   1.713       2,146.4     2,094.3     -2.4%   
+
+  AFTER: Invested ₹1,779,143 | Cash ₹0 | Total ₹1,779,143 | Positions 5/5
+
+========================================================================
+  REBALANCE #44  —  01 Oct 2015  (eligible: 19/20)
+  NAV: ₹1,836,079  |  Slot: ₹367,216  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      06-Apr-15   3.054       1,884.2     2,072.1     +10.0%  
+  NIFTY INDIA DEFENCE     2      03-Feb-15   2.081       3,716.2     4,501.3     +21.1%  
+  NIFTY CONSUMER DURABLES  3      02-Sep-15   2.040       1,842.5     1,959.4     +6.3%   
+  NIFTY MEDIA             4      02-Sep-15   2.016       2,277.4     2,412.6     +5.9%   
+  NIFTY INDIA MFG         6      03-Mar-15   1.412       2,146.4     2,095.8     -2.4%   
+
+  AFTER: Invested ₹1,836,079 | Cash ₹0 | Total ₹1,836,079 | Positions 5/5
+
+========================================================================
+  REBALANCE #45  —  02 Nov 2015  (eligible: 19/20)
+  NAV: ₹1,878,448  |  Slot: ₹375,690  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      06-Apr-15   3.147       1,884.2     2,071.9     +10.0%  
+  NIFTY CONSUMER DURABLES  2      02-Sep-15   2.222       1,842.5     2,025.1     +9.9%   
+  NIFTY INDIA DEFENCE     3      03-Feb-15   1.992       3,716.2     4,649.2     +25.1%  
+  NIFTY INDIA MFG         4      03-Mar-15   1.807       2,146.4     2,207.1     +2.8%   
+  NIFTY MEDIA             6      02-Sep-15   1.429       2,277.4     2,414.1     +6.0%   
+
+  AFTER: Invested ₹1,878,448 | Cash ₹0 | Total ₹1,878,448 | Positions 5/5
+
+========================================================================
+  REBALANCE #46  —  01 Dec 2015  (eligible: 19/20)
+  NAV: ₹1,892,604  |  Slot: ₹378,521  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      02-Sep-15   2.332       1,842.5     2,041.1     +10.8%  
+  NIFTY INDIA DEFENCE     2      03-Feb-15   2.198       3,716.2     4,841.5     +30.3%  
+  NIFTY INDIA MFG         4      03-Mar-15   1.803       2,146.4     2,219.1     +3.4%   
+  NIFTY MEDIA             5      02-Sep-15   1.778       2,277.4     2,461.1     +8.1%   
+  NIFTY HEALTHCARE        6      06-Apr-15   1.511       1,884.2     1,994.3     +5.8%   
+
+  AFTER: Invested ₹1,892,604 | Cash ₹0 | Total ₹1,892,604 | Positions 5/5
+
+========================================================================
+  REBALANCE #47  —  01 Jan 2016  (eligible: 19/20)
+  NAV: ₹1,995,980  |  Slot: ₹399,196  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      03-Feb-15   2.714       3,716.2     5,288.3     +42.3%  
+  NIFTY CONSUMER DURABLES  3      02-Sep-15   1.939       1,842.5     2,120.9     +15.1%  
+  NIFTY INDIA MFG         4      03-Mar-15   1.865       2,146.4     2,273.0     +5.9%   
+  NIFTY HEALTHCARE        5      06-Apr-15   1.566       1,884.2     2,075.2     +10.1%  
+  NIFTY MEDIA             6      02-Sep-15   1.538       2,277.4     2,627.4     +15.4%  
+
+  AFTER: Invested ₹1,995,980 | Cash ₹0 | Total ₹1,995,980 | Positions 5/5
+
+========================================================================
+  REBALANCE #48  —  01 Feb 2016  (eligible: 19/20)
+  NAV: ₹1,821,246  |  Slot: ₹364,249  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INDIA DEFENCE     4      03-Feb-15   3,716.2     4,388.6     ₹+61,379      +18.1%    363d    ema200          
+  NIFTY INDIA MFG         7      03-Mar-15   2,146.4     2,071.3     ₹-12,913      -3.5%     335d    ema200          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY OIL & GAS         1      2.660    +8.2%     +6.4%     1,655.2     ₹+364,249   
+  NIFTY ENERGY            2      2.051    -3.4%     +4.5%     8,445.8     ₹+364,249   
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        3      06-Apr-15   2.030       1,884.2     1,957.7     +3.9%   
+  NIFTY CONSUMER DURABLES  5      02-Sep-15   1.920       1,842.5     1,975.5     +7.2%   
+  NIFTY MEDIA             6      02-Sep-15   1.851       2,277.4     2,458.4     +8.0%   
+
+  AFTER: Invested ₹1,788,128 | Cash ₹28,647 | Total ₹1,816,774 | Positions 5/5
+
+========================================================================
+  REBALANCE #49  —  01 Mar 2016  (eligible: 19/20)
+  NAV: ₹1,692,370  |  Slot: ₹338,474  |  Cash: ₹28,647
+========================================================================
+
+  EXITS (5)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMER DURABLES  3      02-Sep-15   1,842.5     1,901.9     ₹+8,591       +3.2%     181d    ema200          
+  NIFTY MEDIA             2      02-Sep-15   2,277.4     2,295.0     ₹+2,759       +0.8%     181d    ema200          
+  NIFTY HEALTHCARE        1      06-Apr-15   1,884.2     1,881.3     ₹-568         -0.2%     330d    ema200          
+  NIFTY OIL & GAS         4      02-Feb-16   1,655.2     1,553.8     ₹-22,313      -6.1%     28d     ema200          
+  NIFTY ENERGY            5      02-Feb-16   8,445.8     7,908.0     ₹-23,194      -6.4%     28d     ema200          
+
+  ENTRIES (0)
+    —
 
   HOLDS (0)
     —
 
-  AFTER: Invested ₹303,105 | Cash ₹1,236,164 | Total ₹1,539,268 | Positions 1/5
+  AFTER: Invested ₹0 | Cash ₹1,712,178 | Total ₹1,712,178 | Positions 0/5
 
 ========================================================================
-  REBALANCE #50  —  01 Apr 2016  (eligible: 13/14)
-  NAV: ₹1,549,861  |  Slot: ₹309,972  |  Cash: ₹1,243,008
+  REBALANCE #50  —  01 Apr 2016  (eligible: 19/20)
+  NAV: ₹1,712,178  |  Slot: ₹342,436  |  Cash: ₹1,721,630
 ========================================================================
 
   EXITS (0)
     —
 
-  ENTRIES (4)
+  ENTRIES (5)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            2      1.944    -0.5%     -2.0%     8,383.2     ₹+309,972   
-  NIFTY METAL             3      1.664    -19.7%    +4.6%     1,907.7     ₹+309,972   
-  NIFTY IT                4      1.663    -8.1%     +0.7%     11,224.9    ₹+309,972   
-  NIFTY AUTO              5      1.529    -5.3%     -2.6%     8,093.1     ₹+309,972   
+  NIFTY CONSUMER DURABLES  1      2.301    +12.3%    -1.2%     2,103.6     ₹+342,436   
+  NIFTY OIL & GAS         2      1.851    +9.3%     -3.9%     1,655.0     ₹+342,436   
+  NIFTY FMCG              3      1.832    +0.2%     -0.4%     19,727.4    ₹+342,436   
+  NIFTY INDIA MFG         4      1.714    +5.5%     -3.4%     2,189.9     ₹+342,436   
+  NIFTY ENERGY            5      1.604    -0.5%     -2.0%     8,383.2     ₹+342,436   
 
-  HOLDS (1)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      02-Mar-16   2.192       19,455.0    19,992.1    +2.8%   
+  HOLDS (0)
+    —
 
-  AFTER: Invested ₹1,547,939 | Cash ₹3,119 | Total ₹1,551,058 | Positions 5/5
-
-========================================================================
-  REBALANCE #51  —  02 May 2016  (eligible: 13/14)
-  NAV: ₹1,584,441  |  Slot: ₹316,888  |  Cash: ₹3,119
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                9      04-Apr-16   11,224.9    11,129.9    ₹-2,623       -0.8%     28d     rank>7+ema200   
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MEDIA             3      2.002    +14.2%    +3.7%     2,428.2     ₹+310,468   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      04-Apr-16   2.045       1,907.7     2,065.4     +8.3%   
-  NIFTY AUTO              2      04-Apr-16   2.019       8,093.1     8,299.0     +2.5%   
-  NIFTY FMCG              4      02-Mar-16   1.356       19,455.0    19,728.4    +1.4%   
-  NIFTY ENERGY            7      04-Apr-16   1.016       8,383.2     8,419.1     +0.4%   
-
-  AFTER: Invested ₹1,584,957 | Cash ₹0 | Total ₹1,584,957 | Positions 5/5
+  AFTER: Invested ₹1,707,735 | Cash ₹9,452 | Total ₹1,717,187 | Positions 5/5
 
 ========================================================================
-  REBALANCE #52  —  01 Jun 2016  (eligible: 13/14)
-  NAV: ₹1,622,414  |  Slot: ₹324,483  |  Cash: ₹0
+  REBALANCE #51  —  02 May 2016  (eligible: 19/20)
+  NAV: ₹1,776,254  |  Slot: ₹355,251  |  Cash: ₹9,452
 ========================================================================
 
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             8      04-Apr-16   1,907.7     2,010.2     ₹+16,647      +5.4%     58d     rank>7          
-  NIFTY ENERGY            10     04-Apr-16   8,383.2     8,360.0     ₹-858         -0.3%     58d     rank>7          
+  NIFTY ENERGY            13     04-Apr-16   8,383.2     8,435.0     ₹+2,118       +0.6%     28d     rank>7          
+  NIFTY FMCG              8      04-Apr-16   19,727.4    19,755.8    ₹+492         +0.1%     28d     rank>7          
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY BANK              3      1.674    -4.9%     +28.5%    17,404.9    ₹+324,483   
-  NIFTY REALTY            4      1.647    -8.4%     +43.5%    183.7       ₹+311,251   
+  NIFTY METAL             3      1.812    -16.0%    +25.3%    2,077.9     ₹+355,251   
+  NIFTY AUTO              4      1.614    +0.2%     +10.8%    8,346.5     ₹+341,683   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MEDIA             1      03-May-16   2.098       2,428.2     2,549.6     +5.0%   
-  NIFTY FMCG              2      02-Mar-16   1.694       19,455.0    20,886.6    +7.4%   
-  NIFTY AUTO              6      04-Apr-16   1.575       8,093.1     8,670.8     +7.1%   
+  NIFTY CONSUMER DURABLES  1      04-Apr-16   2.548       2,103.6     2,222.8     +5.7%   
+  NIFTY INDIA MFG         2      04-Apr-16   2.179       2,189.9     2,306.1     +5.3%   
+  NIFTY OIL & GAS         6      04-Apr-16   1.484       1,655.0     1,730.2     +4.5%   
 
-  AFTER: Invested ₹1,622,562 | Cash ₹0 | Total ₹1,622,562 | Positions 5/5
-
-========================================================================
-  REBALANCE #53  —  01 Jul 2016  (eligible: 13/14)
-  NAV: ₹1,699,289  |  Slot: ₹339,858  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MEDIA             1      03-May-16   2.278       2,428.2     2,631.6     +8.4%   
-  NIFTY REALTY            2      02-Jun-16   2.251       183.7       201.4       +9.6%   
-  NIFTY FMCG              3      02-Mar-16   2.204       19,455.0    22,025.4    +13.2%  
-  NIFTY AUTO              4      04-Apr-16   1.463       8,093.1     8,894.8     +9.9%   
-  NIFTY BANK              6      02-Jun-16   0.997 ⚠     17,404.9    17,985.4    +3.3%   
-
-  AFTER: Invested ₹1,699,289 | Cash ₹0 | Total ₹1,699,289 | Positions 5/5
+  AFTER: Invested ₹1,773,298 | Cash ₹0 | Total ₹1,773,298 | Positions 5/5
 
 ========================================================================
-  REBALANCE #54  —  01 Aug 2016  (eligible: 13/14)
-  NAV: ₹1,777,644  |  Slot: ₹355,529  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY BANK              10     02-Jun-16   17,404.9    18,783.4    ₹+25,698      +7.9%     60d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY METAL             5      1.491    +12.3%    +20.4%    2,463.6     ₹+350,181   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MEDIA             1      03-May-16   1.984       2,428.2     2,849.5     +17.3%  
-  NIFTY FMCG              2      02-Mar-16   1.866       19,455.0    22,136.9    +13.8%  
-  NIFTY AUTO              3      04-Apr-16   1.827       8,093.1     9,530.0     +17.8%  
-  NIFTY REALTY            4      02-Jun-16   1.497       183.7       207.5       +13.0%  
-
-  AFTER: Invested ₹1,777,792 | Cash ₹0 | Total ₹1,777,792 | Positions 5/5
-
-========================================================================
-  REBALANCE #55  —  01 Sep 2016  (eligible: 13/14)
-  NAV: ₹1,819,043  |  Slot: ₹363,809  |  Cash: ₹0
+  REBALANCE #52  —  01 Jun 2016  (eligible: 19/20)
+  NAV: ₹1,794,355  |  Slot: ₹358,871  |  Cash: ₹0
 ========================================================================
 
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              9      02-Mar-16   19,455.0    22,760.2    ₹+51,861      +17.0%    183d    rank>7          
-  NIFTY REALTY            10     02-Jun-16   183.7       202.4       ₹+31,684      +10.2%    91d     rank>7          
+  NIFTY AUTO              10     03-May-16   8,346.5     8,639.0     ₹+11,972      +3.5%     29d     rank>7          
+  NIFTY METAL             13     03-May-16   2,077.9     2,010.2     ₹-11,575      -3.3%     29d     rank>7          
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            2      1.622    +19.2%    +13.5%    9,547.3     ₹+363,809   
-  NIFTY PSE               4      1.595    +10.2%    +16.7%    3,517.8     ₹+336,258   
+  NIFTY MEDIA             3      1.645    +22.0%    +16.6%    2,554.9     ₹+358,871   
+  NIFTY CONSUMPTION       4      1.564    +6.7%     +14.1%    3,637.5     ₹+338,460   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Aug-16   2.232       2,463.6     2,574.6     +4.5%   
-  NIFTY MEDIA             3      03-May-16   1.608       2,428.2     2,932.7     +20.8%  
-  NIFTY AUTO              5      04-Apr-16   1.576       8,093.1     9,940.0     +22.8%  
+  NIFTY CONSUMER DURABLES  1      04-Apr-16   2.391       2,103.6     2,276.9     +8.2%   
+  NIFTY INDIA MFG         2      04-Apr-16   1.993       2,189.9     2,333.4     +6.6%   
+  NIFTY OIL & GAS         5      04-Apr-16   1.527       1,655.0     1,737.2     +5.0%   
 
-  AFTER: Invested ₹1,821,230 | Cash ₹0 | Total ₹1,821,230 | Positions 5/5
-
-========================================================================
-  REBALANCE #56  —  03 Oct 2016  (eligible: 13/14)
-  NAV: ₹1,880,597  |  Slot: ₹376,119  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      04-Apr-16   2.079       8,093.1     10,275.5    +27.0%  
-  NIFTY ENERGY            2      02-Sep-16   2.025       9,547.3     9,915.5     +3.9%   
-  NIFTY MEDIA             3      03-May-16   1.974       2,428.2     3,127.8     +28.8%  
-  NIFTY METAL             4      02-Aug-16   1.856       2,463.6     2,586.1     +5.0%   
-  NIFTY PSE               5      02-Sep-16   1.549       3,517.8     3,574.7     +1.6%   
-
-  AFTER: Invested ₹1,880,597 | Cash ₹0 | Total ₹1,880,597 | Positions 5/5
+  AFTER: Invested ₹1,792,307 | Cash ₹0 | Total ₹1,792,307 | Positions 5/5
 
 ========================================================================
-  REBALANCE #57  —  01 Nov 2016  (eligible: 13/14)
-  NAV: ₹1,901,256  |  Slot: ₹380,251  |  Cash: ₹0
+  REBALANCE #53  —  01 Jul 2016  (eligible: 19/20)
+  NAV: ₹1,901,722  |  Slot: ₹380,344  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
@@ -1352,850 +1289,741 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   HOLDS (5)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Aug-16   2.339       2,463.6     2,781.0     +12.9%  
-  NIFTY PSE               2      02-Sep-16   2.126       3,517.8     3,769.1     +7.1%   
-  NIFTY ENERGY            3      02-Sep-16   2.096       9,547.3     10,137.5    +6.2%   
-  NIFTY AUTO              4      04-Apr-16   1.848       8,093.1     10,105.5    +24.9%  
-  NIFTY MEDIA             5      03-May-16   1.239       2,428.2     2,912.1     +19.9%  
+  NIFTY CONSUMER DURABLES  1      04-Apr-16   3.040       2,103.6     2,481.9     +18.0%  
+  NIFTY INDIA MFG         2      04-Apr-16   2.148       2,189.9     2,487.3     +13.6%  
+  NIFTY OIL & GAS         3      04-Apr-16   1.834       1,655.0     1,880.6     +13.6%  
+  NIFTY MEDIA             6      02-Jun-16   1.653       2,554.9     2,631.6     +3.0%   
+  NIFTY CONSUMPTION       7      02-Jun-16   1.633       3,637.5     3,761.8     +3.4%   
 
-  AFTER: Invested ₹1,901,256 | Cash ₹0 | Total ₹1,901,256 | Positions 5/5
+  AFTER: Invested ₹1,901,722 | Cash ₹0 | Total ₹1,901,722 | Positions 5/5
 
 ========================================================================
-  REBALANCE #58  —  01 Dec 2016  (eligible: 13/14)
-  NAV: ₹1,803,293  |  Slot: ₹360,659  |  Cash: ₹0
+  REBALANCE #54  —  01 Aug 2016  (eligible: 19/20)
+  NAV: ₹2,034,533  |  Slot: ₹406,907  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Apr-16   3.267       2,103.6     2,732.8     +29.9%  
+  NIFTY INDIA MFG         2      04-Apr-16   2.072       2,189.9     2,657.7     +21.4%  
+  NIFTY OIL & GAS         3      04-Apr-16   1.731       1,655.0     1,986.1     +20.0%  
+  NIFTY MEDIA             4      02-Jun-16   1.448       2,554.9     2,849.5     +11.5%  
+  NIFTY CONSUMPTION       6      02-Jun-16   1.380       3,637.5     3,900.2     +7.2%   
+
+  AFTER: Invested ₹2,034,533 | Cash ₹0 | Total ₹2,034,533 | Positions 5/5
+
+========================================================================
+  REBALANCE #55  —  01 Sep 2016  (eligible: 19/20)
+  NAV: ₹2,095,551  |  Slot: ₹419,110  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMPTION       10     02-Jun-16   3,637.5     3,948.6     ₹+28,947      +8.6%     91d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY METAL             4      1.963    +41.3%    +25.5%    2,578.5     ₹+367,407   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY OIL & GAS         1      04-Apr-16   2.663       1,655.0     2,136.2     +29.1%  
+  NIFTY CONSUMER DURABLES  2      04-Apr-16   2.246       2,103.6     2,731.3     +29.8%  
+  NIFTY INDIA MFG         3      04-Apr-16   2.003       2,189.9     2,750.6     +25.6%  
+  NIFTY MEDIA             7      02-Jun-16   1.358       2,554.9     2,932.7     +14.8%  
+
+  AFTER: Invested ₹2,095,500 | Cash ₹0 | Total ₹2,095,500 | Positions 5/5
+
+========================================================================
+  REBALANCE #56  —  03 Oct 2016  (eligible: 19/20)
+  NAV: ₹2,169,811  |  Slot: ₹433,962  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY OIL & GAS         1      04-Apr-16   2.846       1,655.0     2,233.3     +34.9%  
+  NIFTY INDIA MFG         2      04-Apr-16   2.310       2,189.9     2,856.7     +30.5%  
+  NIFTY CONSUMER DURABLES  3      04-Apr-16   1.859       2,103.6     2,784.0     +32.3%  
+  NIFTY MEDIA             6      02-Jun-16   1.602       2,554.9     3,127.8     +22.4%  
+  NIFTY METAL             7      02-Sep-16   1.484       2,578.5     2,586.1     +0.3%   
+
+  AFTER: Invested ₹2,169,811 | Cash ₹0 | Total ₹2,169,811 | Positions 5/5
+
+========================================================================
+  REBALANCE #57  —  01 Nov 2016  (eligible: 19/20)
+  NAV: ₹2,212,411  |  Slot: ₹442,482  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY MEDIA             9      02-Jun-16   2,554.9     2,872.4     ₹+44,597      +12.4%    152d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY PSE               5      1.612    +18.5%    +10.3%    3,731.2     ₹+403,468   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY OIL & GAS         1      04-Apr-16   3.470       1,655.0     2,390.1     +44.4%  
+  NIFTY INDIA MFG         2      04-Apr-16   2.152       2,189.9     2,894.2     +32.2%  
+  NIFTY CONSUMER DURABLES  3      04-Apr-16   2.013       2,103.6     2,826.0     +34.3%  
+  NIFTY METAL             4      02-Sep-16   1.810       2,578.5     2,781.0     +7.9%   
+
+  AFTER: Invested ₹2,210,940 | Cash ₹0 | Total ₹2,210,940 | Positions 5/5
+
+========================================================================
+  REBALANCE #58  —  01 Dec 2016  (eligible: 19/20)
+  NAV: ₹2,085,486  |  Slot: ₹417,097  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMER DURABLES  13     04-Apr-16   2,103.6     2,332.8     ₹+37,307      +10.9%    241d    rank>7+ema200   
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY ENERGY            4      1.982    +21.5%    +4.1%     9,851.3     ₹+379,742   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY OIL & GAS         1      04-Apr-16   3.386       1,655.0     2,327.7     +40.6%  
+  NIFTY METAL             2      02-Sep-16   2.536       2,578.5     2,748.8     +6.6%   
+  NIFTY PSE               3      02-Nov-16   2.137       3,731.2     3,695.2     -1.0%   
+  NIFTY INDIA MFG         5      04-Apr-16   1.770       2,189.9     2,732.4     +24.8%  
+
+  AFTER: Invested ₹2,080,854 | Cash ₹0 | Total ₹2,080,854 | Positions 5/5
+
+========================================================================
+  REBALANCE #59  —  02 Jan 2017  (eligible: 19/20)
+  NAV: ₹2,106,655  |  Slot: ₹421,331  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY OIL & GAS         1      04-Apr-16   3.433       1,655.0     2,409.8     +45.6%  
+  NIFTY METAL             2      02-Sep-16   2.409       2,578.5     2,705.2     +4.9%   
+  NIFTY ENERGY            3      02-Dec-16   2.296       9,851.3     10,307.7    +4.6%   
+  NIFTY PSE               4      02-Nov-16   2.264       3,731.2     3,716.1     -0.4%   
+  NIFTY INDIA MFG         5      04-Apr-16   1.557       2,189.9     2,707.8     +23.6%  
+
+  AFTER: Invested ₹2,106,655 | Cash ₹0 | Total ₹2,106,655 | Positions 5/5
+
+========================================================================
+  REBALANCE #60  —  01 Feb 2017  (eligible: 19/20)
+  NAV: ₹2,296,987  |  Slot: ₹459,397  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY OIL & GAS         1      04-Apr-16   2.825       1,655.0     2,589.4     +56.5%  
+  NIFTY METAL             2      02-Sep-16   2.536       2,578.5     3,146.8     +22.0%  
+  NIFTY PSE               3      02-Nov-16   2.249       3,731.2     4,068.9     +9.0%   
+  NIFTY ENERGY            4      02-Dec-16   1.828       9,851.3     10,742.4    +9.0%   
+  NIFTY INDIA MFG         5      04-Apr-16   1.592       2,189.9     2,933.9     +34.0%  
+
+  AFTER: Invested ₹2,296,987 | Cash ₹0 | Total ₹2,296,987 | Positions 5/5
+
+========================================================================
+  REBALANCE #61  —  01 Mar 2017  (eligible: 19/20)
+  NAV: ₹2,367,478  |  Slot: ₹473,496  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY OIL & GAS         1      04-Apr-16   3.056       1,655.0     2,716.8     +64.2%  
+  NIFTY INDIA MFG         3      04-Apr-16   2.123       2,189.9     3,086.8     +41.0%  
+  NIFTY ENERGY            4      02-Dec-16   1.927       9,851.3     11,277.3    +14.5%  
+  NIFTY METAL             5      02-Sep-16   1.538       2,578.5     3,184.6     +23.5%  
+  NIFTY PSE               7      02-Nov-16   1.170       3,731.2     4,015.3     +7.6%   
+
+  AFTER: Invested ₹2,367,478 | Cash ₹0 | Total ₹2,367,478 | Positions 5/5
+
+========================================================================
+  REBALANCE #62  —  03 Apr 2017  (eligible: 19/20)
+  NAV: ₹2,414,451  |  Slot: ₹482,890  |  Cash: ₹0
 ========================================================================
 
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY AUTO              7      04-Apr-16   8,093.1     8,984.2     ₹+34,128      +11.0%    241d    ema200          
-  NIFTY MEDIA             8      03-May-16   2,428.2     2,626.6     ₹+25,360      +8.2%     212d    rank>7+ema200   
+  NIFTY METAL             10     02-Sep-16   2,578.5     3,123.9     ₹+77,720      +21.2%    213d    rank>7          
+  NIFTY PSE               8      02-Nov-16   3,731.2     4,021.8     ₹+31,418      +7.8%     152d    rank>7          
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PSU BANK          4      1.142    +0.6%     +4.0%     3,119.7     ₹+360,659   
-  NIFTY BANK              5      0.886    +8.0%     -4.0%     18,329.2    ₹+319,270   
+  NIFTY CONSUMER DURABLES  1      2.941    +61.1%    +39.4%    3,257.4     ₹+482,890   
+  NIFTY FIN SERVICE       5      1.444    +34.2%    +19.2%    8,828.2     ₹+397,124   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Aug-16   2.910       2,463.6     2,748.8     +11.6%  
-  NIFTY PSE               2      02-Sep-16   2.454       3,517.8     3,695.2     +5.0%   
-  NIFTY ENERGY            3      02-Sep-16   2.273       9,547.3     9,876.3     +3.4%   
+  NIFTY OIL & GAS         2      04-Apr-16   2.519       1,655.0     2,780.7     +68.0%  
+  NIFTY INDIA MFG         3      04-Apr-16   2.378       2,189.9     3,247.2     +48.3%  
+  NIFTY ENERGY            4      02-Dec-16   1.538       9,851.3     11,819.4    +20.0%  
 
-  AFTER: Invested ₹1,804,397 | Cash ₹0 | Total ₹1,804,397 | Positions 5/5
-
-========================================================================
-  REBALANCE #59  —  02 Jan 2017  (eligible: 13/14)
-  NAV: ₹1,783,360  |  Slot: ₹356,672  |  Cash: ₹0
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY BANK              8      02-Dec-16   18,329.2    18,002.5    ₹-5,690       -1.8%     31d     rank>7+ema200   
-  NIFTY PSU BANK          5      02-Dec-16   3,119.7     2,925.2     ₹-22,486      -6.2%     31d     ema200          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY AUTO              4      1.050    +15.0%    -5.7%     9,331.4     ₹+356,672   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Aug-16   2.690       2,463.6     2,705.2     +9.8%   
-  NIFTY ENERGY            2      02-Sep-16   2.561       9,547.3     10,307.7    +8.0%   
-  NIFTY PSE               3      02-Sep-16   2.524       3,517.8     3,716.1     +5.6%   
-
-  AFTER: Invested ₹1,489,025 | Cash ₹295,082 | Total ₹1,784,107 | Positions 4/5
+  AFTER: Invested ₹2,416,979 | Cash ₹0 | Total ₹2,416,979 | Positions 5/5
 
 ========================================================================
-  REBALANCE #60  —  01 Feb 2017  (eligible: 13/14)
-  NAV: ₹1,930,224  |  Slot: ₹386,045  |  Cash: ₹297,144
+  REBALANCE #63  —  02 May 2017  (eligible: 20/20)
+  NAV: ₹2,514,453  |  Slot: ₹502,891  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
     —
 
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY OIL & GAS         1      04-Apr-16   2.990       1,655.0     2,997.0     +81.1%  
+  NIFTY INDIA MFG         2      04-Apr-16   2.109       2,189.9     3,347.1     +52.8%  
+  NIFTY CONSUMER DURABLES  3      05-Apr-17   2.017       3,257.4     3,297.8     +1.2%   
+  NIFTY ENERGY            4      02-Dec-16   1.843       9,851.3     12,242.8    +24.3%  
+  NIFTY FIN SERVICE       6      05-Apr-17   1.595       8,828.2     9,117.8     +3.3%   
+
+  AFTER: Invested ₹2,514,453 | Cash ₹0 | Total ₹2,514,453 | Positions 5/5
+
+========================================================================
+  REBALANCE #64  —  01 Jun 2017  (eligible: 20/20)
+  NAV: ₹2,509,279  |  Slot: ₹501,856  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY ENERGY            10     02-Dec-16   9,851.3     11,845.2    ₹+76,860      +20.2%    181d    rank>7          
+
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              4      1.300    +21.2%    +6.1%     22,582.8    ₹+297,144   
+  NIFTY MNC               5      1.605    +32.3%    +12.5%    11,990.7    ₹+456,602   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Aug-16   2.566       2,463.6     3,146.8     +27.7%  
-  NIFTY PSE               2      02-Sep-16   2.294       3,517.8     4,068.9     +15.7%  
-  NIFTY ENERGY            3      02-Sep-16   1.904       9,547.3     10,742.4    +12.5%  
-  NIFTY AUTO              7      03-Jan-17   1.113       9,331.4     10,192.0    +9.2%   
+  NIFTY OIL & GAS         1      04-Apr-16   2.251       1,655.0     2,878.6     +73.9%  
+  NIFTY INDIA MFG         2      04-Apr-16   2.009       2,189.9     3,394.5     +55.0%  
+  NIFTY CONSUMER DURABLES  3      05-Apr-17   1.761       3,257.4     3,386.0     +3.9%   
+  NIFTY FIN SERVICE       4      05-Apr-17   1.741       8,828.2     9,474.6     +7.3%   
 
-  AFTER: Invested ₹1,931,154 | Cash ₹0 | Total ₹1,931,154 | Positions 5/5
+  AFTER: Invested ₹2,509,117 | Cash ₹0 | Total ₹2,509,117 | Positions 5/5
 
 ========================================================================
-  REBALANCE #61  —  01 Mar 2017  (eligible: 13/14)
-  NAV: ₹1,933,894  |  Slot: ₹386,779  |  Cash: ₹0
+  REBALANCE #65  —  03 Jul 2017  (eligible: 20/20)
+  NAV: ₹2,522,167  |  Slot: ₹504,433  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA MFG         1      04-Apr-16   2.212       2,189.9     3,473.3     +58.6%  
+  NIFTY MNC               3      02-Jun-17   1.973       11,990.7    12,271.2    +2.3%   
+  NIFTY CONSUMER DURABLES  4      05-Apr-17   1.763       3,257.4     3,493.2     +7.2%   
+  NIFTY OIL & GAS         5      04-Apr-16   1.617       1,655.0     2,733.6     +65.2%  
+  NIFTY FIN SERVICE       7      05-Apr-17   1.581       8,828.2     9,521.7     +7.9%   
+
+  AFTER: Invested ₹2,522,167 | Cash ₹0 | Total ₹2,522,167 | Positions 5/5
+
+========================================================================
+  REBALANCE #66  —  01 Aug 2017  (eligible: 20/20)
+  NAV: ₹2,675,367  |  Slot: ₹535,073  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY OIL & GAS         8      04-Apr-16   1,655.0     2,894.5     ₹+256,443     +74.9%    484d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY BANK              3      1.945    +32.3%    +12.6%    25,190.1    ₹+535,073   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY MNC               1      02-Jun-17   2.174       11,990.7    13,027.0    +8.6%   
+  NIFTY FIN SERVICE       2      05-Apr-17   2.029       8,828.2     10,262.7    +16.2%  
+  NIFTY INDIA MFG         5      04-Apr-16   1.917       2,189.9     3,624.9     +65.5%  
+  NIFTY CONSUMER DURABLES  6      05-Apr-17   1.900       3,257.4     3,711.8     +14.0%  
+
+  AFTER: Invested ₹2,608,438 | Cash ₹63,806 | Total ₹2,672,244 | Positions 5/5
+
+========================================================================
+  REBALANCE #67  —  01 Sep 2017  (eligible: 20/20)
+  NAV: ₹2,694,913  |  Slot: ₹538,983  |  Cash: ₹63,806
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY BANK              9      02-Aug-17   25,190.1    24,456.0    ₹-15,593      -2.9%     30d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY ENERGY            1      2.411    +39.7%    +12.1%    13,215.5    ₹+538,983   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  3      05-Apr-17   2.362       3,257.4     3,917.5     +20.3%  
+  NIFTY MNC               4      02-Jun-17   2.047       11,990.7    13,268.3    +10.7%  
+  NIFTY INDIA MFG         6      04-Apr-16   1.782       2,189.9     3,655.5     +66.9%  
+  NIFTY FIN SERVICE       7      05-Apr-17   1.512       8,828.2     10,103.3    +14.4%  
+
+  AFTER: Invested ₹2,651,214 | Cash ₹44,303 | Total ₹2,695,517 | Positions 5/5
+
+========================================================================
+  REBALANCE #68  —  03 Oct 2017  (eligible: 20/20)
+  NAV: ₹2,698,542  |  Slot: ₹539,708  |  Cash: ₹44,303
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  2      05-Apr-17   2.419       3,257.4     4,034.7     +23.9%  
+  NIFTY ENERGY            3      04-Sep-17   2.080       13,215.5    12,945.2    -2.0%   
+  NIFTY INDIA MFG         5      04-Apr-16   1.698       2,189.9     3,694.2     +68.7%  
+  NIFTY MNC               6      02-Jun-17   1.694       11,990.7    13,147.8    +9.6%   
+  NIFTY FIN SERVICE       7      05-Apr-17   1.395       8,828.2     9,999.8     +13.3%  
+
+  AFTER: Invested ₹2,654,239 | Cash ₹44,303 | Total ₹2,698,542 | Positions 5/5
+
+========================================================================
+  REBALANCE #69  —  01 Nov 2017  (eligible: 20/20)
+  NAV: ₹2,879,361  |  Slot: ₹575,872  |  Cash: ₹44,303
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY FIN SERVICE       10     05-Apr-17   8,828.2     10,431.8    ₹+72,131      +18.2%    210d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY OIL & GAS         1      3.332    +49.1%    +22.9%    3,537.4     ₹+513,558   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY ENERGY            2      04-Sep-17   2.319       13,215.5    14,585.3    +10.4%  
+  NIFTY CONSUMER DURABLES  3      05-Apr-17   1.964       3,257.4     4,222.8     +29.6%  
+  NIFTY INDIA MFG         5      04-Apr-16   1.772       2,189.9     3,939.4     +79.9%  
+  NIFTY MNC               6      02-Jun-17   1.549       11,990.7    13,883.3    +15.8%  
+
+  AFTER: Invested ₹2,880,837 | Cash ₹0 | Total ₹2,880,837 | Positions 5/5
+
+========================================================================
+  REBALANCE #70  —  01 Dec 2017  (eligible: 20/20)
+  NAV: ₹2,872,936  |  Slot: ₹574,587  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY MNC               8      02-Jun-17   11,990.7    13,672.5    ₹+64,044      +14.0%    182d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY CONSUMPTION       4      1.624    +35.2%    +5.1%     4,803.4     ₹+520,646   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      05-Apr-17   3.570       3,257.4     4,567.0     +40.2%  
+  NIFTY INDIA MFG         2      04-Apr-16   2.257       2,189.9     3,979.1     +81.7%  
+  NIFTY OIL & GAS         3      02-Nov-17   1.680       3,537.4     3,353.0     -5.2%   
+  NIFTY ENERGY            7      04-Sep-17   1.201       13,215.5    13,941.1    +5.5%   
+
+  AFTER: Invested ₹2,872,876 | Cash ₹0 | Total ₹2,872,876 | Positions 5/5
+
+========================================================================
+  REBALANCE #71  —  01 Jan 2018  (eligible: 20/20)
+  NAV: ₹3,015,755  |  Slot: ₹603,151  |  Cash: ₹0
 ========================================================================
 
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY AUTO              10     03-Jan-17   9,331.4     9,756.1     ₹+16,233      +4.6%     57d     rank>7          
-  NIFTY FMCG              9      02-Feb-17   22,582.8    22,688.6    ₹+1,391       +0.5%     27d     rank>7          
+  NIFTY ENERGY            10     04-Sep-17   13,215.5    14,216.0    ₹+40,802      +7.6%     119d    rank>7          
+  NIFTY OIL & GAS         9      02-Nov-17   3,537.4     3,447.1     ₹-13,118      -2.6%     60d     rank>7          
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY BANK              3      1.554    +44.9%    +11.6%    20,884.8    ₹+386,779   
-  NIFTY FIN SERVICE       5      1.485    +40.7%    +10.4%    8,411.4     ₹+284,662   
+  NIFTY INDIA DEFENCE     4      1.882    +46.0%    +31.4%    6,429.1     ₹+603,151   
+  NIFTY MNC               5      1.723    +55.2%    +11.7%    14,717.2    ₹+477,073   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Sep-16   2.288       9,547.3     11,277.3    +18.1%  
-  NIFTY METAL             2      02-Aug-16   1.926       2,463.6     3,184.6     +29.3%  
-  NIFTY PSE               4      02-Sep-16   1.542       3,517.8     4,015.3     +14.1%  
+  NIFTY CONSUMER DURABLES  1      05-Apr-17   3.102       3,257.4     4,887.6     +50.0%  
+  NIFTY CONSUMPTION       2      04-Dec-17   2.349       4,803.4     5,069.8     +5.5%   
+  NIFTY INDIA MFG         3      04-Apr-16   2.261       2,189.9     4,230.8     +93.2%  
 
-  AFTER: Invested ₹1,934,630 | Cash ₹0 | Total ₹1,934,630 | Positions 5/5
-
-========================================================================
-  REBALANCE #62  —  03 Apr 2017  (eligible: 13/14)
-  NAV: ₹1,972,531  |  Slot: ₹394,506  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Sep-16   2.037       9,547.3     11,819.4    +23.8%  
-  NIFTY FIN SERVICE       2      02-Mar-17   1.939       8,411.4     8,825.8     +4.9%   
-  NIFTY BANK              3      02-Mar-17   1.779       20,884.8    21,547.5    +3.2%   
-  NIFTY PSE               6      02-Sep-16   1.371       3,517.8     4,006.2     +13.9%  
-  NIFTY METAL             7      02-Aug-16   1.340       2,463.6     3,105.7     +26.1%  
-
-  AFTER: Invested ₹1,972,531 | Cash ₹0 | Total ₹1,972,531 | Positions 5/5
+  AFTER: Invested ₹3,019,278 | Cash ₹0 | Total ₹3,019,278 | Positions 5/5
 
 ========================================================================
-  REBALANCE #63  —  02 May 2017  (eligible: 14/14)
-  NAV: ₹2,015,929  |  Slot: ₹403,186  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             12     02-Aug-16   2,463.6     2,971.4     ₹+72,187      +20.6%    273d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY REALTY            2      1.931    +52.7%    +40.1%    257.0       ₹+403,186   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Sep-16   2.149       9,547.3     12,242.8    +28.2%  
-  NIFTY FIN SERVICE       3      02-Mar-17   1.865       8,411.4     9,117.8     +8.4%   
-  NIFTY BANK              4      02-Mar-17   1.661       20,884.8    22,341.1    +7.0%   
-  NIFTY PSE               6      02-Sep-16   1.417       3,517.8     4,254.9     +21.0%  
-
-  AFTER: Invested ₹1,996,711 | Cash ₹19,182 | Total ₹2,015,893 | Positions 5/5
-
-========================================================================
-  REBALANCE #64  —  01 Jun 2017  (eligible: 14/14)
-  NAV: ₹1,998,624  |  Slot: ₹399,725  |  Cash: ₹19,182
+  REBALANCE #72  —  01 Feb 2018  (eligible: 20/20)
+  NAV: ₹2,891,119  |  Slot: ₹578,224  |  Cash: ₹0
 ========================================================================
 
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSE               10     02-Sep-16   3,517.8     4,035.6     ₹+49,496      +14.7%    272d    rank>7          
-  NIFTY REALTY            8      03-May-17   257.0       251.7       ₹-8,238       -2.0%     29d     rank>7          
+  NIFTY INDIA MFG         8      04-Apr-16   2,189.9     4,041.1     ₹+289,482     +84.5%    668d    rank>7          
+  NIFTY INDIA DEFENCE     17     02-Jan-18   6,429.1     5,435.8     ₹-93,187      -15.5%    30d     rank>7          
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               2      1.738    +32.3%    +12.5%    11,990.7    ₹+399,725   
-  NIFTY PVT BANK          4      1.608    +32.9%    +13.5%    13,033.0    ₹+399,725   
+  NIFTY IT                1      2.161    +27.3%    +19.5%    12,872.5    ₹+578,224   
+  NIFTY PVT BANK          3      2.040    +39.8%    +8.7%     15,155.3    ₹+563,657   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      02-Mar-17   1.865       8,411.4     9,474.6     +12.6%  
-  NIFTY BANK              3      02-Mar-17   1.728       20,884.8    23,309.9    +11.6%  
-  NIFTY ENERGY            6      02-Sep-16   1.435       9,547.3     11,796.7    +23.6%  
+  NIFTY CONSUMER DURABLES  2      05-Apr-17   2.150       3,257.4     4,573.4     +40.4%  
+  NIFTY MNC               5      02-Jan-18   1.835       14,717.2    14,752.0    +0.2%   
+  NIFTY CONSUMPTION       7      04-Dec-17   1.696       4,803.4     5,017.0     +4.4%   
 
-  AFTER: Invested ₹1,997,439 | Cash ₹434 | Total ₹1,997,873 | Positions 5/5
-
-========================================================================
-  REBALANCE #65  —  03 Jul 2017  (eligible: 14/14)
-  NAV: ₹2,005,638  |  Slot: ₹401,128  |  Cash: ₹434
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               2      02-Jun-17   2.113       11,990.7    12,271.2    +2.3%   
-  NIFTY FIN SERVICE       3      02-Mar-17   1.750       8,411.4     9,521.7     +13.2%  
-  NIFTY PVT BANK          4      02-Jun-17   1.664       13,033.0    13,016.8    -0.1%   
-  NIFTY BANK              5      02-Mar-17   1.605       20,884.8    23,272.5    +11.4%  
-  NIFTY ENERGY            7      02-Sep-16   1.475       9,547.3     11,643.0    +22.0%  
-
-  AFTER: Invested ₹2,005,204 | Cash ₹434 | Total ₹2,005,638 | Positions 5/5
+  AFTER: Invested ₹2,850,467 | Cash ₹0 | Total ₹2,850,467 | Positions 5/5
 
 ========================================================================
-  REBALANCE #66  —  01 Aug 2017  (eligible: 14/14)
-  NAV: ₹2,163,817  |  Slot: ₹432,763  |  Cash: ₹434
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               1      02-Jun-17   2.218       11,990.7    13,027.0    +8.6%   
-  NIFTY FIN SERVICE       2      02-Mar-17   2.089       8,411.4     10,262.7    +22.0%  
-  NIFTY BANK              3      02-Mar-17   2.012       20,884.8    25,122.5    +20.3%  
-  NIFTY PVT BANK          4      02-Jun-17   2.007       13,033.0    13,955.7    +7.1%   
-  NIFTY ENERGY            5      02-Sep-16   1.640       9,547.3     12,820.0    +34.3%  
-
-  AFTER: Invested ₹2,163,383 | Cash ₹434 | Total ₹2,163,817 | Positions 5/5
-
-========================================================================
-  REBALANCE #67  —  01 Sep 2017  (eligible: 14/14)
-  NAV: ₹2,162,357  |  Slot: ₹432,471  |  Cash: ₹434
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Sep-16   2.578       9,547.3     13,218.8    +38.5%  
-  NIFTY MNC               2      02-Jun-17   2.216       11,990.7    13,268.3    +10.7%  
-  NIFTY FIN SERVICE       4      02-Mar-17   1.702       8,411.4     10,103.3    +20.1%  
-  NIFTY PVT BANK          5      02-Jun-17   1.550       13,033.0    13,742.0    +5.4%   
-  NIFTY BANK              6      02-Mar-17   1.424       20,884.8    24,433.7    +17.0%  
-
-  AFTER: Invested ₹2,161,924 | Cash ₹434 | Total ₹2,162,357 | Positions 5/5
-
-========================================================================
-  REBALANCE #68  —  03 Oct 2017  (eligible: 14/14)
-  NAV: ₹2,134,493  |  Slot: ₹426,899  |  Cash: ₹434
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Sep-16   2.402       9,547.3     12,945.2    +35.6%  
-  NIFTY MNC               3      02-Jun-17   1.980       11,990.7    13,147.8    +9.6%   
-  NIFTY FIN SERVICE       4      02-Mar-17   1.655       8,411.4     9,999.8     +18.9%  
-  NIFTY PVT BANK          5      02-Jun-17   1.598       13,033.0    13,618.2    +4.5%   
-  NIFTY BANK              6      02-Mar-17   1.451       20,884.8    24,103.1    +15.4%  
-
-  AFTER: Invested ₹2,134,059 | Cash ₹434 | Total ₹2,134,493 | Positions 5/5
-
-========================================================================
-  REBALANCE #69  —  01 Nov 2017  (eligible: 14/14)
-  NAV: ₹2,275,334  |  Slot: ₹455,067  |  Cash: ₹434
+  REBALANCE #73  —  01 Mar 2018  (eligible: 20/20)
+  NAV: ₹2,718,859  |  Slot: ₹543,772  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PVT BANK          8      02-Jun-17   13,033.0    14,061.5    ₹+31,544      +7.9%     152d    rank>7          
+  NIFTY PVT BANK          9      02-Feb-18   15,155.3    14,075.2    ₹-40,173      -7.1%     27d     rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY METAL             2      2.265    +49.4%    +21.1%    3,950.6     ₹+431,703   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Sep-16   2.780       9,547.3     14,585.3    +52.8%  
-  NIFTY MNC               3      02-Jun-17   1.896       11,990.7    13,883.3    +15.8%  
-  NIFTY FIN SERVICE       5      02-Mar-17   1.172       8,411.4     10,437.6    +24.1%  
-  NIFTY BANK              7      02-Mar-17   1.057       20,884.8    25,490.2    +22.1%  
-
-  AFTER: Invested ₹2,275,150 | Cash ₹0 | Total ₹2,275,150 | Positions 5/5
-
-========================================================================
-  REBALANCE #70  —  01 Dec 2017  (eligible: 14/14)
-  NAV: ₹2,193,975  |  Slot: ₹438,795  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             11     02-Nov-17   3,950.6     3,637.9     ₹-34,165      -7.9%     29d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY REALTY            1      2.312    +90.9%    +11.0%    321.7       ₹+397,538   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            2      02-Sep-16   1.899       9,547.3     13,941.1    +46.0%  
-  NIFTY MNC               3      02-Jun-17   1.648       11,990.7    13,611.5    +13.5%  
-  NIFTY BANK              5      02-Mar-17   1.540       20,884.8    25,191.7    +20.6%  
-  NIFTY FIN SERVICE       6      02-Mar-17   1.213       8,411.4     10,256.2    +21.9%  
-
-  AFTER: Invested ₹2,193,015 | Cash ₹0 | Total ₹2,193,015 | Positions 5/5
-
-========================================================================
-  REBALANCE #71  —  01 Jan 2018  (eligible: 14/14)
-  NAV: ₹2,277,317  |  Slot: ₹455,463  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               1      02-Jun-17   2.575       11,990.7    14,666.5    +22.3%  
-  NIFTY REALTY            2      04-Dec-17   2.565       321.7       347.7       +8.1%   
-  NIFTY ENERGY            4      02-Sep-16   1.374       9,547.3     14,139.0    +48.1%  
-  NIFTY BANK              6      02-Mar-17   0.954 ⚠     20,884.8    25,317.8    +21.2%  
-  NIFTY FIN SERVICE       7      02-Mar-17   0.949 ⚠     8,411.4     10,373.7    +23.3%  
-
-  AFTER: Invested ₹2,277,317 | Cash ₹0 | Total ₹2,277,317 | Positions 5/5
-
-========================================================================
-  REBALANCE #72  —  01 Feb 2018  (eligible: 14/14)
-  NAV: ₹2,342,037  |  Slot: ₹468,407  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY ENERGY            11     02-Sep-16   9,547.3     14,136.2    ₹+174,862     +48.1%    517d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY IT                1      2.077    +27.3%    +19.5%    12,872.5    ₹+468,407   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       3      02-Mar-17   1.964       8,411.4     11,231.8    +33.5%  
-  NIFTY MNC               4      02-Jun-17   1.856       11,990.7    14,752.0    +23.0%  
-  NIFTY BANK              5      02-Mar-17   1.756       20,884.8    27,220.4    +30.3%  
-  NIFTY REALTY            6      04-Dec-17   1.539       321.7       341.9       +6.3%   
-
-  AFTER: Invested ₹2,270,256 | Cash ₹70,264 | Total ₹2,340,520 | Positions 5/5
-
-========================================================================
-  REBALANCE #73  —  01 Mar 2018  (eligible: 14/14)
-  NAV: ₹2,222,480  |  Slot: ₹444,496  |  Cash: ₹70,264
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY BANK              9      02-Mar-17   20,884.8    24,831.1    ₹+73,084      +18.9%    364d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY METAL             4      1.516    +26.9%    +6.4%     3,911.9     ₹+444,496   
+  NIFTY INDIA MFG         3      1.775    +33.0%    +0.5%     4,016.0     ₹+523,484   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
   NIFTY IT                1      02-Feb-18   2.522       12,872.5    12,769.5    -0.8%   
-  NIFTY MNC               2      02-Jun-17   2.210       11,990.7    14,219.8    +18.6%  
-  NIFTY REALTY            3      04-Dec-17   1.741       321.7       324.8       +0.9%   
-  NIFTY FIN SERVICE       5      02-Mar-17   1.284       8,411.4     10,372.6    +23.3%  
+  NIFTY MNC               2      02-Jan-18   2.195       14,717.2    14,219.8    -3.4%   
+  NIFTY CONSUMER DURABLES  6      05-Apr-17   1.412       3,257.4     4,310.8     +32.3%  
+  NIFTY CONSUMPTION       7      04-Dec-17   1.269       4,803.4     4,801.0     -0.0%   
 
-  AFTER: Invested ₹2,141,104 | Cash ₹85,631 | Total ₹2,226,734 | Positions 5/5
-
-========================================================================
-  REBALANCE #74  —  02 Apr 2018  (eligible: 14/14)
-  NAV: ₹2,130,806  |  Slot: ₹426,161  |  Cash: ₹85,631
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY REALTY            6      04-Dec-17   321.7       295.9       ₹-31,944      -8.0%     119d    ema200          
-  NIFTY METAL             10     05-Mar-18   3,911.9     3,508.1     ₹-45,872      -10.3%    28d     rank>7+ema200   
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PVT BANK          4      1.442    +16.9%    -2.8%     13,639.3    ₹+426,161   
-  NIFTY FMCG              5      1.420    +13.0%    -0.5%     26,462.9    ₹+423,688   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.791       12,872.5    12,707.1    -1.3%   
-  NIFTY MNC               2      02-Jun-17   1.843       11,990.7    14,010.3    +16.8%  
-  NIFTY FIN SERVICE       3      02-Mar-17   1.679       8,411.4     10,261.3    +22.0%  
-
-  AFTER: Invested ₹2,128,686 | Cash ₹0 | Total ₹2,128,686 | Positions 5/5
+  AFTER: Invested ₹2,723,023 | Cash ₹0 | Total ₹2,723,023 | Positions 5/5
 
 ========================================================================
-  REBALANCE #75  —  02 May 2018  (eligible: 14/14)
-  NAV: ₹2,264,600  |  Slot: ₹452,920  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.829       12,872.5    13,754.3    +6.9%   
-  NIFTY MNC               2      02-Jun-17   2.086       11,990.7    14,481.4    +20.8%  
-  NIFTY FMCG              3      03-Apr-18   2.076       26,462.9    28,818.2    +8.9%   
-  NIFTY PVT BANK          5      03-Apr-18   1.197       13,639.3    14,624.8    +7.2%   
-  NIFTY FIN SERVICE       6      02-Mar-17   1.167       8,411.4     10,726.2    +27.5%  
-
-  AFTER: Invested ₹2,264,600 | Cash ₹0 | Total ₹2,264,600 | Positions 5/5
-
-========================================================================
-  REBALANCE #76  —  01 Jun 2018  (eligible: 14/14)
-  NAV: ₹2,275,193  |  Slot: ₹455,039  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.285       12,872.5    13,558.5    +5.3%   
-  NIFTY PVT BANK          2      03-Apr-18   2.080       13,639.3    15,119.0    +10.8%  
-  NIFTY FIN SERVICE       3      02-Mar-17   2.056       8,411.4     11,058.0    +31.5%  
-  NIFTY MNC               5      02-Jun-17   1.733       11,990.7    14,312.1    +19.4%  
-  NIFTY FMCG              6      03-Apr-18   1.719       26,462.9    28,611.4    +8.1%   
-
-  AFTER: Invested ₹2,275,193 | Cash ₹0 | Total ₹2,275,193 | Positions 5/5
-
-========================================================================
-  REBALANCE #77  —  02 Jul 2018  (eligible: 14/14)
-  NAV: ₹2,284,340  |  Slot: ₹456,868  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.940       12,872.5    14,072.3    +9.3%   
-  NIFTY PVT BANK          2      03-Apr-18   1.909       13,639.3    14,913.5    +9.3%   
-  NIFTY FIN SERVICE       3      02-Mar-17   1.761       8,411.4     10,932.7    +30.0%  
-  NIFTY FMCG              5      03-Apr-18   1.637       26,462.9    28,777.5    +8.7%   
-  NIFTY MNC               6      02-Jun-17   1.607       11,990.7    14,265.8    +19.0%  
-
-  AFTER: Invested ₹2,284,340 | Cash ₹0 | Total ₹2,284,340 | Positions 5/5
-
-========================================================================
-  REBALANCE #78  —  01 Aug 2018  (eligible: 14/14)
-  NAV: ₹2,398,082  |  Slot: ₹479,616  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.534       12,872.5    14,679.3    +14.0%  
-  NIFTY FMCG              2      03-Apr-18   2.299       26,462.9    31,175.1    +17.8%  
-  NIFTY FIN SERVICE       4      02-Mar-17   1.727       8,411.4     11,590.2    +37.8%  
-  NIFTY PVT BANK          6      03-Apr-18   1.481       13,639.3    15,508.2    +13.7%  
-  NIFTY MNC               7      02-Jun-17   1.321       11,990.7    14,638.6    +22.1%  
-
-  AFTER: Invested ₹2,398,082 | Cash ₹0 | Total ₹2,398,082 | Positions 5/5
-
-========================================================================
-  REBALANCE #79  —  03 Sep 2018  (eligible: 14/14)
-  NAV: ₹2,463,420  |  Slot: ₹492,684  |  Cash: ₹0
+  REBALANCE #74  —  02 Apr 2018  (eligible: 20/20)
+  NAV: ₹2,720,117  |  Slot: ₹544,023  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               8      02-Jun-17   11,990.7    14,716.2    ₹+90,860      +22.7%    458d    rank>7          
+  NIFTY INDIA MFG         8      05-Mar-18   4,016.0     3,978.0     ₹-4,953       -0.9%     28d     rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PHARMA            3      1.868    +16.3%    +26.3%    10,383.5    ₹+490,584   
+  NIFTY FIN SERVICE       4      1.666    +19.4%    -1.9%     10,248.2    ₹+518,531   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.869       12,872.5    15,724.7    +22.2%  
-  NIFTY FMCG              2      03-Apr-18   2.236       26,462.9    32,109.6    +21.3%  
-  NIFTY FIN SERVICE       5      02-Mar-17   1.313       8,411.4     11,631.3    +38.3%  
-  NIFTY PVT BANK          6      03-Apr-18   1.196       13,639.3    15,748.3    +15.5%  
+  NIFTY IT                1      02-Feb-18   2.819       12,872.5    12,707.1    -1.3%   
+  NIFTY CONSUMER DURABLES  2      05-Apr-17   1.987       3,257.4     4,454.3     +36.7%  
+  NIFTY MNC               3      02-Jan-18   1.824       14,717.2    14,010.3    -4.8%   
+  NIFTY CONSUMPTION       5      04-Dec-17   1.425       4,803.4     4,813.0     +0.2%   
 
-  AFTER: Invested ₹2,461,442 | Cash ₹0 | Total ₹2,461,442 | Positions 5/5
+  AFTER: Invested ₹2,726,165 | Cash ₹0 | Total ₹2,726,165 | Positions 5/5
 
 ========================================================================
-  REBALANCE #80  —  01 Oct 2018  (eligible: 14/14)
-  NAV: ₹2,350,015  |  Slot: ₹470,003  |  Cash: ₹0
+  REBALANCE #75  —  02 May 2018  (eligible: 20/20)
+  NAV: ₹2,840,206  |  Slot: ₹568,041  |  Cash: ₹0
 ========================================================================
 
-  EXITS (2)
+  EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FIN SERVICE       6      02-Mar-17   8,411.4     10,676.1    ₹+76,643      +26.9%    578d    ema200          
-  NIFTY PVT BANK          10     03-Apr-18   13,639.3    14,181.5    ₹+16,941      +4.0%     181d    rank>7+ema200   
+  NIFTY FIN SERVICE       9      03-Apr-18   10,248.2    10,714.3    ₹+23,586      +4.5%     29d     rank>7          
 
-  ENTRIES (2)
+  ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            2      2.356    +19.2%    +19.5%    15,469.3    ₹+470,003   
-  NIFTY METAL             5      1.061    +2.3%     +5.4%     3,523.9     ₹+334,404   
+  NIFTY FMCG              4      2.065    +18.6%    +4.0%     28,797.2    ₹+542,117   
 
-  HOLDS (3)
+  HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   3.243       12,872.5    16,213.6    +26.0%  
-  NIFTY FMCG              3      03-Apr-18   1.828       26,462.9    29,923.7    +13.1%  
-  NIFTY PHARMA            4      04-Sep-18   1.397       10,383.5    10,034.4    -3.4%   
+  NIFTY IT                1      02-Feb-18   2.886       12,872.5    13,754.3    +6.9%   
+  NIFTY CONSUMPTION       2      04-Dec-17   2.250       4,803.4     5,059.7     +5.3%   
+  NIFTY MNC               3      02-Jan-18   2.094       14,717.2    14,481.4    -1.6%   
+  NIFTY CONSUMER DURABLES  5      05-Apr-17   1.714       3,257.4     4,464.2     +37.0%  
 
-  AFTER: Invested ₹2,350,105 | Cash ₹0 | Total ₹2,350,105 | Positions 5/5
+  AFTER: Invested ₹2,839,998 | Cash ₹0 | Total ₹2,839,998 | Positions 5/5
 
 ========================================================================
-  REBALANCE #81  —  01 Nov 2018  (eligible: 14/14)
-  NAV: ₹2,174,374  |  Slot: ₹434,875  |  Cash: ₹0
+  REBALANCE #76  —  01 Jun 2018  (eligible: 20/20)
+  NAV: ₹2,779,306  |  Slot: ₹555,861  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMER DURABLES  8      05-Apr-17   3,257.4     4,127.9     ₹+129,047     +26.7%    422d    rank>7+ema200   
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY PVT BANK          3      2.126    +17.3%    +6.4%     15,298.8    ₹+555,861   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMPTION       1      04-Dec-17   2.385       4,803.4     5,045.4     +5.0%   
+  NIFTY IT                2      02-Feb-18   2.358       12,872.5    13,558.5    +5.3%   
+  NIFTY MNC               6      02-Jan-18   1.800       14,717.2    14,312.1    -2.8%   
+  NIFTY FMCG              7      03-May-18   1.732       28,797.2    28,611.4    -0.6%   
+
+  AFTER: Invested ₹2,707,802 | Cash ₹56,076 | Total ₹2,763,878 | Positions 5/5
+
+========================================================================
+  REBALANCE #77  —  02 Jul 2018  (eligible: 20/20)
+  NAV: ₹2,776,915  |  Slot: ₹555,383  |  Cash: ₹56,076
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY IT                1      02-Feb-18   3.125       12,872.5    14,072.3    +9.3%   
+  NIFTY PVT BANK          2      04-Jun-18   2.045       15,298.8    14,913.5    -2.5%   
+  NIFTY CONSUMPTION       3      04-Dec-17   2.009       4,803.4     5,006.6     +4.2%   
+  NIFTY MNC               6      02-Jan-18   1.785       14,717.2    14,265.8    -3.1%   
+  NIFTY FMCG              7      03-May-18   1.757       28,797.2    28,777.5    -0.1%   
+
+  AFTER: Invested ₹2,720,839 | Cash ₹56,076 | Total ₹2,776,915 | Positions 5/5
+
+========================================================================
+  REBALANCE #78  —  01 Aug 2018  (eligible: 20/20)
+  NAV: ₹2,907,804  |  Slot: ₹581,561  |  Cash: ₹56,076
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY MNC               8      02-Jan-18   14,717.2    14,645.0    ₹-2,337       -0.5%     211d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY ENERGY            3      2.098    +20.3%    +11.7%    15,280.2    ₹+530,812   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY IT                1      02-Feb-18   2.701       12,872.5    14,679.3    +14.0%  
+  NIFTY FMCG              2      03-May-18   2.438       28,797.2    31,175.1    +8.3%   
+  NIFTY CONSUMPTION       4      04-Dec-17   2.022       4,803.4     5,235.3     +9.0%   
+  NIFTY PVT BANK          7      04-Jun-18   1.582       15,298.8    15,508.2    +1.4%   
+
+  AFTER: Invested ₹2,906,801 | Cash ₹0 | Total ₹2,906,801 | Positions 5/5
+
+========================================================================
+  REBALANCE #79  —  03 Sep 2018  (eligible: 20/20)
+  NAV: ₹3,000,364  |  Slot: ₹600,073  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY PVT BANK          8      04-Jun-18   15,298.8    15,763.3    ₹+16,879      +3.0%     91d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY HEALTHCARE        2      2.646    +30.1%    +18.9%    2,384.8     ₹+572,740   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY IT                1      02-Feb-18   3.038       12,872.5    15,724.7    +22.2%  
+  NIFTY FMCG              3      03-May-18   2.396       28,797.2    32,109.6    +11.5%  
+  NIFTY ENERGY            4      02-Aug-18   1.917       15,280.2    15,598.6    +2.1%   
+  NIFTY CONSUMPTION       5      04-Dec-17   1.714       4,803.4     5,309.3     +10.5%  
+
+  AFTER: Invested ₹3,009,150 | Cash ₹0 | Total ₹3,009,150 | Positions 5/5
+
+========================================================================
+  REBALANCE #80  —  01 Oct 2018  (eligible: 20/20)
+  NAV: ₹2,916,140  |  Slot: ₹583,228  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMPTION       9      04-Dec-17   4,803.4     4,795.1     ₹-900         -0.2%     301d    rank>7+ema200   
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY METAL             5      1.170    +2.3%     +5.4%     3,523.9     ₹+519,747   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY IT                1      02-Feb-18   3.505       12,872.5    16,213.6    +26.0%  
+  NIFTY ENERGY            2      02-Aug-18   2.573       15,280.2    15,539.8    +1.7%   
+  NIFTY HEALTHCARE        3      04-Sep-18   2.181       2,384.8     2,347.5     -1.6%   
+  NIFTY FMCG              4      03-May-18   1.986       28,797.2    29,923.7    +3.9%   
+
+  AFTER: Invested ₹2,915,607 | Cash ₹0 | Total ₹2,915,607 | Positions 5/5
+
+========================================================================
+  REBALANCE #81  —  01 Nov 2018  (eligible: 20/20)
+  NAV: ₹2,714,822  |  Slot: ₹542,964  |  Cash: ₹0
 ========================================================================
 
   EXITS (3)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              4      03-Apr-18   26,462.9    28,489.8    ₹+32,450      +7.7%     212d    ema200          
-  NIFTY METAL             3      03-Oct-18   3,523.9     3,368.9     ₹-14,709      -4.4%     29d     ema200          
-  NIFTY ENERGY            7      03-Oct-18   15,469.3    13,901.8    ₹-47,627      -10.1%    29d     ema200          
+  NIFTY FMCG              4      03-May-18   28,797.2    28,489.8    ₹-5,787       -1.1%     182d    ema200          
+  NIFTY METAL             3      03-Oct-18   3,523.9     3,368.9     ₹-22,861      -4.4%     29d     ema200          
+  NIFTY ENERGY            7      02-Aug-18   15,280.2    13,901.8    ₹-47,885      -9.0%     91d     ema200          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PVT BANK          5      1.140    +4.6%     -7.9%     14,447.9    ₹+434,875   
+  NIFTY PVT BANK          5      1.226    +4.6%     -7.9%     14,447.9    ₹+542,964   
 
   HOLDS (2)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.871       12,872.5    14,622.0    +13.6%  
-  NIFTY PHARMA            2      04-Sep-18   2.163       10,383.5    9,609.2     -7.5%   
+  NIFTY HEALTHCARE        1      04-Sep-18   3.143       2,384.8     2,308.6     -3.2%   
+  NIFTY IT                2      02-Feb-18   3.031       12,872.5    14,622.0    +13.6%  
 
-  AFTER: Invested ₹1,416,925 | Cash ₹763,335 | Total ₹2,180,260 | Positions 3/5
-
-========================================================================
-  REBALANCE #82  —  03 Dec 2018  (eligible: 14/14)
-  NAV: ₹2,183,774  |  Slot: ₹436,755  |  Cash: ₹768,313
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PHARMA            7      04-Sep-18   10,383.5    9,071.9     ₹-61,971      -12.6%    90d     ema200          
-
-  ENTRIES (3)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FIN SERVICE       2      2.164    +9.0%     -3.1%     11,414.5    ₹+436,755   
-  NIFTY FMCG              3      1.820    +17.7%    -6.6%     30,306.1    ₹+436,755   
-  NIFTY BANK              4      1.623    +4.4%     -5.0%     26,809.2    ₹+323,417   
-
-  HOLDS (2)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.533       12,872.5    14,740.4    +14.5%  
-  NIFTY PVT BANK          5      02-Nov-18   1.616       14,447.9    15,160.5    +4.9%   
-
-  AFTER: Invested ₹2,191,362 | Cash ₹0 | Total ₹2,191,362 | Positions 5/5
+  AFTER: Invested ₹1,749,213 | Cash ₹973,178 | Total ₹2,722,392 | Positions 3/5
 
 ========================================================================
-  REBALANCE #83  —  01 Jan 2019  (eligible: 14/14)
-  NAV: ₹2,205,408  |  Slot: ₹441,082  |  Cash: ₹0
+  REBALANCE #82  —  03 Dec 2018  (eligible: 20/20)
+  NAV: ₹2,763,812  |  Slot: ₹552,762  |  Cash: ₹979,478
 ========================================================================
 
   EXITS (0)
     —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      04-Dec-18   2.287       11,414.5    11,702.0    +2.5%   
-  NIFTY PVT BANK          2      02-Nov-18   2.054       14,447.9    15,391.5    +6.5%   
-  NIFTY BANK              3      04-Dec-18   2.051       26,809.2    27,392.1    +2.2%   
-  NIFTY FMCG              4      04-Dec-18   1.815       30,306.1    30,398.4    +0.3%   
-  NIFTY IT                5      02-Feb-18   1.340       12,872.5    14,450.9    +12.3%  
-
-  AFTER: Invested ₹2,205,408 | Cash ₹0 | Total ₹2,205,408 | Positions 5/5
-
-========================================================================
-  REBALANCE #84  —  01 Feb 2019  (eligible: 14/14)
-  NAV: ₹2,235,678  |  Slot: ₹447,136  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.370       12,872.5    15,724.3    +22.2%  
-  NIFTY FMCG              2      04-Dec-18   2.129       30,306.1    30,199.9    -0.4%   
-  NIFTY FIN SERVICE       3      04-Dec-18   1.901       11,414.5    11,460.9    +0.4%   
-  NIFTY PVT BANK          5      02-Nov-18   1.882       14,447.9    15,382.1    +6.5%   
-  NIFTY BANK              6      04-Dec-18   1.774       26,809.2    27,085.6    +1.0%   
-
-  AFTER: Invested ₹2,235,678 | Cash ₹0 | Total ₹2,235,678 | Positions 5/5
-
-========================================================================
-  REBALANCE #85  —  01 Mar 2019  (eligible: 14/14)
-  NAV: ₹2,224,920  |  Slot: ₹444,984  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Feb-18   2.981       12,872.5    15,848.3    +23.1%  
-  NIFTY PVT BANK          2      02-Nov-18   1.849       14,447.9    15,437.7    +6.9%   
-  NIFTY BANK              4      04-Dec-18   1.635       26,809.2    27,043.6    +0.9%   
-  NIFTY FIN SERVICE       5      04-Dec-18   1.366       11,414.5    11,308.2    -0.9%   
-  NIFTY FMCG              6      04-Dec-18   1.323       30,306.1    29,464.9    -2.8%   
-
-  AFTER: Invested ₹2,224,920 | Cash ₹0 | Total ₹2,224,920 | Positions 5/5
-
-========================================================================
-  REBALANCE #86  —  01 Apr 2019  (eligible: 14/14)
-  NAV: ₹2,374,131  |  Slot: ₹474,826  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              8      04-Dec-18   30,306.1    30,237.2    ₹-993         -0.2%     118d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            3      1.884    +24.1%    +15.7%    16,585.9    ₹+435,762   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PVT BANK          1      02-Nov-18   2.371       14,447.9    17,225.2    +19.2%  
-  NIFTY BANK              2      04-Dec-18   2.342       26,809.2    30,326.1    +13.1%  
-  NIFTY FIN SERVICE       4      04-Dec-18   1.863       11,414.5    12,499.7    +9.5%   
-  NIFTY IT                5      02-Feb-18   1.771       12,872.5    15,840.7    +23.1%  
-
-  AFTER: Invested ₹2,373,351 | Cash ₹0 | Total ₹2,373,351 | Positions 5/5
-
-========================================================================
-  REBALANCE #87  —  02 May 2019  (eligible: 14/14)
-  NAV: ₹2,374,574  |  Slot: ₹474,915  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY BANK              1      04-Dec-18   2.199       26,809.2    29,708.3    +10.8%  
-  NIFTY FIN SERVICE       2      04-Dec-18   2.131       11,414.5    12,583.8    +10.2%  
-  NIFTY IT                3      02-Feb-18   2.088       12,872.5    16,403.7    +27.4%  
-  NIFTY PVT BANK          4      02-Nov-18   2.010       14,447.9    16,754.7    +16.0%  
-  NIFTY ENERGY            5      02-Apr-19   1.875       16,585.9    16,499.1    -0.5%   
-
-  AFTER: Invested ₹2,374,574 | Cash ₹0 | Total ₹2,374,574 | Positions 5/5
-
-========================================================================
-  REBALANCE #88  —  03 Jun 2019  (eligible: 14/14)
-  NAV: ₹2,471,720  |  Slot: ₹494,344  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                8      02-Feb-18   12,872.5    16,276.8    ₹+123,876     +26.4%    486d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY REALTY            5      1.295    -3.3%     +23.9%    286.5       ₹+494,344   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      04-Dec-18   2.561       11,414.5    13,636.1    +19.5%  
-  NIFTY BANK              2      04-Dec-18   2.290       26,809.2    31,653.3    +18.1%  
-  NIFTY PVT BANK          3      02-Nov-18   1.993       14,447.9    17,689.2    +22.4%  
-  NIFTY ENERGY            4      02-Apr-19   1.626       16,585.9    16,760.2    +1.1%   
-
-  AFTER: Invested ₹2,371,250 | Cash ₹97,940 | Total ₹2,469,190 | Positions 5/5
-
-========================================================================
-  REBALANCE #89  —  01 Jul 2019  (eligible: 14/14)
-  NAV: ₹2,445,931  |  Slot: ₹489,186  |  Cash: ₹97,940
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      04-Dec-18   2.921       11,414.5    13,695.7    +20.0%  
-  NIFTY BANK              2      04-Dec-18   2.130       26,809.2    31,371.8    +17.0%  
-  NIFTY PVT BANK          4      02-Nov-18   1.678       14,447.9    17,358.9    +20.1%  
-  NIFTY REALTY            5      04-Jun-19   1.617       286.5       291.8       +1.9%   
-  NIFTY ENERGY            7      02-Apr-19   1.007       16,585.9    15,964.0    -3.7%   
-
-  AFTER: Invested ₹2,347,991 | Cash ₹97,940 | Total ₹2,445,931 | Positions 5/5
-
-========================================================================
-  REBALANCE #90  —  01 Aug 2019  (eligible: 14/14)
-  NAV: ₹2,230,267  |  Slot: ₹446,053  |  Cash: ₹97,940
-========================================================================
-
-  EXITS (3)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PVT BANK          6      02-Nov-18   14,447.9    15,610.2    ₹+34,983      +8.0%     272d    ema200          
-  NIFTY BANK              4      04-Dec-18   26,809.2    28,223.9    ₹+17,067      +5.3%     240d    ema200          
-  NIFTY ENERGY            8      02-Apr-19   16,585.9    14,546.2    ₹-53,589      -12.3%    121d    rank>7+ema200   
 
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY IT                3      1.811    +5.8%     -4.7%     15,277.7    ₹+446,053   
-  NIFTY FMCG              5      1.666    -1.0%     -2.8%     28,846.8    ₹+446,053   
+  NIFTY FIN SERVICE       3      2.131    +9.0%     -3.1%     11,414.5    ₹+552,762   
+  NIFTY FMCG              4      1.839    +17.7%    -6.6%     30,306.1    ₹+426,716   
 
-  HOLDS (2)
+  HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      04-Dec-18   2.487       11,414.5    12,494.1    +9.5%   
-  NIFTY REALTY            2      04-Jun-19   2.280       286.5       264.5       -7.6%   
+  NIFTY HEALTHCARE        1      04-Sep-18   2.643       2,384.8     2,326.6     -2.4%   
+  NIFTY IT                2      02-Feb-18   2.529       12,872.5    14,740.4    +14.5%  
+  NIFTY PVT BANK          5      02-Nov-18   1.613       14,447.9    15,160.5    +4.9%   
 
-  AFTER: Invested ₹1,829,522 | Cash ₹398,348 | Total ₹2,227,870 | Positions 4/5
+  AFTER: Invested ₹2,771,400 | Cash ₹0 | Total ₹2,771,400 | Positions 5/5
 
 ========================================================================
-  REBALANCE #91  —  03 Sep 2019  (eligible: 14/14)
-  NAV: ₹2,224,870  |  Slot: ₹444,974  |  Cash: ₹400,963
+  REBALANCE #83  —  01 Jan 2019  (eligible: 20/20)
+  NAV: ₹2,776,000  |  Slot: ₹555,200  |  Cash: ₹0
 ========================================================================
 
-  EXITS (3)
+  EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FIN SERVICE       3      04-Dec-18   11,414.5    12,125.7    ₹+27,211      +6.2%     273d    ema200          
-  NIFTY FMCG              4      02-Aug-19   28,846.8    28,812.9    ₹-524         -0.1%     32d     ema200          
-  NIFTY REALTY            2      04-Jun-19   286.5       260.3       ₹-45,129      -9.1%     91d     ema200          
+  NIFTY HEALTHCARE        8      04-Sep-18   2,384.8     2,292.1     ₹-22,264      -3.9%     119d    rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PHARMA            5      1.384    -17.7%    -5.7%     7,931.6     ₹+444,974   
+  NIFTY BANK              2      2.235    +7.2%     +9.4%     27,296.7    ₹+550,476   
 
-  HOLDS (1)
+  HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Aug-19   2.843       15,277.7    15,984.9    +4.6%   
+  NIFTY FIN SERVICE       1      04-Dec-18   2.498       11,414.5    11,702.0    +2.5%   
+  NIFTY PVT BANK          3      02-Nov-18   2.226       14,447.9    15,391.5    +6.5%   
+  NIFTY FMCG              4      04-Dec-18   1.888       30,306.1    30,398.4    +0.3%   
+  NIFTY IT                6      02-Feb-18   1.241       12,872.5    14,450.9    +12.3%  
 
-  AFTER: Invested ₹914,193 | Cash ₹1,314,699 | Total ₹2,228,891 | Positions 2/5
-
-========================================================================
-  REBALANCE #92  —  01 Oct 2019  (eligible: 14/14)
-  NAV: ₹2,180,290  |  Slot: ₹436,058  |  Cash: ₹1,321,222
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                7      02-Aug-19   15,277.7    15,318.8    ₹+1,201       +0.3%     60d     ema200          
-  NIFTY PHARMA            12     04-Sep-19   7,931.6     7,418.8     ₹-28,769      -6.5%     27d     rank>7+ema200   
-
-  ENTRIES (5)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              1      2.392    +0.8%     +4.2%     30,819.6    ₹+436,058   
-  NIFTY FIN SERVICE       2      2.137    +15.8%    -4.1%     12,943.2    ₹+436,058   
-  NIFTY MNC               3      1.803    -6.3%     +2.1%     13,278.8    ₹+436,058   
-  NIFTY ENERGY            4      1.533    -1.4%     -4.1%     15,348.5    ₹+436,058   
-  NIFTY BANK              5      1.520    +7.1%     -7.7%     28,606.4    ₹+436,058   
-
-  HOLDS (0)
-    —
-
-  AFTER: Invested ₹2,185,898 | Cash ₹4,391 | Total ₹2,190,290 | Positions 5/5
+  AFTER: Invested ₹2,774,650 | Cash ₹0 | Total ₹2,774,650 | Positions 5/5
 
 ========================================================================
-  REBALANCE #93  —  01 Nov 2019  (eligible: 14/14)
-  NAV: ₹2,316,885  |  Slot: ₹463,377  |  Cash: ₹4,391
+  REBALANCE #84  —  01 Feb 2019  (eligible: 20/20)
+  NAV: ₹2,810,846  |  Slot: ₹562,169  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
@@ -2207,17 +2035,17 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   HOLDS (5)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      03-Oct-19   2.316       30,819.6    32,449.8    +5.3%   
-  NIFTY MNC               2      03-Oct-19   2.094       13,278.8    14,250.0    +7.3%   
-  NIFTY FIN SERVICE       3      03-Oct-19   1.907       12,943.2    13,585.3    +5.0%   
-  NIFTY ENERGY            4      03-Oct-19   1.518       15,348.5    16,381.0    +6.7%   
-  NIFTY BANK              5      03-Oct-19   1.440       28,606.4    30,330.2    +6.0%   
+  NIFTY IT                1      02-Feb-18   2.502       12,872.5    15,724.3    +22.2%  
+  NIFTY FMCG              2      04-Dec-18   2.253       30,306.1    30,199.9    -0.4%   
+  NIFTY FIN SERVICE       3      04-Dec-18   2.017       11,414.5    11,460.9    +0.4%   
+  NIFTY PVT BANK          4      02-Nov-18   1.999       14,447.9    15,382.1    +6.5%   
+  NIFTY BANK              6      02-Jan-19   1.884       27,296.7    27,085.6    -0.8%   
 
-  AFTER: Invested ₹2,312,494 | Cash ₹4,391 | Total ₹2,316,885 | Positions 5/5
+  AFTER: Invested ₹2,810,846 | Cash ₹0 | Total ₹2,810,846 | Positions 5/5
 
 ========================================================================
-  REBALANCE #94  —  02 Dec 2019  (eligible: 14/14)
-  NAV: ₹2,319,497  |  Slot: ₹463,899  |  Cash: ₹4,391
+  REBALANCE #85  —  01 Mar 2019  (eligible: 20/20)
+  NAV: ₹2,799,911  |  Slot: ₹559,982  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
@@ -2229,1458 +2057,436 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   HOLDS (5)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      03-Oct-19   2.237       12,943.2    14,163.0    +9.4%   
-  NIFTY BANK              2      03-Oct-19   1.993       28,606.4    31,871.1    +11.4%  
-  NIFTY ENERGY            4      03-Oct-19   1.740       15,348.5    16,258.5    +5.9%   
-  NIFTY MNC               5      03-Oct-19   1.607       13,278.8    13,799.8    +3.9%   
-  NIFTY FMCG              7      03-Oct-19   1.371       30,819.6    30,889.5    +0.2%   
+  NIFTY IT                1      02-Feb-18   3.128       12,872.5    15,848.3    +23.1%  
+  NIFTY PVT BANK          2      02-Nov-18   1.967       14,447.9    15,437.7    +6.9%   
+  NIFTY BANK              5      02-Jan-19   1.750       27,296.7    27,043.6    -0.9%   
+  NIFTY FIN SERVICE       6      04-Dec-18   1.480       11,414.5    11,308.2    -0.9%   
+  NIFTY FMCG              7      04-Dec-18   1.446       30,306.1    29,464.9    -2.8%   
 
-  AFTER: Invested ₹2,315,105 | Cash ₹4,391 | Total ₹2,319,497 | Positions 5/5
+  AFTER: Invested ₹2,799,911 | Cash ₹0 | Total ₹2,799,911 | Positions 5/5
 
 ========================================================================
-  REBALANCE #95  —  01 Jan 2020  (eligible: 14/14)
-  NAV: ₹2,318,377  |  Slot: ₹463,675  |  Cash: ₹4,391
+  REBALANCE #86  —  01 Apr 2019  (eligible: 20/20)
+  NAV: ₹3,000,896  |  Slot: ₹600,179  |  Cash: ₹0
 ========================================================================
 
-  EXITS (2)
+  EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               9      03-Oct-19   13,278.8    13,831.6    ₹+18,152      +4.2%     90d     rank>7          
-  NIFTY FMCG              13     03-Oct-19   30,819.6    30,271.3    ₹-7,758       -1.8%     90d     rank>7+ema200   
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY REALTY            2      2.265    +25.9%    +11.2%    299.1       ₹+463,675   
-  NIFTY PVT BANK          4      1.885    +17.4%    +7.2%     17,734.2    ₹+423,226   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      03-Oct-19   2.721       12,943.2    14,574.2    +12.6%  
-  NIFTY BANK              3      03-Oct-19   1.924       28,606.4    32,102.5    +12.2%  
-  NIFTY ENERGY            5      03-Oct-19   1.301       15,348.5    15,987.8    +4.2%   
-
-  AFTER: Invested ₹2,320,267 | Cash ₹0 | Total ₹2,320,267 | Positions 5/5
-
-========================================================================
-  REBALANCE #96  —  03 Feb 2020  (eligible: 14/14)
-  NAV: ₹2,212,048  |  Slot: ₹442,410  |  Cash: ₹0
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY ENERGY            12     03-Oct-19   15,348.5    14,619.8    ₹-20,700      -4.7%     123d    rank>7+ema200   
-  NIFTY PVT BANK          5      02-Jan-20   17,734.2    16,706.9    ₹-24,514      -5.8%     32d     ema200          
+  NIFTY FMCG              10     04-Dec-18   30,306.1    30,237.2    ₹-970         -0.2%     118d    rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY IT                3      1.939    +7.8%     +3.0%     16,174.8    ₹+442,410   
+  NIFTY ENERGY            3      2.030    +24.1%    +15.7%    16,585.9    ₹+425,746   
 
-  HOLDS (3)
+  HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY REALTY            1      02-Jan-20   3.111       299.1       310.0       +3.6%   
-  NIFTY FIN SERVICE       2      03-Oct-19   2.107       12,943.2    13,822.3    +6.8%   
-  NIFTY BANK              4      03-Oct-19   1.522       28,606.4    30,022.9    +5.0%   
+  NIFTY PVT BANK          1      02-Nov-18   2.563       14,447.9    17,225.2    +19.2%  
+  NIFTY BANK              2      02-Jan-19   2.531       27,296.7    30,326.1    +11.1%  
+  NIFTY FIN SERVICE       4      04-Dec-18   2.011       11,414.5    12,499.7    +9.5%   
+  NIFTY IT                5      02-Feb-18   1.910       12,872.5    15,840.7    +23.1%  
 
-  AFTER: Invested ₹1,843,087 | Cash ₹371,660 | Total ₹2,214,747 | Positions 4/5
+  AFTER: Invested ₹3,000,135 | Cash ₹0 | Total ₹3,000,135 | Positions 5/5
 
 ========================================================================
-  REBALANCE #97  —  02 Mar 2020  (eligible: 14/14)
-  NAV: ₹2,122,624  |  Slot: ₹424,525  |  Cash: ₹373,777
+  REBALANCE #87  —  02 May 2019  (eligible: 20/20)
+  NAV: ₹2,998,509  |  Slot: ₹599,702  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY BANK              1      02-Jan-19   2.331       27,296.7    29,708.3    +8.8%   
+  NIFTY FIN SERVICE       2      04-Dec-18   2.261       11,414.5    12,583.8    +10.2%  
+  NIFTY IT                3      02-Feb-18   2.216       12,872.5    16,403.7    +27.4%  
+  NIFTY PVT BANK          5      02-Nov-18   2.134       14,447.9    16,754.7    +16.0%  
+  NIFTY ENERGY            6      02-Apr-19   1.991       16,585.9    16,499.1    -0.5%   
+
+  AFTER: Invested ₹2,998,509 | Cash ₹0 | Total ₹2,998,509 | Positions 5/5
+
+========================================================================
+  REBALANCE #88  —  03 Jun 2019  (eligible: 20/20)
+  NAV: ₹3,128,575  |  Slot: ₹625,715  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY IT                11     02-Feb-18   12,872.5    16,276.8    ₹+152,919     +26.4%    486d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY OIL & GAS         3      2.174    +23.9%    +24.6%    3,763.9     ₹+625,715   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FIN SERVICE       1      04-Dec-18   2.617       11,414.5    13,636.1    +19.5%  
+  NIFTY BANK              2      02-Jan-19   2.321       27,296.7    31,653.3    +16.0%  
+  NIFTY PVT BANK          4      02-Nov-18   1.995       14,447.9    17,689.2    +22.4%  
+  NIFTY ENERGY            5      02-Apr-19   1.596       16,585.9    16,760.2    +1.1%   
+
+  AFTER: Invested ₹3,022,093 | Cash ₹105,428 | Total ₹3,127,520 | Positions 5/5
+
+========================================================================
+  REBALANCE #89  —  01 Jul 2019  (eligible: 20/20)
+  NAV: ₹3,046,422  |  Slot: ₹609,284  |  Cash: ₹105,428
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY ENERGY            11     02-Apr-19   16,585.9    16,046.0    ₹-13,858      -3.3%     90d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INFRA             3      1.748    +6.0%     +6.2%     3,397.3     ₹+517,316   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FIN SERVICE       1      04-Dec-18   3.175       11,414.5    13,695.7    +20.0%  
+  NIFTY BANK              2      02-Jan-19   2.245       27,296.7    31,371.8    +14.9%  
+  NIFTY PVT BANK          5      02-Nov-18   1.714       14,447.9    17,358.9    +20.1%  
+  NIFTY OIL & GAS         7      04-Jun-19   1.430       3,763.9     3,506.7     -6.8%   
+
+  AFTER: Invested ₹3,047,256 | Cash ₹0 | Total ₹3,047,256 | Positions 5/5
+
+========================================================================
+  REBALANCE #90  —  01 Aug 2019  (eligible: 20/20)
+  NAV: ₹2,768,678  |  Slot: ₹553,736  |  Cash: ₹0
 ========================================================================
 
   EXITS (4)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FIN SERVICE       2      03-Oct-19   12,943.2    13,595.5    ₹+21,980      +5.0%     151d    ema200          
-  NIFTY BANK              5      03-Oct-19   28,606.4    29,012.2    ₹+6,186       +1.4%     151d    ema200          
-  NIFTY IT                3      04-Feb-20   16,174.8    15,615.0    ₹-15,310      -3.5%     27d     ema200          
-  NIFTY REALTY            1      02-Jan-20   299.1       280.9       ₹-28,365      -6.1%     60d     ema200          
+  NIFTY PVT BANK          8      02-Nov-18   14,447.9    15,610.2    ₹+43,678      +8.0%     272d    rank>7+ema200   
+  NIFTY BANK              5      02-Jan-19   27,296.7    28,223.9    ₹+18,699      +3.4%     211d    ema200          
+  NIFTY INFRA             4      02-Jul-19   3,397.3     3,044.8     ₹-53,684      -10.4%    30d     ema200          
+  NIFTY OIL & GAS         7      04-Jun-19   3,763.9     3,222.1     ₹-90,062      -14.4%    58d     ema200          
 
-  ENTRIES (1)
+  ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               4      1.647    +4.4%     -4.2%     13,315.9    ₹+424,525   
+  NIFTY REALTY            2      2.333    +4.2%     +0.7%     261.4       ₹+553,736   
+  NIFTY IT                3      1.838    +5.8%     -4.7%     15,277.7    ₹+553,736   
 
-  HOLDS (0)
-    —
+  HOLDS (1)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FIN SERVICE       1      04-Dec-18   2.572       11,414.5    12,494.1    +9.5%   
 
-  AFTER: Invested ₹421,604 | Cash ₹1,711,944 | Total ₹2,133,549 | Positions 1/5
+  AFTER: Invested ₹1,721,265 | Cash ₹1,047,632 | Total ₹2,768,898 | Positions 3/5
 
 ========================================================================
-  REBALANCE #98  —  01 Apr 2020  (eligible: 14/14)
-  NAV: ₹2,055,976  |  Slot: ₹411,195  |  Cash: ₹1,720,732
+  REBALANCE #91  —  03 Sep 2019  (eligible: 20/20)
+  NAV: ₹2,767,963  |  Slot: ₹553,593  |  Cash: ₹1,054,139
 ========================================================================
 
-  EXITS (1)
+  EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               3      03-Mar-20   13,315.9    10,882.6    ₹-77,576      -18.3%    29d     ema200          
+  NIFTY FIN SERVICE       5      04-Dec-18   11,414.5    12,125.7    ₹+34,438      +6.2%     273d    ema200          
+  NIFTY REALTY            3      02-Aug-19   261.4       260.3       ₹-2,225       -0.4%     32d     ema200          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY HEALTHCARE        2      2.072    -5.3%     -1.7%     2,180.6     ₹+553,593   
+  NIFTY CONSUMER DURABLES  4      1.876    -3.5%     -5.6%     4,085.6     ₹+553,593   
+
+  HOLDS (1)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY IT                1      02-Aug-19   2.847       15,277.7    15,984.9    +4.6%   
+
+  AFTER: Invested ₹1,689,338 | Cash ₹1,085,666 | Total ₹2,775,004 | Positions 3/5
+
+========================================================================
+  REBALANCE #92  —  01 Oct 2019  (eligible: 20/20)
+  NAV: ₹2,809,489  |  Slot: ₹561,898  |  Cash: ₹1,091,269
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY IT                11     02-Aug-19   15,277.7    15,318.8    ₹+1,491       +0.3%     60d     rank>7+ema200   
+  NIFTY HEALTHCARE        14     04-Sep-19   2,180.6     2,146.8     ₹-8,576       -1.5%     27d     rank>7+ema200   
 
   ENTRIES (4)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              1      2.955    -12.6%    -12.5%    26,716.5    ₹+411,195   
-  NIFTY PHARMA            2      2.309    -24.0%    -12.7%    7,019.9     ₹+411,195   
-  NIFTY IT                4      1.887    -22.3%    -23.4%    12,129.8    ₹+411,195   
-  NIFTY FIN SERVICE       5      1.349    -27.4%    -38.6%    8,986.6     ₹+411,195   
+  NIFTY FMCG              2      2.087    +0.8%     +4.2%     30,819.6    ₹+561,898   
+  NIFTY OIL & GAS         3      1.971    +13.4%    -1.5%     3,537.1     ₹+561,898   
+  NIFTY FIN SERVICE       4      1.917    +15.8%    -4.1%     12,943.2    ₹+561,898   
+  NIFTY CONSUMPTION       5      1.722    -3.6%     +3.3%     4,908.1     ₹+505,819   
 
-  HOLDS (0)
-    —
+  HOLDS (1)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Sep-19   2.748       4,085.6     4,618.7     +13.0%  
 
-  AFTER: Invested ₹1,634,813 | Cash ₹422,899 | Total ₹2,057,713 | Positions 4/5
+  AFTER: Invested ₹2,814,511 | Cash ₹0 | Total ₹2,814,511 | Positions 5/5
 
 ========================================================================
-  REBALANCE #99  —  04 May 2020  (eligible: 14/14)
-  NAV: ₹2,295,231  |  Slot: ₹459,046  |  Cash: ₹425,597
+  REBALANCE #93  —  01 Nov 2019  (eligible: 20/20)
+  NAV: ₹2,966,115  |  Slot: ₹593,223  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Sep-19   2.541       4,085.6     4,753.3     +16.3%  
+  NIFTY OIL & GAS         2      03-Oct-19   2.520       3,537.1     3,827.6     +8.2%   
+  NIFTY FMCG              3      03-Oct-19   1.854       30,819.6    32,449.8    +5.3%   
+  NIFTY CONSUMPTION       4      03-Oct-19   1.733       4,908.1     5,168.0     +5.3%   
+  NIFTY FIN SERVICE       7      03-Oct-19   1.492       12,943.2    13,585.3    +5.0%   
+
+  AFTER: Invested ₹2,966,115 | Cash ₹0 | Total ₹2,966,115 | Positions 5/5
+
+========================================================================
+  REBALANCE #94  —  02 Dec 2019  (eligible: 20/20)
+  NAV: ₹2,918,373  |  Slot: ₹583,675  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMPTION       14     03-Oct-19   4,908.1     5,013.2     ₹+10,831      +2.1%     60d     rank>7          
+  NIFTY FMCG              12     03-Oct-19   30,819.6    30,898.2    ₹+1,433       +0.3%     60d     rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY BANK              3      1.777    +21.9%    +14.0%    31,919.7    ₹+583,675   
+  NIFTY PVT BANK          5      1.578    +18.7%    +13.2%    17,643.4    ₹+496,307   
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY OIL & GAS         1      03-Oct-19   2.355       3,537.1     3,787.0     +7.1%   
+  NIFTY FIN SERVICE       2      03-Oct-19   2.039       12,943.2    14,163.0    +9.4%   
+  NIFTY CONSUMER DURABLES  4      04-Sep-19   1.713       4,085.6     4,598.9     +12.6%  
+
+  AFTER: Invested ₹2,918,312 | Cash ₹0 | Total ₹2,918,312 | Positions 5/5
+
+========================================================================
+  REBALANCE #95  —  01 Jan 2020  (eligible: 20/20)
+  NAV: ₹2,997,817  |  Slot: ₹599,563  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FIN SERVICE       1      03-Oct-19   2.495       12,943.2    14,574.2    +12.6%  
+  NIFTY OIL & GAS         2      03-Oct-19   2.326       3,537.1     3,806.0     +7.6%   
+  NIFTY CONSUMER DURABLES  3      04-Sep-19   2.121       4,085.6     4,971.9     +21.7%  
+  NIFTY BANK              6      03-Dec-19   1.726       31,919.7    32,102.5    +0.6%   
+  NIFTY PVT BANK          7      03-Dec-19   1.683       17,643.4    17,767.6    +0.7%   
+
+  AFTER: Invested ₹2,997,817 | Cash ₹0 | Total ₹2,997,817 | Positions 5/5
+
+========================================================================
+  REBALANCE #96  —  03 Feb 2020  (eligible: 20/20)
+  NAV: ₹2,926,185  |  Slot: ₹585,237  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY BANK              8      03-Dec-19   31,919.7    30,234.9    ₹-30,807      -5.3%     62d     rank>7          
+  NIFTY PVT BANK          9      03-Dec-19   17,643.4    16,706.9    ₹-26,344      -5.3%     62d     rank>7+ema200   
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY REALTY            2      2.552    +30.1%    +15.0%    310.1       ₹+585,237   
+  NIFTY HEALTHCARE        3      1.900    +5.2%     +6.7%     2,463.7     ₹+437,594   
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Sep-19   3.448       4,085.6     5,429.5     +32.9%  
+  NIFTY FIN SERVICE       4      03-Oct-19   1.691       12,943.2    13,822.3    +6.8%   
+  NIFTY OIL & GAS         7      03-Oct-19   1.258       3,537.1     3,615.4     +2.2%   
+
+  AFTER: Invested ₹2,928,063 | Cash ₹0 | Total ₹2,928,063 | Positions 5/5
+
+========================================================================
+  REBALANCE #97  —  02 Mar 2020  (eligible: 20/20)
+  NAV: ₹2,776,149  |  Slot: ₹555,230  |  Cash: ₹0
 ========================================================================
 
   EXITS (3)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                4      03-Apr-20   12,129.8    13,637.8    ₹+51,119      +12.4%    31d     ema200          
-  NIFTY FIN SERVICE       6      03-Apr-20   8,986.6     9,856.0     ₹+39,781      +9.7%     31d     ema200          
-  NIFTY FMCG              2      03-Apr-20   26,716.5    27,815.7    ₹+16,918      +4.1%     31d     ema200          
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               3      1.816    -11.1%    -14.4%    12,193.6    ₹+459,046   
-  NIFTY ENERGY            5      1.422    -21.5%    -17.8%    12,917.2    ₹+459,046   
-
-  HOLDS (1)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      03-Apr-20   3.467       7,019.9     9,364.6     +33.4%  
-
-  AFTER: Invested ₹1,454,584 | Cash ₹848,908 | Total ₹2,303,492 | Positions 3/5
-
-========================================================================
-  REBALANCE #100  —  01 Jun 2020  (eligible: 14/14)
-  NAV: ₹2,374,203  |  Slot: ₹474,841  |  Cash: ₹853,643
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               3      05-May-20   12,193.6    12,742.0    ₹+20,647      +4.5%     27d     ema200          
-  NIFTY ENERGY            4      05-May-20   12,917.2    13,430.3    ₹+18,232      +4.0%     27d     ema200          
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              2      2.100    +1.2%     -1.9%     29,751.6    ₹+474,841   
-  NIFTY IT                5      1.328    -9.7%     -13.1%    14,358.0    ₹+474,841   
-
-  HOLDS (1)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      03-Apr-20   3.541       7,019.9     9,802.1     +39.6%  
-
-  AFTER: Invested ₹1,519,290 | Cash ₹860,934 | Total ₹2,380,223 | Positions 3/5
-
-========================================================================
-  REBALANCE #101  —  01 Jul 2020  (eligible: 14/14)
-  NAV: ₹2,409,563  |  Slot: ₹481,913  |  Cash: ₹866,083
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            2      1.807    -8.9%     +36.0%    14,538.8    ₹+481,913   
-  NIFTY MNC               3      1.658    +2.2%     +20.9%    13,208.9    ₹+384,170   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      03-Apr-20   3.620       7,019.9     9,882.8     +40.8%  
-  NIFTY FMCG              4      02-Jun-20   1.537       29,751.6    30,232.5    +1.6%   
-  NIFTY IT                6      02-Jun-20   1.012       14,358.0    14,732.2    +2.6%   
-
-  AFTER: Invested ₹2,410,758 | Cash ₹0 | Total ₹2,410,758 | Positions 5/5
-
-========================================================================
-  REBALANCE #102  —  03 Aug 2020  (eligible: 14/14)
-  NAV: ₹2,630,239  |  Slot: ₹526,048  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Jun-20   2.732       14,358.0    17,965.8    +25.1%  
-  NIFTY PHARMA            2      03-Apr-20   2.653       7,019.9     11,128.4    +58.5%  
-  NIFTY MNC               4      02-Jul-20   1.509       13,208.9    13,555.5    +2.6%   
-  NIFTY FMCG              5      02-Jun-20   1.388       29,751.6    30,759.8    +3.4%   
-  NIFTY ENERGY            6      02-Jul-20   1.189       14,538.8    15,055.5    +3.6%   
-
-  AFTER: Invested ₹2,630,239 | Cash ₹0 | Total ₹2,630,239 | Positions 5/5
-
-========================================================================
-  REBALANCE #103  —  01 Sep 2020  (eligible: 14/14)
-  NAV: ₹2,671,719  |  Slot: ₹534,344  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              12     02-Jun-20   29,751.6    31,099.4    ₹+21,512      +4.5%     91d     rank>7          
+  NIFTY FIN SERVICE       4      03-Oct-19   12,943.2    13,595.5    ₹+28,322      +5.0%     151d    ema200          
+  NIFTY OIL & GAS         11     03-Oct-19   3,537.1     3,355.9     ₹-28,788      -5.1%     151d    rank>7+ema200   
+  NIFTY REALTY            3      04-Feb-20   310.1       280.9       ₹-55,202      -9.4%     27d     ema200          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY METAL             3      1.993    +13.3%    +26.6%    2,512.8     ₹+496,353   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      03-Apr-20   2.327       7,019.9     11,339.5    +61.5%  
-  NIFTY IT                2      02-Jun-20   2.201       14,358.0    17,814.1    +24.1%  
-  NIFTY ENERGY            5      02-Jul-20   1.353       14,538.8    15,673.0    +7.8%   
-  NIFTY MNC               6      02-Jul-20   1.060       13,208.9    13,900.0    +5.2%   
-
-  AFTER: Invested ₹2,670,324 | Cash ₹0 | Total ₹2,670,324 | Positions 5/5
-
-========================================================================
-  REBALANCE #104  —  01 Oct 2020  (eligible: 14/14)
-  NAV: ₹2,712,050  |  Slot: ₹542,410  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      03-Apr-20   3.039       7,019.9     11,822.9    +68.4%  
-  NIFTY IT                2      02-Jun-20   2.934       14,358.0    20,110.4    +40.1%  
-  NIFTY MNC               4      02-Jul-20   1.277       13,208.9    14,059.8    +6.4%   
-  NIFTY METAL             6      02-Sep-20   1.121       2,512.8     2,261.2     -10.0%  
-  NIFTY ENERGY            7      02-Jul-20   0.882 ⚠     14,538.8    15,049.7    +3.5%   
-
-  AFTER: Invested ₹2,712,050 | Cash ₹0 | Total ₹2,712,050 | Positions 5/5
-
-========================================================================
-  REBALANCE #105  —  02 Nov 2020  (eligible: 14/14)
-  NAV: ₹2,695,048  |  Slot: ₹539,010  |  Cash: ₹0
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               8      02-Jul-20   13,208.9    14,111.9    ₹+26,263      +6.8%     123d    rank>7          
-  NIFTY ENERGY            11     02-Jul-20   14,538.8    14,754.7    ₹+7,156       +1.5%     123d    rank>7+ema200   
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY REALTY            3      1.512    -11.5%    +16.4%    234.8       ₹+539,010   
-  NIFTY PVT BANK          4      1.402    -16.8%    +17.9%    13,932.5    ₹+360,493   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Jun-20   2.715       14,358.0    20,732.3    +44.4%  
-  NIFTY PHARMA            2      03-Apr-20   1.870       7,019.9     11,175.3    +59.2%  
-  NIFTY METAL             7      02-Sep-20   1.114       2,512.8     2,338.9     -6.9%   
-
-  AFTER: Invested ₹2,700,231 | Cash ₹0 | Total ₹2,700,231 | Positions 5/5
-
-========================================================================
-  REBALANCE #106  —  01 Dec 2020  (eligible: 14/14)
-  NAV: ₹3,075,272  |  Slot: ₹615,054  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Jun-20   2.761       14,358.0    22,170.9    +54.4%  
-  NIFTY PHARMA            2      03-Apr-20   1.884       7,019.9     12,045.2    +71.6%  
-  NIFTY METAL             3      02-Sep-20   1.605       2,512.8     2,974.1     +18.4%  
-  NIFTY PVT BANK          5      03-Nov-20   1.325       13,932.5    16,597.2    +19.1%  
-  NIFTY REALTY            7      03-Nov-20   1.243       234.8       269.9       +14.9%  
-
-  AFTER: Invested ₹3,075,272 | Cash ₹0 | Total ₹3,075,272 | Positions 5/5
-
-========================================================================
-  REBALANCE #107  —  01 Jan 2021  (eligible: 14/14)
-  NAV: ₹3,380,147  |  Slot: ₹676,029  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Jun-20   1.924       14,358.0    24,456.1    +70.3%  
-  NIFTY REALTY            2      03-Nov-20   1.643       234.8       313.9       +33.7%  
-  NIFTY METAL             3      02-Sep-20   1.634       2,512.8     3,254.6     +29.5%  
-  NIFTY PHARMA            4      03-Apr-20   1.572       7,019.9     13,002.0    +85.2%  
-  NIFTY PVT BANK          7      03-Nov-20   1.237       13,932.5    17,251.8    +23.8%  
-
-  AFTER: Invested ₹3,380,147 | Cash ₹0 | Total ₹3,380,147 | Positions 5/5
-
-========================================================================
-  REBALANCE #108  —  01 Feb 2021  (eligible: 14/14)
-  NAV: ₹3,383,419  |  Slot: ₹676,684  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PVT BANK          9      03-Nov-20   13,932.5    18,314.0    ₹+113,368     +31.4%    90d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY AUTO              2      1.530    +24.1%    +29.0%    10,427.0    ₹+473,861   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Jun-20   1.930       14,358.0    24,922.7    +73.6%  
-  NIFTY METAL             3      02-Sep-20   1.512       2,512.8     3,227.2     +28.4%  
-  NIFTY REALTY            4      03-Nov-20   1.431       234.8       325.0       +38.4%  
-  NIFTY PHARMA            7      03-Apr-20   1.153       7,019.9     12,103.5    +72.4%  
-
-  AFTER: Invested ₹3,381,459 | Cash ₹0 | Total ₹3,381,459 | Positions 5/5
-
-========================================================================
-  REBALANCE #109  —  01 Mar 2021  (eligible: 14/14)
-  NAV: ₹3,577,067  |  Slot: ₹715,413  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Sep-20   2.193       2,512.8     3,896.9     +55.1%  
-  NIFTY IT                3      02-Jun-20   1.536       14,358.0    24,556.3    +71.0%  
-  NIFTY REALTY            4      03-Nov-20   1.450       234.8       354.5       +51.0%  
-  NIFTY PHARMA            5      03-Apr-20   1.335       7,019.9     12,092.7    +72.3%  
-  NIFTY AUTO              6      02-Feb-21   1.257       10,427.0    10,411.8    -0.1%   
-
-  AFTER: Invested ₹3,577,067 | Cash ₹0 | Total ₹3,577,067 | Positions 5/5
-
-========================================================================
-  REBALANCE #110  —  01 Apr 2021  (eligible: 14/14)
-  NAV: ₹3,638,041  |  Slot: ₹727,608  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PHARMA            10     03-Apr-20   7,019.9     12,383.5    ₹+314,184     +76.4%    363d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            3      1.337    +69.7%    +11.4%    18,438.8    ₹+725,380   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Sep-20   3.158       2,512.8     4,189.1     +66.7%  
-  NIFTY IT                2      02-Jun-20   1.893       14,358.0    25,980.4    +80.9%  
-  NIFTY AUTO              4      02-Feb-21   1.244       10,427.0    10,022.6    -3.9%   
-  NIFTY REALTY            7      03-Nov-20   0.893 ⚠     234.8       335.8       +43.0%  
-
-  AFTER: Invested ₹3,641,463 | Cash ₹0 | Total ₹3,641,463 | Positions 5/5
-
-========================================================================
-  REBALANCE #111  —  03 May 2021  (eligible: 14/14)
-  NAV: ₹3,680,247  |  Slot: ₹736,049  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY REALTY            12     03-Nov-20   234.8       309.5       ₹+171,367     +31.8%    181d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PHARMA            3      1.150    +43.9%    +8.1%     13,573.8    ₹+710,377   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Sep-20   4.039       2,512.8     4,952.5     +97.1%  
-  NIFTY IT                2      02-Jun-20   1.525       14,358.0    25,676.1    +78.8%  
-  NIFTY ENERGY            6      05-Apr-21   0.866 ⚠     18,438.8    17,983.4    -2.5%   
-  NIFTY AUTO              7      02-Feb-21   0.853 ⚠     10,427.0    9,663.0     -7.3%   
-
-  AFTER: Invested ₹3,680,904 | Cash ₹0 | Total ₹3,680,904 | Positions 5/5
-
-========================================================================
-  REBALANCE #112  —  01 Jun 2021  (eligible: 14/14)
-  NAV: ₹3,906,246  |  Slot: ₹781,249  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY AUTO              8      02-Feb-21   10,427.0    10,431.5    ₹+205         +0.0%     119d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PSE               5      1.069    +56.3%    +15.4%    3,525.4     ₹+474,065   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Sep-20   3.826       2,512.8     5,121.6     +103.8% 
-  NIFTY IT                2      02-Jun-20   1.788       14,358.0    27,144.4    +89.1%  
-  NIFTY PHARMA            3      04-May-21   1.185       13,573.8    14,058.0    +3.6%   
-  NIFTY ENERGY            4      05-Apr-21   1.110       18,438.8    19,976.8    +8.3%   
-
-  AFTER: Invested ₹3,904,553 | Cash ₹0 | Total ₹3,904,553 | Positions 5/5
-
-========================================================================
-  REBALANCE #113  —  01 Jul 2021  (eligible: 14/14)
-  NAV: ₹4,003,673  |  Slot: ₹800,735  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY ENERGY            12     05-Apr-21   18,438.8    19,653.1    ₹+47,768      +6.6%     87d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               3      1.629    +38.2%    +9.1%     17,551.2    ₹+773,148   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Sep-20   3.531       2,512.8     5,207.4     +107.2% 
-  NIFTY IT                2      02-Jun-20   2.089       14,358.0    29,003.1    +102.0% 
-  NIFTY PHARMA            4      04-May-21   1.371       13,573.8    14,442.5    +6.4%   
-  NIFTY PSE               5      02-Jun-21   0.940 ⚠     3,525.4     3,604.6     +2.2%   
-
-  AFTER: Invested ₹3,999,420 | Cash ₹0 | Total ₹3,999,420 | Positions 5/5
-
-========================================================================
-  REBALANCE #114  —  02 Aug 2021  (eligible: 14/14)
-  NAV: ₹4,197,694  |  Slot: ₹839,539  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PHARMA            13     04-May-21   13,573.8    14,498.7    ₹+48,401      +6.8%     90d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY REALTY            2      2.446    +109.2%   +38.4%    419.4       ₹+758,778   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Sep-20   2.999       2,512.8     5,781.3     +130.1% 
-  NIFTY IT                3      02-Jun-20   1.975       14,358.0    30,803.1    +114.5% 
-  NIFTY MNC               4      02-Jul-21   1.747       17,551.2    17,957.7    +2.3%   
-  NIFTY PSE               5      02-Jun-21   1.152       3,525.4     3,632.2     +3.0%   
-
-  AFTER: Invested ₹4,196,042 | Cash ₹0 | Total ₹4,196,042 | Positions 5/5
-
-========================================================================
-  REBALANCE #115  —  01 Sep 2021  (eligible: 14/14)
-  NAV: ₹4,292,167  |  Slot: ₹858,433  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSE               9      02-Jun-21   3,525.4     3,638.8     ₹+15,242      +3.2%     91d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              5      1.461    +25.3%    +12.5%    39,713.6    ₹+489,307   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Jun-20   3.058       14,358.0    34,110.5    +137.6% 
-  NIFTY METAL             2      02-Sep-20   1.970       2,512.8     5,612.5     +123.4% 
-  NIFTY REALTY            3      03-Aug-21   1.865       419.4       408.4       -2.6%   
-  NIFTY MNC               4      02-Jul-21   1.856       17,551.2    18,767.4    +6.9%   
-
-  AFTER: Invested ₹4,290,767 | Cash ₹0 | Total ₹4,290,767 | Positions 5/5
-
-========================================================================
-  REBALANCE #116  —  01 Oct 2021  (eligible: 14/14)
-  NAV: ₹4,520,876  |  Slot: ₹904,175  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY REALTY            1      03-Aug-21   2.912       419.4       506.0       +20.7%  
-  NIFTY IT                2      02-Jun-20   2.303       14,358.0    34,780.6    +142.2% 
-  NIFTY METAL             3      02-Sep-20   1.480       2,512.8     5,638.8     +124.4% 
-  NIFTY MNC               4      02-Jul-21   1.409       17,551.2    19,145.8    +9.1%   
-  NIFTY FMCG              5      02-Sep-21   1.246       39,713.6    40,399.0    +1.7%   
-
-  AFTER: Invested ₹4,520,876 | Cash ₹0 | Total ₹4,520,876 | Positions 5/5
-
-========================================================================
-  REBALANCE #117  —  01 Nov 2021  (eligible: 14/14)
-  NAV: ₹4,561,881  |  Slot: ₹912,376  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              13     02-Sep-21   39,713.6    38,758.6    ₹-11,765      -2.4%     60d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            2      1.999    +58.5%    +24.1%    23,618.8    ₹+477,542   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY REALTY            1      03-Aug-21   2.224       419.4       518.8       +23.7%  
-  NIFTY IT                3      02-Jun-20   1.460       14,358.0    35,290.0    +145.8% 
-  NIFTY MNC               5      02-Jul-21   1.243       17,551.2    19,230.2    +9.6%   
-  NIFTY METAL             7      02-Sep-20   1.096       2,512.8     5,733.8     +128.2% 
-
-  AFTER: Invested ₹4,560,741 | Cash ₹0 | Total ₹4,560,741 | Positions 5/5
-
-========================================================================
-  REBALANCE #118  —  01 Dec 2021  (eligible: 14/14)
-  NAV: ₹4,410,227  |  Slot: ₹882,045  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               8      02-Jul-21   17,551.2    18,752.2    ₹+52,901      +6.8%     152d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MEDIA             3      1.729    +48.9%    +36.8%    2,202.9     ₹+826,049   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY REALTY            1      03-Aug-21   2.568       419.4       494.6       +18.0%  
-  NIFTY ENERGY            2      02-Nov-21   1.856       23,618.8    23,110.8    -2.2%   
-  NIFTY IT                4      02-Jun-20   1.521       14,358.0    35,429.0    +146.8% 
-  NIFTY METAL             7      02-Sep-20   1.316       2,512.8     5,322.2     +111.8% 
-
-  AFTER: Invested ₹4,407,900 | Cash ₹0 | Total ₹4,407,900 | Positions 5/5
-
-========================================================================
-  REBALANCE #119  —  03 Jan 2022  (eligible: 14/14)
-  NAV: ₹4,597,743  |  Slot: ₹919,549  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      02-Jun-20   3.478       14,358.0    39,123.8    +172.5% 
-  NIFTY METAL             2      02-Sep-20   1.725       2,512.8     5,628.1     +124.0% 
-  NIFTY REALTY            4      03-Aug-21   1.246       419.4       489.6       +16.8%  
-  NIFTY ENERGY            6      02-Nov-21   1.126       23,618.8    22,849.2    -3.3%   
-  NIFTY MEDIA             7      02-Dec-21   1.100       2,202.9     2,251.2     +2.2%   
-
-  AFTER: Invested ₹4,597,743 | Cash ₹0 | Total ₹4,597,743 | Positions 5/5
-
-========================================================================
-  REBALANCE #120  —  01 Feb 2022  (eligible: 14/14)
-  NAV: ₹4,529,609  |  Slot: ₹905,922  |  Cash: ₹0
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY REALTY            8      03-Aug-21   419.4       491.4       ₹+130,368     +17.2%    182d    rank>7          
-  NIFTY MEDIA             9      02-Dec-21   2,202.9     2,269.6     ₹+25,049      +3.0%     61d     rank>7          
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PSU BANK          3      1.847    +55.2%    +3.7%     2,983.1     ₹+905,922   
-  NIFTY PSE               4      1.813    +37.5%    +1.3%     4,157.9     ₹+834,323   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Nov-21   2.997       23,618.8    24,888.4    +5.4%   
-  NIFTY METAL             2      02-Sep-20   1.858       2,512.8     5,719.4     +127.6% 
-  NIFTY IT                5      02-Jun-20   1.784       14,358.0    35,371.6    +146.4% 
-
-  AFTER: Invested ₹4,532,405 | Cash ₹0 | Total ₹4,532,405 | Positions 5/5
-
-========================================================================
-  REBALANCE #121  —  02 Mar 2022  (eligible: 14/14)
-  NAV: ₹4,428,998  |  Slot: ₹885,800  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             1      02-Sep-20   3.122       2,512.8     6,136.7     +144.2% 
-  NIFTY ENERGY            2      02-Nov-21   2.520       23,618.8    24,520.7    +3.8%   
-  NIFTY PSE               3      02-Feb-22   2.058       4,157.9     4,008.6     -3.6%   
-  NIFTY IT                4      02-Jun-20   1.404       14,358.0    33,720.0    +134.9% 
-  NIFTY PSU BANK          5      02-Feb-22   1.117       2,983.1     2,639.2     -11.5%  
-
-  AFTER: Invested ₹4,428,998 | Cash ₹0 | Total ₹4,428,998 | Positions 5/5
-
-========================================================================
-  REBALANCE #122  —  01 Apr 2022  (eligible: 14/14)
-  NAV: ₹4,723,736  |  Slot: ₹944,747  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Nov-21   2.817       23,618.8    26,454.5    +12.0%  
-  NIFTY METAL             2      02-Sep-20   2.476       2,512.8     6,477.2     +157.8% 
-  NIFTY PSE               3      02-Feb-22   1.770       4,157.9     4,219.5     +1.5%   
-  NIFTY PSU BANK          5      02-Feb-22   1.194       2,983.1     2,834.5     -5.0%   
-  NIFTY IT                6      02-Jun-20   1.100       14,358.0    36,343.4    +153.1% 
-
-  AFTER: Invested ₹4,723,736 | Cash ₹0 | Total ₹4,723,736 | Positions 5/5
-
-========================================================================
-  REBALANCE #123  —  02 May 2022  (eligible: 14/14)
-  NAV: ₹4,549,539  |  Slot: ₹909,908  |  Cash: ₹0
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY IT                10     02-Jun-20   14,358.0    31,260.4    ₹+558,988     +117.7%   699d    rank>7+ema200   
-  NIFTY PSU BANK          8      02-Feb-22   2,983.1     2,760.1     ₹-67,722      -7.5%     89d     rank>7          
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              4      1.292    +9.8%     +6.4%     38,432.4    ₹+909,908   
-  NIFTY MEDIA             5      1.110    +46.4%    -1.2%     2,171.5     ₹+909,908   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Nov-21   3.560       23,618.8    28,573.7    +21.0%  
-  NIFTY METAL             2      02-Sep-20   1.952       2,512.8     6,363.1     +153.2% 
-  NIFTY PSE               3      02-Feb-22   1.796       4,157.9     4,242.0     +2.0%   
-
-  AFTER: Invested ₹4,496,791 | Cash ₹52,213 | Total ₹4,549,004 | Positions 5/5
-
-========================================================================
-  REBALANCE #124  —  01 Jun 2022  (eligible: 14/14)
-  NAV: ₹4,207,195  |  Slot: ₹841,439  |  Cash: ₹52,213
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             9      02-Sep-20   2,512.8     5,344.5     ₹+559,355     +112.7%   637d    rank>7+ema200   
-  NIFTY MEDIA             5      04-May-22   2,171.5     2,037.1     ₹-56,317      -6.2%     28d     ema200          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY AUTO              4      1.621    +12.1%    +6.1%     11,543.5    ₹+841,439   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Nov-21   2.782       23,618.8    25,456.4    +7.8%   
-  NIFTY FMCG              2      04-May-22   2.328       38,432.4    38,434.6    +0.0%   
-  NIFTY PSE               3      02-Feb-22   1.991       4,157.9     4,098.8     -1.4%   
-
-  AFTER: Invested ₹3,089,990 | Cash ₹1,120,072 | Total ₹4,210,062 | Positions 4/5
-
-========================================================================
-  REBALANCE #125  —  01 Jul 2022  (eligible: 14/14)
-  NAV: ₹4,127,280  |  Slot: ₹825,456  |  Cash: ₹1,124,482
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY ENERGY            3      02-Nov-21   23,618.8    24,030.1    ₹+8,317       +1.7%     241d    ema200          
-  NIFTY PSE               6      02-Feb-22   4,157.9     3,711.6     ₹-89,545      -10.7%    149d    ema200          
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               4      1.338    +1.2%     -2.1%     17,724.2    ₹+825,456   
-  NIFTY REALTY            5      1.273    +12.9%    -15.6%    391.0       ₹+825,456   
+  NIFTY IT                5      1.475    -2.5%     +3.9%     15,615.0    ₹+555,230   
 
   HOLDS (2)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      02-Jun-22   2.537       11,543.5    11,712.0    +1.5%   
-  NIFTY FMCG              2      04-May-22   2.525       38,432.4    38,725.9    +0.8%   
+  NIFTY CONSUMER DURABLES  1      04-Sep-19   3.686       4,085.6     5,238.4     +28.2%  
+  NIFTY HEALTHCARE        2      04-Feb-20   2.276       2,463.7     2,451.5     -0.5%   
 
-  AFTER: Invested ₹3,422,484 | Cash ₹704,207 | Total ₹4,126,691 | Positions 4/5
-
-========================================================================
-  REBALANCE #126  —  01 Aug 2022  (eligible: 14/14)
-  NAV: ₹4,511,330  |  Slot: ₹902,266  |  Cash: ₹709,188
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY REALTY            10     04-Jul-22   391.0       452.1       ₹+128,991     +15.6%    28d     rank>7          
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            3      1.609    +40.7%    -5.2%     26,770.2    ₹+902,266   
-  NIFTY BANK              5      1.143    +9.8%     +7.5%     37,767.3    ₹+761,369   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      02-Jun-22   2.631       11,543.5    12,953.7    +12.2%  
-  NIFTY FMCG              2      04-May-22   2.225       38,432.4    42,526.8    +10.7%  
-  NIFTY MNC               4      04-Jul-22   1.435       17,724.2    19,334.4    +9.1%   
-
-  AFTER: Invested ₹4,517,079 | Cash ₹0 | Total ₹4,517,079 | Positions 5/5
+  AFTER: Invested ₹1,693,776 | Cash ₹1,098,135 | Total ₹2,791,912 | Positions 3/5
 
 ========================================================================
-  REBALANCE #127  —  01 Sep 2022  (eligible: 14/14)
-  NAV: ₹4,637,906  |  Slot: ₹927,581  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY BANK              8      02-Aug-22   37,767.3    39,421.8    ₹+33,356      +4.4%     30d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PSU BANK          4      1.717    +33.9%    +16.6%    3,045.4     ₹+794,724   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      02-Jun-22   2.211       11,543.5    13,266.2    +14.9%  
-  NIFTY FMCG              2      04-May-22   1.965       38,432.4    43,497.4    +13.2%  
-  NIFTY ENERGY            3      02-Aug-22   1.945       26,770.2    27,565.8    +3.0%   
-  NIFTY MNC               5      04-Jul-22   1.275       17,724.2    19,748.2    +11.4%  
-
-  AFTER: Invested ₹4,634,919 | Cash ₹0 | Total ₹4,634,919 | Positions 5/5
-
-========================================================================
-  REBALANCE #128  —  03 Oct 2022  (eligible: 14/14)
-  NAV: ₹4,446,807  |  Slot: ₹889,361  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY ENERGY            8      02-Aug-22   26,770.2    25,646.4    ₹-37,877      -4.2%     62d     rank>7+ema200   
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PVT BANK          3      1.609    -0.9%     +16.6%    19,978.1    ₹+864,389   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Sep-22   2.170       3,045.4     2,914.9     -4.3%   
-  NIFTY FMCG              2      04-May-22   2.090       38,432.4    43,477.3    +13.1%  
-  NIFTY AUTO              4      02-Jun-22   1.433       11,543.5    12,441.0    +7.8%   
-  NIFTY MNC               7      04-Jul-22   1.325       17,724.2    19,343.1    +9.1%   
-
-  AFTER: Invested ₹4,447,038 | Cash ₹0 | Total ₹4,447,038 | Positions 5/5
-
-========================================================================
-  REBALANCE #129  —  01 Nov 2022  (eligible: 14/14)
-  NAV: ₹4,778,978  |  Slot: ₹955,796  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Sep-22   2.536       3,045.4     3,437.7     +12.9%  
-  NIFTY FMCG              2      04-May-22   1.839       38,432.4    44,564.9    +16.0%  
-  NIFTY AUTO              3      02-Jun-22   1.759       11,543.5    13,416.9    +16.2%  
-  NIFTY PVT BANK          6      04-Oct-22   1.302       19,978.1    21,162.8    +5.9%   
-  NIFTY MNC               7      04-Jul-22   1.285       17,724.2    20,036.7    +13.0%  
-
-  AFTER: Invested ₹4,778,978 | Cash ₹0 | Total ₹4,778,978 | Positions 5/5
-
-========================================================================
-  REBALANCE #130  —  01 Dec 2022  (eligible: 14/14)
-  NAV: ₹5,005,838  |  Slot: ₹1,001,168  |  Cash: ₹0
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               8      04-Jul-22   17,724.2    20,439.6    ₹+126,460     +15.3%    150d    rank>7          
-  NIFTY AUTO              9      02-Jun-22   11,543.5    13,137.0    ₹+116,155     +13.8%    182d    rank>7          
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY BANK              2      1.537    +20.1%    +9.4%     42,976.2    ₹+1,001,168 
-  NIFTY METAL             5      1.356    +25.2%    +12.3%    6,663.0     ₹+908,342   
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Sep-22   3.496       3,045.4     4,085.3     +34.1%  
-  NIFTY FMCG              3      04-May-22   1.430       38,432.4    45,370.6    +18.1%  
-  NIFTY PVT BANK          4      04-Oct-22   1.389       19,978.1    21,991.7    +10.1%  
-
-  AFTER: Invested ₹5,008,139 | Cash ₹0 | Total ₹5,008,139 | Positions 5/5
-
-========================================================================
-  REBALANCE #131  —  02 Jan 2023  (eligible: 14/14)
-  NAV: ₹5,078,277  |  Slot: ₹1,015,655  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Sep-22   3.457       3,045.4     4,348.9     +42.8%  
-  NIFTY PVT BANK          2      04-Oct-22   1.618       19,978.1    21,999.5    +10.1%  
-  NIFTY BANK              3      02-Dec-22   1.556       42,976.2    43,203.1    +0.5%   
-  NIFTY METAL             4      02-Dec-22   1.531       6,663.0     6,886.6     +3.4%   
-  NIFTY FMCG              7      04-May-22   0.962 ⚠     38,432.4    44,192.9    +15.0%  
-
-  AFTER: Invested ₹5,078,277 | Cash ₹0 | Total ₹5,078,277 | Positions 5/5
-
-========================================================================
-  REBALANCE #132  —  01 Feb 2023  (eligible: 14/14)
-  NAV: ₹4,732,567  |  Slot: ₹946,513  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Sep-22   2.690       3,045.4     3,778.9     +24.1%  
-  NIFTY FMCG              2      04-May-22   2.492       38,432.4    44,958.3    +17.0%  
-  NIFTY METAL             3      02-Dec-22   1.595       6,663.0     6,177.0     -7.3%   
-  NIFTY PVT BANK          6      04-Oct-22   1.255       19,978.1    20,712.2    +3.7%   
-  NIFTY BANK              7      02-Dec-22   1.229       42,976.2    40,513.0    -5.7%   
-
-  AFTER: Invested ₹4,732,567 | Cash ₹0 | Total ₹4,732,567 | Positions 5/5
-
-========================================================================
-  REBALANCE #133  —  01 Mar 2023  (eligible: 14/14)
-  NAV: ₹4,644,573  |  Slot: ₹928,915  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             10     02-Dec-22   6,663.0     5,464.9     ₹-163,332     -18.0%    89d     rank>7+ema200   
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PSE               2      2.070    +14.3%    -0.2%     4,445.9     ₹+745,009   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      04-May-22   2.648       38,432.4    45,062.6    +17.3%  
-  NIFTY PSU BANK          3      02-Sep-22   2.026       3,045.4     3,767.2     +23.7%  
-  NIFTY BANK              5      02-Dec-22   1.529       42,976.2    40,698.1    -5.3%   
-  NIFTY PVT BANK          6      04-Oct-22   1.345       19,978.1    20,795.8    +4.1%   
-
-  AFTER: Invested ₹4,642,710 | Cash ₹0 | Total ₹4,642,710 | Positions 5/5
-
-========================================================================
-  REBALANCE #134  —  03 Apr 2023  (eligible: 14/14)
-  NAV: ₹4,664,614  |  Slot: ₹932,923  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      04-May-22   2.937       38,432.4    45,738.4    +19.0%  
-  NIFTY PSE               2      02-Mar-23   1.983       4,445.9     4,488.2     +1.0%   
-  NIFTY PVT BANK          5      04-Oct-22   1.296       19,978.1    20,774.2    +4.0%   
-  NIFTY BANK              6      02-Dec-22   1.244       42,976.2    40,813.1    -5.0%   
-  NIFTY PSU BANK          7      02-Sep-22   1.201       3,045.4     3,755.5     +23.3%  
-
-  AFTER: Invested ₹4,664,614 | Cash ₹0 | Total ₹4,664,614 | Positions 5/5
-
-========================================================================
-  REBALANCE #135  —  02 May 2023  (eligible: 14/14)
-  NAV: ₹4,979,574  |  Slot: ₹995,915  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      04-May-22   2.820       38,432.4    47,750.2    +24.2%  
-  NIFTY PSU BANK          2      02-Sep-22   1.662       3,045.4     4,184.1     +37.4%  
-  NIFTY PSE               4      02-Mar-23   1.620       4,445.9     4,758.6     +7.0%   
-  NIFTY BANK              5      02-Dec-22   1.558       42,976.2    43,352.1    +0.9%   
-  NIFTY PVT BANK          6      04-Oct-22   1.503       19,978.1    21,953.5    +9.9%   
-
-  AFTER: Invested ₹4,979,574 | Cash ₹0 | Total ₹4,979,574 | Positions 5/5
-
-========================================================================
-  REBALANCE #136  —  01 Jun 2023  (eligible: 14/14)
-  NAV: ₹5,051,117  |  Slot: ₹1,010,223  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSE               8      02-Mar-23   4,445.9     4,795.5     ₹+58,601      +7.9%     91d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY REALTY            2      2.091    +27.1%    +27.2%    485.2       ₹+803,610   
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      04-May-22   2.550       38,432.4    50,998.9    +32.7%  
-  NIFTY PSU BANK          5      02-Sep-22   1.456       3,045.4     4,053.6     +33.1%  
-  NIFTY BANK              6      02-Dec-22   1.350       42,976.2    43,790.2    +1.9%   
-  NIFTY PVT BANK          7      04-Oct-22   1.349       19,978.1    22,311.2    +11.7%  
-
-  AFTER: Invested ₹5,052,322 | Cash ₹0 | Total ₹5,052,322 | Positions 5/5
-
-========================================================================
-  REBALANCE #137  —  03 Jul 2023  (eligible: 14/14)
-  NAV: ₹5,277,608  |  Slot: ₹1,055,522  |  Cash: ₹0
-========================================================================
-
-  EXITS (2)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSU BANK          9      02-Sep-22   3,045.4     4,285.4     ₹+323,558     +40.7%    304d    rank>7          
-  NIFTY BANK              8      02-Dec-22   42,976.2    45,310.6    ₹+54,381      +5.4%     213d    rank>7          
-
-  ENTRIES (2)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY AUTO              3      1.903    +33.0%    +26.8%    15,180.9    ₹+1,055,522 
-  NIFTY MNC               4      1.746    +25.9%    +16.3%    21,835.8    ₹+1,055,522 
-
-  HOLDS (3)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FMCG              1      04-May-22   2.116       38,432.4    52,741.5    +37.2%  
-  NIFTY REALTY            2      02-Jun-23   1.951       485.2       523.9       +8.0%   
-  NIFTY PVT BANK          6      04-Oct-22   1.257       19,978.1    23,064.6    +15.4%  
-
-  AFTER: Invested ₹5,217,472 | Cash ₹62,787 | Total ₹5,280,259 | Positions 5/5
-
-========================================================================
-  REBALANCE #138  —  01 Aug 2023  (eligible: 14/14)
-  NAV: ₹5,416,526  |  Slot: ₹1,083,305  |  Cash: ₹62,787
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PVT BANK          9      04-Oct-22   19,978.1    23,232.0    ₹+140,788     +16.3%    301d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PSE               1      2.503    +41.6%    +15.5%    5,517.0     ₹+1,067,965 
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY MNC               3      04-Jul-23   1.641       21,835.8    22,440.8    +2.8%   
-  NIFTY AUTO              4      04-Jul-23   1.631       15,180.9    15,688.7    +3.3%   
-  NIFTY REALTY            5      02-Jun-23   1.378       485.2       556.7       +14.7%  
-  NIFTY FMCG              6      04-May-22   1.275       38,432.4    52,501.1    +36.6%  
-
-  AFTER: Invested ₹5,407,649 | Cash ₹0 | Total ₹5,407,649 | Positions 5/5
-
-========================================================================
-  REBALANCE #139  —  01 Sep 2023  (eligible: 14/14)
-  NAV: ₹5,407,694  |  Slot: ₹1,081,539  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              9      04-May-22   38,432.4    51,415.1    ₹+307,371     +33.8%    485d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PHARMA            2      2.180    +19.3%    +16.4%    15,063.3    ₹+1,081,539 
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSE               1      02-Aug-23   2.785       5,517.0     5,621.4     +1.9%   
-  NIFTY AUTO              3      04-Jul-23   1.567       15,180.9    15,928.3    +4.9%   
-  NIFTY REALTY            6      02-Jun-23   1.153       485.2       563.7       +16.2%  
-  NIFTY MNC               7      04-Jul-23   0.999 ⚠     21,835.8    22,038.8    +0.9%   
-
-  AFTER: Invested ₹5,272,390 | Cash ₹135,740 | Total ₹5,408,130 | Positions 5/5
-
-========================================================================
-  REBALANCE #140  —  03 Oct 2023  (eligible: 14/14)
-  NAV: ₹5,511,475  |  Slot: ₹1,102,295  |  Cash: ₹135,740
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               9      04-Jul-23   21,835.8    21,881.1    ₹+2,185       +0.2%     91d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PSU BANK          2      2.341    +76.3%    +26.4%    5,363.7     ₹+1,102,295 
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSE               1      02-Aug-23   2.855       5,517.0     5,949.4     +7.8%   
-  NIFTY PHARMA            3      04-Sep-23   1.914       15,063.3    15,281.3    +1.4%   
-  NIFTY REALTY            5      02-Jun-23   1.270       485.2       578.3       +19.2%  
-  NIFTY AUTO              6      04-Jul-23   1.158       15,180.9    15,990.6    +5.3%   
-
-  AFTER: Invested ₹5,424,807 | Cash ₹91,152 | Total ₹5,515,959 | Positions 5/5
-
-========================================================================
-  REBALANCE #141  —  01 Nov 2023  (eligible: 14/14)
-  NAV: ₹5,414,251  |  Slot: ₹1,082,850  |  Cash: ₹91,152
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSE               1      02-Aug-23   2.867       5,517.0     5,850.8     +6.1%   
-  NIFTY REALTY            2      02-Jun-23   2.413       485.2       612.3       +26.2%  
-  NIFTY PSU BANK          3      04-Oct-23   1.959       5,363.7     4,950.0     -7.7%   
-  NIFTY AUTO              4      04-Jul-23   1.677       15,180.9    15,835.7    +4.3%   
-  NIFTY PHARMA            7      04-Sep-23   0.912 ⚠     15,063.3    14,735.2    -2.2%   
-
-  AFTER: Invested ₹5,323,099 | Cash ₹91,152 | Total ₹5,414,251 | Positions 5/5
-
-========================================================================
-  REBALANCE #142  —  01 Dec 2023  (eligible: 14/14)
-  NAV: ₹6,065,145  |  Slot: ₹1,213,029  |  Cash: ₹91,152
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSU BANK          8      04-Oct-23   5,363.7     5,269.1     ₹-19,441      -1.8%     58d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              5      1.141    +22.8%    +5.1%     54,313.6    ₹+1,174,005 
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSE               1      02-Aug-23   3.228       5,517.0     6,911.9     +25.3%  
-  NIFTY REALTY            2      02-Jun-23   2.717       485.2       723.0       +49.0%  
-  NIFTY AUTO              3      04-Jul-23   1.929       15,180.9    17,489.1    +15.2%  
-  NIFTY PHARMA            4      04-Sep-23   1.329       15,063.3    16,257.0    +7.9%   
-
-  AFTER: Invested ₹6,082,807 | Cash ₹0 | Total ₹6,082,807 | Positions 5/5
-
-========================================================================
-  REBALANCE #143  —  01 Jan 2024  (eligible: 14/14)
-  NAV: ₹6,554,237  |  Slot: ₹1,310,847  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSE               1      02-Aug-23   3.323       5,517.0     7,855.0     +42.4%  
-  NIFTY REALTY            2      02-Jun-23   2.588       485.2       783.0       +61.4%  
-  NIFTY AUTO              3      04-Jul-23   1.734       15,180.9    18,618.2    +22.6%  
-  NIFTY PHARMA            5      04-Sep-23   1.252       15,063.3    16,858.8    +11.9%  
-  NIFTY FMCG              6      04-Dec-23   1.099       54,313.6    56,987.2    +4.9%   
-
-  AFTER: Invested ₹6,554,237 | Cash ₹0 | Total ₹6,554,237 | Positions 5/5
-
-========================================================================
-  REBALANCE #144  —  01 Feb 2024  (eligible: 14/14)
-  NAV: ₹6,909,289  |  Slot: ₹1,381,858  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FMCG              8      04-Dec-23   54,313.6    55,347.4    ₹+22,346      +1.9%     59d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            3      1.831    +41.1%    +39.2%    37,139.1    ₹+1,196,351 
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSE               1      02-Aug-23   3.195       5,517.0     8,711.0     +57.9%  
-  NIFTY REALTY            2      02-Jun-23   2.219       485.2       848.2       +74.8%  
-  NIFTY AUTO              4      04-Jul-23   1.738       15,180.9    19,328.7    +27.3%  
-  NIFTY PHARMA            5      04-Sep-23   1.611       15,063.3    17,839.2    +18.4%  
-
-  AFTER: Invested ₹6,904,774 | Cash ₹0 | Total ₹6,904,774 | Positions 5/5
-
-========================================================================
-  REBALANCE #145  —  01 Mar 2024  (eligible: 14/14)
-  NAV: ₹7,410,040  |  Slot: ₹1,482,008  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSE               1      02-Aug-23   2.657       5,517.0     9,347.0     +69.4%  
-  NIFTY ENERGY            2      02-Feb-24   2.341       37,139.1    39,707.1    +6.9%   
-  NIFTY REALTY            3      02-Jun-23   1.985       485.2       917.1       +89.0%  
-  NIFTY AUTO              4      04-Jul-23   1.764       15,180.9    20,871.9    +37.5%  
-  NIFTY PHARMA            6      04-Sep-23   1.592       15,063.3    18,822.3    +25.0%  
-
-  AFTER: Invested ₹7,410,040 | Cash ₹0 | Total ₹7,410,040 | Positions 5/5
-
-========================================================================
-  REBALANCE #146  —  01 Apr 2024  (eligible: 14/14)
-  NAV: ₹7,493,605  |  Slot: ₹1,498,721  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      04-Jul-23   2.329       15,180.9    21,385.2    +40.9%  
-  NIFTY REALTY            2      02-Jun-23   2.182       485.2       939.9       +93.7%  
-  NIFTY PHARMA            3      04-Sep-23   1.957       15,063.3    19,207.9    +27.5%  
-  NIFTY PSE               4      02-Aug-23   1.935       5,517.0     9,292.3     +68.4%  
-  NIFTY ENERGY            5      02-Feb-24   1.823       37,139.1    39,489.7    +6.3%   
-
-  AFTER: Invested ₹7,493,605 | Cash ₹0 | Total ₹7,493,605 | Positions 5/5
-
-========================================================================
-  REBALANCE #147  —  02 May 2024  (eligible: 14/14)
-  NAV: ₹7,857,803  |  Slot: ₹1,571,561  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      04-Jul-23   2.417       15,180.9    22,733.5    +49.8%  
-  NIFTY PSE               2      02-Aug-23   2.152       5,517.0     10,222.0    +85.3%  
-  NIFTY REALTY            3      02-Jun-23   1.782       485.2       972.7       +100.5% 
-  NIFTY ENERGY            5      02-Feb-24   1.635       37,139.1    40,801.1    +9.9%   
-  NIFTY PHARMA            7      04-Sep-23   1.257       15,063.3    19,124.4    +27.0%  
-
-  AFTER: Invested ₹7,857,803 | Cash ₹0 | Total ₹7,857,803 | Positions 5/5
-
-========================================================================
-  REBALANCE #148  —  03 Jun 2024  (eligible: 14/14)
-  NAV: ₹8,389,629  |  Slot: ₹1,677,926  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PHARMA            8      04-Sep-23   15,063.3    18,942.4    ₹+278,518     +25.8%    273d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               3      1.997    +42.7%    +16.0%    29,215.8    ₹+1,360,057 
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSE               1      02-Aug-23   2.135       5,517.0     11,331.8    +105.4% 
-  NIFTY AUTO              2      04-Jul-23   2.051       15,180.9    23,992.7    +58.0%  
-  NIFTY REALTY            4      02-Jun-23   1.905       485.2       1,080.1     +122.6% 
-  NIFTY ENERGY            7      02-Feb-24   1.250       37,139.1    42,981.9    +15.7%  
-
-  AFTER: Invested ₹8,389,936 | Cash ₹0 | Total ₹8,389,936 | Positions 5/5
-
-========================================================================
-  REBALANCE #149  —  01 Jul 2024  (eligible: 14/14)
-  NAV: ₹8,428,575  |  Slot: ₹1,685,715  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY ENERGY            8      02-Feb-24   37,139.1    41,747.3    ₹+148,444     +12.4%    150d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY METAL             5      1.182    +59.3%    +21.1%    9,902.0     ₹+1,344,795 
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      04-Jul-23   2.566       15,180.9    25,323.8    +66.8%  
-  NIFTY MNC               2      04-Jun-24   2.549       29,215.8    30,667.1    +5.0%   
-  NIFTY REALTY            3      02-Jun-23   1.960       485.2       1,101.1     +126.9% 
-  NIFTY PSE               4      02-Aug-23   1.485       5,517.0     10,732.2    +94.5%  
-
-  AFTER: Invested ₹8,431,692 | Cash ₹0 | Total ₹8,431,692 | Positions 5/5
-
-========================================================================
-  REBALANCE #150  —  01 Aug 2024  (eligible: 14/14)
-  NAV: ₹8,646,563  |  Slot: ₹1,729,313  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             9      02-Jul-24   9,902.0     9,440.3     ₹-62,691      -4.7%     30d     rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PHARMA            3      1.969    +52.4%    +14.9%    21,620.4    ₹+1,282,105 
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      04-Jul-23   2.312       15,180.9    26,487.4    +74.5%  
-  NIFTY MNC               2      04-Jun-24   2.078       29,215.8    31,189.7    +6.8%   
-  NIFTY PSE               4      02-Aug-23   1.719       5,517.0     11,737.3    +112.8% 
-  NIFTY REALTY            6      02-Jun-23   1.264       485.2       1,075.2     +121.6% 
-
-  AFTER: Invested ₹8,638,599 | Cash ₹0 | Total ₹8,638,599 | Positions 5/5
-
-========================================================================
-  REBALANCE #151  —  02 Sep 2024  (eligible: 14/14)
-  NAV: ₹8,566,546  |  Slot: ₹1,713,309  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      02-Aug-24   2.391       21,620.4    22,987.4    +6.3%   
-  NIFTY AUTO              3      04-Jul-23   1.820       15,180.9    26,071.4    +71.7%  
-  NIFTY MNC               5      04-Jun-24   1.504       29,215.8    30,911.6    +5.8%   
-  NIFTY PSE               6      02-Aug-23   1.339       5,517.0     11,422.2    +107.0% 
-  NIFTY REALTY            7      02-Jun-23   1.120       485.2       1,050.9     +116.6% 
-
-  AFTER: Invested ₹8,566,546 | Cash ₹0 | Total ₹8,566,546 | Positions 5/5
-
-========================================================================
-  REBALANCE #152  —  01 Oct 2024  (eligible: 14/14)
-  NAV: ₹8,782,344  |  Slot: ₹1,756,469  |  Cash: ₹0
-========================================================================
-
-  EXITS (1)
-  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY REALTY            8      02-Jun-23   485.2       1,073.4     ₹+974,203     +121.2%   487d    rank>7          
-
-  ENTRIES (1)
-  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
-  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FMCG              2      1.994    +26.2%    +15.5%    64,687.8    ₹+1,756,469 
-
-  HOLDS (4)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      02-Aug-24   2.679       21,620.4    23,296.6    +7.8%   
-  NIFTY MNC               3      04-Jun-24   1.893       29,215.8    32,761.4    +12.1%  
-  NIFTY AUTO              4      04-Jul-23   1.801       15,180.9    27,083.4    +78.4%  
-  NIFTY PSE               5      02-Aug-23   1.212       5,517.0     11,240.8    +103.8% 
-
-  AFTER: Invested ₹8,743,426 | Cash ₹21,344 | Total ₹8,764,770 | Positions 5/5
-
-========================================================================
-  REBALANCE #153  —  01 Nov 2024  (eligible: 14/14)
-  NAV: ₹7,996,134  |  Slot: ₹1,599,227  |  Cash: ₹21,344
+  REBALANCE #98  —  01 Apr 2020  (eligible: 20/20)
+  NAV: ₹2,427,280  |  Slot: ₹485,456  |  Cash: ₹1,103,323
 ========================================================================
 
   EXITS (3)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSE               8      02-Aug-23   5,517.0     10,311.5    ₹+928,123     +86.9%    457d    rank>7          
-  NIFTY AUTO              9      04-Jul-23   15,180.9    23,883.8    ₹+605,105     +57.3%    486d    rank>7          
-  NIFTY FMCG              13     03-Oct-24   64,687.8    59,579.1    ₹-138,717     -7.9%     29d     rank>7          
+  NIFTY HEALTHCARE        1      04-Feb-20   2,463.7     2,295.2     ₹-29,939      -6.8%     57d     ema200          
+  NIFTY CONSUMER DURABLES  3      04-Sep-19   4,085.6     3,702.5     ₹-51,910      -9.4%     210d    ema200          
+  NIFTY IT                6      03-Mar-20   15,615.0    12,129.8    ₹-123,924     -22.3%    29d     ema200          
 
   ENTRIES (3)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY IT                2      1.462    +31.1%    +1.8%     40,202.2    ₹+1,599,227 
-  NIFTY REALTY            3      1.450    +66.5%    -2.7%     1,004.0     ₹+1,599,227 
-  NIFTY FIN SERVICE       4      1.448    +22.1%    +2.5%     23,997.9    ₹+1,599,227 
+  NIFTY FMCG              2      2.673    -12.6%    -12.5%    26,716.5    ₹+485,456   
+  NIFTY MNC               4      1.738    -18.5%    -21.8%    10,882.6    ₹+485,456   
+  NIFTY CONSUMPTION       5      1.705    -18.8%    -20.1%    3,996.9     ₹+485,456   
 
-  HOLDS (2)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      02-Aug-24   3.032       21,620.4    22,807.2    +5.5%   
-  NIFTY MNC               7      04-Jun-24   0.933 ⚠     29,215.8    29,341.8    +0.4%   
+  HOLDS (0)
+    —
 
-  AFTER: Invested ₹7,530,137 | Cash ₹498,131 | Total ₹8,028,268 | Positions 5/5
+  AFTER: Invested ₹1,440,874 | Cash ₹987,597 | Total ₹2,428,470 | Positions 3/5
 
 ========================================================================
-  REBALANCE #154  —  02 Dec 2024  (eligible: 14/14)
-  NAV: ₹8,190,519  |  Slot: ₹1,638,104  |  Cash: ₹498,131
+  REBALANCE #99  —  04 May 2020  (eligible: 20/20)
+  NAV: ₹2,552,943  |  Slot: ₹510,589  |  Cash: ₹993,598
+========================================================================
+
+  EXITS (3)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY MNC               3      03-Apr-20   10,882.6    12,193.6    ₹+58,482      +12.0%    31d     ema200          
+  NIFTY CONSUMPTION       5      03-Apr-20   3,996.9     4,381.7     ₹+46,744      +9.6%     31d     ema200          
+  NIFTY FMCG              2      03-Apr-20   26,716.5    27,815.7    ₹+19,973      +4.1%     31d     ema200          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY HEALTHCARE        1      4.393    +22.0%    +16.3%    2,871.1     ₹+510,589   
+  NIFTY OIL & GAS         4      1.451    -11.8%    -19.5%    3,076.1     ₹+510,589   
+
+  HOLDS (0)
+    —
+
+  AFTER: Invested ₹1,033,387 | Cash ₹1,553,987 | Total ₹2,587,374 | Positions 2/5
+
+========================================================================
+  REBALANCE #100  —  01 Jun 2020  (eligible: 20/20)
+  NAV: ₹2,610,361  |  Slot: ₹522,072  |  Cash: ₹1,561,797
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY MNC               8      04-Jun-24   29,215.8    29,088.8    ₹-5,917       -0.4%     181d    rank>7          
+  NIFTY OIL & GAS         7      05-May-20   3,076.1     3,224.2     ₹+24,574      +4.8%     27d     ema200          
 
-  ENTRIES (1)
+  ENTRIES (4)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY BANK              5      1.395    +19.3%    +1.5%     52,357.9    ₹+1,638,104 
+  NIFTY FMCG              2      1.968    +1.2%     -1.9%     29,751.6    ₹+522,072   
+  NIFTY CONSUMPTION       3      1.699    +0.1%     -6.5%     4,729.8     ₹+522,072   
+  NIFTY MNC               4      1.598    -0.1%     -8.6%     12,742.0    ₹+522,072   
+  NIFTY INFRA             5      1.469    -4.8%     -9.5%     2,903.9     ₹+522,072   
 
-  HOLDS (4)
+  HOLDS (1)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      02-Aug-24   1.879       21,620.4    22,450.2    +3.8%   
-  NIFTY IT                2      04-Nov-24   1.823       40,202.2    43,547.0    +8.3%   
-  NIFTY REALTY            3      04-Nov-24   1.709       1,004.0     1,051.2     +4.7%   
-  NIFTY FIN SERVICE       4      04-Nov-24   1.604       23,997.9    24,072.7    +0.3%   
+  NIFTY HEALTHCARE        1      05-May-20   4.097       2,871.1     2,959.9     +3.1%   
 
-  AFTER: Invested ₹7,972,608 | Cash ₹214,167 | Total ₹8,186,775 | Positions 5/5
+  AFTER: Invested ₹2,602,377 | Cash ₹8,671 | Total ₹2,611,048 | Positions 5/5
 
 ========================================================================
-  REBALANCE #155  —  01 Jan 2025  (eligible: 14/14)
-  NAV: ₹8,171,447  |  Slot: ₹1,634,289  |  Cash: ₹214,167
+  REBALANCE #101  —  01 Jul 2020  (eligible: 20/20)
+  NAV: ₹2,694,528  |  Slot: ₹538,906  |  Cash: ₹8,671
+========================================================================
+
+  EXITS (3)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INFRA             8      02-Jun-20   2,903.9     3,050.2     ₹+26,312      +5.0%     29d     rank>7          
+  NIFTY CONSUMPTION       9      02-Jun-20   4,729.8     4,823.4     ₹+10,332      +2.0%     29d     rank>7          
+  NIFTY FMCG              10     02-Jun-20   29,751.6    30,352.5    ₹+10,545      +2.0%     29d     rank>7          
+
+  ENTRIES (3)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INDIA DEFENCE     2      2.569    +4.4%     +62.8%    4,405.4     ₹+538,906   
+  NIFTY INDIA MFG         3      1.971    +4.8%     +37.2%    3,928.0     ₹+538,906   
+  NIFTY OIL & GAS         4      1.558    -1.2%     +35.8%    3,575.8     ₹+538,906   
+
+  HOLDS (2)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      05-May-20   3.538       2,871.1     3,051.0     +6.3%   
+  NIFTY MNC               7      02-Jun-20   1.242       12,742.0    13,146.3    +3.2%   
+
+  AFTER: Invested ₹2,676,002 | Cash ₹5,359 | Total ₹2,681,361 | Positions 5/5
+
+========================================================================
+  REBALANCE #102  —  03 Aug 2020  (eligible: 20/20)
+  NAV: ₹2,855,521  |  Slot: ₹571,104  |  Cash: ₹5,359
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY MNC               8      02-Jun-20   12,742.0    13,635.5    ₹+36,605      +7.0%     62d     rank>7          
+  NIFTY OIL & GAS         11     02-Jul-20   3,575.8     3,518.0     ₹-8,711       -1.6%     32d     rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY IT                4      2.092    +16.3%    +34.2%    18,029.4    ₹+571,104   
+  NIFTY CONSUMER DURABLES  5      1.888    +23.6%    +23.9%    4,994.3     ₹+523,126   
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      05-May-20   3.107       2,871.1     3,546.1     +23.5%  
+  NIFTY INDIA DEFENCE     2      02-Jul-20   2.460       4,405.4     4,595.0     +4.3%   
+  NIFTY INDIA MFG         3      02-Jul-20   2.111       3,928.0     4,179.0     +6.4%   
+
+  AFTER: Invested ₹2,851,981 | Cash ₹0 | Total ₹2,851,981 | Positions 5/5
+
+========================================================================
+  REBALANCE #103  —  01 Sep 2020  (eligible: 20/20)
+  NAV: ₹3,033,620  |  Slot: ₹606,724  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
@@ -3692,67 +2498,553 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   HOLDS (5)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PHARMA            1      02-Aug-24   3.011       21,620.4    23,459.8    +8.5%   
-  NIFTY IT                2      04-Nov-24   2.144       40,202.2    43,373.1    +7.9%   
-  NIFTY REALTY            3      04-Nov-24   1.685       1,004.0     1,052.3     +4.8%   
-  NIFTY BANK              5      03-Dec-24   1.120       52,357.9    51,060.6    -2.5%   
-  NIFTY FIN SERVICE       6      04-Nov-24   1.059       23,997.9    23,512.8    -2.0%   
+  NIFTY INDIA DEFENCE     1      02-Jul-20   3.101       4,405.4     5,185.1     +17.7%  
+  NIFTY HEALTHCARE        2      05-May-20   2.985       2,871.1     3,635.7     +26.6%  
+  NIFTY INDIA MFG         3      02-Jul-20   2.479       3,928.0     4,612.7     +17.4%  
+  NIFTY CONSUMER DURABLES  4      04-Aug-20   1.673       4,994.3     5,304.9     +6.2%   
+  NIFTY IT                5      04-Aug-20   1.348       18,029.4    17,814.1    -1.2%   
 
-  AFTER: Invested ₹7,957,280 | Cash ₹214,167 | Total ₹8,171,447 | Positions 5/5
+  AFTER: Invested ₹3,033,620 | Cash ₹0 | Total ₹3,033,620 | Positions 5/5
 
 ========================================================================
-  REBALANCE #156  —  03 Feb 2025  (eligible: 14/14)
-  NAV: ₹7,758,161  |  Slot: ₹1,551,632  |  Cash: ₹214,167
+  REBALANCE #104  —  01 Oct 2020  (eligible: 20/20)
+  NAV: ₹3,210,609  |  Slot: ₹642,122  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      05-May-20   3.666       2,871.1     3,917.4     +36.4%  
+  NIFTY CONSUMER DURABLES  2      04-Aug-20   2.594       4,994.3     6,072.4     +21.6%  
+  NIFTY IT                3      04-Aug-20   2.427       18,029.4    20,110.4    +11.5%  
+  NIFTY INDIA MFG         4      02-Jul-20   2.000       3,928.0     4,674.3     +19.0%  
+  NIFTY INDIA DEFENCE     7      02-Jul-20   1.035       4,405.4     4,901.5     +11.3%  
+
+  AFTER: Invested ₹3,210,609 | Cash ₹0 | Total ₹3,210,609 | Positions 5/5
+
+========================================================================
+  REBALANCE #105  —  02 Nov 2020  (eligible: 20/20)
+  NAV: ₹3,175,928  |  Slot: ₹635,186  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INDIA DEFENCE     14     02-Jul-20   4,405.4     4,521.7     ₹+14,217      +2.6%     123d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY REALTY            5      1.300    -11.5%    +16.4%    234.8       ₹+553,122   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Aug-20   3.038       4,994.3     6,318.3     +26.5%  
+  NIFTY HEALTHCARE        2      05-May-20   2.606       2,871.1     3,763.8     +31.1%  
+  NIFTY IT                3      04-Aug-20   2.282       18,029.4    20,732.3    +15.0%  
+  NIFTY INDIA MFG         4      02-Jul-20   1.787       3,928.0     4,625.7     +17.8%  
+
+  AFTER: Invested ₹3,177,053 | Cash ₹0 | Total ₹3,177,053 | Positions 5/5
+
+========================================================================
+  REBALANCE #106  —  01 Dec 2020  (eligible: 20/20)
+  NAV: ₹3,574,853  |  Slot: ₹714,971  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY REALTY            10     03-Nov-20   234.8       271.3       ₹+85,984      +15.5%    28d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY METAL             5      1.230    +14.3%    +22.9%    2,978.8     ₹+639,106   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Aug-20   3.514       4,994.3     7,412.9     +48.4%  
+  NIFTY HEALTHCARE        2      05-May-20   2.390       2,871.1     4,079.9     +42.1%  
+  NIFTY IT                3      04-Aug-20   2.098       18,029.4    22,170.9    +23.0%  
+  NIFTY INDIA MFG         4      02-Jul-20   1.855       3,928.0     5,355.3     +36.3%  
+
+  AFTER: Invested ₹3,577,142 | Cash ₹0 | Total ₹3,577,142 | Positions 5/5
+
+========================================================================
+  REBALANCE #107  —  01 Jan 2021  (eligible: 20/20)
+  NAV: ₹3,882,406  |  Slot: ₹776,481  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Aug-20   2.512       4,994.3     8,018.2     +60.5%  
+  NIFTY INDIA MFG         2      02-Jul-20   1.956       3,928.0     5,827.1     +48.3%  
+  NIFTY HEALTHCARE        3      05-May-20   1.756       2,871.1     4,330.4     +50.8%  
+  NIFTY IT                5      04-Aug-20   1.523       18,029.4    24,456.1    +35.6%  
+  NIFTY METAL             6      02-Dec-20   1.478       2,978.8     3,254.6     +9.3%   
+
+  AFTER: Invested ₹3,882,406 | Cash ₹0 | Total ₹3,882,406 | Positions 5/5
+
+========================================================================
+  REBALANCE #108  —  01 Feb 2021  (eligible: 20/20)
+  NAV: ₹3,966,396  |  Slot: ₹793,279  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Aug-20   3.124       4,994.3     8,743.5     +75.1%  
+  NIFTY INDIA MFG         2      02-Jul-20   2.418       3,928.0     6,047.9     +54.0%  
+  NIFTY HEALTHCARE        3      05-May-20   1.458       2,871.1     4,155.1     +44.7%  
+  NIFTY IT                4      04-Aug-20   1.345       18,029.4    24,922.7    +38.2%  
+  NIFTY METAL             6      02-Dec-20   1.179       2,978.8     3,227.2     +8.3%   
+
+  AFTER: Invested ₹3,966,396 | Cash ₹0 | Total ₹3,966,396 | Positions 5/5
+
+========================================================================
+  REBALANCE #109  —  01 Mar 2021  (eligible: 20/20)
+  NAV: ₹4,309,118  |  Slot: ₹861,824  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY IT                11     04-Aug-20   18,029.4    24,809.7    ₹+214,775     +37.6%    209d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY PSU BANK          4      1.699    +12.0%    +62.5%    2,397.6     ₹+785,879   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Aug-20   2.925       4,994.3     9,792.0     +96.1%  
+  NIFTY INDIA MFG         2      02-Jul-20   2.507       3,928.0     6,688.3     +70.3%  
+  NIFTY METAL             3      02-Dec-20   1.700       2,978.8     3,896.9     +30.8%  
+  NIFTY HEALTHCARE        6      05-May-20   1.260       2,871.1     4,227.9     +47.3%  
+
+  AFTER: Invested ₹4,312,606 | Cash ₹0 | Total ₹4,312,606 | Positions 5/5
+
+========================================================================
+  REBALANCE #110  —  01 Apr 2021  (eligible: 20/20)
+  NAV: ₹4,361,529  |  Slot: ₹872,306  |  Cash: ₹0
 ========================================================================
 
   EXITS (2)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY REALTY            5      04-Nov-24   1,004.0     952.5       ₹-81,957      -5.1%     91d     ema200          
-  NIFTY BANK              6      03-Dec-24   52,357.9    49,538.8    ₹-88,202      -5.4%     62d     ema200          
+  NIFTY HEALTHCARE        9      05-May-20   2,871.1     4,394.1     ₹+270,844     +53.0%    331d    rank>7          
+  NIFTY PSU BANK          8      02-Mar-21   2,397.6     2,205.0     ₹-63,145      -8.0%     30d     rank>7          
 
-  ENTRIES (1)
+  ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY AUTO              2      2.329    +27.0%    -0.8%     23,607.5    ₹+1,551,632 
+  NIFTY OIL & GAS         3      2.173    +104.1%   +22.7%    5,175.5     ₹+872,306   
+  NIFTY INFRA             5      1.228    +73.1%    +15.7%    4,138.0     ₹+631,861   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY IT                1      04-Nov-24   2.400       40,202.2    42,314.2    +5.3%   
-  NIFTY PHARMA            3      02-Aug-24   1.625       21,620.4    21,361.6    -1.2%   
-  NIFTY FIN SERVICE       4      04-Nov-24   1.602       23,997.9    23,132.4    -3.6%   
+  NIFTY CONSUMER DURABLES  1      04-Aug-20   3.180       4,994.3     9,849.6     +97.2%  
+  NIFTY INDIA MFG         2      02-Jul-20   2.842       3,928.0     6,770.8     +72.4%  
+  NIFTY METAL             4      02-Dec-20   2.150       2,978.8     4,189.1     +40.6%  
 
-  AFTER: Invested ₹6,024,748 | Cash ₹1,729,707 | Total ₹7,754,455 | Positions 4/5
+  AFTER: Invested ₹4,373,680 | Cash ₹0 | Total ₹4,373,680 | Positions 5/5
 
 ========================================================================
-  REBALANCE #157  —  03 Mar 2025  (eligible: 14/14)
-  NAV: ₹7,284,369  |  Slot: ₹1,456,874  |  Cash: ₹1,736,972
+  REBALANCE #111  —  03 May 2021  (eligible: 20/20)
+  NAV: ₹4,507,675  |  Slot: ₹901,535  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INFRA             8      05-Apr-21   4,138.0     4,093.4     ₹-6,810       -1.1%     28d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY HEALTHCARE        5      1.624    +65.0%    +12.3%    4,728.1     ₹+625,051   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY METAL             1      02-Dec-20   3.408       2,978.8     4,952.5     +66.3%  
+  NIFTY INDIA MFG         2      02-Jul-20   2.809       3,928.0     7,026.1     +78.9%  
+  NIFTY CONSUMER DURABLES  3      04-Aug-20   2.254       4,994.3     9,344.5     +87.1%  
+  NIFTY OIL & GAS         4      05-Apr-21   1.948       5,175.5     5,224.6     +1.0%   
+
+  AFTER: Invested ₹4,518,253 | Cash ₹0 | Total ₹4,518,253 | Positions 5/5
+
+========================================================================
+  REBALANCE #112  —  01 Jun 2021  (eligible: 20/20)
+  NAV: ₹4,805,923  |  Slot: ₹961,185  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY METAL             1      02-Dec-20   3.194       2,978.8     5,121.6     +71.9%  
+  NIFTY INDIA MFG         2      02-Jul-20   2.810       3,928.0     7,553.8     +92.3%  
+  NIFTY CONSUMER DURABLES  3      04-Aug-20   1.932       4,994.3     9,849.9     +97.2%  
+  NIFTY HEALTHCARE        4      04-May-21   1.811       4,728.1     5,003.7     +5.8%   
+  NIFTY OIL & GAS         5      05-Apr-21   1.764       5,175.5     5,799.4     +12.1%  
+
+  AFTER: Invested ₹4,805,923 | Cash ₹0 | Total ₹4,805,923 | Positions 5/5
+
+========================================================================
+  REBALANCE #113  —  01 Jul 2021  (eligible: 20/20)
+  NAV: ₹4,958,636  |  Slot: ₹991,727  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA MFG         1      02-Jul-20   2.987       3,928.0     7,920.8     +101.6% 
+  NIFTY METAL             2      02-Dec-20   2.690       2,978.8     5,207.4     +74.8%  
+  NIFTY HEALTHCARE        3      04-May-21   2.207       4,728.1     5,281.5     +11.7%  
+  NIFTY CONSUMER DURABLES  4      04-Aug-20   1.971       4,994.3     10,318.4    +106.6% 
+  NIFTY OIL & GAS         7      05-Apr-21   1.275       5,175.5     5,788.6     +11.8%  
+
+  AFTER: Invested ₹4,958,636 | Cash ₹0 | Total ₹4,958,636 | Positions 5/5
+
+========================================================================
+  REBALANCE #114  —  02 Aug 2021  (eligible: 20/20)
+  NAV: ₹5,150,436  |  Slot: ₹1,030,087  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY HEALTHCARE        8      04-May-21   4,728.1     5,421.0     ₹+91,611      +14.7%    90d     rank>7          
+  NIFTY OIL & GAS         12     05-Apr-21   5,175.5     5,796.1     ₹+104,599     +12.0%    119d    rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY REALTY            4      2.131    +109.2%   +38.4%    419.4       ₹+1,030,087 
+  NIFTY INDIA DEFENCE     5      1.793    +60.7%    +30.4%    7,628.2     ₹+663,480   
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY METAL             1      02-Dec-20   2.440       2,978.8     5,781.3     +94.1%  
+  NIFTY INDIA MFG         2      02-Jul-20   2.378       3,928.0     8,140.5     +107.2% 
+  NIFTY CONSUMER DURABLES  3      04-Aug-20   2.231       4,994.3     10,570.9    +111.7% 
+
+  AFTER: Invested ₹5,146,813 | Cash ₹0 | Total ₹5,146,813 | Positions 5/5
+
+========================================================================
+  REBALANCE #115  —  01 Sep 2021  (eligible: 20/20)
+  NAV: ₹5,106,468  |  Slot: ₹1,021,294  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INDIA DEFENCE     13     03-Aug-21   7,628.2     7,748.9     ₹+10,500      +1.6%     29d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY IT                1      2.867    +88.2%    +26.6%    34,218.2    ₹+673,980   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  2      04-Aug-20   2.061       4,994.3     10,690.9    +114.1% 
+  NIFTY INDIA MFG         3      02-Jul-20   1.708       3,928.0     8,170.0     +108.0% 
+  NIFTY METAL             5      02-Dec-20   1.636       2,978.8     5,612.5     +88.4%  
+  NIFTY REALTY            6      03-Aug-21   1.625       419.4       408.4       -2.6%   
+
+  AFTER: Invested ₹5,119,827 | Cash ₹0 | Total ₹5,119,827 | Positions 5/5
+
+========================================================================
+  REBALANCE #116  —  01 Oct 2021  (eligible: 20/20)
+  NAV: ₹5,549,429  |  Slot: ₹1,109,886  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY METAL             11     02-Dec-20   2,978.8     5,669.7     ₹+577,357     +90.3%    303d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY OIL & GAS         5      1.804    +99.1%    +14.1%    6,584.4     ₹+1,109,886 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY REALTY            1      03-Aug-21   2.481       419.4       506.0       +20.7%  
+  NIFTY CONSUMER DURABLES  2      04-Aug-20   2.432       4,994.3     11,793.9    +136.1% 
+  NIFTY INDIA MFG         3      02-Jul-20   1.829       3,928.0     8,572.6     +118.2% 
+  NIFTY IT                4      02-Sep-21   1.822       34,218.2    34,780.6    +1.6%   
+
+  AFTER: Invested ₹5,453,040 | Cash ₹106,577 | Total ₹5,559,617 | Positions 5/5
+
+========================================================================
+  REBALANCE #117  —  01 Nov 2021  (eligible: 20/20)
+  NAV: ₹5,667,913  |  Slot: ₹1,133,583  |  Cash: ₹106,577
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY IT                9      02-Sep-21   34,218.2    35,334.2    ₹+21,981      +3.3%     60d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INDIA DEFENCE     2      2.196    +98.3%    +24.0%    9,353.6     ₹+802,539   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      04-Aug-20   2.306       4,994.3     12,344.6    +147.2% 
+  NIFTY OIL & GAS         3      04-Oct-21   1.806       6,584.4     6,495.9     -1.3%   
+  NIFTY INDIA MFG         4      02-Jul-20   1.801       3,928.0     8,774.9     +123.4% 
+  NIFTY REALTY            5      03-Aug-21   1.729       419.4       518.8       +23.7%  
+
+  AFTER: Invested ₹5,667,561 | Cash ₹0 | Total ₹5,667,561 | Positions 5/5
+
+========================================================================
+  REBALANCE #118  —  01 Dec 2021  (eligible: 20/20)
+  NAV: ₹5,509,812  |  Slot: ₹1,101,962  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY OIL & GAS         8      04-Oct-21   6,584.4     6,393.3     ₹-32,222      -2.9%     58d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INFRA             5      1.479    +56.5%    +7.6%     5,002.2     ₹+1,077,664 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Nov-21   2.786       9,353.6     9,377.0     +0.3%   
+  NIFTY CONSUMER DURABLES  2      04-Aug-20   2.230       4,994.3     11,983.8    +140.0% 
+  NIFTY REALTY            3      03-Aug-21   2.147       419.4       494.6       +18.0%  
+  NIFTY INDIA MFG         4      02-Jul-20   1.863       3,928.0     8,573.0     +118.3% 
+
+  AFTER: Invested ₹5,526,714 | Cash ₹0 | Total ₹5,526,714 | Positions 5/5
+
+========================================================================
+  REBALANCE #119  —  03 Jan 2022  (eligible: 20/20)
+  NAV: ₹5,712,626  |  Slot: ₹1,142,525  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY REALTY            9      03-Aug-21   419.4       492.4       ₹+179,316     +17.4%    153d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY IT                2      2.638    +62.3%    +12.5%    39,243.5    ₹+1,142,525 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Nov-21   3.008       9,353.6     9,832.6     +5.1%   
+  NIFTY INDIA MFG         3      02-Jul-20   2.579       3,928.0     9,116.2     +132.1% 
+  NIFTY CONSUMER DURABLES  4      04-Aug-20   2.428       4,994.3     12,755.8    +155.4% 
+  NIFTY INFRA             7      02-Dec-21   1.017       5,002.2     5,010.3     +0.2%   
+
+  AFTER: Invested ₹5,648,894 | Cash ₹66,879 | Total ₹5,715,773 | Positions 5/5
+
+========================================================================
+  REBALANCE #120  —  01 Feb 2022  (eligible: 20/20)
+  NAV: ₹5,563,511  |  Slot: ₹1,112,702  |  Cash: ₹66,879
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INFRA             10     02-Dec-21   5,002.2     5,138.1     ₹+29,289      +2.7%     61d     rank>7          
+  NIFTY IT                9      04-Jan-22   39,243.5    35,556.5    ₹-107,342     -9.4%     28d     rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY ENERGY            3      2.403    +43.6%    +5.9%     25,069.1    ₹+1,112,702 
+  NIFTY OIL & GAS         4      1.627    +50.8%    -0.6%     6,496.9     ₹+1,096,311 
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Nov-21   3.118       9,353.6     9,835.5     +5.2%   
+  NIFTY INDIA MFG         2      02-Jul-20   2.590       3,928.0     9,032.7     +130.0% 
+  NIFTY CONSUMER DURABLES  6      04-Aug-20   1.400       4,994.3     12,247.2    +145.2% 
+
+  AFTER: Invested ₹5,559,727 | Cash ₹0 | Total ₹5,559,727 | Positions 5/5
+
+========================================================================
+  REBALANCE #121  —  02 Mar 2022  (eligible: 20/20)
+  NAV: ₹5,292,410  |  Slot: ₹1,058,482  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMER DURABLES  8      04-Aug-20   4,994.3     11,615.5    ₹+693,541     +132.6%   575d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY METAL             1      3.144    +73.0%    +15.3%    6,254.4     ₹+1,058,482 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY ENERGY            2      02-Feb-22   2.509       25,069.1    24,520.7    -2.2%   
+  NIFTY INDIA DEFENCE     4      02-Nov-21   1.919       9,353.6     9,029.4     -3.5%   
+  NIFTY INDIA MFG         5      02-Jul-20   1.899       3,928.0     8,580.3     +118.4% 
+  NIFTY OIL & GAS         7      02-Feb-22   1.153       6,496.9     6,097.7     -6.1%   
+
+  AFTER: Invested ₹5,107,784 | Cash ₹158,185 | Total ₹5,265,970 | Positions 5/5
+
+========================================================================
+  REBALANCE #122  —  01 Apr 2022  (eligible: 20/20)
+  NAV: ₹5,623,037  |  Slot: ₹1,124,607  |  Cash: ₹158,185
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY ENERGY            1      02-Feb-22   2.677       25,069.1    26,454.5    +5.5%   
+  NIFTY METAL             2      03-Mar-22   2.290       6,254.4     6,477.2     +3.6%   
+  NIFTY INDIA DEFENCE     3      02-Nov-21   2.219       9,353.6     9,895.2     +5.8%   
+  NIFTY INDIA MFG         5      02-Jul-20   1.619       3,928.0     9,097.9     +131.6% 
+  NIFTY OIL & GAS         6      02-Feb-22   1.514       6,496.9     6,502.5     +0.1%   
+
+  AFTER: Invested ₹5,464,851 | Cash ₹158,185 | Total ₹5,623,037 | Positions 5/5
+
+========================================================================
+  REBALANCE #123  —  02 May 2022  (eligible: 20/20)
+  NAV: ₹5,778,627  |  Slot: ₹1,155,725  |  Cash: ₹158,185
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY OIL & GAS         10     02-Feb-22   6,496.9     6,469.8     ₹-4,574       -0.4%     89d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY PSE               5      1.504    +37.8%    +4.8%     4,262.9     ₹+1,155,725 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY ENERGY            1      02-Feb-22   3.247       25,069.1    28,573.7    +14.0%  
+  NIFTY INDIA DEFENCE     2      02-Nov-21   3.052       9,353.6     10,718.1    +14.6%  
+  NIFTY METAL             3      03-Mar-22   1.753       6,254.4     6,363.1     +1.7%   
+  NIFTY INDIA MFG         4      02-Jul-20   1.752       3,928.0     9,217.9     +134.7% 
+
+  AFTER: Invested ₹5,679,487 | Cash ₹94,197 | Total ₹5,773,684 | Positions 5/5
+
+========================================================================
+  REBALANCE #124  —  01 Jun 2022  (eligible: 20/20)
+  NAV: ₹5,337,509  |  Slot: ₹1,067,502  |  Cash: ₹94,197
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY METAL             16     03-Mar-22   6,254.4     5,344.5     ₹-153,974     -14.5%    90d     rank>7+ema200   
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY FMCG              3      1.917    +11.2%    +8.9%     38,332.1    ₹+998,705   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Nov-21   3.497       9,353.6     10,238.3    +9.5%   
+  NIFTY ENERGY            2      02-Feb-22   2.254       25,069.1    25,456.4    +1.5%   
+  NIFTY INDIA MFG         4      02-Jul-20   1.670       3,928.0     8,896.4     +126.5% 
+  NIFTY PSE               6      04-May-22   1.585       4,262.9     4,098.8     -3.8%   
+
+  AFTER: Invested ₹5,341,508 | Cash ₹0 | Total ₹5,341,508 | Positions 5/5
+
+========================================================================
+  REBALANCE #125  —  01 Jul 2022  (eligible: 20/20)
+  NAV: ₹5,046,097  |  Slot: ₹1,009,219  |  Cash: ₹0
 ========================================================================
 
   EXITS (4)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FIN SERVICE       1      04-Nov-24   23,997.9    22,865.0    ₹-75,497      -4.7%     119d    ema200          
-  NIFTY IT                7      04-Nov-24   40,202.2    37,228.8    ₹-118,282     -7.4%     119d    ema200          
-  NIFTY PHARMA            6      02-Aug-24   21,620.4    19,795.2    ₹-108,236     -8.4%     213d    ema200          
-  NIFTY AUTO              5      04-Feb-25   23,607.5    20,295.8    ₹-217,666     -14.0%    27d     ema200          
+  NIFTY INDIA MFG         6      02-Jul-20   3,928.0     8,496.2     ₹+626,739     +116.3%   729d    ema200          
+  NIFTY INDIA DEFENCE     3      02-Nov-21   9,353.6     9,352.2     ₹-120         -0.0%     241d    ema200          
+  NIFTY ENERGY            4      02-Feb-22   25,069.1    24,030.1    ₹-46,116      -4.1%     149d    ema200          
+  NIFTY PSE               10     04-May-22   4,262.9     3,711.6     ₹-149,464     -12.9%    58d     rank>7+ema200   
 
-  ENTRIES (3)
+  ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PVT BANK          2      2.082    +2.9%     -4.7%     24,028.6    ₹+1,456,874 
-  NIFTY METAL             3      2.038    +4.3%     -7.9%     8,197.2     ₹+1,456,874 
-  NIFTY BANK              4      1.714    +2.5%     -7.7%     47,942.5    ₹+1,456,874 
+  NIFTY AUTO              1      2.534    +9.4%     +11.0%    11,690.8    ₹+1,009,219 
+  NIFTY CONSUMPTION       5      1.700    +6.5%     -0.9%     6,784.2     ₹+1,009,219 
 
-  HOLDS (0)
-    —
+  HOLDS (1)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FMCG              2      02-Jun-22   2.508       38,332.1    38,725.9    +1.0%   
 
-  AFTER: Invested ₹4,402,915 | Cash ₹2,878,861 | Total ₹7,281,775 | Positions 3/5
+  AFTER: Invested ₹3,027,244 | Cash ₹2,022,472 | Total ₹5,049,716 | Positions 3/5
 
 ========================================================================
-  REBALANCE #158  —  01 Apr 2025  (eligible: 14/14)
-  NAV: ₹7,567,358  |  Slot: ₹1,513,472  |  Cash: ₹2,894,493
+  REBALANCE #126  —  01 Aug 2022  (eligible: 20/20)
+  NAV: ₹5,381,473  |  Slot: ₹1,076,295  |  Cash: ₹2,034,355
 ========================================================================
 
   EXITS (0)
@@ -3761,305 +3053,316 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   ENTRIES (2)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY FIN SERVICE       1      2.715    +19.4%    +3.1%     24,582.4    ₹+1,513,472 
-  NIFTY PSE               5      1.376    +7.8%     -2.7%     9,305.5     ₹+1,381,022 
+  NIFTY INDIA DEFENCE     4      1.747    +42.2%    +1.6%     10,680.5    ₹+1,076,295 
+  NIFTY INDIA MFG         5      1.568    +19.9%    +5.6%     9,531.4     ₹+958,060   
 
   HOLDS (3)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY METAL             2      04-Mar-25   2.033       8,197.2     9,016.8     +10.0%  
-  NIFTY PVT BANK          3      04-Mar-25   2.028       24,028.6    25,422.8    +5.8%   
-  NIFTY BANK              4      04-Mar-25   1.767       47,942.5    50,827.5    +6.0%   
+  NIFTY AUTO              1      04-Jul-22   2.649       11,690.8    12,953.7    +10.8%  
+  NIFTY FMCG              2      02-Jun-22   2.213       38,332.1    42,526.8    +10.9%  
+  NIFTY CONSUMPTION       3      04-Jul-22   2.047       6,784.2     7,614.8     +12.2%  
 
-  AFTER: Invested ₹7,579,524 | Cash ₹0 | Total ₹7,579,524 | Positions 5/5
+  AFTER: Invested ₹5,380,113 | Cash ₹0 | Total ₹5,380,113 | Positions 5/5
 
 ========================================================================
-  REBALANCE #159  —  02 May 2025  (eligible: 14/14)
-  NAV: ₹7,874,151  |  Slot: ₹1,574,830  |  Cash: ₹0
+  REBALANCE #127  —  01 Sep 2022  (eligible: 20/20)
+  NAV: ₹5,732,814  |  Slot: ₹1,146,563  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Aug-22   3.200       10,680.5    12,529.5    +17.3%  
+  NIFTY CONSUMPTION       2      04-Jul-22   2.076       6,784.2     7,933.5     +16.9%  
+  NIFTY INDIA MFG         3      02-Aug-22   2.004       9,531.4     10,063.3    +5.6%   
+  NIFTY AUTO              4      04-Jul-22   1.819       11,690.8    13,266.2    +13.5%  
+  NIFTY FMCG              5      02-Jun-22   1.626       38,332.1    43,497.4    +13.5%  
+
+  AFTER: Invested ₹5,732,814 | Cash ₹0 | Total ₹5,732,814 | Positions 5/5
+
+========================================================================
+  REBALANCE #128  —  03 Oct 2022  (eligible: 20/20)
+  NAV: ₹5,669,598  |  Slot: ₹1,133,920  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY METAL             11     04-Mar-25   8,197.2     8,523.1     ₹+57,922      +4.0%     59d     rank>7+ema200   
+  NIFTY AUTO              8      04-Jul-22   11,690.8    12,643.0    ₹+82,200      +8.1%     91d     rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PHARMA            4      1.452    +17.1%    -1.1%     21,699.1    ₹+1,514,795 
+  NIFTY CONSUMER DURABLES  3      1.631    +10.2%    +17.7%    12,784.5    ₹+1,091,419 
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      02-Apr-25   2.789       24,582.4    26,151.8    +6.4%   
-  NIFTY PVT BANK          2      04-Mar-25   2.349       24,028.6    27,396.4    +14.0%  
-  NIFTY BANK              3      04-Mar-25   2.281       47,942.5    55,115.4    +15.0%  
-  NIFTY PSE               6      02-Apr-25   0.860 ⚠     9,305.5     9,529.0     +2.4%   
+  NIFTY INDIA DEFENCE     1      02-Aug-22   4.061       10,680.5    13,089.6    +22.6%  
+  NIFTY INDIA MFG         2      02-Aug-22   2.092       9,531.4     9,893.7     +3.8%   
+  NIFTY CONSUMPTION       5      04-Jul-22   1.495       6,784.2     7,726.0     +13.9%  
+  NIFTY FMCG              6      02-Jun-22   1.448       38,332.1    43,477.3    +13.4%  
 
-  AFTER: Invested ₹7,869,985 | Cash ₹0 | Total ₹7,869,985 | Positions 5/5
-
-========================================================================
-  REBALANCE #160  —  02 Jun 2025  (eligible: 14/14)
-  NAV: ₹7,968,280  |  Slot: ₹1,593,656  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      02-Apr-25   2.600       24,582.4    26,448.4    +7.6%   
-  NIFTY BANK              2      04-Mar-25   2.238       47,942.5    55,903.4    +16.6%  
-  NIFTY PVT BANK          3      04-Mar-25   2.114       24,028.6    27,670.1    +15.2%  
-  NIFTY PHARMA            4      05-May-25   1.129       21,699.1    21,394.1    -1.4%   
-  NIFTY PSE               7      02-Apr-25   0.809 ⚠     9,305.5     9,904.9     +6.4%   
-
-  AFTER: Invested ₹7,968,280 | Cash ₹0 | Total ₹7,968,280 | Positions 5/5
+  AFTER: Invested ₹5,671,818 | Cash ₹0 | Total ₹5,671,818 | Positions 5/5
 
 ========================================================================
-  REBALANCE #161  —  01 Jul 2025  (eligible: 14/14)
-  NAV: ₹8,166,851  |  Slot: ₹1,633,370  |  Cash: ₹0
+  REBALANCE #129  —  01 Nov 2022  (eligible: 20/20)
+  NAV: ₹5,969,086  |  Slot: ₹1,193,817  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PSE               11     02-Apr-25   9,305.5     10,093.1    ₹+116,879     +8.5%     90d     rank>7          
+  NIFTY CONSUMER DURABLES  14     04-Oct-22   12,784.5    12,503.6    ₹-23,983      -2.2%     28d     rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY PSU BANK          4      1.328    -1.1%     +15.2%    7,254.9     ₹+1,497,901 
+  NIFTY PSU BANK          3      1.644    +19.4%    +22.0%    3,432.6     ₹+1,067,436 
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY BANK              1      04-Mar-25   2.352       47,942.5    57,459.4    +19.9%  
-  NIFTY FIN SERVICE       2      02-Apr-25   2.257       24,582.4    27,124.2    +10.3%  
-  NIFTY PVT BANK          3      04-Mar-25   2.091       24,028.6    28,288.9    +17.7%  
-  NIFTY PHARMA            6      05-May-25   1.093       21,699.1    22,041.2    +1.6%   
+  NIFTY INDIA DEFENCE     1      02-Aug-22   4.436       10,680.5    14,909.7    +39.6%  
+  NIFTY INDIA MFG         2      02-Aug-22   1.933       9,531.4     10,421.4    +9.3%   
+  NIFTY CONSUMPTION       4      04-Jul-22   1.354       6,784.2     7,994.1     +17.8%  
+  NIFTY FMCG              5      02-Jun-22   1.315       38,332.1    44,564.9    +16.3%  
 
-  AFTER: Invested ₹8,167,532 | Cash ₹0 | Total ₹8,167,532 | Positions 5/5
-
-========================================================================
-  REBALANCE #162  —  01 Aug 2025  (eligible: 14/14)
-  NAV: ₹7,888,472  |  Slot: ₹1,577,694  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       1      02-Apr-25   2.027       24,582.4    26,492.5    +7.8%   
-  NIFTY BANK              2      04-Mar-25   1.850       47,942.5    55,617.6    +16.0%  
-  NIFTY PSU BANK          4      02-Jul-25   1.671       7,254.9     6,773.4     -6.6%   
-  NIFTY PHARMA            6      05-May-25   1.308       21,699.1    22,011.7    +1.4%   
-  NIFTY PVT BANK          7      04-Mar-25   1.080       24,028.6    26,920.3    +12.0%  
-
-  AFTER: Invested ₹7,888,472 | Cash ₹0 | Total ₹7,888,472 | Positions 5/5
+  AFTER: Invested ₹5,969,307 | Cash ₹0 | Total ₹5,969,307 | Positions 5/5
 
 ========================================================================
-  REBALANCE #163  —  01 Sep 2025  (eligible: 14/14)
-  NAV: ₹7,749,632  |  Slot: ₹1,549,926  |  Cash: ₹0
+  REBALANCE #130  —  01 Dec 2022  (eligible: 20/20)
+  NAV: ₹6,315,051  |  Slot: ₹1,263,010  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PVT BANK          8      04-Mar-25   24,028.6    26,284.3    ₹+136,771     +9.4%     181d    rank>7+ema200   
+  NIFTY CONSUMPTION       14     04-Jul-22   6,784.2     7,890.1     ₹+164,513     +16.3%    150d    rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY AUTO              1      2.417    -0.7%     +10.0%    25,710.8    ₹+1,549,926 
+  NIFTY BANK              4      1.367    +20.1%    +9.4%     42,976.2    ₹+1,173,732 
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY FIN SERVICE       3      02-Apr-25   1.794       24,582.4    25,743.5    +4.7%   
-  NIFTY PHARMA            5      05-May-25   1.454       21,699.1    21,778.8    +0.4%   
-  NIFTY BANK              6      04-Mar-25   1.350       47,942.5    54,002.4    +12.6%  
-  NIFTY PSU BANK          7      02-Jul-25   0.979 ⚠     7,254.9     6,831.0     -5.8%   
+  NIFTY INDIA DEFENCE     1      02-Aug-22   3.671       10,680.5    15,988.9    +49.7%  
+  NIFTY PSU BANK          2      02-Nov-22   3.073       3,432.6     4,085.3     +19.0%  
+  NIFTY INDIA MFG         3      02-Aug-22   1.603       9,531.4     10,710.1    +12.4%  
+  NIFTY FMCG              5      02-Jun-22   1.258       38,332.1    45,370.6    +18.4%  
 
-  AFTER: Invested ₹7,703,572 | Cash ₹43,719 | Total ₹7,747,291 | Positions 5/5
+  AFTER: Invested ₹6,321,750 | Cash ₹0 | Total ₹6,321,750 | Positions 5/5
 
 ========================================================================
-  REBALANCE #164  —  01 Oct 2025  (eligible: 14/14)
-  NAV: ₹8,029,140  |  Slot: ₹1,605,828  |  Cash: ₹43,719
+  REBALANCE #131  —  02 Jan 2023  (eligible: 20/20)
+  NAV: ₹6,283,970  |  Slot: ₹1,256,794  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY FMCG              11     02-Jun-22   38,332.1    44,121.6    ₹+150,841     +15.1%    214d    rank>7          
+  NIFTY INDIA MFG         9      02-Aug-22   9,531.4     10,452.4    ₹+92,576      +9.7%     153d    rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY PVT BANK          3      1.628    +23.6%    +13.4%    21,968.0    ₹+1,256,794 
+  NIFTY METAL             5      1.544    +25.5%    +22.0%    6,897.2     ₹+943,389   
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSU BANK          1      02-Nov-22   3.529       3,432.6     4,348.9     +26.7%  
+  NIFTY INDIA DEFENCE     2      02-Aug-22   2.451       10,680.5    15,410.5    +44.3%  
+  NIFTY BANK              4      02-Dec-22   1.563       42,976.2    43,203.1    +0.5%   
+
+  AFTER: Invested ₹6,285,769 | Cash ₹0 | Total ₹6,285,769 | Positions 5/5
+
+========================================================================
+  REBALANCE #132  —  01 Feb 2023  (eligible: 20/20)
+  NAV: ₹5,818,167  |  Slot: ₹1,163,633  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY PVT BANK          8      03-Jan-23   21,968.0    20,438.3    ₹-87,512      -7.0%     29d     rank>7          
+  NIFTY BANK              9      02-Dec-22   42,976.2    39,943.4    ₹-82,831      -7.1%     61d     rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY FMCG              3      2.335    +23.6%    +0.9%     44,989.4    ₹+1,163,633 
+  NIFTY INDIA MFG         4      1.787    +18.1%    -0.9%     10,360.2    ₹+1,096,550 
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSU BANK          1      02-Nov-22   2.591       3,432.6     3,778.9     +10.1%  
+  NIFTY INDIA DEFENCE     2      02-Aug-22   2.524       10,680.5    14,952.1    +40.0%  
+  NIFTY METAL             5      03-Jan-23   1.563       6,897.2     6,177.0     -10.4%  
+
+  AFTER: Invested ₹5,785,457 | Cash ₹0 | Total ₹5,785,457 | Positions 5/5
+
+========================================================================
+  REBALANCE #133  —  01 Mar 2023  (eligible: 20/20)
+  NAV: ₹5,715,277  |  Slot: ₹1,143,055  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY PHARMA            8      05-May-25   21,699.1    21,684.2    ₹-1,040       -0.1%     149d    rank>7          
+  NIFTY METAL             15     03-Jan-23   6,897.2     5,464.9     ₹-195,913     -20.8%    57d     rank>7+ema200   
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY METAL             3      1.900    +3.7%     +4.1%     10,108.9    ₹+1,557,474 
+  NIFTY PSE               4      1.903    +14.3%    -0.2%     4,445.9     ₹+747,476   
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY AUTO              1      02-Sep-25   2.464       25,710.8    26,768.7    +4.1%   
-  NIFTY PSU BANK          2      02-Jul-25   2.181       7,254.9     7,499.2     +3.4%   
-  NIFTY FIN SERVICE       4      02-Apr-25   1.622       24,582.4    26,382.2    +7.3%   
-  NIFTY BANK              6      04-Mar-25   1.247       47,942.5    55,347.9    +15.4%  
+  NIFTY INDIA DEFENCE     1      02-Aug-22   2.915       10,680.5    15,229.8    +42.6%  
+  NIFTY FMCG              2      02-Feb-23   2.299       44,989.4    45,062.6    +0.2%   
+  NIFTY INDIA MFG         3      02-Feb-23   1.962       10,360.2    10,339.0    -0.2%   
+  NIFTY PSU BANK          5      02-Nov-22   1.747       3,432.6     3,767.2     +9.7%   
 
-  AFTER: Invested ₹8,023,241 | Cash ₹0 | Total ₹8,023,241 | Positions 5/5
-
-========================================================================
-  REBALANCE #165  —  03 Nov 2025  (eligible: 14/14)
-  NAV: ₹8,428,341  |  Slot: ₹1,685,668  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Jul-25   2.914       7,254.9     8,341.3     +15.0%  
-  NIFTY AUTO              2      02-Sep-25   1.973       25,710.8    26,841.8    +4.4%   
-  NIFTY METAL             3      03-Oct-25   1.933       10,108.9    10,652.8    +5.4%   
-  NIFTY BANK              4      04-Mar-25   1.660       47,942.5    58,101.4    +21.2%  
-  NIFTY FIN SERVICE       5      02-Apr-25   1.440       24,582.4    27,306.2    +11.1%  
-
-  AFTER: Invested ₹8,428,341 | Cash ₹0 | Total ₹8,428,341 | Positions 5/5
+  AFTER: Invested ₹5,713,409 | Cash ₹0 | Total ₹5,713,409 | Positions 5/5
 
 ========================================================================
-  REBALANCE #166  —  01 Dec 2025  (eligible: 14/14)
-  NAV: ₹8,571,014  |  Slot: ₹1,714,203  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Jul-25   2.697       7,254.9     8,535.7     +17.7%  
-  NIFTY BANK              2      04-Mar-25   2.084       47,942.5    59,681.4    +24.5%  
-  NIFTY FIN SERVICE       4      02-Apr-25   1.890       24,582.4    27,814.5    +13.1%  
-  NIFTY AUTO              5      02-Sep-25   1.739       25,710.8    27,993.0    +8.9%   
-  NIFTY METAL             6      03-Oct-25   1.471       10,108.9    10,353.2    +2.4%   
-
-  AFTER: Invested ₹8,571,014 | Cash ₹0 | Total ₹8,571,014 | Positions 5/5
-
-========================================================================
-  REBALANCE #167  —  01 Jan 2026  (eligible: 14/14)
-  NAV: ₹8,696,352  |  Slot: ₹1,739,270  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY BANK              1      04-Mar-25   2.230       47,942.5    59,711.6    +24.5%  
-  NIFTY PSU BANK          2      02-Jul-25   2.170       7,254.9     8,533.2     +17.6%  
-  NIFTY METAL             4      03-Oct-25   1.802       10,108.9    11,167.7    +10.5%  
-  NIFTY FIN SERVICE       5      02-Apr-25   1.683       24,582.4    27,613.3    +12.3%  
-  NIFTY AUTO              6      02-Sep-25   1.633       25,710.8    28,189.6    +9.6%   
-
-  AFTER: Invested ₹8,696,352 | Cash ₹0 | Total ₹8,696,352 | Positions 5/5
-
-========================================================================
-  REBALANCE #168  —  02 Feb 2026  (eligible: 14/14)
-  NAV: ₹8,598,959  |  Slot: ₹1,719,792  |  Cash: ₹0
-========================================================================
-
-  EXITS (0)
-    —
-
-  ENTRIES (0)
-    —
-
-  HOLDS (5)
-  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
-  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Jul-25   2.276       7,254.9     8,591.7     +18.4%  
-  NIFTY METAL             2      03-Oct-25   2.197       10,108.9    11,561.5    +14.4%  
-  NIFTY BANK              3      04-Mar-25   1.954       47,942.5    58,619.0    +22.3%  
-  NIFTY AUTO              5      02-Sep-25   1.461       25,710.8    26,749.2    +4.0%   
-  NIFTY FIN SERVICE       7      02-Apr-25   1.340       24,582.4    26,799.0    +9.0%   
-
-  AFTER: Invested ₹8,598,959 | Cash ₹0 | Total ₹8,598,959 | Positions 5/5
-
-========================================================================
-  REBALANCE #169  —  02 Mar 2026  (eligible: 14/14)
-  NAV: ₹9,056,263  |  Slot: ₹1,811,253  |  Cash: ₹0
+  REBALANCE #134  —  03 Apr 2023  (eligible: 20/20)
+  NAV: ₹5,732,592  |  Slot: ₹1,146,518  |  Cash: ₹0
 ========================================================================
 
   EXITS (1)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY FIN SERVICE       8      02-Apr-25   24,582.4    26,948.5    ₹+145,671     +9.6%     334d    rank>7          
+  NIFTY PSU BANK          10     02-Nov-22   3,432.6     3,763.0     ₹+102,744     +9.6%     152d    rank>7          
 
   ENTRIES (1)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY MNC               3      1.706    +21.3%    +3.3%     30,859.0    ₹+1,659,143 
+  NIFTY AUTO              5      1.703    +19.2%    -1.5%     12,428.5    ₹+1,146,518 
 
   HOLDS (4)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Jul-25   2.645       7,254.9     9,639.3     +32.9%  
-  NIFTY METAL             2      03-Oct-25   2.457       10,108.9    12,269.8    +21.4%  
-  NIFTY BANK              5      04-Mar-25   1.415       47,942.5    59,839.6    +24.8%  
-  NIFTY AUTO              6      02-Sep-25   1.262       25,710.8    27,540.1    +7.1%   
+  NIFTY FMCG              1      02-Feb-23   2.946       44,989.4    45,738.4    +1.7%   
+  NIFTY INDIA DEFENCE     2      02-Aug-22   2.600       10,680.5    15,259.2    +42.9%  
+  NIFTY PSE               3      02-Mar-23   1.959       4,445.9     4,488.2     +1.0%   
+  NIFTY INDIA MFG         4      02-Feb-23   1.752       10,360.2    10,293.1    -0.6%   
 
-  AFTER: Invested ₹9,043,939 | Cash ₹0 | Total ₹9,043,939 | Positions 5/5
+  AFTER: Invested ₹5,711,018 | Cash ₹23,662 | Total ₹5,734,680 | Positions 5/5
 
 ========================================================================
-  REBALANCE #170  —  01 Apr 2026  (eligible: 14/14)
-  NAV: ₹7,988,605  |  Slot: ₹1,597,721  |  Cash: ₹0
+  REBALANCE #135  —  02 May 2023  (eligible: 20/20)
+  NAV: ₹6,124,299  |  Slot: ₹1,224,860  |  Cash: ₹23,662
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FMCG              1      02-Feb-23   2.778       44,989.4    47,750.2    +6.1%   
+  NIFTY INDIA DEFENCE     2      02-Aug-22   2.383       10,680.5    16,654.9    +55.9%  
+  NIFTY INDIA MFG         3      02-Feb-23   2.043       10,360.2    10,977.0    +6.0%   
+  NIFTY AUTO              5      05-Apr-23   1.525       12,428.5    13,283.2    +6.9%   
+  NIFTY PSE               6      02-Mar-23   1.522       4,445.9     4,758.6     +7.0%   
+
+  AFTER: Invested ₹6,100,637 | Cash ₹23,662 | Total ₹6,124,299 | Positions 5/5
+
+========================================================================
+  REBALANCE #136  —  01 Jun 2023  (eligible: 20/20)
+  NAV: ₹6,457,130  |  Slot: ₹1,291,426  |  Cash: ₹23,662
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY PSE               13     02-Mar-23   4,445.9     4,795.5     ₹+58,795      +7.9%     91d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY REALTY            4      1.926    +27.1%    +27.2%    485.2       ₹+829,933   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Aug-22   2.387       10,680.5    17,597.2    +64.8%  
+  NIFTY FMCG              2      02-Feb-23   2.296       44,989.4    50,998.9    +13.4%  
+  NIFTY INDIA MFG         3      02-Feb-23   2.116       10,360.2    11,553.4    +11.5%  
+  NIFTY AUTO              7      05-Apr-23   1.279       12,428.5    14,257.0    +14.7%  
+
+  AFTER: Invested ₹6,458,281 | Cash ₹0 | Total ₹6,458,281 | Positions 5/5
+
+========================================================================
+  REBALANCE #137  —  03 Jul 2023  (eligible: 20/20)
+  NAV: ₹7,062,015  |  Slot: ₹1,412,403  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Aug-22   3.240       10,680.5    20,809.5    +94.8%  
+  NIFTY INDIA MFG         2      02-Feb-23   2.407       10,360.2    12,387.7    +19.6%  
+  NIFTY FMCG              3      02-Feb-23   1.629       44,989.4    52,741.5    +17.2%  
+  NIFTY REALTY            4      02-Jun-23   1.513       485.2       523.9       +8.0%   
+  NIFTY AUTO              5      05-Apr-23   1.468       12,428.5    15,106.8    +21.6%  
+
+  AFTER: Invested ₹7,062,015 | Cash ₹0 | Total ₹7,062,015 | Positions 5/5
+
+========================================================================
+  REBALANCE #138  —  01 Aug 2023  (eligible: 20/20)
+  NAV: ₹7,548,342  |  Slot: ₹1,509,668  |  Cash: ₹0
 ========================================================================
 
   EXITS (3)
   Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
-  NIFTY BANK              9      04-Mar-25   47,942.5    50,625.6    ₹+81,535      +5.6%     393d    rank>7+ema200   
-  NIFTY AUTO              7      02-Sep-25   25,710.8    23,929.1    ₹-107,409     -6.9%     211d    ema200          
-  NIFTY MNC               6      04-Mar-26   30,859.0    28,028.4    ₹-152,188     -9.2%     28d     ema200          
+  NIFTY AUTO              8      05-Apr-23   12,428.5    15,688.8    ₹+300,755     +26.2%    118d    rank>7          
+  NIFTY FMCG              10     02-Feb-23   44,989.4    52,491.7    ₹+194,044     +16.7%    180d    rank>7          
+  NIFTY REALTY            9      02-Jun-23   485.2       553.5       ₹+116,827     +14.1%    60d     rank>7          
 
   ENTRIES (3)
   Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
   ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
-  NIFTY ENERGY            3      1.875    +7.3%     +0.9%     35,106.6    ₹+1,597,721 
-  NIFTY PSE               4      1.799    +7.2%     -0.2%     9,611.6     ₹+1,597,721 
-  NIFTY PHARMA            5      1.416    +3.1%     -3.3%     21,689.9    ₹+1,292,439 
+  NIFTY HEALTHCARE        3      1.943    +25.9%    +23.3%    6,023.7     ₹+1,509,668 
+  NIFTY PSE               4      1.669    +41.6%    +15.5%    5,517.0     ₹+1,509,668 
+  NIFTY CONSUMER DURABLES  5      1.480    +21.6%    +20.3%    14,142.5    ₹+732,374   
 
   HOLDS (2)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY PSU BANK          1      02-Jul-25   2.499       7,254.9     8,164.8     +12.5%  
-  NIFTY METAL             2      03-Oct-25   2.482       10,108.9    11,412.0    +12.9%  
+  NIFTY INDIA DEFENCE     1      02-Aug-22   3.544       10,680.5    23,643.6    +121.4% 
+  NIFTY INDIA MFG         2      02-Feb-23   2.576       10,360.2    13,305.8    +28.4%  
 
-  AFTER: Invested ₹7,979,203 | Cash ₹0 | Total ₹7,979,203 | Positions 5/5
+  AFTER: Invested ₹7,557,005 | Cash ₹0 | Total ₹7,557,005 | Positions 5/5
 
 ========================================================================
-  REBALANCE #171  —  04 May 2026  (eligible: 14/14)
-  NAV: ₹8,783,261  |  Slot: ₹1,756,652  |  Cash: ₹0
+  REBALANCE #139  —  01 Sep 2023  (eligible: 20/20)
+  NAV: ₹8,077,116  |  Slot: ₹1,615,423  |  Cash: ₹0
 ========================================================================
 
   EXITS (0)
@@ -4071,70 +3374,848 @@ Rebalance schedule: 171 months  (2012-03-01 → 2026-05-04)
   HOLDS (5)
   Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
   ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
-  NIFTY ENERGY            1      02-Apr-26   2.553       35,106.6    40,970.1    +16.7%  
-  NIFTY METAL             2      03-Oct-25   2.343       10,108.9    12,972.7    +28.3%  
-  NIFTY PSE               4      02-Apr-26   1.556       9,611.6     10,680.0    +11.1%  
-  NIFTY PHARMA            5      02-Apr-26   1.489       21,689.9    23,475.6    +8.2%   
-  NIFTY PSU BANK          6      02-Jul-25   1.179       7,254.9     8,455.8     +16.6%  
+  NIFTY INDIA DEFENCE     1      02-Aug-22   3.841       10,680.5    27,043.5    +153.2% 
+  NIFTY INDIA MFG         2      02-Feb-23   2.706       10,360.2    14,061.7    +35.7%  
+  NIFTY CONSUMER DURABLES  3      02-Aug-23   1.955       14,142.5    15,945.3    +12.7%  
+  NIFTY PSE               4      02-Aug-23   1.808       5,517.0     5,621.4     +1.9%   
+  NIFTY HEALTHCARE        5      02-Aug-23   1.477       6,023.7     5,983.4     -0.7%   
 
-  AFTER: Invested ₹8,783,261 | Cash ₹0 | Total ₹8,783,261 | Positions 5/5
+  AFTER: Invested ₹8,077,116 | Cash ₹0 | Total ₹8,077,116 | Positions 5/5
+
+========================================================================
+  REBALANCE #140  —  03 Oct 2023  (eligible: 20/20)
+  NAV: ₹8,255,529  |  Slot: ₹1,651,106  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Aug-22   3.079       10,680.5    27,221.8    +154.9% 
+  NIFTY INDIA MFG         2      02-Feb-23   2.738       10,360.2    14,237.7    +37.4%  
+  NIFTY PSE               3      02-Aug-23   2.165       5,517.0     5,949.4     +7.8%   
+  NIFTY CONSUMER DURABLES  4      02-Aug-23   1.860       14,142.5    15,941.4    +12.7%  
+  NIFTY HEALTHCARE        6      02-Aug-23   1.561       6,023.7     6,192.0     +2.8%   
+
+  AFTER: Invested ₹8,255,529 | Cash ₹0 | Total ₹8,255,529 | Positions 5/5
+
+========================================================================
+  REBALANCE #141  —  01 Nov 2023  (eligible: 20/20)
+  NAV: ₹8,052,303  |  Slot: ₹1,610,461  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY HEALTHCARE        10     02-Aug-23   6,023.7     5,968.9     ₹-13,723      -0.9%     91d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY REALTY            5      1.905    +43.1%    +8.0%     614.1       ₹+1,495,946 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Aug-22   2.750       10,680.5    26,640.7    +149.4% 
+  NIFTY CONSUMER DURABLES  2      02-Aug-23   2.605       14,142.5    15,975.0    +13.0%  
+  NIFTY INDIA MFG         3      02-Feb-23   2.314       10,360.2    13,768.7    +32.9%  
+  NIFTY PSE               4      02-Aug-23   2.268       5,517.0     5,850.8     +6.1%   
+
+  AFTER: Invested ₹8,061,897 | Cash ₹0 | Total ₹8,061,897 | Positions 5/5
+
+========================================================================
+  REBALANCE #142  —  01 Dec 2023  (eligible: 20/20)
+  NAV: ₹9,203,875  |  Slot: ₹1,840,775  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSE               1      02-Aug-23   3.015       5,517.0     6,911.9     +25.3%  
+  NIFTY REALTY            2      02-Nov-23   2.534       614.1       723.0       +17.7%  
+  NIFTY INDIA MFG         3      02-Feb-23   2.139       10,360.2    15,265.5    +47.3%  
+  NIFTY INDIA DEFENCE     4      02-Aug-22   1.827       10,680.5    30,274.7    +183.5% 
+  NIFTY CONSUMER DURABLES  7      02-Aug-23   1.524       14,142.5    17,081.9    +20.8%  
+
+  AFTER: Invested ₹9,203,875 | Cash ₹0 | Total ₹9,203,875 | Positions 5/5
+
+========================================================================
+  REBALANCE #143  —  01 Jan 2024  (eligible: 20/20)
+  NAV: ₹10,084,038  |  Slot: ₹2,016,808  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMER DURABLES  10     02-Aug-23   14,142.5    17,568.9    ₹+177,437     +24.2%    152d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INFRA             5      1.671    +35.1%    +18.2%    7,315.8     ₹+909,811   
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSE               1      02-Aug-23   2.882       5,517.0     7,855.0     +42.4%  
+  NIFTY INDIA MFG         2      02-Feb-23   2.255       10,360.2    16,421.5    +58.5%  
+  NIFTY REALTY            3      02-Nov-23   2.203       614.1       783.0       +27.5%  
+  NIFTY INDIA DEFENCE     4      02-Aug-22   2.012       10,680.5    33,468.7    +213.4% 
+
+  AFTER: Invested ₹10,076,012 | Cash ₹0 | Total ₹10,076,012 | Positions 5/5
+
+========================================================================
+  REBALANCE #144  —  01 Feb 2024  (eligible: 20/20)
+  NAV: ₹10,854,355  |  Slot: ₹2,170,871  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSE               1      02-Aug-23   2.716       5,517.0     8,711.0     +57.9%  
+  NIFTY INDIA MFG         2      02-Feb-23   2.078       10,360.2    16,795.0    +62.1%  
+  NIFTY INDIA DEFENCE     3      02-Aug-22   2.063       10,680.5    36,257.0    +239.5% 
+  NIFTY INFRA             4      02-Jan-24   1.940       7,315.8     7,825.9     +7.0%   
+  NIFTY REALTY            6      02-Nov-23   1.805       614.1       848.2       +38.1%  
+
+  AFTER: Invested ₹10,854,355 | Cash ₹0 | Total ₹10,854,355 | Positions 5/5
+
+========================================================================
+  REBALANCE #145  —  01 Mar 2024  (eligible: 20/20)
+  NAV: ₹11,350,124  |  Slot: ₹2,270,025  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSE               1      02-Aug-23   2.383       5,517.0     9,347.0     +69.4%  
+  NIFTY INFRA             3      02-Jan-24   2.077       7,315.8     8,244.0     +12.7%  
+  NIFTY INDIA MFG         5      02-Feb-23   1.865       10,360.2    17,619.4    +70.1%  
+  NIFTY REALTY            6      02-Nov-23   1.723       614.1       917.1       +49.3%  
+  NIFTY INDIA DEFENCE     7      02-Aug-22   1.550       10,680.5    36,401.4    +240.8% 
+
+  AFTER: Invested ₹11,350,124 | Cash ₹0 | Total ₹11,350,124 | Positions 5/5
+
+========================================================================
+  REBALANCE #146  —  01 Apr 2024  (eligible: 20/20)
+  NAV: ₹11,481,579  |  Slot: ₹2,296,316  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INDIA DEFENCE     10     02-Aug-22   10,680.5    37,373.7    ₹+2,689,920   +249.9%   608d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY AUTO              2      2.129    +73.8%    +20.3%    21,494.2    ₹+2,296,316 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA MFG         1      02-Feb-23   2.192       10,360.2    18,216.7    +75.8%  
+  NIFTY INFRA             3      02-Jan-24   2.010       7,315.8     8,423.0     +15.1%  
+  NIFTY REALTY            4      02-Nov-23   1.946       614.1       939.9       +53.1%  
+  NIFTY PSE               5      02-Aug-23   1.715       5,517.0     9,292.3     +68.4%  
+
+  AFTER: Invested ₹10,092,663 | Cash ₹1,469,899 | Total ₹11,562,562 | Positions 5/5
+
+========================================================================
+  REBALANCE #147  —  02 May 2024  (eligible: 20/20)
+  NAV: ₹12,230,892  |  Slot: ₹2,446,178  |  Cash: ₹1,469,899
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY REALTY            8      02-Nov-23   614.1       979.9       ₹+891,088     +59.6%    182d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY CONSUMER DURABLES  4      1.621    +68.5%    +14.1%    20,022.6    ₹+2,446,178 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA MFG         1      02-Feb-23   2.601       10,360.2    19,769.2    +90.8%  
+  NIFTY AUTO              2      02-Apr-24   2.153       21,494.2    22,733.5    +5.8%   
+  NIFTY PSE               3      02-Aug-23   1.844       5,517.0     10,222.0    +85.3%  
+  NIFTY INFRA             5      02-Jan-24   1.555       7,315.8     8,630.5     +18.0%  
+
+  AFTER: Invested ₹10,854,454 | Cash ₹1,410,754 | Total ₹12,265,208 | Positions 5/5
+
+========================================================================
+  REBALANCE #148  —  03 Jun 2024  (eligible: 20/20)
+  NAV: ₹13,103,569  |  Slot: ₹2,620,714  |  Cash: ₹1,410,754
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INFRA             9      02-Jan-24   7,315.8     9,112.6     ₹+223,462     +24.6%    153d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INDIA DEFENCE     2      2.242    +180.2%   +33.4%    42,651.9    ₹+2,544,027 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA MFG         1      02-Feb-23   2.829       10,360.2    21,702.5    +109.5% 
+  NIFTY CONSUMER DURABLES  3      03-May-24   1.866       20,022.6    21,233.6    +6.0%   
+  NIFTY PSE               4      02-Aug-23   1.774       5,517.0     11,331.8    +105.4% 
+  NIFTY AUTO              5      02-Apr-24   1.702       21,494.2    23,992.7    +11.6%  
+
+  AFTER: Invested ₹13,447,031 | Cash ₹0 | Total ₹13,447,031 | Positions 5/5
+
+========================================================================
+  REBALANCE #149  —  01 Jul 2024  (eligible: 20/20)
+  NAV: ₹14,316,770  |  Slot: ₹2,863,354  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY PSE               8      02-Aug-23   5,517.0     10,769.2    ₹+1,437,249   +95.2%    334d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY MNC               5      1.691    +41.9%    +20.2%    30,811.6    ₹+2,863,354 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      03-May-24   3.011       20,022.6    24,559.2    +22.7%  
+  NIFTY INDIA MFG         2      02-Feb-23   2.725       10,360.2    22,990.8    +121.9% 
+  NIFTY INDIA DEFENCE     3      04-Jun-24   2.575       42,651.9    54,332.7    +27.4%  
+  NIFTY AUTO              4      02-Apr-24   1.800       21,494.2    25,323.8    +17.8%  
+
+  AFTER: Invested ₹14,229,931 | Cash ₹83,563 | Total ₹14,313,494 | Positions 5/5
+
+========================================================================
+  REBALANCE #150  —  01 Aug 2024  (eligible: 20/20)
+  NAV: ₹14,807,509  |  Slot: ₹2,961,502  |  Cash: ₹83,563
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      03-May-24   2.832       20,022.6    25,771.7    +28.7%  
+  NIFTY INDIA MFG         2      02-Feb-23   2.394       10,360.2    23,815.5    +129.9% 
+  NIFTY INDIA DEFENCE     3      04-Jun-24   1.961       42,651.9    55,769.8    +30.8%  
+  NIFTY AUTO              4      02-Apr-24   1.824       21,494.2    26,487.4    +23.2%  
+  NIFTY MNC               6      02-Jul-24   1.608       30,811.6    31,189.7    +1.2%   
+
+  AFTER: Invested ₹14,723,946 | Cash ₹83,563 | Total ₹14,807,509 | Positions 5/5
+
+========================================================================
+  REBALANCE #151  —  02 Sep 2024  (eligible: 20/20)
+  NAV: ₹14,634,480  |  Slot: ₹2,926,896  |  Cash: ₹83,563
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INDIA DEFENCE     11     04-Jun-24   42,651.9    51,950.7    ₹+554,637     +21.8%    90d     rank>7          
+  NIFTY MNC               9      02-Jul-24   30,811.6    31,022.8    ₹+19,622      +0.7%     62d     rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY HEALTHCARE        2      2.265    +57.4%    +23.0%    9,619.3     ₹+2,926,896 
+  NIFTY CONSUMPTION       3      2.045    +47.1%    +15.6%    12,130.4    ₹+2,926,896 
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      03-May-24   2.719       20,022.6    26,909.7    +34.4%  
+  NIFTY INDIA MFG         4      02-Feb-23   1.773       10,360.2    23,789.6    +129.6% 
+  NIFTY AUTO              6      02-Apr-24   1.468       21,494.2    26,071.4    +21.3%  
+
+  AFTER: Invested ₹14,436,734 | Cash ₹211,411 | Total ₹14,648,146 | Positions 5/5
+
+========================================================================
+  REBALANCE #152  —  01 Oct 2024  (eligible: 20/20)
+  NAV: ₹15,425,583  |  Slot: ₹3,085,117  |  Cash: ₹211,411
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      03-May-24   2.780       20,022.6    29,306.8    +46.4%  
+  NIFTY HEALTHCARE        2      03-Sep-24   2.585       9,619.3     9,917.8     +3.1%   
+  NIFTY CONSUMPTION       3      03-Sep-24   2.400       12,130.4    12,811.6    +5.6%   
+  NIFTY INDIA MFG         4      02-Feb-23   1.784       10,360.2    24,860.8    +140.0% 
+  NIFTY AUTO              7      02-Apr-24   1.425       21,494.2    27,083.4    +26.0%  
+
+  AFTER: Invested ₹15,214,171 | Cash ₹211,411 | Total ₹15,425,583 | Positions 5/5
+
+========================================================================
+  REBALANCE #153  —  01 Nov 2024  (eligible: 20/20)
+  NAV: ₹14,367,244  |  Slot: ₹2,873,449  |  Cash: ₹211,411
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY AUTO              14     02-Apr-24   21,494.2    23,883.8    ₹+255,286     +11.1%    213d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY REALTY            5      1.151    +66.5%    -2.7%     1,004.0     ₹+2,763,013 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      03-Sep-24   3.407       9,619.3     9,932.2     +3.3%   
+  NIFTY CONSUMER DURABLES  2      03-May-24   2.870       20,022.6    27,470.6    +37.2%  
+  NIFTY INDIA MFG         3      02-Feb-23   1.782       10,360.2    23,080.5    +122.8% 
+  NIFTY CONSUMPTION       4      03-Sep-24   1.244       12,130.4    11,569.2    -4.6%   
+
+  AFTER: Invested ₹14,389,767 | Cash ₹0 | Total ₹14,389,767 | Positions 5/5
+
+========================================================================
+  REBALANCE #154  —  02 Dec 2024  (eligible: 20/20)
+  NAV: ₹14,666,113  |  Slot: ₹2,933,223  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMPTION       9      03-Sep-24   12,130.4    11,522.9    ₹-146,581     -5.0%     90d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY IT                4      1.455    +34.7%    +1.8%     43,794.7    ₹+2,780,315 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      03-May-24   3.058       20,022.6    28,648.7    +43.1%  
+  NIFTY HEALTHCARE        2      03-Sep-24   2.637       9,619.3     9,978.7     +3.7%   
+  NIFTY INDIA MFG         3      02-Feb-23   1.756       10,360.2    23,169.6    +123.6% 
+  NIFTY REALTY            5      04-Nov-24   1.348       1,004.0     1,051.2     +4.7%   
+
+  AFTER: Invested ₹14,646,238 | Cash ₹0 | Total ₹14,646,238 | Positions 5/5
+
+========================================================================
+  REBALANCE #155  —  01 Jan 2025  (eligible: 20/20)
+  NAV: ₹14,968,028  |  Slot: ₹2,993,606  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY CONSUMER DURABLES  1      03-May-24   3.174       20,022.6    30,553.2    +52.6%  
+  NIFTY HEALTHCARE        2      03-Sep-24   3.049       9,619.3     10,393.7    +8.1%   
+  NIFTY IT                3      03-Dec-24   1.766       43,794.7    43,373.1    -1.0%   
+  NIFTY INDIA MFG         5      02-Feb-23   1.601       10,360.2    22,893.0    +121.0% 
+  NIFTY REALTY            6      04-Nov-24   1.339       1,004.0     1,052.3     +4.8%   
+
+  AFTER: Invested ₹14,968,028 | Cash ₹0 | Total ₹14,968,028 | Positions 5/5
+
+========================================================================
+  REBALANCE #156  —  01 Feb 2025  (eligible: 20/20)
+  NAV: ₹13,597,847  |  Slot: ₹2,719,569  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INDIA MFG         6      02-Feb-23   10,360.2    21,271.0    ₹+1,154,825   +105.3%   730d    ema200          
+  NIFTY REALTY            15     04-Nov-24   1,004.0     943.4       ₹-166,642     -6.0%     89d     rank>7+ema200   
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INDIA DEFENCE     4      1.755    +32.7%    -2.3%     44,745.0    ₹+2,719,569 
+  NIFTY AUTO              5      1.633    +22.3%    -3.1%     23,299.8    ₹+2,128,176 
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY IT                1      03-Dec-24   2.592       43,794.7    42,662.8    -2.6%   
+  NIFTY CONSUMER DURABLES  2      03-May-24   2.228       20,022.6    26,148.7    +30.6%  
+  NIFTY HEALTHCARE        3      03-Sep-24   1.829       9,619.3     9,459.3     -1.7%   
+
+  AFTER: Invested ₹13,709,654 | Cash ₹0 | Total ₹13,709,654 | Positions 5/5
+
+========================================================================
+  REBALANCE #157  —  03 Mar 2025  (eligible: 20/20)
+  NAV: ₹12,157,987  |  Slot: ₹2,431,597  |  Cash: ₹0
+========================================================================
+
+  EXITS (5)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMER DURABLES  4      03-May-24   20,022.6    24,040.6    ₹+490,876     +20.1%    304d    ema200          
+  NIFTY HEALTHCARE        6      03-Sep-24   9,619.3     8,857.1     ₹-231,917     -7.9%     181d    ema200          
+  NIFTY AUTO              8      03-Feb-25   23,299.8    20,295.8    ₹-274,378     -12.9%    28d     rank>7+ema200   
+  NIFTY INDIA DEFENCE     9      03-Feb-25   44,745.0    38,789.1    ₹-361,996     -13.3%    28d     rank>7+ema200   
+  NIFTY IT                12     03-Dec-24   43,794.7    37,228.8    ₹-416,837     -15.0%    90d     rank>7+ema200   
+
+  ENTRIES (4)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY FIN SERVICE       1      2.468    +11.0%    -4.4%     22,865.0    ₹+2,431,597 
+  NIFTY PVT BANK          2      2.035    +2.9%     -4.7%     24,028.6    ₹+2,431,597 
+  NIFTY METAL             3      1.988    +4.3%     -7.9%     8,197.2     ₹+2,431,597 
+  NIFTY BANK              5      1.620    +2.5%     -7.7%     47,942.5    ₹+2,431,597 
+
+  HOLDS (0)
+    —
+
+  AFTER: Invested ₹9,789,648 | Cash ₹2,480,494 | Total ₹12,270,141 | Positions 4/5
+
+========================================================================
+  REBALANCE #158  —  01 Apr 2025  (eligible: 20/20)
+  NAV: ₹12,914,436  |  Slot: ₹2,582,887  |  Cash: ₹2,493,833
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY HEALTHCARE        5      1.557    +26.3%    -9.1%     9,480.6     ₹+2,493,833 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FIN SERVICE       1      04-Mar-25   2.359       22,865.0    24,529.4    +7.3%   
+  NIFTY METAL             2      04-Mar-25   1.834       8,197.2     9,016.8     +10.0%  
+  NIFTY PVT BANK          3      04-Mar-25   1.824       24,028.6    25,422.8    +5.8%   
+  NIFTY BANK              4      04-Mar-25   1.562       47,942.5    50,827.5    +6.0%   
+
+  AFTER: Invested ₹12,911,638 | Cash ₹0 | Total ₹12,911,638 | Positions 5/5
+
+========================================================================
+  REBALANCE #159  —  02 May 2025  (eligible: 20/20)
+  NAV: ₹13,372,636  |  Slot: ₹2,674,527  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY METAL             17     04-Mar-25   8,197.2     8,523.1     ₹+96,674      +4.0%     59d     rank>7+ema200   
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INDIA DEFENCE     5      1.488    +22.8%    +12.3%    51,038.5    ₹+2,528,271 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY FIN SERVICE       1      04-Mar-25   2.800       22,865.0    26,151.8    +14.4%  
+  NIFTY PVT BANK          2      04-Mar-25   2.350       24,028.6    27,396.4    +14.0%  
+  NIFTY BANK              3      04-Mar-25   2.266       47,942.5    55,115.4    +15.0%  
+  NIFTY HEALTHCARE        4      02-Apr-25   1.725       9,480.6     9,492.0     +0.1%   
+
+  AFTER: Invested ₹13,327,267 | Cash ₹0 | Total ₹13,327,267 | Positions 5/5
+
+========================================================================
+  REBALANCE #160  —  02 Jun 2025  (eligible: 20/20)
+  NAV: ₹14,195,222  |  Slot: ₹2,839,044  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      05-May-25   3.242       51,038.5    64,966.6    +27.3%  
+  NIFTY FIN SERVICE       2      04-Mar-25   2.215       22,865.0    26,448.4    +15.7%  
+  NIFTY BANK              3      04-Mar-25   1.862       47,942.5    55,903.4    +16.6%  
+  NIFTY PVT BANK          4      04-Mar-25   1.768       24,028.6    27,670.1    +15.2%  
+  NIFTY HEALTHCARE        5      02-Apr-25   1.552       9,480.6     9,613.7     +1.4%   
+
+  AFTER: Invested ₹14,195,222 | Cash ₹0 | Total ₹14,195,222 | Positions 5/5
+
+========================================================================
+  REBALANCE #161  —  01 Jul 2025  (eligible: 20/20)
+  NAV: ₹14,623,216  |  Slot: ₹2,924,643  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      05-May-25   3.090       51,038.5    66,783.9    +30.8%  
+  NIFTY FIN SERVICE       2      04-Mar-25   1.905       22,865.0    27,124.2    +18.6%  
+  NIFTY BANK              3      04-Mar-25   1.860       47,942.5    57,459.4    +19.9%  
+  NIFTY HEALTHCARE        4      02-Apr-25   1.683       9,480.6     10,087.3    +6.4%   
+  NIFTY PVT BANK          5      04-Mar-25   1.669       24,028.6    28,288.9    +17.7%  
+
+  AFTER: Invested ₹14,623,216 | Cash ₹0 | Total ₹14,623,216 | Positions 5/5
+
+========================================================================
+  REBALANCE #162  —  01 Aug 2025  (eligible: 20/20)
+  NAV: ₹13,923,811  |  Slot: ₹2,784,762  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY PVT BANK          11     04-Mar-25   24,028.6    26,875.4    ₹+288,090     +11.8%    150d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY CONSUMER DURABLES  2      1.968    +3.7%     +9.2%     27,222.0    ₹+2,719,688 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      02-Apr-25   2.702       9,480.6     10,316.9    +8.8%   
+  NIFTY INDIA DEFENCE     3      05-May-25   1.958       51,038.5    57,483.1    +12.6%  
+  NIFTY FIN SERVICE       4      04-Mar-25   1.827       22,865.0    26,492.5    +15.9%  
+  NIFTY BANK              6      04-Mar-25   1.632       47,942.5    55,617.6    +16.0%  
+
+  AFTER: Invested ₹13,881,137 | Cash ₹0 | Total ₹13,881,137 | Positions 5/5
+
+========================================================================
+  REBALANCE #163  —  01 Sep 2025  (eligible: 20/20)
+  NAV: ₹13,768,574  |  Slot: ₹2,753,715  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INDIA DEFENCE     10     05-May-25   51,038.5    60,159.3    ₹+451,813     +17.9%    119d    rank>7          
+  NIFTY BANK              9      04-Mar-25   47,942.5    54,038.2    ₹+309,171     +12.7%    181d    rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY CONSUMPTION       2      2.182    +1.8%     +6.7%     12,225.7    ₹+2,753,715 
+  NIFTY AUTO              3      2.134    -0.7%     +10.0%    25,710.8    ₹+2,753,715 
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY HEALTHCARE        1      02-Apr-25   2.353       9,480.6     10,215.6    +7.8%   
+  NIFTY CONSUMER DURABLES  5      04-Aug-25   1.640       27,222.0    26,792.7    -1.6%   
+  NIFTY FIN SERVICE       6      04-Mar-25   1.604       22,865.0    25,743.5    +12.6%  
+
+  AFTER: Invested ₹13,599,808 | Cash ₹213,422 | Total ₹13,813,230 | Positions 5/5
+
+========================================================================
+  REBALANCE #164  —  01 Oct 2025  (eligible: 20/20)
+  NAV: ₹13,858,760  |  Slot: ₹2,771,752  |  Cash: ₹213,422
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY CONSUMPTION       9      02-Sep-25   12,225.7    12,103.4    ₹-27,547      -1.0%     29d     rank>7          
+  NIFTY CONSUMER DURABLES  15     04-Aug-25   27,222.0    25,903.8    ₹-131,698     -4.8%     58d     rank>7+ema200   
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY PSU BANK          2      2.132    +10.4%    +4.2%     7,508.7     ₹+2,771,752 
+  NIFTY INDIA DEFENCE     3      1.983    +30.0%    -3.9%     66,132.9    ₹+2,755,828 
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY AUTO              1      02-Sep-25   2.511       25,710.8    26,768.7    +4.1%   
+  NIFTY HEALTHCARE        6      02-Apr-25   1.576       9,480.6     10,200.5    +7.6%   
+  NIFTY FIN SERVICE       7      04-Mar-25   1.515       22,865.0    26,382.2    +15.4%  
+
+  AFTER: Invested ₹13,800,392 | Cash ₹0 | Total ₹13,800,392 | Positions 5/5
+
+========================================================================
+  REBALANCE #165  —  03 Nov 2025  (eligible: 20/20)
+  NAV: ₹14,363,660  |  Slot: ₹2,872,732  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY FIN SERVICE       8      04-Mar-25   22,865.0    27,230.4    ₹+464,242     +19.1%    244d    rank>7          
+  NIFTY HEALTHCARE        15     02-Apr-25   9,480.6     10,455.5    ₹+256,446     +10.3%    215d    rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY METAL             4      1.918    +14.9%    +14.7%    10,651.6    ₹+2,872,732 
+  NIFTY BANK              5      1.596    +14.4%    +3.8%     57,966.6    ₹+2,773,387 
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSU BANK          1      03-Oct-25   2.973       7,508.7     8,341.3     +11.1%  
+  NIFTY INDIA DEFENCE     2      03-Oct-25   2.086       66,132.9    65,802.7    -0.5%   
+  NIFTY AUTO              3      02-Sep-25   1.967       25,710.8    26,841.8    +4.4%   
+
+  AFTER: Invested ₹14,348,924 | Cash ₹0 | Total ₹14,348,924 | Positions 5/5
+
+========================================================================
+  REBALANCE #166  —  01 Dec 2025  (eligible: 20/20)
+  NAV: ₹14,473,341  |  Slot: ₹2,894,668  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY METAL             8      04-Nov-25   10,651.6    10,344.2    ₹-82,919      -2.9%     27d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY PVT BANK          3      1.968    +14.7%    +10.4%    28,601.3    ₹+2,789,813 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSU BANK          1      03-Oct-25   2.830       7,508.7     8,535.7     +13.7%  
+  NIFTY BANK              2      04-Nov-25   2.175       57,966.6    59,681.4    +3.0%   
+  NIFTY AUTO              5      02-Sep-25   1.807       25,710.8    27,993.0    +8.9%   
+  NIFTY INDIA DEFENCE     7      03-Oct-25   1.560       66,132.9    64,233.0    -2.9%   
+
+  AFTER: Invested ₹14,486,243 | Cash ₹0 | Total ₹14,486,243 | Positions 5/5
+
+========================================================================
+  REBALANCE #167  —  01 Jan 2026  (eligible: 20/20)
+  NAV: ₹14,413,041  |  Slot: ₹2,882,608  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INDIA DEFENCE     13     03-Oct-25   66,132.9    62,420.8    ₹-154,687     -5.6%     90d     rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY METAL             4      1.959    +25.6%    +12.5%    11,280.1    ₹+2,601,141 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY BANK              1      04-Nov-25   2.391       57,966.6    59,711.6    +3.0%   
+  NIFTY PSU BANK          2      03-Oct-25   2.331       7,508.7     8,533.2     +13.6%  
+  NIFTY PVT BANK          3      02-Dec-25   2.128       28,601.3    28,721.2    +0.4%   
+  NIFTY AUTO              6      02-Sep-25   1.800       25,710.8    28,189.6    +9.6%   
+
+  AFTER: Invested ₹14,402,704 | Cash ₹0 | Total ₹14,402,704 | Positions 5/5
+
+========================================================================
+  REBALANCE #168  —  02 Feb 2026  (eligible: 20/20)
+  NAV: ₹14,258,316  |  Slot: ₹2,851,663  |  Cash: ₹0
+========================================================================
+
+  EXITS (0)
+    —
+
+  ENTRIES (0)
+    —
+
+  HOLDS (5)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSU BANK          1      03-Oct-25   2.439       7,508.7     8,591.7     +14.4%  
+  NIFTY METAL             2      02-Jan-26   2.348       11,280.1    11,561.5    +2.5%   
+  NIFTY BANK              3      04-Nov-25   2.124       57,966.6    58,619.0    +1.1%   
+  NIFTY PVT BANK          4      02-Dec-25   1.703       28,601.3    28,205.7    -1.4%   
+  NIFTY AUTO              5      02-Sep-25   1.607       25,710.8    26,749.2    +4.0%   
+
+  AFTER: Invested ₹14,258,316 | Cash ₹0 | Total ₹14,258,316 | Positions 5/5
+
+========================================================================
+  REBALANCE #169  —  02 Mar 2026  (eligible: 20/20)
+  NAV: ₹14,966,334  |  Slot: ₹2,993,267  |  Cash: ₹0
+========================================================================
+
+  EXITS (2)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY AUTO              8      02-Sep-25   25,710.8    26,979.4    ₹+135,871     +4.9%     181d    rank>7          
+  NIFTY PVT BANK          12     02-Dec-25   28,601.3    27,638.6    ₹-93,908      -3.4%     90d     rank>7          
+
+  ENTRIES (2)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY MNC               3      1.805    +21.3%    +3.3%     30,859.0    ₹+2,993,267 
+  NIFTY INDIA MFG         4      1.714    +27.2%    +3.3%     25,450.0    ₹+2,592,224 
+
+  HOLDS (3)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY PSU BANK          1      03-Oct-25   2.828       7,508.7     9,639.3     +28.4%  
+  NIFTY METAL             2      02-Jan-26   2.624       11,280.1    12,269.8    +8.8%   
+  NIFTY BANK              7      04-Nov-25   1.487       57,966.6    59,839.6    +3.2%   
+
+  AFTER: Invested ₹14,950,365 | Cash ₹0 | Total ₹14,950,365 | Positions 5/5
+
+========================================================================
+  REBALANCE #170  —  01 Apr 2026  (eligible: 20/20)
+  NAV: ₹13,293,506  |  Slot: ₹2,658,701  |  Cash: ₹0
+========================================================================
+
+  EXITS (3)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY INDIA MFG         6      04-Mar-26   25,450.0    23,868.7    ₹-161,059     -6.2%     28d     ema200          
+  NIFTY MNC               7      04-Mar-26   30,859.0    28,028.4    ₹-274,563     -9.2%     28d     ema200          
+  NIFTY BANK              13     04-Nov-25   57,966.6    50,625.6    ₹-351,227     -12.7%    148d    rank>7+ema200   
+
+  ENTRIES (3)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INDIA DEFENCE     3      2.203    +28.8%    -2.3%     60,705.9    ₹+2,658,701 
+  NIFTY ENERGY            4      1.967    +7.3%     +0.9%     35,106.6    ₹+2,658,701 
+  NIFTY PSE               5      1.882    +7.2%     -0.2%     9,611.6     ₹+2,254,627 
+
+  HOLDS (2)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY METAL             1      02-Jan-26   2.615       11,280.1    11,412.0    +1.2%   
+  NIFTY PSU BANK          2      03-Oct-25   2.606       7,508.7     8,164.8     +8.7%   
+
+  AFTER: Invested ₹13,257,357 | Cash ₹0 | Total ₹13,257,357 | Positions 5/5
+
+========================================================================
+  REBALANCE #171  —  01 May 2026  (eligible: 20/20)
+  NAV: ₹15,071,420  |  Slot: ₹3,014,284  |  Cash: ₹0
+========================================================================
+
+  EXITS (1)
+  Sector                  Rank   Entry       Entry₹      Exit₹       Gross P&L     P&L%      Hold    Reason          
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ────────────  ────────  ──────  ────────────────
+  NIFTY PSU BANK          9      03-Oct-25   7,508.7     8,495.5     ₹+364,266     +13.1%    210d    rank>7          
+
+  ENTRIES (1)
+  Sector                  Rank   Score    Ret12m    Ret3m     Entry₹      Capital     
+  ──────────────────────  ─────  ───────  ────────  ────────  ──────────  ────────────
+  NIFTY INDIA MFG         4      1.789    +21.7%    +8.3%     26,619.7    ₹+3,014,284 
+
+  HOLDS (4)
+  Sector                  Rank   Since       Score       Entry₹      Now₹        P&L%    
+  ──────────────────────  ─────  ──────────  ──────────  ──────────  ──────────  ────────
+  NIFTY INDIA DEFENCE     1      02-Apr-26   2.812       60,705.9    77,629.3    +27.9%  
+  NIFTY ENERGY            2      02-Apr-26   2.508       35,106.6    40,771.9    +16.1%  
+  NIFTY METAL             3      02-Jan-26   2.263       11,280.1    12,833.0    +13.8%  
+  NIFTY PSE               6      02-Apr-26   1.475       9,611.6     10,629.0    +10.6%  
+
+  AFTER: Invested ₹14,930,957 | Cash ₹121,734 | Total ₹15,052,691 | Positions 5/5
 
 ========================================================================
   SECTOR Z-SCORE V3 PHASE 1  |  Top 5 sectors  |  monthly rebal
 ========================================================================
-  Period         : 2012-03-01 → 2026-05-04  (14.17 yr)
+  Period         : 2012-03-01 → 2026-05-01  (14.17 yr)
   Initial capital: ₹10.0L  (5 slots × ₹2.0L)
 
-  2012:  +16.8%  (NAV ₹11.68L)
-  2013:   +7.8%  (NAV ₹12.59L)
-  2014:  +39.7%  (NAV ₹17.58L)
-  2015:   -3.9%  (NAV ₹16.89L) ◄ NEG
-  2016:   +6.8%  (NAV ₹18.04L)
-  2017:  +21.5%  (NAV ₹21.93L)
-  2018:   -0.1%  (NAV ₹21.91L) ◄ NEG
-  2019:   +5.8%  (NAV ₹23.19L)
-  2020:  +32.6%  (NAV ₹30.75L)
-  2021:  +43.3%  (NAV ₹44.08L)
-  2022:  +13.6%  (NAV ₹50.08L)
-  2023:  +21.5%  (NAV ₹60.83L)
-  2024:  +34.6%  (NAV ₹81.87L)
-  2025:   +4.7%  (NAV ₹85.71L)
-  2026:   +2.5%  (NAV ₹87.83L)
+  2012:  +18.0%  (NAV ₹11.80L)
+  2013:   +3.8%  (NAV ₹12.25L)
+  2014:  +38.7%  (NAV ₹16.99L)
+  2015:  +11.4%  (NAV ₹18.93L)
+  2016:   +9.9%  (NAV ₹20.81L)
+  2017:  +38.1%  (NAV ₹28.73L)
+  2018:   -3.5%  (NAV ₹27.71L) ◄ NEG
+  2019:   +5.3%  (NAV ₹29.18L)
+  2020:  +22.6%  (NAV ₹35.77L)
+  2021:  +54.5%  (NAV ₹55.27L)
+  2022:  +14.4%  (NAV ₹63.22L)
+  2023:  +45.6%  (NAV ₹92.04L)
+  2024:  +59.1%  (NAV ₹146.46L)
+  2025:   -1.1%  (NAV ₹144.86L) ◄ NEG
+  2026:   +3.9%  (NAV ₹150.53L)
 
-  Total Return  : +778.3%
-  CAGR (P&L)    : +16.4%
+  Total Return  : +1405.3%
+  CAGR (P&L)    : +20.9%
   Neg years     : 2
 
-  Closed Trades : 152  |  Open: 5
-  Win Rate (trades) : 55.9%  (85W / 67L)
-  Profit Factor : 3.55
-  Avg hold      : 158 days
-  Exit reasons  : rank>7: 68  |  ema200: 59  |  rank>7+ema200: 25
-  Total charges : ₹217,550
-  LIQUIDBEES    : ₹92,365  (6.5% p.a. on idle slots)
-  Net P&L       : ₹+7,565,711
-  Final NAV     : ₹8,783,261  (₹87.83L)
+  Closed Trades : 177  |  Open: 5
+  Win Rate (trades) : 54.8%  (97W / 80L)
+  Profit Factor : 3.46
+  Avg hold      : 138 days
+  Exit reasons  : rank>7: 104  |  ema200: 49  |  rank>7+ema200: 24
+  Total charges : ₹376,010
+  LIQUIDBEES    : ₹82,440  (6.5% p.a. on idle slots)
+  Net P&L       : ₹+13,676,682
+  Final NAV     : ₹15,052,691  (₹150.53L)
 
-  Sharpe (mthly→ann) : 1.09
-  IR vs Nifty 200    : 0.38
-  MaxDD strategy     : -17.6%
+  Sharpe (mthly→ann) : 1.21
+  IR vs Nifty 200    : 0.79
+  MaxDD strategy     : -22.4%
   MaxDD Nifty 200    : -31.7%
-  Win rate vs N200   : 60.6% of months
-  Worst monthly rel  : -7.4pp
-  Bench CAGR (N200)  : +12.2%
-  Strategy CAGR      : +16.6%
+  Win rate vs N200   : 61.8% of months
+  Worst monthly rel  : -9.0pp
+  Bench CAGR (N200)  : +12.1%
+  Strategy CAGR      : +21.1%
 
 ========================================================================
   V3 Phase 1 — Pass Criteria Gate
 ========================================================================
-  CAGR vs Nifty 200 (≥ +4pp)                      +4.4pp     ✅ PASS
-  Sharpe (≥ 0.85)                                   1.09     ✅ PASS
-  Information Ratio (≥ 0.40)                        0.38     ❌ FAIL
-  MaxDD widening vs N200 (≤ +5pp)                -14.1pp     ✅ PASS
-  Worst monthly relative (≥ -8pp)                 -7.4pp     ✅ PASS
+  CAGR vs Nifty 200 (≥ +4pp)                      +9.0pp     ✅ PASS
+  Sharpe (≥ 0.85)                                   1.21     ✅ PASS
+  Information Ratio (≥ 0.40)                        0.79     ✅ PASS
+  MaxDD widening vs N200 (≤ +5pp)                 -9.4pp     ✅ PASS
+  Worst monthly relative (≥ -8pp)                 -9.0pp     ❌ FAIL
   ──────────────────────────────────────────────────────────────────────
   VERDICT: GATE PASSED — 4/5 pass — proceed to Layer 2 (stock picking within sectors)
-  Avg sector turnover per rebalance: 1.81 (out of 5)
+  Avg sector turnover per rebalance: 2.10 (out of 5)
 ========================================================================
 
   Rebalance NAV exported → sector_zscore_rebal.csv (171 rows)

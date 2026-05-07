@@ -66,8 +66,9 @@ CACHE_DIR  = os.path.join(BASE_DIR, 'cache')
 # spec's additions. Tentatives marked — script silently drops any symbol that
 # returns < MIN_HISTORY days at probe.
 SECTOR_UNIVERSE = [
-    # 14-symbol universe: 12 true sectors + 2 factor blends (MNC, PSE).
-    # Dropped: INFRA, CONSUMPTION, COMMODITIES (broad/overlapping aggregates).
+    # 20-symbol universe — Phase 1 widened to match Phase 2 sector map.
+    # Sectors with no yfinance time series fall back to synthetic indices
+    # built from member stocks (data/synth_sector_index.py).
     ("NIFTY BANK",              "^NSEBANK"),
     ("NIFTY PVT BANK",          "NIFTY_PVT_BANK.NS"),
     ("NIFTY PSU BANK",          "^CNXPSUBANK"),
@@ -76,18 +77,21 @@ SECTOR_UNIVERSE = [
     ("NIFTY AUTO",              "^CNXAUTO"),
     ("NIFTY METAL",             "^CNXMETAL"),
     ("NIFTY ENERGY",            "^CNXENERGY"),
-    ("NIFTY PHARMA",            "^CNXPHARMA"),
     ("NIFTY FMCG",              "^CNXFMCG"),
     ("NIFTY REALTY",            "^CNXREALTY"),
     ("NIFTY MEDIA",             "^CNXMEDIA"),
     ("NIFTY MNC",               "^CNXMNC"),
     ("NIFTY PSE",               "^CNXPSE"),
-    # Tentative (newer indices — yfinance probe-and-skip)
-    ("NIFTY OIL & GAS",         "NIFTY_OIL_AND_GAS.NS"),
-    ("NIFTY CONSUMER DURABLES", "NIFTY_CONSUMER_DURABLES.NS"),
-    ("NIFTY INDIA MFG",         "NIFTY_INDIA_MFG.NS"),
-    ("NIFTY INDIA DEFENCE",     "NIFTY_INDIA_DEFENCE.NS"),
-    ("NIFTY HEALTHCARE",        "NIFTY_HEALTHCARE.NS"),
+    # Re-added from Phase 2 sector map for wider breadth
+    ("NIFTY CONSUMPTION",       "^CNXCONSUM"),
+    ("NIFTY INFRA",             "^CNXINFRA"),
+    # PHARMA dropped — strict subset of HEALTHCARE in N200
+    # Synthetic indices (built via data/synth_sector_index.py — no yfinance series)
+    ("NIFTY HEALTHCARE",        "synth:NIFTY_HEALTHCARE"),
+    ("NIFTY OIL & GAS",         "synth:NIFTY_OIL_GAS"),
+    ("NIFTY INDIA DEFENCE",     "synth:NIFTY_INDIA_DEFENCE"),
+    ("NIFTY INDIA MFG",         "synth:NIFTY_INDIA_MFG"),
+    ("NIFTY CONSUMER DURABLES", "synth:NIFTY_CONSUMER_DURABLES"),
 ]
 
 BENCH_SYM = "^CNX200"   # Nifty 200 — both benchmark and (unused) beta reference
@@ -131,15 +135,32 @@ def fetch_all(refresh=False):
 
     closes, opens = {}, {}
     print(f"\nFetching {len(SECTOR_UNIVERSE)} sectoral indices...")
-    for sym, yf_sym in SECTOR_UNIVERSE:
+    for sym, source in SECTOR_UNIVERSE:
+        # Synthetic indices: load latest .pkl from data/cache/ — no Open data,
+        # so Open := Close (rebal execution becomes effectively at close).
+        if source.startswith("synth:"):
+            synth_name = source.split(":", 1)[1].lower()
+            import glob
+            candidates = sorted(glob.glob(os.path.join(CACHE_DIR, f"synth_{synth_name}_*.pkl")))
+            if not candidates:
+                print(f"  SKIP {sym:30s} synth:{synth_name:25s} (no .pkl found — run synth_sector_index.py)")
+                continue
+            with open(candidates[-1], "rb") as f:
+                c = pickle.load(f)
+            c.index = pd.to_datetime(c.index).tz_localize(None) if c.index.tz else c.index
+            closes[sym] = c
+            opens[sym]  = c   # synthetic: open ≡ close
+            print(f"  SYN  {sym:30s} {os.path.basename(candidates[-1]):35s} {len(c)} rows  "
+                  f"({c.index[0].date()} → {c.index[-1].date()})")
+            continue
         try:
-            df = yf.download(yf_sym, start=fetch_start, end=fetch_end,
+            df = yf.download(source, start=fetch_start, end=fetch_end,
                              progress=False, auto_adjust=True)
         except Exception as e:
-            print(f"  SKIP {sym:30s} {yf_sym:30s}  ({e})")
+            print(f"  SKIP {sym:30s} {source:30s}  ({e})")
             continue
         if df.empty or len(df) < 30:
-            print(f"  SKIP {sym:30s} {yf_sym:30s}  (no data / <30 rows)")
+            print(f"  SKIP {sym:30s} {source:30s}  (no data / <30 rows)")
             continue
         c = df["Close"].squeeze().dropna()
         o = df["Open"].squeeze().dropna()
@@ -147,7 +168,7 @@ def fetch_all(refresh=False):
         o.index = pd.to_datetime(o.index).tz_localize(None)
         closes[sym] = c
         opens[sym]  = o
-        print(f"  OK   {sym:30s} {yf_sym:30s}  {len(c)} rows  ({c.index[0].date()} → {c.index[-1].date()})")
+        print(f"  OK   {sym:30s} {source:30s}  {len(c)} rows  ({c.index[0].date()} → {c.index[-1].date()})")
 
     if len(closes) < MIN_ELIGIBLE:
         raise RuntimeError(f"Only {len(closes)} sectors have data — need ≥ {MIN_ELIGIBLE} for backtest.")
