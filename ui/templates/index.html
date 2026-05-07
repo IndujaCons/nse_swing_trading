@@ -2449,6 +2449,20 @@
                             </thead>
                             <tbody id="mom20-tracker-tbody"></tbody>
                         </table>
+                        <!-- Portfolio vs Nifty 200 / 500 chart — sits flush under the holdings table -->
+                        <div id="mom20-perf-chart-wrap" style="margin-top:16px;display:none;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                <span style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO vs BENCHMARK</span>
+                                <div style="display:flex;gap:14px;font-size:11px;">
+                                    <span>■ <span style="color:#4a9eff;">My Portfolio</span> <span id="mom20-chart-port-ret" style="font-weight:700;color:#4a9eff;"></span></span>
+                                    <span>■ <span style="color:#f5a623;">Nifty 500</span> <span id="mom20-chart-n500-ret" style="font-weight:700;color:#f5a623;"></span></span>
+                                    <span>■ <span style="color:#a78bfa;">Nifty 200</span> <span id="mom20-chart-n200-ret" style="font-weight:700;color:#a78bfa;"></span></span>
+                                </div>
+                            </div>
+                            <div style="position:relative;height:220px;">
+                                <canvas id="mom20-perf-canvas"></canvas>
+                            </div>
+                        </div>
                         </div>
                         <!-- Side chart + sector ranking panel -->
                         <div id="mom20-tracker-chart-panel" style="flex:0 0 38%;min-width:0;position:sticky;top:10px;align-self:flex-start;">
@@ -2477,21 +2491,6 @@
                                     <div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:11px;">Loading sector ranking…</div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Portfolio vs Nifty 200 / 500 chart -->
-                    <div id="mom20-perf-chart-wrap" style="margin-top:16px;display:none;max-width:50%;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                            <span style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO vs BENCHMARK</span>
-                            <div style="display:flex;gap:14px;font-size:11px;">
-                                <span>■ <span style="color:#4a9eff;">My Portfolio</span> <span id="mom20-chart-port-ret" style="font-weight:700;color:#4a9eff;"></span></span>
-                                <span>■ <span style="color:#f5a623;">Nifty 500</span> <span id="mom20-chart-n500-ret" style="font-weight:700;color:#f5a623;"></span></span>
-                                <span>■ <span style="color:#a78bfa;">Nifty 200</span> <span id="mom20-chart-n200-ret" style="font-weight:700;color:#a78bfa;"></span></span>
-                            </div>
-                        </div>
-                        <div style="position:relative;height:220px;">
-                            <canvas id="mom20-perf-canvas"></canvas>
                         </div>
                     </div>
                 </div>
