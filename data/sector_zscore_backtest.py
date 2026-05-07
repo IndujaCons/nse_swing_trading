@@ -352,7 +352,7 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
 
     # Pre-compute indicators per symbol (full history)
     price, open_price = {}, {}
-    ret12, ret3, vol, sma200 = {}, {}, {}, {}
+    ret12, ret3, vol, ema200 = {}, {}, {}, {}
 
     for sym in universe_syms:
         s = closes[sym]
@@ -362,7 +362,9 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
         ret12[sym] = s / s.shift(LONG_PD) - 1
         ret3[sym]  = s / s.shift(SHORT_PD) - 1
         vol[sym]   = dr.rolling(LONG_PD, min_periods=126).std() * (LONG_PD ** 0.5)
-        sma200[sym] = s.rolling(200, min_periods=150).mean()    # trend filter
+        # Trend filter: EMA(200) — more responsive than SMA(200), reacts
+        # quicker to trend breaks but can be slightly whippier.
+        ema200[sym] = s.ewm(span=200, adjust=False, min_periods=150).mean()
 
     trading_days = sorted(d for d in all_dates if d >= pd.Timestamp(START_DATE))
     rebal_dates  = get_rebal_dates(trading_days, START_DATE)
@@ -483,16 +485,16 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
 
         # ── Exits  (rank slip OR close < SMA200 trend filter) ────────────────
         current = set(portfolio.keys())
-        exit_reasons = {}   # sym → "rank>7" / "sma200" / "rank>7+sma200" / "missing"
+        exit_reasons = {}   # sym → "rank>7" / "ema200" / "rank>7+ema200" / "missing"
         for sym in current:
             reasons = []
             rk = rank_map.get(sym, 9999)
             if rk > BUFFER_OUT or sym not in score_data:
                 reasons.append("rank>" + str(BUFFER_OUT) if sym in score_data else "missing")
-            sma = _indicator_on(sma200, sym, rebal_day)
+            sma = _indicator_on(ema200, sym, rebal_day)
             px  = _price_on(sym, rebal_day, None)
             if sma is not None and px is not None and px < sma:
-                reasons.append("sma200")
+                reasons.append("ema200")
             if reasons:
                 exit_reasons[sym] = "+".join(reasons)
         to_sell = set(exit_reasons.keys())
