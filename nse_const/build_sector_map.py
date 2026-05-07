@@ -48,6 +48,7 @@ NIFTYINDICES_URLS = {
     "NIFTY CONSUMER DURABLES": "ind_niftyconsumerdurableslist.csv",
     "NIFTY REALTY":            "ind_niftyrealtylist.csv",
     "NIFTY MEDIA":             "ind_niftymedialist.csv",
+    "NIFTY CONSUMPTION":       "ind_niftyconsumptionlist.csv",
     "NIFTY INFRA":             "ind_niftyinfralist.csv",
     "NIFTY INDIA MFG":         "ind_niftyindiamanufacturing_list.csv",
     "NIFTY INDIA DEFENCE":     "ind_niftyindiadefence_list.csv",
@@ -87,6 +88,7 @@ SECTOR_PRECEDENCE = [
     "NIFTY FMCG",              # consumer staples
     "NIFTY REALTY",
     "NIFTY MEDIA",
+    "NIFTY CONSUMPTION",       # broad consumer-facing — retail, hotels, media, etc. (~30 stocks)
     "NIFTY INFRA",             # infra/airports/ports/telecom/utilities (~30 stocks)
     "NIFTY INDIA MFG",         # broad catch-all manufacturing (~80 stocks)
     "NIFTY FIN SERVICE",       # from sector_mapping.STOCK_SECTOR_MAP fallback
@@ -139,11 +141,19 @@ def main():
 
     print("\nFetching sector constituent CSVs from niftyindices.com:")
     sec_to_syms = {}
+    failed = []
     for sec, fname in NIFTYINDICES_URLS.items():
         syms = fetch_constituents(sec, fname)
         sec_to_syms[sec] = syms
-        print(f"  OK   {sec:18s} {len(syms):3d} stocks")
+        if len(syms) == 0:
+            failed.append(sec)
+        print(f"  {'OK ' if syms else 'FAIL'}   {sec:18s} {len(syms):3d} stocks")
         time.sleep(0.5)   # be polite
+
+    if failed:
+        print(f"\n  ABORT: {len(failed)} sector(s) returned empty after retries: {failed}")
+        print(f"  Existing CSV left intact to avoid overwriting with bad data.")
+        sys.exit(1)
 
     sec_to_syms["NIFTY PVT BANK"] = sec_to_syms["NIFTY BANK"] - sec_to_syms["NIFTY PSU BANK"]
     print(f"  DRV  NIFTY PVT BANK         {len(sec_to_syms['NIFTY PVT BANK']):3d} stocks  (BANK − PSU BANK)")
