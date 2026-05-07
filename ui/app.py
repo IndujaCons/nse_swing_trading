@@ -2410,27 +2410,31 @@ def _fetch_etf_ltp(symbols):
     return out
 
 
-# Sector → ETF map cache for the basket flow (computed lazily)
-_SECTOR_TOP5_CACHE = {"data": None, "timestamp": 0}
+# Sector ranking cache (full ranking + derived top-5). 15-min TTL.
+_SECTOR_RANK_CACHE = {"ranking": None, "timestamp": 0}
 
 
-def _get_top5_sectors(force_refresh=False):
-    """Return today's top-5 sector names (Phase 1 V1.2-revised ranking).
+def _get_sector_ranking(force_refresh=False):
+    """Return today's full Phase 1 sector Z-score ranking (list of 19 dicts).
     15-min in-memory TTL — same shape as live signals cache."""
     import time as _t
-    if (not force_refresh and _SECTOR_TOP5_CACHE["data"]
-            and (_t.time() - _SECTOR_TOP5_CACHE["timestamp"]) < 900):
-        return _SECTOR_TOP5_CACHE["data"]
+    if (not force_refresh and _SECTOR_RANK_CACHE["ranking"]
+            and (_t.time() - _SECTOR_RANK_CACHE["timestamp"]) < 900):
+        return _SECTOR_RANK_CACHE["ranking"]
     try:
         from data.score_live_sectors import score_live_sectors
         ranking = score_live_sectors()
-        top5 = [r["symbol"] for r in ranking[:5]]
-        _SECTOR_TOP5_CACHE["data"] = top5
-        _SECTOR_TOP5_CACHE["timestamp"] = _t.time()
-        return top5
+        _SECTOR_RANK_CACHE["ranking"] = ranking
+        _SECTOR_RANK_CACHE["timestamp"] = _t.time()
+        return ranking
     except Exception as e:
         print(f"[mom20] sector ranking failed: {e}")
         return []
+
+
+def _get_top5_sectors(force_refresh=False):
+    """Top-5 sector names (used by Mom20 ETF top-up). Slices full ranking."""
+    return [r["symbol"] for r in _get_sector_ranking(force_refresh)[:5]]
 
 
 def _load_sector_map():
@@ -2520,6 +2524,25 @@ def api_delete_user(user_id):
     if not ok:
         return jsonify({"success": False, "error": "user not found"})
     return jsonify({"success": True})
+
+
+# ── Mom20 sector ranking (shared, no user) ────────────────────────────────────
+
+@app.route("/api/sector-ranking", methods=["GET"])
+def api_sector_ranking():
+    """Today's Phase 1 sector Z-score ranking (19 sectors). 15-min TTL."""
+    from datetime import date as _date
+    force = request.args.get("refresh", "").lower() in ("1", "true", "yes")
+    ranking = _get_sector_ranking(force_refresh=force)
+    if not ranking:
+        return jsonify({"success": False, "error": "ranking unavailable"})
+    return jsonify({
+        "success":   True,
+        "as_of":     _date.today().isoformat(),
+        "ranking":   ranking,
+        "top5":      [r["symbol"] for r in ranking[:5]],
+        "cached_at": _SECTOR_RANK_CACHE["timestamp"],
+    })
 
 
 # ── Mom20 basket (per user) ────────────────────────────────────────────────────

@@ -2313,7 +2313,7 @@
                         <option value="">— Select User —</option>
                     </select>
                     <button class="add-user-btn" onclick="openAddUserModal()">+ Add User</button>
-                    <button id="mom20-basket-refresh-btn" onclick="mom20LoadBasket()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">↺ Refresh Basket</button>
+                    <button id="mom20-basket-refresh-btn" onclick="mom20LoadBasket(); mom20LoadSectorRanking(true)" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">↺ Refresh Basket</button>
                     <button id="mom20-delete-user-btn" onclick="deleteSelectedUser('mom20')" style="display:none;padding:4px 10px;font-size:11px;background:rgba(220,53,69,0.12);color:#dc3545;border:1px solid rgba(220,53,69,0.4);border-radius:5px;cursor:pointer;">✕ Delete User</button>
                     <button id="mom20-history-btn" onclick="mom20ToggleHistory()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">📋 History</button>
                 </div>
@@ -2450,9 +2450,9 @@
                             <tbody id="mom20-tracker-tbody"></tbody>
                         </table>
                         </div>
-                        <!-- Side chart panel -->
-                        <div id="mom20-tracker-chart-panel" style="flex:0 0 38%;min-width:0;position:sticky;top:10px;align-self:flex-start;display:none;">
-                            <div class="panel" style="height:100%;">
+                        <!-- Side chart + sector ranking panel -->
+                        <div id="mom20-tracker-chart-panel" style="flex:0 0 38%;min-width:0;position:sticky;top:10px;align-self:flex-start;">
+                            <div class="panel" style="margin-bottom:12px;">
                                 <div class="panel-header">
                                     <span class="panel-title" id="mom20-tracker-chart-title" style="color:var(--green);">Price Chart</span>
                                     <div style="display:flex;gap:0;">
@@ -2464,6 +2464,17 @@
                                 </div>
                                 <div class="panel-body" id="mom20-tracker-chart-body" style="padding:8px;max-height:none;overflow:visible;">
                                     <div style="padding:40px 20px;text-align:center;color:var(--text-muted);">Click any stock to view chart</div>
+                                </div>
+                            </div>
+                            <!-- Sector ranking panel -->
+                            <div class="panel">
+                                <div class="panel-header">
+                                    <span class="panel-title" style="color:#ff6b35;">Sector Ranking</span>
+                                    <span id="mom20-sector-rank-status" style="font-size:10px;color:var(--text-muted);"></span>
+                                    <button onclick="mom20LoadSectorRanking(true)" title="Force refresh" style="margin-left:auto;padding:2px 8px;font-size:10px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺</button>
+                                </div>
+                                <div class="panel-body" id="mom20-sector-rank-body" style="padding:0;max-height:520px;overflow-y:auto;">
+                                    <div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:11px;">Loading sector ranking…</div>
                                 </div>
                             </div>
                         </div>
@@ -7890,6 +7901,73 @@ function mom20OnUserChange() {
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
     mom20LoadBasket();
     mom20LoadPerformance();
+    mom20LoadSectorRanking();
+}
+
+const SECTOR_LABEL = {
+    'NIFTY INDIA DEFENCE': 'Defence',
+    'NIFTY METAL': 'Metal',
+    'NIFTY ENERGY': 'Energy',
+    'NIFTY HEALTHCARE': 'Healthcare',
+    'NIFTY MNC': 'MNC',
+    'NIFTY INDIA MFG': 'Mfg',
+    'NIFTY PSE': 'PSE',
+    'NIFTY AUTO': 'Auto',
+    'NIFTY INFRA': 'Infra',
+    'NIFTY PSU BANK': 'PSU Bank',
+    'NIFTY IT': 'IT',
+    'NIFTY FMCG': 'FMCG',
+    'NIFTY PVT BANK': 'Pvt Bank',
+    'NIFTY BANK': 'Bank',
+    'NIFTY OIL & GAS': 'Oil & Gas',
+    'NIFTY CONSUMPTION': 'Consumption',
+    'NIFTY REALTY': 'Realty',
+    'NIFTY MEDIA': 'Media',
+    'NIFTY CONSUMER DURABLES': 'Cons Durables',
+    'NIFTY FIN SERVICE': 'Fin Service',
+};
+
+async function mom20LoadSectorRanking(force=false) {
+    const body = document.getElementById('mom20-sector-rank-body');
+    const status = document.getElementById('mom20-sector-rank-status');
+    if (!body) return;
+    if (status) status.textContent = force ? 'Refreshing…' : 'Loading…';
+    try {
+        const url = '/api/sector-ranking' + (force ? '?refresh=1' : '');
+        const r = await fetch(url);
+        const d = await r.json();
+        if (!d.success) {
+            body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:11px;">Ranking unavailable</div>`;
+            if (status) status.textContent = '';
+            return;
+        }
+        const rows = (d.ranking || []).map((row) => {
+            const isTop5 = row.rank <= 5;
+            const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+            const colour = (v) => v >= 0 ? '#26a69a' : '#ef5350';
+            const label = SECTOR_LABEL[row.symbol] || row.symbol.replace('NIFTY ', '');
+            const bg = isTop5 ? 'background:rgba(255,107,53,0.08);' : '';
+            return `<tr style="${bg}border-bottom:1px solid var(--border-color);">
+                <td style="padding:5px 8px;font-family:monospace;color:${isTop5?'#ff6b35':'var(--text-muted)'};font-weight:${isTop5?'700':'400'};">${row.rank}</td>
+                <td style="padding:5px 8px;font-family:monospace;color:var(--text-primary);${isTop5?'font-weight:700;':''}">${label}</td>
+                <td style="padding:5px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${row.score.toFixed(2)}</td>
+                <td style="padding:5px 8px;font-family:monospace;text-align:right;color:${colour(row.ret_12m)};">${fmt(row.ret_12m)}</td>
+                <td style="padding:5px 8px;font-family:monospace;text-align:right;color:${colour(row.ret_3m)};">${fmt(row.ret_3m)}</td>
+            </tr>`;
+        }).join('');
+        body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border-color);">
+                <th style="text-align:left;padding:5px 8px;font-family:monospace;">#</th>
+                <th style="text-align:left;padding:5px 8px;font-family:monospace;">Sector</th>
+                <th style="text-align:right;padding:5px 8px;font-family:monospace;">Score</th>
+                <th style="text-align:right;padding:5px 8px;font-family:monospace;">12M</th>
+                <th style="text-align:right;padding:5px 8px;font-family:monospace;">3M</th>
+            </tr></thead><tbody>${rows}</tbody></table>`;
+        if (status) status.textContent = `as of ${d.as_of}`;
+    } catch (e) {
+        body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:#ef5350;font-size:11px;">Error: ${e.message}</div>`;
+        if (status) status.textContent = '';
+    }
 }
 
 async function mom20LoadPerformance(live=false) {
