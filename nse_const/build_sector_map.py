@@ -61,6 +61,23 @@ NIFTYINDICES_URLS = {
 OIL_GAS_HARDCODED = {"RELIANCE", "ONGC", "IOC", "BPCL", "GAIL", "HINDPETRO",
                      "PETRONET", "OIL", "ATGL", "MGL", "IGL", "GUJGASLTD"}
 
+# Hardcoded fallbacks used ONLY when niftyindices.com fetch fails (rate-limit
+# or timeout). These constituent lists are very stable (change once every few
+# years on reconstitution). Update if NSE adds/removes a bank.
+HARDCODED_FALLBACKS = {
+    "NIFTY BANK": {"AUBANK", "AXISBANK", "BANKBARODA", "CANBK", "FEDERALBNK",
+                   "HDFCBANK", "ICICIBANK", "IDFCFIRSTB", "INDUSINDBK",
+                   "KOTAKBANK", "PNB", "SBIN", "UNIONBANK", "YESBANK"},
+    "NIFTY PSU BANK": {"BANKBARODA", "BANKINDIA", "CANBK", "CENTRALBK",
+                       "INDIANB", "IOB", "MAHABANK", "PNB", "PSB", "SBIN",
+                       "UCOBANK", "UNIONBANK"},
+    "NIFTY INDIA DEFENCE": {"AXISCADES", "AEQUS", "APOLLO", "ASTRAMICRO",
+                            "BEML", "BDL", "BEL", "BHARATFORG", "COCHINSHIP",
+                            "DATAPATTNS", "DYNAMATECH", "GRSE", "HAL",
+                            "MTARTECH", "MAZDOCK", "MIDHANI", "PARAS",
+                            "SOLARINDS", "ZENTEC"},
+}
+
 # Manual primary-sector overrides — apply AFTER auto-classification.
 # Use for N200 stocks with no clean home in the niftyindices universe but
 # where we want to assign a sensible primary anyway (typically retail /
@@ -70,7 +87,14 @@ MANUAL_OVERRIDES = {
     "DMART":   ("NIFTY FMCG",        "Avenue Supermarts — consumer-staples retailer; treated as FMCG-adjacent"),
     "GROWW":   ("NIFTY FIN SERVICE", "Groww (Billionbrains Garage Ventures) — discount brokerage / fin-services platform"),
     "TATACAP":  ("NIFTY FIN SERVICE", "Tata Capital — NBFC; classified as non-bank financial services"),
-    "ICICIAMC": ("NIFTY FIN SERVICE", "ICICI Prudential AMC — asset management"),
+    "ICICIAMC":  ("NIFTY FIN SERVICE", "ICICI Prudential AMC — asset management"),
+    "KPITTECH":  ("NIFTY IT",          "KPIT Technologies — software/IT services"),
+    "TATAELXSI": ("NIFTY IT",          "Tata Elxsi — design/embedded software"),
+    "NAUKRI":    ("NIFTY IT",          "Info Edge — internet/IT services platform (Naukri.com, 99acres)"),
+    "JUBLFOOD":  ("NIFTY CONSUMPTION", "Jubilant FoodWorks — Domino's franchisee; QSR/consumption"),
+    "IDEA":      ("NIFTY CONSUMPTION", "Vodafone Idea — telecom; alongside BHARTIARTL/INDUSTOWER"),
+    "TATACOMM":  ("NIFTY CONSUMPTION", "Tata Communications — telecom; alongside BHARTIARTL/INDUSTOWER"),
+    "GODFRYPHLP": ("NIFTY FMCG",       "Godfrey Phillips — tobacco/FMCG (alongside ITC)"),
 }
 
 # Precedence: first match wins → encodes "most specific first"
@@ -144,10 +168,15 @@ def main():
     failed = []
     for sec, fname in NIFTYINDICES_URLS.items():
         syms = fetch_constituents(sec, fname)
-        sec_to_syms[sec] = syms
-        if len(syms) == 0:
+        if len(syms) == 0 and sec in HARDCODED_FALLBACKS:
+            syms = set(HARDCODED_FALLBACKS[sec])
+            print(f"  HRD  {sec:18s} {len(syms):3d} stocks (hardcoded fallback — niftyindices fetch failed)")
+        elif len(syms) == 0:
             failed.append(sec)
-        print(f"  {'OK ' if syms else 'FAIL'}   {sec:18s} {len(syms):3d} stocks")
+            print(f"  FAIL {sec:18s}   0 stocks")
+        else:
+            print(f"  OK   {sec:18s} {len(syms):3d} stocks")
+        sec_to_syms[sec] = syms
         time.sleep(0.5)   # be polite
 
     if failed:
