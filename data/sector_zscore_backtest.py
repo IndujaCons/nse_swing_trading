@@ -368,7 +368,7 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
 
     # Pre-compute indicators per symbol (full history)
     price, open_price = {}, {}
-    ret12, ret3, vol, ema200 = {}, {}, {}, {}
+    ret12, ret3, vol, ema200, ema50 = {}, {}, {}, {}, {}
 
     for sym in universe_syms:
         s = closes[sym]
@@ -378,9 +378,9 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
         ret12[sym] = s / s.shift(LONG_PD) - 1
         ret3[sym]  = s / s.shift(SHORT_PD) - 1
         vol[sym]   = dr.rolling(LONG_PD, min_periods=126).std() * (LONG_PD ** 0.5)
-        # Trend filter: EMA(200) — more responsive than SMA(200), reacts
-        # quicker to trend breaks but can be slightly whippier.
+        # Trend filters: EMA(200) for exits, EMA(50) for entries.
         ema200[sym] = s.ewm(span=200, adjust=False, min_periods=150).mean()
+        ema50[sym]  = s.ewm(span=50,  adjust=False, min_periods=30).mean()
 
     trading_days = sorted(d for d in all_dates if d >= pd.Timestamp(START_DATE))
     rebal_dates  = get_rebal_dates(trading_days, START_DATE)
@@ -449,6 +449,46 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
         next_idx = trading_days.index(rebal_day) + 1 if rebal_day in trading_days else None
         exec_day = trading_days[next_idx] if next_idx and next_idx < len(trading_days) else rebal_day + pd.Timedelta(days=1)
 
+        # ── Intra-month hard stop (V1.2): exit if price ≤ -10% from entry
+        # AND price < EMA200 — fires between rebals, not waiting for monthly check.
+        prev_rebal = rebal_dates[rebal_idx - 1] if rebal_idx > 0 else None
+        if prev_rebal is not None:
+            for sym in list(portfolio.keys()):
+                pos = portfolio[sym]
+                s = price.get(sym)
+                if s is None or s.empty:
+                    continue
+                # Scan daily closes from entry_date+1 to rebal_day-1
+                mask = (s.index > pd.Timestamp(pos["entry_date"])) & (s.index < rebal_day)
+                sub = s[mask]
+                for day, px in sub.items():
+                    if px > pos["entry_price"] * 0.90:
+                        continue
+                    ema = _indicator_on(ema200, sym, day)
+                    if ema is None or px >= ema:
+                        continue
+                    # Hard stop fires — exit at this day's close
+                    sc_      = pos["slot_capital"]
+                    sell_val = sc_ * float(px) / pos["entry_price"]
+                    gp       = sell_val - sc_
+                    chrg     = calc_charges(sc_, sell_val)
+                    total_charges += chrg
+                    pnl      = gp - chrg
+                    pnl_pct  = gp / sc_ * 100
+                    hold_days= (day.date() - pos["entry_date"]).days
+                    cash += sell_val
+                    all_trades.append({
+                        "sym": sym, "entry": pos["entry_date"], "exit": day.date(),
+                        "entry_px": pos["entry_price"], "exit_px": float(px),
+                        "gross_pnl": gp, "net_pnl": pnl, "charges": chrg,
+                        "hold_days": hold_days, "reason": "hard_stop",
+                    })
+                    print(f"  HARD STOP {sym:22s}  entry {pos['entry_date']}  "
+                          f"stopped {day.date()}  @ ₹{float(px):.1f}  "
+                          f"({pnl_pct:+.1f}%)")
+                    del portfolio[sym]
+                    break   # one stop per position per cycle
+
         nav = portfolio_nav(rebal_day)
         new_sc = nav / MAX_SLOTS if nav > SLOT_START * MAX_SLOTS else SLOT_START
         slot_capital = max(SLOT_START, new_sc)
@@ -499,18 +539,24 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
         print(f"  NAV: ₹{nav:,.0f}  |  Slot: ₹{slot_capital:,.0f}  |  Cash: ₹{cash:,.0f}")
         print("=" * 72)
 
-        # ── Exits  (rank slip OR close < EMA200 trend filter) ───────────────
+        # ── Exits  (rank slip OR EMA200 trend filter — asymmetric) ──────────
+        # V1.2-revised: when close < EMA200, hold-buffer collapses from
+        # BUFFER_OUT=7 to TIGHT_BELOW_EMA=5. Marginal-rank holdings get
+        # cut sooner when the trend filter confirms weakness; high-conviction
+        # holdings (rank ≤ 5) stay even through brief EMA dips.
+        TIGHT_BELOW_EMA = 5
         current = set(portfolio.keys())
-        exit_reasons = {}   # sym → "rank>7" / "ema200" / "rank>7+ema200" / "missing"
+        exit_reasons = {}
         for sym in current:
             reasons = []
-            rk = rank_map.get(sym, 9999)
+            rk  = rank_map.get(sym, 9999)
             if rk > BUFFER_OUT or sym not in score_data:
                 reasons.append("rank>" + str(BUFFER_OUT) if sym in score_data else "missing")
             ema = _indicator_on(ema200, sym, rebal_day)
             px  = _price_on(sym, rebal_day, None)
-            if ema is not None and px is not None and px < ema:
-                reasons.append("ema200")
+            below_ema = (ema is not None and px is not None and px < ema)
+            if below_ema and rk > TIGHT_BELOW_EMA:
+                reasons.append(f"ema200+rank>{TIGHT_BELOW_EMA}")
             if reasons:
                 exit_reasons[sym] = "+".join(reasons)
         to_sell = set(exit_reasons.keys())
@@ -550,11 +596,9 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
             print("    —")
 
         # ── Entries ──────────────────────────────────────────────────────────
-        # Rank-only entry (no EMA200 entry filter). The asymmetric rule is
-        # tested vs symmetric; reverted because symmetric cost ~2pp CAGR and
-        # worsened worst-monthly. The "buy below EMA200, hope trend recovers"
-        # asymmetry actually catches enough early-trend pickups to outweigh
-        # the occasional same-month whipsaw exit cost.
+        # Rank-only entry. V1.3 tested EMA50 entry filter (and earlier symmetric
+        # EMA200 filter) — both hurt CAGR and worst-monthly. The "buy on rank,
+        # exit on rank-or-EMA200" asymmetry is the right rule for this signal.
         to_buy = {s for s in ranked if s not in current and rank_map.get(s, 9999) <= BUFFER_IN}
         slots_free = MAX_SLOTS - len(portfolio)
 
