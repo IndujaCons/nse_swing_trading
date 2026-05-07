@@ -41,7 +41,8 @@ NIFTYINDICES_URLS = {
     "NIFTY AUTO":              "ind_niftyautolist.csv",
     "NIFTY METAL":             "ind_niftymetallist.csv",
     "NIFTY ENERGY":            "ind_niftyenergylist.csv",
-    "NIFTY PHARMA":            "ind_niftypharmalist.csv",
+    # NIFTY PHARMA dropped — strict subset of HEALTHCARE within N200 (all 13
+    # pharma names also in HEALTHCARE; HEALTHCARE adds 3 hospitals).
     "NIFTY HEALTHCARE":        "ind_niftyhealthcarelist.csv",
     "NIFTY FMCG":              "ind_niftyfmcglist.csv",
     "NIFTY CONSUMER DURABLES": "ind_niftyconsumerdurableslist.csv",
@@ -68,8 +69,7 @@ SECTOR_PRECEDENCE = [
     "NIFTY AUTO",
     "NIFTY METAL",
     "NIFTY ENERGY",            # broader than O&G (includes power utilities)
-    "NIFTY HEALTHCARE",        # hospitals/diagnostics — distinct from PHARMA
-    "NIFTY PHARMA",            # drug makers
+    "NIFTY HEALTHCARE",        # superset of PHARMA + hospitals (PHARMA dropped)
     "NIFTY CONSUMER DURABLES", # specific consumer sub-sector
     "NIFTY FMCG",              # consumer staples
     "NIFTY REALTY",
