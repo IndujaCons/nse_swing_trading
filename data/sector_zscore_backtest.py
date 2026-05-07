@@ -352,7 +352,7 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
 
     # Pre-compute indicators per symbol (full history)
     price, open_price = {}, {}
-    ret12, ret3, vol = {}, {}, {}
+    ret12, ret3, vol, sma200 = {}, {}, {}, {}
 
     for sym in universe_syms:
         s = closes[sym]
@@ -362,6 +362,7 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
         ret12[sym] = s / s.shift(LONG_PD) - 1
         ret3[sym]  = s / s.shift(SHORT_PD) - 1
         vol[sym]   = dr.rolling(LONG_PD, min_periods=126).std() * (LONG_PD ** 0.5)
+        sma200[sym] = s.rolling(200, min_periods=150).mean()    # trend filter
 
     trading_days = sorted(d for d in all_dates if d >= pd.Timestamp(START_DATE))
     rebal_dates  = get_rebal_dates(trading_days, START_DATE)
@@ -480,10 +481,21 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
         print(f"  NAV: ₹{nav:,.0f}  |  Slot: ₹{slot_capital:,.0f}  |  Cash: ₹{cash:,.0f}")
         print("=" * 72)
 
-        # ── Exits ─────────────────────────────────────────────────────────────
+        # ── Exits  (rank slip OR close < SMA200 trend filter) ────────────────
         current = set(portfolio.keys())
-        to_sell = {sym for sym in current
-                   if rank_map.get(sym, 9999) > BUFFER_OUT or sym not in score_data}
+        exit_reasons = {}   # sym → "rank>7" / "sma200" / "rank>7+sma200" / "missing"
+        for sym in current:
+            reasons = []
+            rk = rank_map.get(sym, 9999)
+            if rk > BUFFER_OUT or sym not in score_data:
+                reasons.append("rank>" + str(BUFFER_OUT) if sym in score_data else "missing")
+            sma = _indicator_on(sma200, sym, rebal_day)
+            px  = _price_on(sym, rebal_day, None)
+            if sma is not None and px is not None and px < sma:
+                reasons.append("sma200")
+            if reasons:
+                exit_reasons[sym] = "+".join(reasons)
+        to_sell = set(exit_reasons.keys())
 
         exit_rows = []
         for sym in sorted(to_sell):
@@ -497,23 +509,25 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
             pnl      = gp - chrg
             pnl_pct  = gp / sc_ * 100
             hold_days= (rebal_day.date() - pos["entry_date"]).days
+            reason   = exit_reasons[sym]
             cash += sell_val
             all_trades.append({
                 "sym": sym, "entry": pos["entry_date"], "exit": rebal_day.date(),
                 "entry_px": pos["entry_price"], "exit_px": ep,
                 "gross_pnl": gp, "net_pnl": pnl, "charges": chrg, "hold_days": hold_days,
+                "reason": reason,
             })
             exit_rows.append((sym, rank_map.get(sym, "—"),
                               pos["entry_date"].strftime("%d-%b-%y"),
                               f"{pos['entry_price']:,.1f}", f"{ep:,.1f}",
-                              inr(gp), pct(pnl_pct), f"{hold_days}d"))
+                              inr(gp), pct(pnl_pct), f"{hold_days}d", reason))
             del portfolio[sym]
 
         print(f"\n  EXITS ({len(exit_rows)})")
         if exit_rows:
-            print_table(["Sector", "Rank", "Entry", "Entry₹", "Exit₹", "Gross P&L", "P&L%", "Hold"],
+            print_table(["Sector", "Rank", "Entry", "Entry₹", "Exit₹", "Gross P&L", "P&L%", "Hold", "Reason"],
                         sorted(exit_rows, key=lambda r: float(r[6].replace('+','').replace('%','')), reverse=True),
-                        [22, 5, 10, 10, 10, 12, 8, 6])
+                        [22, 5, 10, 10, 10, 12, 8, 6, 16])
         else:
             print("    —")
 
@@ -658,6 +672,15 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
     print(f"  Win Rate (trades) : {wr:.1f}%  ({len(winners)}W / {len(losers)}L)")
     print(f"  Profit Factor : {pf:.2f}")
     print(f"  Avg hold      : {avg_hold:.0f} days")
+    # Exit-reason breakdown
+    reason_counts = {}
+    for t in closed:
+        r = t.get("reason", "—")
+        reason_counts[r] = reason_counts.get(r, 0) + 1
+    if reason_counts:
+        breakdown = "  |  ".join(f"{r}: {n}" for r, n in sorted(reason_counts.items(),
+                                                                key=lambda kv: -kv[1]))
+        print(f"  Exit reasons  : {breakdown}")
     print(f"  Total charges : ₹{total_charges:,.0f}")
     print(f"  LIQUIDBEES    : ₹{liquidbees_income:,.0f}  ({LIQUIDBEES_PA*100:.1f}% p.a. on idle slots)")
     print(f"  Net P&L       : ₹{total_net:+,.0f}")
