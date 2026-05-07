@@ -80,6 +80,10 @@ SECTOR_UNIVERSE = [
     ("NIFTY FMCG",              "^CNXFMCG"),
     ("NIFTY REALTY",            "^CNXREALTY"),
     ("NIFTY MEDIA",             "^CNXMEDIA"),
+    # NIFTY MNC kept: tested dropping (Run 13) — CAGR -1.9pp, IR -0.17,
+    # Sharpe -0.10. Even though every MNC stock classifies elsewhere via
+    # precedence, the MNC INDEX itself is a useful cross-sector quality
+    # blend that adds genuine diversified-factor signal to the rotation.
     ("NIFTY MNC",               "^CNXMNC"),
     ("NIFTY PSE",               "^CNXPSE"),
     # Re-added from Phase 2 sector map for wider breadth
