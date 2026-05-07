@@ -65,7 +65,10 @@ OIL_GAS_HARDCODED = {"RELIANCE", "ONGC", "IOC", "BPCL", "GAIL", "HINDPETRO",
 # new-age tech / cement / paint / telecom / etc.).
 # Format: { ticker: ("PRIMARY SECTOR LABEL", "rationale") }
 MANUAL_OVERRIDES = {
-    "DMART":         ("NIFTY FMCG", "Avenue Supermarts — consumer-staples retailer; treated as FMCG-adjacent"),
+    "DMART":   ("NIFTY FMCG",        "Avenue Supermarts — consumer-staples retailer; treated as FMCG-adjacent"),
+    "GROWW":   ("NIFTY FIN SERVICE", "Groww (Billionbrains Garage Ventures) — discount brokerage / fin-services platform"),
+    "TATACAP":  ("NIFTY FIN SERVICE", "Tata Capital — NBFC; classified as non-bank financial services"),
+    "ICICIAMC": ("NIFTY FIN SERVICE", "ICICI Prudential AMC — asset management"),
 }
 
 # Precedence: first match wins → encodes "most specific first"
