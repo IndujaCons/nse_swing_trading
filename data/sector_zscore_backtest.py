@@ -424,17 +424,6 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
             nav += px / pos["entry_price"] * pos["slot_capital"]
         return nav
 
-    def peak_price_since(sym, entry_dt, until_day):
-        """Highest close between entry_dt (inclusive) and until_day (inclusive)."""
-        s = price.get(sym)
-        if s is None or s.empty:
-            return None
-        mask = (s.index >= pd.Timestamp(entry_dt)) & (s.index <= until_day)
-        sub = s[mask]
-        if sub.empty:
-            return None
-        return float(sub.max())
-
     for rebal_idx, rebal_day in enumerate(rebal_dates):
         next_idx = trading_days.index(rebal_day) + 1 if rebal_day in trading_days else None
         exec_day = trading_days[next_idx] if next_idx and next_idx < len(trading_days) else rebal_day + pd.Timedelta(days=1)
@@ -489,24 +478,18 @@ def run(refresh=False, start_override=None, no_liquidbees=False):
         print(f"  NAV: ₹{nav:,.0f}  |  Slot: ₹{slot_capital:,.0f}  |  Cash: ₹{cash:,.0f}")
         print("=" * 72)
 
-        # ── Exits  (rank slip OR close < EMA200 OR drawdown ≥ 20% from peak) ─
+        # ── Exits  (rank slip OR close < EMA200 trend filter) ───────────────
         current = set(portfolio.keys())
-        exit_reasons = {}   # sym → composite reason e.g. "rank>7+ema200+trail20"
+        exit_reasons = {}   # sym → "rank>7" / "ema200" / "rank>7+ema200" / "missing"
         for sym in current:
             reasons = []
-            pos = portfolio[sym]
-            rk  = rank_map.get(sym, 9999)
+            rk = rank_map.get(sym, 9999)
             if rk > BUFFER_OUT or sym not in score_data:
                 reasons.append("rank>" + str(BUFFER_OUT) if sym in score_data else "missing")
             ema = _indicator_on(ema200, sym, rebal_day)
             px  = _price_on(sym, rebal_day, None)
             if ema is not None and px is not None and px < ema:
                 reasons.append("ema200")
-            # Trailing-DD exit: 20% below peak close since entry
-            # (15% tested — fired more but caused whipsaws; CAGR -0.3pp)
-            peak = peak_price_since(sym, pos["entry_date"], rebal_day)
-            if peak is not None and px is not None and px <= peak * 0.80:
-                reasons.append("trail20")
             if reasons:
                 exit_reasons[sym] = "+".join(reasons)
         to_sell = set(exit_reasons.keys())
