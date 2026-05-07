@@ -39,7 +39,7 @@ BUFFER_IN      = 5       # enter if rank ≤ 5 (top 5)
 BUFFER_OUT     = 7       # hold if rank ≤ 7  (exit when rank ≥ 8 — 2-rank hysteresis)
 W12, W3        = 0.50, 0.50
 LONG_PD        = 252     # 12m
-SHORT_PD       = 63      # 3m
+SHORT_PD       = 63      # 3m  (2m tested, made signal noisier — see commit log)
 MIN_HISTORY    = LONG_PD + 10        # eligibility threshold per index
 MIN_ELIGIBLE   = 6                   # backtest start = ≥ this many sectors eligible
 WARMUP_DAYS    = 450
