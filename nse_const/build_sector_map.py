@@ -33,38 +33,52 @@ sys.path.insert(0, ROOT)
 
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
 
-# 12 sector CSVs that resolve cleanly at niftyindices.com
+# 16 sector CSVs that resolve cleanly at niftyindices.com
 NIFTYINDICES_URLS = {
-    "NIFTY BANK":     "ind_niftybanklist.csv",
-    "NIFTY PSU BANK": "ind_niftypsubanklist.csv",
-    "NIFTY IT":       "ind_niftyitlist.csv",
-    "NIFTY AUTO":     "ind_niftyautolist.csv",
-    "NIFTY METAL":    "ind_niftymetallist.csv",
-    "NIFTY ENERGY":   "ind_niftyenergylist.csv",
-    "NIFTY PHARMA":   "ind_niftypharmalist.csv",
-    "NIFTY FMCG":     "ind_niftyfmcglist.csv",
-    "NIFTY REALTY":   "ind_niftyrealtylist.csv",
-    "NIFTY MEDIA":    "ind_niftymedialist.csv",
-    "NIFTY MNC":      "ind_niftymnclist.csv",
-    "NIFTY PSE":      "ind_niftypselist.csv",
+    "NIFTY BANK":              "ind_niftybanklist.csv",
+    "NIFTY PSU BANK":          "ind_niftypsubanklist.csv",
+    "NIFTY IT":                "ind_niftyitlist.csv",
+    "NIFTY AUTO":              "ind_niftyautolist.csv",
+    "NIFTY METAL":             "ind_niftymetallist.csv",
+    "NIFTY ENERGY":            "ind_niftyenergylist.csv",
+    "NIFTY PHARMA":            "ind_niftypharmalist.csv",
+    "NIFTY HEALTHCARE":        "ind_niftyhealthcarelist.csv",
+    "NIFTY FMCG":              "ind_niftyfmcglist.csv",
+    "NIFTY CONSUMER DURABLES": "ind_niftyconsumerdurableslist.csv",
+    "NIFTY REALTY":            "ind_niftyrealtylist.csv",
+    "NIFTY MEDIA":             "ind_niftymedialist.csv",
+    "NIFTY INDIA MFG":         "ind_niftyindiamanufacturing_list.csv",
+    "NIFTY INDIA DEFENCE":     "ind_niftyindiadefence_list.csv",
+    "NIFTY MNC":               "ind_niftymnclist.csv",
+    "NIFTY PSE":               "ind_niftypselist.csv",
 }
+
+# OIL & GAS: niftyindices.com doesn't expose its CSV under any URL probed;
+# hardcoded from the published index composition.
+OIL_GAS_HARDCODED = {"RELIANCE", "ONGC", "IOC", "BPCL", "GAIL", "HINDPETRO",
+                     "PETRONET", "OIL", "ATGL", "MGL", "IGL", "GUJGASLTD"}
 
 # Precedence: first match wins → encodes "most specific first"
 SECTOR_PRECEDENCE = [
-    "NIFTY PVT BANK",      # derived BANK \ PSU BANK
+    "NIFTY PVT BANK",          # derived BANK \ PSU BANK
     "NIFTY PSU BANK",
+    "NIFTY INDIA DEFENCE",     # very narrow (~19 stocks)
+    "NIFTY OIL & GAS",         # narrow oil/gas — beats broader ENERGY
     "NIFTY IT",
     "NIFTY AUTO",
     "NIFTY METAL",
-    "NIFTY ENERGY",
-    "NIFTY PHARMA",
-    "NIFTY FMCG",
+    "NIFTY ENERGY",            # broader than O&G (includes power utilities)
+    "NIFTY HEALTHCARE",        # hospitals/diagnostics — distinct from PHARMA
+    "NIFTY PHARMA",            # drug makers
+    "NIFTY CONSUMER DURABLES", # specific consumer sub-sector
+    "NIFTY FMCG",              # consumer staples
     "NIFTY REALTY",
     "NIFTY MEDIA",
-    "NIFTY FIN SERVICE",   # from sector_mapping.STOCK_SECTOR_MAP fallback
-    "NIFTY BANK",          # broader; rarely primary (PVT/PSU cover all banks)
-    "NIFTY MNC",           # factor blend (lowest priority)
-    "NIFTY PSE",           # factor blend
+    "NIFTY INDIA MFG",         # broad catch-all manufacturing (~80 stocks)
+    "NIFTY FIN SERVICE",       # from sector_mapping.STOCK_SECTOR_MAP fallback
+    "NIFTY BANK",              # broader; rarely primary (PVT/PSU cover all)
+    "NIFTY MNC",               # factor blend (lowest priority)
+    "NIFTY PSE",               # factor blend
 ]
 
 OUTPUT_CSV = os.path.join(HERE, "nifty200_sector_map.csv")
@@ -114,10 +128,13 @@ def main():
         time.sleep(0.5)   # be polite
 
     sec_to_syms["NIFTY PVT BANK"] = sec_to_syms["NIFTY BANK"] - sec_to_syms["NIFTY PSU BANK"]
-    print(f"  DRV  NIFTY PVT BANK     {len(sec_to_syms['NIFTY PVT BANK']):3d} stocks  (BANK − PSU BANK)")
+    print(f"  DRV  NIFTY PVT BANK         {len(sec_to_syms['NIFTY PVT BANK']):3d} stocks  (BANK − PSU BANK)")
 
     sec_to_syms["NIFTY FIN SERVICE"] = fin_service_set()
-    print(f"  FBK  NIFTY FIN SERVICE  {len(sec_to_syms['NIFTY FIN SERVICE']):3d} stocks  (sector_mapping.STOCK_SECTOR_MAP)")
+    print(f"  FBK  NIFTY FIN SERVICE      {len(sec_to_syms['NIFTY FIN SERVICE']):3d} stocks  (sector_mapping.STOCK_SECTOR_MAP)")
+
+    sec_to_syms["NIFTY OIL & GAS"] = OIL_GAS_HARDCODED
+    print(f"  HRD  NIFTY OIL & GAS        {len(sec_to_syms['NIFTY OIL & GAS']):3d} stocks  (hardcoded — no public CSV)")
 
     rows = []
     for ticker in sorted(n200):
