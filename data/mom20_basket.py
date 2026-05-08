@@ -169,19 +169,30 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     etf_entries = []
     if sector_map and top5_sectors:
         from data.sector_etf_map import SECTOR_TO_ETF
-        # Count stocks per sector across both entries (new) and holds (kept)
+        # Count stocks per sector across both entries (new) and holds (kept).
+        # Held ETFs already cover their sector — count them too via
+        # `etf_for_sector` (sector_map only knows N200 stocks).
         sector_count = {}
+        held_etf_syms = set()
         for item in list(entries) + list(holds):
-            sec = sector_map.get(item["ticker"])
+            if item.get("is_etf") or item.get("is_etf_topup"):
+                sec = item.get("etf_for_sector")
+                held_etf_syms.add(item["ticker"])
+            else:
+                sec = sector_map.get(item["ticker"])
             if sec:
                 sector_count[sec] = sector_count.get(sec, 0) + 1
         for sec in top5_sectors:
-            if sector_count.get(sec, 0) >= 4:
-                continue
             mapping = SECTOR_TO_ETF.get(sec)
             if not mapping:
                 continue
             etf_sym, etf_name = mapping
+            # Belt-and-braces: never re-add an ETF the user already holds,
+            # regardless of sector count.
+            if etf_sym in held_etf_syms:
+                continue
+            if sector_count.get(sec, 0) >= 4:
+                continue
             etf_price = (etf_prices or {}).get(etf_sym, 0)
             if etf_price <= 0:
                 continue   # skip if price unavailable
