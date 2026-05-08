@@ -461,18 +461,32 @@ class LiveSignalsEngine:
         # Now: chunked yf.download(group_by='ticker', threads=True) — emits
         # progress between chunks so the UI never freezes at 0/200, and
         # smaller chunks are less likely to trigger Yahoo throttling on EC2.
+        # Each chunk is capped at 45s via ThreadPoolExecutor so a single hung
+        # ticker (Yahoo throttling, network blip) doesn't freeze the whole
+        # scan — abandoned chunks fall through to the per-ticker fallback.
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
         CHUNK_SIZE = 25
+        CHUNK_TIMEOUT = 45  # seconds
         yf_tickers = [f"{t}.NS" for t in tickers]
         bulk_data = {}  # {yf_sym: per-ticker OHLCV DataFrame}
+
+        def _fetch_chunk(chunk_syms):
+            return yf.download(chunk_syms, start=daily_start, end=end_date,
+                               progress=False, auto_adjust=True,
+                               group_by='ticker', threads=True, timeout=15)
 
         for chunk_start in range(0, len(yf_tickers), CHUNK_SIZE):
             chunk = yf_tickers[chunk_start:chunk_start + CHUNK_SIZE]
             if progress_callback:
                 progress_callback(chunk_start, total, "fetching prices…")
+            chunk_df = None
             try:
-                chunk_df = yf.download(chunk, start=daily_start, end=end_date,
-                                       progress=False, auto_adjust=True,
-                                       group_by='ticker', threads=True)
+                with ThreadPoolExecutor(max_workers=1) as _ex:
+                    chunk_df = _ex.submit(_fetch_chunk, chunk).result(timeout=CHUNK_TIMEOUT)
+            except FutTimeout:
+                print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} "
+                      f"timed out after {CHUNK_TIMEOUT}s — falling back to per-ticker for {chunk}")
+                continue
             except Exception as e:
                 print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} fetch failed: {e}")
                 continue
@@ -497,12 +511,17 @@ class LiveSignalsEngine:
             per-ticker fetch if the chunk missed it. Always returns tz-naive
             so its index intersects cleanly with the (now tz-naive) Nifty 50
             reference series — Mom20 beta / Alpha20 / overflow all depend on
-            this alignment."""
+            this alignment. Per-ticker fallback is capped at 10s via
+            ThreadPoolExecutor so a single hung Yahoo response doesn't stall
+            the per-ticker compute loop."""
             df = bulk_data.get(yf_sym, pd.DataFrame())
             if df.empty or len(df) < 210:
                 try:
-                    df = yf.Ticker(yf_sym).history(start=daily_start, end=end_date)
-                except Exception:
+                    with ThreadPoolExecutor(max_workers=1) as _e:
+                        df = _e.submit(
+                            lambda: yf.Ticker(yf_sym).history(start=daily_start, end=end_date)
+                        ).result(timeout=10)
+                except (FutTimeout, Exception):
                     df = pd.DataFrame()
             if not df.empty and df.index.tz is not None:
                 df = df.copy()

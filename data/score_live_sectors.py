@@ -61,17 +61,55 @@ def _load_synth(synth_name: str) -> pd.Series:
 
 def _fetch_live_sector_prices() -> dict:
     """Pull each sector's close series. Synth-prefixed entries load from
-    pkl; yfinance entries fetch ~400 days fresh."""
+    pkl; yfinance entries fetch in ONE bulk call with a hard 30s timeout
+    so a single hung Yahoo response can't freeze /api/sector-ranking
+    (the freeze used to surface as 'Error: Unexpected token <' in the UI
+    because the Flask worker was 504'ing back to the proxy)."""
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
     start = (pd.Timestamp.today() - pd.Timedelta(days=400)).strftime('%Y-%m-%d')
     end   = (date.today() + timedelta(days=1)).isoformat()
 
     closes = {}
+
+    # Synth fallbacks first — fast pkl reads, no network.
+    yf_pairs = []
     for sec, source in SECTOR_UNIVERSE:
         if source.startswith("synth:"):
             synth_name = source.split(":", 1)[1].lower()
             closes[sec] = _load_synth(synth_name)
         else:
-            closes[sec] = _fetch_yf(source, start, end)
+            yf_pairs.append((sec, source))
+
+    # Bulk yfinance for the remaining sectors, hard-capped at 30s.
+    if yf_pairs:
+        yf_syms = [src for _, src in yf_pairs]
+        bulk_df = None
+        try:
+            def _bulk():
+                return yf.download(yf_syms, start=start, end=end, progress=False,
+                                   auto_adjust=True, group_by='ticker',
+                                   threads=True, timeout=15)
+            with ThreadPoolExecutor(max_workers=1) as _e:
+                bulk_df = _e.submit(_bulk).result(timeout=30)
+        except FutTimeout:
+            print("[score_live_sectors] bulk yfinance fetch timed out after 30s")
+        except Exception as e:
+            print(f"[score_live_sectors] bulk fetch failed: {e}")
+
+        for sec, sym in yf_pairs:
+            s = pd.Series(dtype=float)
+            try:
+                if bulk_df is not None and not bulk_df.empty:
+                    if isinstance(bulk_df.columns, pd.MultiIndex) and sym in bulk_df.columns.get_level_values(0):
+                        s = bulk_df[sym]["Close"].dropna()
+                    elif len(yf_syms) == 1:
+                        s = bulk_df["Close"].squeeze().dropna()
+                if len(s) > 0 and hasattr(s.index, 'tz') and s.index.tz is not None:
+                    s.index = s.index.tz_localize(None)
+            except Exception:
+                pass
+            closes[sec] = s
+
     return closes
 
 
