@@ -7983,11 +7983,22 @@ async function mom20LoadPerformance(live=false) {
     if (card) card.style.display = 'block';
     if (status) status.textContent = live ? 'Fetching live prices…' : 'Loading…';
 
+    // When Live Prices is clicked, also include entry+exit tickers from the
+    // basket panel so a single bulk fetch refreshes both the tracker and the
+    // basket display in one round-trip.
+    let extraQuery = '';
+    if (live && _mom20BasketData) {
+        const entryT = (_mom20BasketData.entries || []).map(e => e.ticker);
+        const exitT  = (_mom20BasketData.exits  || []).map(e => e.ticker);
+        const extras = [...new Set([...entryT, ...exitT])].filter(Boolean);
+        if (extras.length) extraQuery = '&extra_tickers=' + encodeURIComponent(extras.join(','));
+    }
+
     let d;
     try {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 30000);
-        const url = `/api/portfolio-users/${uid}/mom20-performance${live ? '?live=1' : ''}`;
+        const url = `/api/portfolio-users/${uid}/mom20-performance${live ? '?live=1' + extraQuery : ''}`;
         d = await fetch(url, {signal: ctrl.signal})
             .then(r => r.json()).finally(() => clearTimeout(t));
     } catch(e) {
@@ -7997,6 +8008,26 @@ async function mom20LoadPerformance(live=false) {
     if (!d?.success) {
         if (status) status.textContent = 'Error loading holdings';
         return;
+    }
+
+    // Apply fresh prices to the basket panel (Entries qty×price, Exits price)
+    if (live && d.fresh_prices && _mom20BasketData) {
+        const fp = d.fresh_prices;
+        let touched = false;
+        (_mom20BasketData.entries || []).forEach(e => {
+            if (fp[e.ticker] && fp[e.ticker] > 0) {
+                e.price = fp[e.ticker];
+                e.capital_allocated = Math.round((e.qty || 0) * fp[e.ticker]);
+                touched = true;
+            }
+        });
+        (_mom20BasketData.exits || []).forEach(e => {
+            if (fp[e.ticker] && fp[e.ticker] > 0) {
+                e.current_price = fp[e.ticker];
+                touched = true;
+            }
+        });
+        if (touched) _renderMom20Basket(_mom20BasketData);
     }
     if (!d.holdings.length) {
         if (status) status.textContent = 'No holdings — upload trade book to start tracking';

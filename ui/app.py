@@ -2833,17 +2833,28 @@ def api_mom20_performance(user_id):
 
     tickers = [h["ticker"] for h in basket]
 
-    if want_live:
+    # When Live Prices is clicked from the basket page, the JS passes the
+    # union of entry+exit tickers via ?extra_tickers=A,B,C so a single bulk
+    # fetch refreshes prices for the tracker AND the basket panel.
+    extra = [t.strip() for t in request.args.get("extra_tickers", "").split(",")
+             if t.strip()]
+    fetch_tickers = list(dict.fromkeys(tickers + extra))   # dedup, preserve order
+    fresh_prices = {}
+
+    if want_live and fetch_tickers:
         import yfinance as yf
         from datetime import datetime as _dt, timezone as _tz, timedelta as _td
-        yf_syms = [f"{t}.NS" for t in tickers]
+        yf_syms = [f"{t}.NS" for t in fetch_tickers]
         try:
             df = yf.download(yf_syms, period="1d", interval="5m", progress=False,
                              group_by="ticker", threads=True, auto_adjust=True)
-            for t, sym in zip(tickers, yf_syms):
+            for t, sym in zip(fetch_tickers, yf_syms):
                 try:
-                    price_map[t] = float(df["Close"].dropna().iloc[-1]) if len(tickers) == 1 \
-                                   else float(df[sym]["Close"].dropna().iloc[-1])
+                    val = float(df["Close"].dropna().iloc[-1]) if len(fetch_tickers) == 1 \
+                          else float(df[sym]["Close"].dropna().iloc[-1])
+                    if val > 0:
+                        price_map[t] = val
+                        fresh_prices[t] = round(val, 2)
                 except Exception:
                     pass
         except Exception:
@@ -2901,6 +2912,7 @@ def api_mom20_performance(user_id):
     return jsonify({
         "success":            True,
         "holdings":           holdings,
+        "fresh_prices":       fresh_prices,   # {ticker: price} for tracker + extras
         "total_entry_value":  round(total_entry, 2),
         "total_current_value": round(total_current, 2),
         "total_return_pct":   total_return_pct,
