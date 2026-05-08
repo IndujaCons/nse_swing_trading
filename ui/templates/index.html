@@ -1473,27 +1473,25 @@
                 <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save Settings</button>
             </div>
 
-            <div class="section hidden" id="live-signals-settings">
-                <div class="section-title">Scan Universe</div>
+            <!-- Scan Universe + Scan Date — hidden (Mom20 N200 universe is the
+                 only one in active use; historical scan-by-date isn't part of
+                 the daily flow). DOM elements kept so existing JS reads of
+                 #ls-universe / #ls-scan-date continue to return their default
+                 values without errors. -->
+            <div class="section hidden" id="live-signals-settings" style="display:none !important;">
                 <div class="setting-row">
-                    <span class="setting-label">Universe</span>
                     <select class="setting-select" id="ls-universe">
-                        <option value="50" selected>Nifty 50</option>
+                        <option value="50">Nifty 50</option>
                         <option value="100">Nifty 100</option>
-                        <option value="200">Nifty 200</option>
+                        <option value="200" selected>Nifty 200</option>
                         <option value="150">Midcap 150</option>
                     </select>
+                    <input type="date" id="ls-scan-date" class="setting-select">
                 </div>
-                <div class="section-title" style="margin-top: 12px;">Scan Date</div>
-                <div class="setting-row">
-                    <span class="setting-label">Date</span>
-                    <input type="date" id="ls-scan-date" class="setting-select" style="width:130px;">
-                </div>
-                <div class="setting-row hidden" id="ls-historical-info" style="font-size:11px;color:var(--yellow,#f0c040);align-items:center;">
+                <div class="setting-row hidden" id="ls-historical-info">
                     <span>Viewing historical signals</span>
-                    <button class="btn" onclick="clearScanDate()" style="padding:2px 8px;font-size:11px;margin-left:6px;">Today</button>
+                    <button onclick="clearScanDate()">Today</button>
                 </div>
-                <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 8px;">Save</button>
             </div>
 
             <div class="section hidden" id="momentum-settings">
@@ -1661,22 +1659,14 @@
                 </div>
             </div>
 
-            <div class="divider"></div>
-
-            <div class="section">
+            <!-- Market Info hidden — values were always '--' / 0 (the underlying
+                 wiring was for the legacy screener flow). Kept in DOM so any
+                 stray reads don't throw. -->
+            <div class="section" style="display:none;">
                 <div class="section-title">Market Info</div>
-                <div class="setting-row">
-                    <span class="setting-label">Nifty 50 Return</span>
-                    <span class="setting-value" id="nifty-return">--</span>
-                </div>
-                <div class="setting-row">
-                    <span class="setting-label">Stocks Processed</span>
-                    <span class="setting-value" id="stocks-processed">--</span>
-                </div>
-                <div class="setting-row">
-                    <span class="setting-label">Paper Trades</span>
-                    <span class="setting-value" id="paper-trades-count">0</span>
-                </div>
+                <span id="nifty-return">--</span>
+                <span id="stocks-processed">--</span>
+                <span id="paper-trades-count">0</span>
             </div>
 
             <div class="section hidden" id="trade-explain-settings">
