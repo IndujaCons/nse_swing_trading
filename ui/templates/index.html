@@ -8305,7 +8305,9 @@ function mom20TrackerRender() {
         const color = h.return_pct >= 0 ? 'var(--green)' : '#dc3545';
         const sign  = h.return_pct >= 0 ? '+' : '';
         const rank  = h.rank != null ? h.rank : '—';
-        const rankColor = h.rank != null && h.rank <= 20 ? 'var(--green)'
+        const _isEtfRank = typeof h.rank === 'string' && h.rank.startsWith('ETF');
+        const rankColor = _isEtfRank ? '#ff6b35'
+                        : h.rank != null && h.rank <= 20 ? 'var(--green)'
                         : h.rank != null && h.rank <= 40 ? '#ff6b35' : '#dc3545';
         let sinceStr = '—';
         if (h.entry_date) {
@@ -8440,12 +8442,13 @@ function _renderMom20Basket(d) {
         : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>';
 
     // Entries
+    const rankCell = r => (typeof r === 'string' && r.startsWith('ETF')) ? r : `#${r}`;
     document.getElementById('mom20-basket-entries-body').innerHTML = entries.length
         ? entries.map((e,i) => `<tr>
             <td>${i+1}</td>
             <td>${tickerLink(e.ticker,'var(--green)')}</td>
             <td style="color:var(--text-muted);font-size:11px">${sectorOf(e)}</td>
-            <td>#${e.rank}</td>
+            <td>${rankCell(e.rank)}</td>
             <td>${fmtP(e.price)}</td>
             <td style="font-weight:700">${e.qty}</td>
             <td>${fmt(e.capital_allocated)}</td>

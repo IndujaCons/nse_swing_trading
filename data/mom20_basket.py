@@ -87,7 +87,15 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     # "removed from Nifty 200". Exit semantics for ETFs: hold while the
     # underlying sector is in today's top-5; exit when it drops past 5.
     from data.sector_etf_map import KNOWN_ETF_SYMBOLS, ETF_TO_SECTOR
-    top5_set = set(top5_sectors or [])
+    top5_list = list(top5_sectors or [])
+    top5_set = set(top5_list)
+
+    def _etf_rank_str(sec):
+        """ETF#<n> when sector is in top-5; plain 'ETF' otherwise."""
+        try:
+            return f"ETF#{top5_list.index(sec) + 1}"
+        except (ValueError, AttributeError):
+            return "ETF"
 
     for ticker in current_tickers:
         if ticker in KNOWN_ETF_SYMBOLS:
@@ -97,7 +105,7 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
             if sec and sec in top5_set:
                 holds.append({
                     "ticker":         ticker,
-                    "rank":           "ETF",
+                    "rank":           _etf_rank_str(sec),
                     "price":          price,
                     "is_etf":         True,
                     "etf_for_sector": sec,
@@ -182,7 +190,7 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
                 continue
             etf_entries.append({
                 "ticker":            etf_sym,
-                "rank":              "ETF",
+                "rank":              _etf_rank_str(sec),
                 "price":             round(etf_price, 2),
                 "qty":               qty,
                 "capital_allocated": round(qty * etf_price, 2),

@@ -2897,6 +2897,18 @@ def api_mom20_performance(user_id):
     total_current = 0.0
     earliest_date = None
 
+    # Resolve sector rank for any held ETFs so the Tracker's Rank column
+    # can render as 'ETF#<n>' (matching the basket Holds/Entries display).
+    from data.sector_etf_map import KNOWN_ETF_SYMBOLS, ETF_TO_SECTOR
+    has_etfs = any(item.get("ticker") in KNOWN_ETF_SYMBOLS for item in basket)
+    sector_rank_by_name = {}
+    if has_etfs:
+        try:
+            for r in (_get_sector_ranking() or []):
+                sector_rank_by_name[r["symbol"]] = r["rank"]
+        except Exception:
+            pass
+
     for h in basket:
         t = h["ticker"]
         ep = h.get("entry_price", 0)
@@ -2912,9 +2924,16 @@ def api_mom20_performance(user_id):
         if edate and (earliest_date is None or edate < earliest_date):
             earliest_date = edate
 
+        if t in KNOWN_ETF_SYMBOLS:
+            sec = ETF_TO_SECTOR.get(t)
+            sec_rank = sector_rank_by_name.get(sec)
+            row_rank = f"ETF#{sec_rank}" if sec_rank else "ETF"
+        else:
+            row_rank = rank_map.get(t)
+
         holdings.append({
             "ticker":        t,
-            "rank":          rank_map.get(t),
+            "rank":          row_rank,
             "qty":           qty,
             "entry_price":   round(ep, 2),
             "current_price": round(cp, 2),
