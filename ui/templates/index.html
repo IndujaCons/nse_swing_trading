@@ -8189,8 +8189,11 @@ function mom20RenderPerformance(d, live=false) {
         if (status) status.textContent = 'Render error';
     }
 
-    // Load portfolio vs benchmark chart (non-blocking)
-    mom20LoadPerfChart(uid);
+    // Load portfolio vs benchmark chart (non-blocking). uid is grabbed from
+    // the selected-user global because this render fn is also called by the
+    // bootstrap path which doesn't have a local uid in scope.
+    const _uid = _mom20SelectedUser?.id;
+    if (_uid) mom20LoadPerfChart(_uid);
 }
 
 let _mom20PerfChart = null;
