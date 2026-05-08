@@ -2409,7 +2409,7 @@
                 <div id="mom20-tracker-card" style="display:none;margin-bottom:20px;">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
-                        <button onclick="mom20LoadPerformance(true)" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
+                        <button onclick="mom20LivePricesAndBasket()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
                         <span id="mom20-tracker-status" style="font-size:10px;color:var(--text-muted);"></span>
                     </div>
                     <!-- Summary strip -->
@@ -7973,6 +7973,15 @@ async function mom20LoadSectorRanking(force=false) {
         body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:#ef5350;font-size:11px;">Error: ${e.message}</div>`;
         if (status) status.textContent = '';
     }
+}
+
+// Live Prices button handler — refreshes the basket structure (entries/exits/holds)
+// against the latest signals cache FIRST, then overlays fresh LTPs on top. Without
+// this two-step flow, a stock whose rank dropped past 40 (e.g. POWERGRID 61)
+// stayed in 'holds' because _mom20BasketData was cached from the initial load.
+async function mom20LivePricesAndBasket() {
+    await mom20LoadBasket();
+    await mom20LoadPerformance(true);
 }
 
 async function mom20LoadPerformance(live=false) {
