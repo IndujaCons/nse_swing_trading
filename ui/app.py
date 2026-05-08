@@ -2545,6 +2545,14 @@ def api_sector_ranking():
     })
 
 
+# ── Sector map (ticker → primary sector, current N200) ───────────────────────
+
+@app.route("/api/sector-map", methods=["GET"])
+def api_sector_map():
+    """Return {ticker: primary_sector} for current Nifty 200, cached."""
+    return jsonify({"success": True, "map": _load_sector_map()})
+
+
 # ── Mom20 basket (per user) ────────────────────────────────────────────────────
 
 @app.route("/api/portfolio-users/<user_id>/mom20-basket", methods=["GET"])

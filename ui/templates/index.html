@@ -2382,14 +2382,14 @@
                     <!-- Exits -->
                     <div class="basket-section-title">EXITS (<span id="mom20-exits-count-lbl">0</span>)</div>
                     <table class="basket-table" style="margin-bottom:14px;font-family:monospace;">
-                        <thead><tr><th>#</th><th>Ticker</th><th>Rank</th><th>Qty</th><th>Price₹</th><th>Reason</th></tr></thead>
+                        <thead><tr><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Qty</th><th>Price₹</th><th>Reason</th></tr></thead>
                         <tbody id="mom20-basket-exits-body"></tbody>
                     </table>
 
                     <!-- Entries -->
                     <div class="basket-section-title">ENTRIES (<span id="mom20-entries-count-lbl">0</span>)</div>
                     <table class="basket-table" style="margin-bottom:14px;font-family:monospace;">
-                        <thead><tr><th>#</th><th>Ticker</th><th>Rank</th><th>Price₹</th><th>Qty</th><th>Capital</th><th>Score</th></tr></thead>
+                        <thead><tr><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Price₹</th><th>Qty</th><th>Capital</th><th>Score</th></tr></thead>
                         <tbody id="mom20-basket-entries-body"></tbody>
                     </table>
 
@@ -2438,6 +2438,7 @@
                             <thead>
                                 <tr style="font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border-color);">
                                     <th style="text-align:left;padding:5px 8px;font-family:monospace;">Ticker</th>
+                                    <th style="text-align:left;padding:5px 8px;font-family:monospace;">Sector</th>
                                     <th id="th-rank" onclick="mom20TrackerSetSort('rank')" style="text-align:right;padding:5px 8px;cursor:pointer;user-select:none;font-family:monospace;">Rank <span id="th-rank-arrow"></span></th>
                                     <th style="text-align:right;padding:5px 8px;font-family:monospace;">Since</th>
                                     <th style="text-align:right;padding:5px 8px;font-family:monospace;">Entry₹</th>
@@ -7904,6 +7905,7 @@ function mom20OnUserChange() {
     if (histBtn) histBtn.style.display = 'inline';
     _mom20HistoryLoaded = false;
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
+    mom20EnsureSectorMap();
     mom20LoadBasket();
     mom20LoadPerformance();
     mom20LoadSectorRanking();
@@ -7984,6 +7986,23 @@ async function mom20LivePricesAndBasket() {
     await mom20LoadPerformance(true);
 }
 
+// Ticker → primary_sector cache, fetched once. Used by the Tracker, Entries,
+// and Exits tables to render a Sector column next to each ticker.
+let _mom20SectorMap = {};
+async function mom20EnsureSectorMap() {
+    if (Object.keys(_mom20SectorMap).length > 0) return;
+    try {
+        const r = await fetch('/api/sector-map');
+        const d = await r.json();
+        if (d.success && d.map) _mom20SectorMap = d.map;
+    } catch (e) { console.warn('sector map load failed', e); }
+}
+function mom20SectorLabel(ticker) {
+    const full = _mom20SectorMap[ticker];
+    if (!full) return '—';
+    return SECTOR_LABEL[full] || full.replace(/^NIFTY /, '');
+}
+
 async function mom20LoadPerformance(live=false) {
     const uid = _mom20SelectedUser?.id;
     if (!uid) return;
@@ -8041,7 +8060,7 @@ async function mom20LoadPerformance(live=false) {
     if (!d.holdings.length) {
         if (status) status.textContent = 'No holdings — upload trade book to start tracking';
         const tbody = document.getElementById('mom20-tracker-tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
         return;
     }
 
@@ -8275,6 +8294,7 @@ function mom20TrackerRender() {
         const td = 'padding:4px 8px;font-family:monospace;';
         return `<tr data-ticker="${h.ticker}" onclick="openTrackerChart('${h.ticker}')" style="border-bottom:1px solid var(--border-color);cursor:pointer;">
             <td style="${td}font-weight:700;">${h.ticker}</td>
+            <td style="${td}color:var(--text-muted);font-size:11px;">${mom20SectorLabel(h.ticker)}</td>
             <td style="${td}text-align:right;font-weight:700;color:${rankColor};">${rank}</td>
             <td style="${td}text-align:right;color:var(--text-muted);">${sinceStr}</td>
             <td style="${td}text-align:right;color:var(--text-muted);">${h.entry_price.toLocaleString('en-IN')}</td>
@@ -8378,28 +8398,36 @@ function _renderMom20Basket(d) {
                onclick="openTrackerChart('${ticker}','1y');document.getElementById('mom20-tracker-chart-panel').scrollIntoView({behavior:'smooth',block:'nearest'})"
          >${ticker}</span>`;
 
+    // Helper: ETF rows store the sector explicitly (e.etf_for_sector); regular
+    // stocks use the global sector map.
+    const sectorOf = e => e.is_etf_topup
+        ? (SECTOR_LABEL[e.etf_for_sector] || (e.etf_for_sector || '').replace(/^NIFTY /, '') || '—')
+        : mom20SectorLabel(e.ticker);
+
     // Exits
     document.getElementById('mom20-basket-exits-body').innerHTML = exits.length
         ? exits.map((e,i) => `<tr>
             <td>${i+1}</td>
             <td>${tickerLink(e.ticker,'var(--red)')}</td>
+            <td style="color:var(--text-muted);font-size:11px">${sectorOf(e)}</td>
             <td style="color:var(--text-muted)">${e.rank ?? '—'}</td>
             <td>${e.qty}</td>
             <td>${fmtP(e.current_price)}</td>
             <td style="font-size:10px;color:var(--text-muted)">${e.reason}</td></tr>`).join('')
-        : '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>';
+        : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>';
 
     // Entries
     document.getElementById('mom20-basket-entries-body').innerHTML = entries.length
         ? entries.map((e,i) => `<tr>
             <td>${i+1}</td>
             <td>${tickerLink(e.ticker,'var(--green)')}</td>
+            <td style="color:var(--text-muted);font-size:11px">${sectorOf(e)}</td>
             <td>#${e.rank}</td>
             <td>${fmtP(e.price)}</td>
             <td style="font-weight:700">${e.qty}</td>
             <td>${fmt(e.capital_allocated)}</td>
             <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td></tr>`).join('')
-        : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
+        : '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
 
 }
 
