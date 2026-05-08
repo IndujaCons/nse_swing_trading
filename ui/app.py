@@ -3905,6 +3905,252 @@ def overflow_portfolio_confirm_investment():
                     "tracking_since": portfolio["tracking_since"]})
 
 
+# ── Backtest runner (mom15_pit_report.py subprocess) ──────────────────────────
+# Wraps `mom15_pit_report.py` as a subprocess so the UI can sweep params on the
+# fly. Caches successful runs by hash of the request body.
+
+import hashlib
+import re
+import subprocess
+import time as _bt_time
+
+_BACKTEST_LOCK = threading.Lock()
+_BACKTEST_CACHE_DIR = os.path.join(DATA_STORE_PATH, "backtest_cache")
+_BACKTEST_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_BACKTEST_SCRIPT = os.path.join(_BACKTEST_PROJECT_ROOT, "mom15_pit_report.py")
+
+
+def _bt_cache_key(payload: dict) -> str:
+    """Stable hash of the request body — sort keys, json.dumps, sha256[:12]."""
+    canon = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canon.encode("utf-8")).hexdigest()[:12]
+
+
+def _bt_build_args(payload: dict) -> list:
+    """Map request JSON → CLI flags for mom15_pit_report.py."""
+    args = []
+    universe = (payload.get("universe") or "").lower()
+    if universe == "n500":
+        args.append("--n500")
+    elif universe == "qqq":
+        args.append("--qqq")
+    # else: default Nifty200 (Mom20 monthly) — script's default
+
+    if payload.get("top_n") is not None:
+        args += ["--top-n", str(int(payload["top_n"]))]
+    if payload.get("buffer_in") is not None:
+        args += ["--buffer-in", str(int(payload["buffer_in"]))]
+    if payload.get("buffer_out") is not None:
+        args += ["--buffer-out", str(int(payload["buffer_out"]))]
+    if payload.get("beta_cap") is not None:
+        args += ["--beta-cap", str(float(payload["beta_cap"]))]
+    if payload.get("ema200_exit"):
+        args.append("--ema200-exit")
+    if (payload.get("rebal_day") or "").lower() == "mid":
+        args += ["--rebal-day", "mid"]
+    return args
+
+
+def _bt_parse_summary(stdout: str) -> dict:
+    """Extract FINAL SUMMARY block + year-by-year rows from the report stdout.
+
+    Regexes are forgiving (whitespace tolerant) but assume the script's print
+    format in `mom15_pit_report.py:print_final_summary` is unchanged.
+    """
+    summary = {}
+
+    m = re.search(r"Period\s*:\s*(\S+)\s*→\s*(\S+)\s*\(([\d.]+)\s*years\)", stdout)
+    if m:
+        summary["period"] = f"{m.group(1)} → {m.group(2)}"
+        summary["years"] = float(m.group(3))
+
+    m = re.search(r"Total Return\s*:\s*([+\-]?[\d,\.]+)%", stdout)
+    if m:
+        summary["total_return_pct"] = float(m.group(1).replace(",", ""))
+
+    m = re.search(r"CAGR\s*:\s*([+\-]?[\d,\.]+)%", stdout)
+    if m:
+        summary["cagr_pct"] = float(m.group(1).replace(",", ""))
+
+    m = re.search(r"Win Rate\s*:\s*([\d\.]+)%\s*\((\d+)W\s*/\s*(\d+)L\)", stdout)
+    if m:
+        summary["win_rate_pct"] = float(m.group(1))
+        summary["winners"] = int(m.group(2))
+        summary["losers"] = int(m.group(3))
+
+    m = re.search(r"Profit Factor\s*:\s*([\d\.]+|inf)", stdout)
+    if m:
+        v = m.group(1)
+        summary["profit_factor"] = float("inf") if v == "inf" else float(v)
+
+    m = re.search(r"Avg hold\s*:\s*(\d+)\s*days", stdout)
+    if m:
+        summary["avg_hold_days"] = int(m.group(1))
+
+    m = re.search(r"Total charges\s*:\s*₹\s*([\d,]+)", stdout)
+    if m:
+        summary["total_charges"] = int(m.group(1).replace(",", ""))
+
+    # YEAR-BY-YEAR: lines like "  2015  + 12.8%  ███..." or "  2018  -  3.4%  ░░..."
+    yby = []
+    in_block = False
+    for line in stdout.splitlines():
+        if "YEAR-BY-YEAR" in line:
+            in_block = True
+            continue
+        if in_block:
+            ym = re.match(r"\s*(\d{4})\s+([+\-])\s*([\d\.]+)%", line)
+            if ym:
+                yr = int(ym.group(1))
+                sign = -1 if ym.group(2) == "-" else 1
+                pct = sign * float(ym.group(3))
+                yby.append({"year": yr, "return_pct": pct})
+            elif yby and not line.strip():
+                # blank line after rows — end of block
+                break
+    if yby:
+        summary["year_by_year"] = yby
+
+    return summary
+
+
+def _bt_run_subprocess(args: list, timeout: int = 600) -> tuple:
+    """Run mom15_pit_report.py with given args. Returns (returncode, stdout, stderr)."""
+    cmd = [sys.executable, _BACKTEST_SCRIPT] + args
+    proc = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        cwd=_BACKTEST_PROJECT_ROOT,
+    )
+    return proc.returncode, proc.stdout, proc.stderr, cmd
+
+
+@app.route("/api/backtest/run", methods=["POST"])
+def api_backtest_run():
+    """Run a Mom15/Mom20/N500/QQQ backtest as a subprocess.
+
+    Body: {universe, top_n, buffer_in, buffer_out, beta_cap, ema200_exit, rebal_day}
+    Returns: {success, summary{...}, raw_report, rebalance_count, command,
+              cached, elapsed_sec}.
+
+    Caches successful runs to data_store/backtest_cache/<key>.json.
+    """
+    payload = request.get_json(silent=True) or {}
+    key = _bt_cache_key(payload)
+    cache_path = os.path.join(_BACKTEST_CACHE_DIR, f"{key}.json")
+
+    # Cache hit → return immediately
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path) as f:
+                cached = json.load(f)
+            cached["cached"] = True
+            cached["elapsed_sec"] = 0.0
+            return jsonify(cached)
+        except Exception:
+            # Corrupt cache — fall through and re-run
+            pass
+
+    args = _bt_build_args(payload)
+
+    # Serialize concurrent runs — yfinance/pickle cache is not thread-safe
+    with _BACKTEST_LOCK:
+        # Re-check cache after acquiring lock (another thread may have populated it)
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path) as f:
+                    cached = json.load(f)
+                cached["cached"] = True
+                cached["elapsed_sec"] = 0.0
+                return jsonify(cached)
+            except Exception:
+                pass
+
+        t0 = _bt_time.time()
+        try:
+            rc, stdout, stderr, cmd = _bt_run_subprocess(args, timeout=600)
+        except subprocess.TimeoutExpired:
+            return jsonify({
+                "success": False,
+                "error": "backtest timed out after 600 seconds",
+                "command": " ".join([sys.executable, _BACKTEST_SCRIPT] + args),
+            }), 504
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "error": f"subprocess failed: {e}",
+                "command": " ".join([sys.executable, _BACKTEST_SCRIPT] + args),
+            }), 500
+        elapsed = _bt_time.time() - t0
+
+        if rc != 0:
+            return jsonify({
+                "success": False,
+                "error": f"mom15_pit_report.py exited with code {rc}",
+                "stderr": (stderr or "")[-2000:],
+                "stdout_tail": (stdout or "")[-2000:],
+                "command": " ".join(cmd),
+                "elapsed_sec": round(elapsed, 2),
+            }), 500
+
+        summary = _bt_parse_summary(stdout)
+        rebalance_count = len(re.findall(r"REBALANCE #", stdout))
+
+        if "cagr_pct" not in summary:
+            return jsonify({
+                "success": False,
+                "error": "failed to parse FINAL SUMMARY from stdout",
+                "stdout_tail": (stdout or "")[-2000:],
+                "command": " ".join(cmd),
+                "elapsed_sec": round(elapsed, 2),
+            }), 500
+
+        response = {
+            "success": True,
+            "summary": summary,
+            "raw_report": stdout,
+            "rebalance_count": rebalance_count,
+            "command": " ".join(cmd),
+            "cached": False,
+            "elapsed_sec": round(elapsed, 2),
+            "cache_key": key,
+        }
+
+        # Persist to cache
+        try:
+            os.makedirs(_BACKTEST_CACHE_DIR, exist_ok=True)
+            with open(cache_path, "w") as f:
+                json.dump(response, f)
+        except Exception as e:
+            # Non-fatal — log but still return
+            print(f"[backtest] cache write failed: {e}")
+
+        return jsonify(response)
+
+
+@app.route("/api/backtest/history", methods=["GET"])
+def api_backtest_history():
+    """Return the rebalance history (raw_report) for a cached backtest run."""
+    key = (request.args.get("key") or "").strip()
+    if not key or not re.fullmatch(r"[0-9a-f]{6,64}", key):
+        return jsonify({"success": False, "error": "missing or invalid key"}), 400
+    cache_path = os.path.join(_BACKTEST_CACHE_DIR, f"{key}.json")
+    if not os.path.exists(cache_path):
+        return jsonify({"success": False, "error": "cache miss — run /api/backtest/run first"}), 404
+    try:
+        with open(cache_path) as f:
+            cached = json.load(f)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"cache read failed: {e}"}), 500
+    return jsonify({
+        "success": True,
+        "raw_report": cached.get("raw_report", ""),
+        "rebalance_count": cached.get("rebalance_count", 0),
+    })
+
+
 # ============ Run Server ============
 
 def run_server():
