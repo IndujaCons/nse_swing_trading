@@ -2327,12 +2327,39 @@ def _etf_signal_scheduler():
         else:
             try:
                 from data.notifier import format_mom20_alert, format_mom20_overflow_alert
-                with ThreadPoolExecutor(max_workers=1) as _ex:
-                    _fut = _ex.submit(live_signals_scanner.scan_entry_signals, True)
+                # Shared scan lock: if a user-triggered background refresh is
+                # already running (Tier-1 perf C), don't double-fetch yfinance.
+                # Wait for it to finish, then read the now-fresh cache.
+                global live_signals_refresh_in_progress
+                with live_signals_refresh_lock:
+                    user_scan_running = live_signals_refresh_in_progress
+                    if not user_scan_running:
+                        live_signals_refresh_in_progress = True
+
+                if user_scan_running:
+                    print("[ETF scheduler] Mom20 — user-triggered scan in flight, waiting…")
+                    import time as _t_wait
+                    waited = 0
+                    while waited < 180:
+                        _t_wait.sleep(2)
+                        waited += 2
+                        with live_signals_refresh_lock:
+                            if not live_signals_refresh_in_progress:
+                                break
+                    # Read the freshly-updated cache instead of re-scanning
+                    mom20_result = live_signals_scanner.scan_entry_signals(force_refresh=False)
+                else:
                     try:
-                        mom20_result = _fut.result(timeout=180)
-                    except _FutTimeout:
-                        raise RuntimeError("scan_entry_signals() timed out after 3 minutes")
+                        with ThreadPoolExecutor(max_workers=1) as _ex:
+                            _fut = _ex.submit(live_signals_scanner.scan_entry_signals, True)
+                            try:
+                                mom20_result = _fut.result(timeout=180)
+                            except _FutTimeout:
+                                raise RuntimeError("scan_entry_signals() timed out after 3 minutes")
+                    finally:
+                        with live_signals_refresh_lock:
+                            live_signals_refresh_in_progress = False
+
                 _persist_mom20_ranks_to_users(mom20_result)
 
                 # Mom20 top-40 — dedup by ticker+score (rounded 1dp)
