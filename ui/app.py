@@ -2669,6 +2669,47 @@ def api_delete_user(user_id):
 
 # ── Mom20 sector ranking (shared, no user) ────────────────────────────────────
 
+@app.route("/api/portfolio-users/<user_id>/mom20-bootstrap", methods=["GET"])
+def api_mom20_bootstrap(user_id):
+    """Single round-trip endpoint: returns basket, performance, sector
+    ranking, and sector map for the Mom20 page in one shot. Internally
+    dispatches the four existing endpoints in parallel via the Flask test
+    client + a 4-worker thread pool. Saves 3× HTTP round-trip overhead
+    (~50-100ms on EC2) and gives the page an atomic snapshot.
+
+    Frontend should prefer this over the four individual fetches; the
+    individual endpoints stay live as fallbacks."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _dispatch(path):
+        try:
+            with app.test_client() as client:
+                r = client.get(path)
+                return r.get_json()
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    paths = {
+        "basket":         f"/api/portfolio-users/{user_id}/mom20-basket",
+        "performance":    f"/api/portfolio-users/{user_id}/mom20-performance",
+        "sector_ranking": "/api/sector-ranking",
+        "sector_map":     "/api/sector-map",
+    }
+    results = {}
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        futures = {key: ex.submit(_dispatch, p) for key, p in paths.items()}
+        for key, fut in futures.items():
+            try:
+                results[key] = fut.result(timeout=30)
+            except Exception as e:
+                results[key] = {"success": False, "error": f"timeout/error: {e}"}
+
+    return jsonify({"success": True, **results})
+
+
 @app.route("/api/sector-ranking", methods=["GET"])
 def api_sector_ranking():
     """Today's Phase 1 sector Z-score ranking (19 sectors). 15-min TTL."""

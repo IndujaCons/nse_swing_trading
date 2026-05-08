@@ -7918,10 +7918,46 @@ function mom20OnUserChange() {
     if (histBtn) histBtn.style.display = 'inline';
     _mom20HistoryLoaded = false;
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
-    mom20EnsureSectorMap();
-    mom20LoadBasket();
-    mom20LoadPerformance();
-    mom20LoadSectorRanking();
+    // Single bootstrap fetch (Tier-1 perf D) — server runs basket /
+    // performance / sector ranking / sector map in parallel and returns
+    // them in one round-trip. Fall back to the four individual fetches
+    // if the bootstrap endpoint fails for any reason.
+    mom20LoadBootstrap();
+}
+
+async function mom20LoadBootstrap() {
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) return;
+    try {
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-bootstrap`);
+        const d = await r.json();
+        if (!d.success) throw new Error(d.error || 'bootstrap failed');
+
+        // Sector map first — other render paths depend on it.
+        if (d.sector_map?.success && d.sector_map.map) {
+            _mom20SectorMap = d.sector_map.map;
+        }
+        // Basket
+        if (d.basket?.success) {
+            _mom20BasketData = d.basket;
+            _renderMom20Basket(d.basket);
+            mom20SeedLoad();
+        }
+        // Performance (tracker)
+        if (d.performance?.success) {
+            mom20RenderPerformance(d.performance);
+        }
+        // Sector ranking
+        if (d.sector_ranking?.success) {
+            mom20RenderSectorRanking(d.sector_ranking);
+        }
+    } catch (e) {
+        console.warn('bootstrap failed, falling back to individual fetches:', e);
+        mom20EnsureSectorMap();
+        mom20LoadBasket();
+        mom20LoadPerformance();
+        mom20LoadSectorRanking();
+    }
 }
 
 const SECTOR_LABEL = {
@@ -7956,12 +7992,23 @@ async function mom20LoadSectorRanking(force=false) {
         const url = '/api/sector-ranking' + (force ? '?refresh=1' : '');
         const r = await fetch(url);
         const d = await r.json();
-        if (!d.success) {
-            body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:11px;">Ranking unavailable</div>`;
-            if (status) status.textContent = '';
-            return;
-        }
-        const rows = (d.ranking || []).map((row) => {
+        mom20RenderSectorRanking(d);
+    } catch (e) {
+        body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:#ef5350;font-size:11px;">Error: ${e.message}</div>`;
+        if (status) status.textContent = '';
+    }
+}
+
+function mom20RenderSectorRanking(d) {
+    const body = document.getElementById('mom20-sector-rank-body');
+    const status = document.getElementById('mom20-sector-rank-status');
+    if (!body) return;
+    if (!d || !d.success) {
+        body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:11px;">Ranking unavailable</div>`;
+        if (status) status.textContent = '';
+        return;
+    }
+    const rows = (d.ranking || []).map((row) => {
             const isTop5 = row.rank <= 5;
             const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
             const colour = (v) => v >= 0 ? '#26a69a' : '#ef5350';
@@ -7975,22 +8022,18 @@ async function mom20LoadSectorRanking(force=false) {
                 <td style="padding:5px 8px;font-family:monospace;text-align:right;color:${colour(row.ret_3m)};">${fmt(row.ret_3m)}</td>
             </tr>`;
         }).join('');
-        body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
-            <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border-color);">
-                <th style="text-align:left;padding:5px 8px;font-family:monospace;">#</th>
-                <th style="text-align:left;padding:5px 8px;font-family:monospace;">Sector</th>
-                <th style="text-align:right;padding:5px 8px;font-family:monospace;">Score</th>
-                <th style="text-align:right;padding:5px 8px;font-family:monospace;">12M</th>
-                <th style="text-align:right;padding:5px 8px;font-family:monospace;">3M</th>
-            </tr></thead><tbody>${rows}</tbody></table>`;
-        if (status) {
-            const ts = d.cached_at ? new Date(d.cached_at * 1000) : null;
-            const tstr = ts ? ts.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:false}) : d.as_of;
-            status.textContent = `cached @ ${tstr}`;
-        }
-    } catch (e) {
-        body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:#ef5350;font-size:11px;">Error: ${e.message}</div>`;
-        if (status) status.textContent = '';
+    body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border-color);">
+            <th style="text-align:left;padding:5px 8px;font-family:monospace;">#</th>
+            <th style="text-align:left;padding:5px 8px;font-family:monospace;">Sector</th>
+            <th style="text-align:right;padding:5px 8px;font-family:monospace;">Score</th>
+            <th style="text-align:right;padding:5px 8px;font-family:monospace;">12M</th>
+            <th style="text-align:right;padding:5px 8px;font-family:monospace;">3M</th>
+        </tr></thead><tbody>${rows}</tbody></table>`;
+    if (status) {
+        const ts = d.cached_at ? new Date(d.cached_at * 1000) : null;
+        const tstr = ts ? ts.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:false}) : d.as_of;
+        status.textContent = `cached @ ${tstr}`;
     }
 }
 
@@ -8073,6 +8116,14 @@ async function mom20LoadPerformance(live=false) {
         if (status) status.textContent = 'Load failed — try Refresh';
         return;
     }
+    mom20RenderPerformance(d, live);
+}
+
+// Pure render path. Used by mom20LoadPerformance (after fetch) and by
+// mom20LoadBootstrap (when a preloaded perf payload arrives via the
+// /api/mom20-bootstrap single round-trip).
+function mom20RenderPerformance(d, live=false) {
+    const status = document.getElementById('mom20-tracker-status');
     if (!d?.success) {
         if (status) status.textContent = 'Error loading holdings';
         return;
@@ -8097,7 +8148,7 @@ async function mom20LoadPerformance(live=false) {
         });
         if (touched) _renderMom20Basket(_mom20BasketData);
     }
-    if (!d.holdings.length) {
+    if (!d.holdings || !d.holdings.length) {
         if (status) status.textContent = 'No holdings — upload trade book to start tracking';
         const tbody = document.getElementById('mom20-tracker-tbody');
         if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
