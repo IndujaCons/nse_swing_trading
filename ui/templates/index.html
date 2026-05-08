@@ -2409,7 +2409,7 @@
                 <div id="mom20-tracker-card" style="display:none;margin-bottom:20px;">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
-                        <button onclick="mom20LivePricesAndBasket()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
+                        <button id="mom20-live-prices-btn" onclick="mom20LivePricesAndBasket()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
                         <span id="mom20-tracker-status" style="font-size:10px;color:var(--text-muted);"></span>
                     </div>
                     <!-- Summary strip -->
@@ -7981,9 +7981,32 @@ async function mom20LoadSectorRanking(force=false) {
 // against the latest signals cache FIRST, then overlays fresh LTPs on top. Without
 // this two-step flow, a stock whose rank dropped past 40 (e.g. POWERGRID 61)
 // stayed in 'holds' because _mom20BasketData was cached from the initial load.
+//
+// Re-entrancy guard + visual disabled state: the button looked "unclickable"
+// because a second click while the first fetch was still in-flight got queued
+// silently behind yfinance, with no UI feedback. Now the button greys out and
+// ignores extra clicks until the chain finishes.
+let _mom20LiveBusy = false;
 async function mom20LivePricesAndBasket() {
-    await mom20LoadBasket();
-    await mom20LoadPerformance(true);
+    if (_mom20LiveBusy) return;
+    _mom20LiveBusy = true;
+    const btn = document.getElementById('mom20-live-prices-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'wait';
+    }
+    try {
+        await mom20LoadBasket();
+        await mom20LoadPerformance(true);
+    } finally {
+        _mom20LiveBusy = false;
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor = 'pointer';
+        }
+    }
 }
 
 // Ticker → primary_sector cache, fetched once. Used by the Tracker, Entries,
