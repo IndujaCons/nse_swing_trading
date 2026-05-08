@@ -461,18 +461,14 @@ class LiveSignalsEngine:
         # Now: chunked yf.download(group_by='ticker', threads=True) — emits
         # progress between chunks so the UI never freezes at 0/200, and
         # smaller chunks are less likely to trigger Yahoo throttling on EC2.
-        # Progress bar: fetch fills 0 → total/2, compute fills total/2 → total
-        # so the bar is monotonic and looks like one scan, not two.
         CHUNK_SIZE = 25
         yf_tickers = [f"{t}.NS" for t in tickers]
         bulk_data = {}  # {yf_sym: per-ticker OHLCV DataFrame}
-        _half = total // 2  # bar position where fetch ends and compute begins
 
         for chunk_start in range(0, len(yf_tickers), CHUNK_SIZE):
             chunk = yf_tickers[chunk_start:chunk_start + CHUNK_SIZE]
             if progress_callback:
-                progress_callback((chunk_start * _half) // max(total, 1),
-                                  total, "fetching prices…")
+                progress_callback(chunk_start, total, "fetching prices…")
             try:
                 chunk_df = yf.download(chunk, start=daily_start, end=end_date,
                                        progress=False, auto_adjust=True,
@@ -515,8 +511,7 @@ class LiveSignalsEngine:
 
         for idx, ticker in enumerate(tickers):
             if progress_callback:
-                progress_callback(_half + ((idx + 1) * _half) // max(total, 1),
-                                  total, ticker)
+                progress_callback(idx + 1, total, ticker)
 
             daily = _slice_daily(f"{ticker}.NS")
 
