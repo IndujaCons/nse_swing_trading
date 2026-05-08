@@ -4092,6 +4092,9 @@
             }
         }
 
+        // Stale-while-revalidate refresh (Tier-1 perf C). The Refresh click
+        // now returns instantly with cached data, then a background scan runs
+        // and the page auto-updates when it's done. Never blocks the UI.
         async function refreshLiveSignalsData() {
             if (isHistoricalScan()) {
                 return scanForDate(lsScanDate);
@@ -4101,67 +4104,88 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            ['ls-j-panel', 'ls-t-panel', 'ls-r-panel', 'ls-mw-panel', 'ls-rs-panel', 'ls-wt-panel', 'ls-mom20-panel', 'ls-picks-panel'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.innerHTML = `
-                        <div class="loading-container">
-                            <div class="loader"></div>
-                            <span>Scanning...</span>
-                            <span class="progress-text"></span>
-                        </div>
-                    `;
+            // Phase 1: kick off the scan; the response is the *cached* data
+            // returned immediately. Render it so the page stays populated.
+            try {
+                const res = await fetch('/api/live-signals/refresh', { method: 'POST' });
+                const d = await res.json();
+                if (d.success && d.data) {
+                    try {
+                        renderEntrySignals(d.data);
+                        updateLastUpdated(d.data.last_updated, d.cache_age_minutes ?? 0);
+                        liveSignalsDataLoaded = true;
+                    } catch (renderErr) {
+                        console.error('Render (cached) error:', renderErr);
+                    }
+                    loadLivePositions();
+                    loadExitSignals();
                 }
-            });
+                if (!d.in_progress) {
+                    // Server didn't actually start a scan (e.g. cached returned alone).
+                    // Treat as already up-to-date.
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                    showToast('Up to date', 'success');
+                    return;
+                }
+                showToast(d.already_running
+                    ? 'Refresh already running — showing cached data'
+                    : 'Refresh started — current data shown, fresh data coming…',
+                    'info');
+            } catch (e) {
+                console.error('Live signals refresh error:', e);
+                showToast('Refresh failed: ' + e.message, 'error');
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                loadLiveSignalsData();
+                return;
+            }
 
+            // Phase 2: poll progress in the background. When the scan finishes,
+            // GET the fresh data and re-render.
+            const lastUpd = document.getElementById('last-updated');
+            const startTs = Date.now();
             const progressInterval = setInterval(async () => {
                 try {
-                    const res = await fetch('/api/live-signals/progress');
-                    const progress = await res.json();
+                    const pr = await fetch('/api/live-signals/progress');
+                    const progress = await pr.json();
                     if (progress.in_progress && progress.total > 0) {
                         const pct = Math.round((progress.current / progress.total) * 100);
                         const tk = progress.ticker || '';
-                        const text = tk
-                            ? `${tk} ${progress.current}/${progress.total} (${pct}%)`
-                            : `${progress.current}/${progress.total} (${pct}%)`;
-                        document.querySelectorAll('#live-signals-panels .progress-text').forEach(el => {
-                            el.textContent = text;
-                        });
+                        if (lastUpd) {
+                            lastUpd.textContent = tk
+                                ? `🔄 ${tk} ${progress.current}/${progress.total} (${pct}%)`
+                                : `🔄 ${progress.current}/${progress.total} (${pct}%)`;
+                        }
                     }
-                } catch (e) {}
-            }, 500);
-
-            try {
-                const res = await fetch('/api/live-signals/refresh', { method: 'POST' });
-                const data = await res.json();
-                clearInterval(progressInterval);
-
-                if (data.success) {
-                    try {
-                        renderEntrySignals(data.data);
-                        updateLastUpdated(data.data.last_updated, 0);
-                        liveSignalsDataLoaded = true;
-                        showToast('Live signals refreshed!', 'success');
-                    } catch (renderErr) {
-                        console.error('Render error:', renderErr);
-                        showToast('Scan OK but render failed: ' + renderErr.message, 'error');
+                    if (!progress.in_progress) {
+                        clearInterval(progressInterval);
+                        // Scan finished — fetch fresh data and re-render
+                        try {
+                            const fr = await fetch('/api/live-signals/data');
+                            const fresh = await fr.json();
+                            if (fresh.success && fresh.data) {
+                                renderEntrySignals(fresh.data);
+                                updateLastUpdated(fresh.data.last_updated, 0);
+                                showToast('Fresh data loaded', 'success');
+                            }
+                        } catch (e) {
+                            console.error('Fresh data fetch failed:', e);
+                        }
+                        loadLivePositions();
+                        loadExitSignals();
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
                     }
-                    // Also refresh positions (LTP/P&L) and exits
-                    loadLivePositions();
-                    loadExitSignals();
-                } else {
-                    showToast(data.error || 'Refresh failed', 'error');
-                    loadLiveSignalsData();
-                }
-            } catch (e) {
+                } catch (e) { /* swallow polling errors */ }
+            }, 1000);
+
+            // Safety: stop polling after 5 minutes regardless
+            setTimeout(() => {
                 clearInterval(progressInterval);
-                console.error('Live signals refresh error:', e);
-                showToast('Refresh failed: ' + e.message, 'error');
-                loadLiveSignalsData();
-            } finally {
                 btn.classList.remove('loading');
                 btn.disabled = false;
-            }
+            }, 5 * 60 * 1000);
         }
 
         function isHistoricalScan() { return lsScanDate !== null; }

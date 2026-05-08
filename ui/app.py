@@ -318,47 +318,71 @@ def _fetch_zerodha_ltp(tickers):
 
 @app.route("/api/live-signals/refresh", methods=["POST"])
 def refresh_live_signals():
-    """Force re-scan J+T entry signals."""
+    """Stale-while-revalidate refresh (Tier-1 perf C).
+
+    Returns the current cached scan **immediately** (sub-100ms) and kicks
+    off a background thread to do the fresh scan. The frontend polls
+    /api/live-signals/progress until in_progress=False, then GETs
+    /api/live-signals/data for the fresh result. This way the click never
+    blocks the UI on a 30-60s yfinance fetch.
+    """
     global live_signals_refresh_in_progress
 
-    with live_signals_refresh_lock:
-        if live_signals_refresh_in_progress:
-            return jsonify({
-                "success": False,
-                "error": "Refresh already in progress"
-            }), 409
-
-        live_signals_refresh_in_progress = True
-
+    # Read whatever's in cache right now — return it as the immediate response
+    # so the page can re-render instantly while the fresh scan runs.
+    cached_data = None
+    cache_age = None
     try:
-        # Fetch real-time LTP from Zerodha if connected
-        from data.live_signals_engine import get_scan_tickers
-        from config.settings import load_config
-        universe = load_config().get("live_signals_universe", 50)
-        scan_tickers = get_scan_tickers(universe)
+        cached_data = live_signals_scanner.scan_entry_signals(force_refresh=False)
+        cache_age = live_signals_scanner.get_cache_age_minutes()
+    except Exception:
+        pass
 
-        ltp_map = _fetch_zerodha_ltp(scan_tickers)
+    with live_signals_refresh_lock:
+        already_running = live_signals_refresh_in_progress
+        if not already_running:
+            live_signals_refresh_in_progress = True
 
-        data = live_signals_scanner.scan_entry_signals(
-            force_refresh=True,
-            progress_callback=update_live_signals_progress,
-            ltp_map=ltp_map
-        )
-        _persist_mom20_ranks_to_users(data)
+    if not already_running:
+        # Spawn the actual scan in a daemon thread; the request returns
+        # without waiting for it. Frontend polls /api/live-signals/progress.
+        def _bg_refresh():
+            global live_signals_refresh_in_progress
+            try:
+                from data.live_signals_engine import get_scan_tickers
+                from config.settings import load_config
+                universe = load_config().get("live_signals_universe", 50)
+                scan_tickers = get_scan_tickers(universe)
+                ltp_map = _fetch_zerodha_ltp(scan_tickers)
 
-        return jsonify({
-            "success": True,
-            "data": data,
-            "message": f"Live signals refreshed {'with Zerodha real-time prices' if ltp_map else 'with yfinance data'}"
-        })
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-    finally:
-        with live_signals_refresh_lock:
-            live_signals_refresh_in_progress = False
+                data = live_signals_scanner.scan_entry_signals(
+                    force_refresh=True,
+                    progress_callback=update_live_signals_progress,
+                    ltp_map=ltp_map
+                )
+                _persist_mom20_ranks_to_users(data)
+                print(f"[refresh-bg] scan done — "
+                      f"{len(data.get('mom20_signals', []))} mom20 signals")
+            except Exception as e:
+                print(f"[refresh-bg] scan failed: {e}")
+            finally:
+                with live_signals_refresh_lock:
+                    live_signals_refresh_in_progress = False
+
+        threading.Thread(target=_bg_refresh, daemon=True,
+                         name="live-signals-refresh").start()
+
+    return jsonify({
+        "success":           True,
+        "data":              cached_data,
+        "cache_age_minutes": round(cache_age, 1) if cache_age else None,
+        "cached":            True,
+        "in_progress":       True,
+        "already_running":   already_running,
+        "message":           ("Refresh in progress — showing cached data"
+                              if already_running
+                              else "Refresh started in background"),
+    })
 
 
 @app.route("/api/live-signals/scan-date", methods=["POST"])
