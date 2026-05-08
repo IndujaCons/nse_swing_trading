@@ -435,6 +435,9 @@ class LiveSignalsEngine:
         n50_var = 0.0
         if not nifty_raw.empty and len(nifty_raw) >= 253:
             n50_close_series = nifty_raw["Close"].astype(float)
+            # Strip tz so this index aligns with bulk-fetched (tz-naive) stock series
+            if n50_close_series.index.tz is not None:
+                n50_close_series.index = n50_close_series.index.tz_localize(None)
             n50_ret_series = n50_close_series.pct_change().iloc[-252:]  # date-indexed returns
             n50_market_rets = n50_ret_series.values
             n50_rm = float(np.mean(n50_market_rets))
@@ -458,14 +461,18 @@ class LiveSignalsEngine:
         # Now: chunked yf.download(group_by='ticker', threads=True) — emits
         # progress between chunks so the UI never freezes at 0/200, and
         # smaller chunks are less likely to trigger Yahoo throttling on EC2.
+        # Progress bar: fetch fills 0 → total/2, compute fills total/2 → total
+        # so the bar is monotonic and looks like one scan, not two.
         CHUNK_SIZE = 25
         yf_tickers = [f"{t}.NS" for t in tickers]
         bulk_data = {}  # {yf_sym: per-ticker OHLCV DataFrame}
+        _half = total // 2  # bar position where fetch ends and compute begins
 
         for chunk_start in range(0, len(yf_tickers), CHUNK_SIZE):
             chunk = yf_tickers[chunk_start:chunk_start + CHUNK_SIZE]
             if progress_callback:
-                progress_callback(chunk_start, total, "fetching prices…")
+                progress_callback((chunk_start * _half) // max(total, 1),
+                                  total, "fetching prices…")
             try:
                 chunk_df = yf.download(chunk, start=daily_start, end=end_date,
                                        progress=False, auto_adjust=True,
@@ -491,18 +498,25 @@ class LiveSignalsEngine:
 
         def _slice_daily(yf_sym):
             """Pull a single ticker's OHLCV from the bulk dict; fall back to a
-            per-ticker fetch if the chunk missed it."""
+            per-ticker fetch if the chunk missed it. Always returns tz-naive
+            so its index intersects cleanly with the (now tz-naive) Nifty 50
+            reference series — Mom20 beta / Alpha20 / overflow all depend on
+            this alignment."""
             df = bulk_data.get(yf_sym, pd.DataFrame())
             if df.empty or len(df) < 210:
                 try:
                     df = yf.Ticker(yf_sym).history(start=daily_start, end=end_date)
                 except Exception:
                     df = pd.DataFrame()
+            if not df.empty and df.index.tz is not None:
+                df = df.copy()
+                df.index = df.index.tz_localize(None)
             return df
 
         for idx, ticker in enumerate(tickers):
             if progress_callback:
-                progress_callback(idx + 1, total, ticker)
+                progress_callback(_half + ((idx + 1) * _half) // max(total, 1),
+                                  total, ticker)
 
             daily = _slice_daily(f"{ticker}.NS")
 
