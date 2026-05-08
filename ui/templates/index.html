@@ -1431,19 +1431,19 @@
     <div class="container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="section" id="zerodha-section">
+            <!-- Zerodha sidebar block hidden — user opted out of Kite Connect
+                 (₹500/mo). Underlying #user-cards-container and #trade-as-select
+                 elements are still in the DOM so existing JS user-selection
+                 logic continues to work; only the visual section is gone. -->
+            <div class="section" id="zerodha-section" style="display:none;">
                 <div class="section-title">Zerodha</div>
-                <div id="user-cards-container">
-                    <!-- Per-user cards rendered by JS -->
-                </div>
+                <div id="user-cards-container"></div>
                 <div style="margin-top:8px;">
                     <label style="font-size:11px;color:var(--text-muted);">Trade as:</label>
                     <select class="setting-select" id="trade-as-select" style="width:100%;margin-top:2px;">
                     </select>
                 </div>
             </div>
-
-            <div class="divider"></div>
 
             <div class="section hidden" id="watchlist-settings">
                 <div class="section-title">Watchlist</div>
