@@ -8451,6 +8451,12 @@ async function mom20LoadBasket() {
 }
 
 function _renderMom20Basket(d) {
+    // Ensure the basket section is visible — mom20LoadBasket() used to do
+    // this implicitly, but the bootstrap (perf D) path skips that wrapper
+    // and calls _renderMom20Basket directly, leaving the section hidden.
+    const _section = document.getElementById('mom20-basket-section');
+    if (_section) _section.style.display = 'block';
+
     const fmt  = n => '₹' + Math.round(n).toLocaleString('en-IN');
     const fmtP = n => '₹' + (n||0).toLocaleString('en-IN', {minimumFractionDigits:0, maximumFractionDigits:2});
 
