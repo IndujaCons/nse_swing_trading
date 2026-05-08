@@ -461,12 +461,15 @@ class LiveSignalsEngine:
         # Now: chunked yf.download(group_by='ticker', threads=True) — emits
         # progress between chunks so the UI never freezes at 0/200, and
         # smaller chunks are less likely to trigger Yahoo throttling on EC2.
-        # Each chunk is capped at 45s via ThreadPoolExecutor so a single hung
-        # ticker (Yahoo throttling, network blip) doesn't freeze the whole
-        # scan — abandoned chunks fall through to the per-ticker fallback.
+        # Each chunk is capped via ThreadPoolExecutor so a single hung ticker
+        # (Yahoo throttling, network blip) doesn't freeze the whole scan —
+        # abandoned chunks fall through to the per-ticker fallback.
+        # Tuning: 15-ticker chunks + 25s cap chosen because a 25-ticker burst
+        # was triggering Yahoo throttle on EC2; smaller batches keep the UI
+        # progress bar moving every 3-5s and bail in 25s rather than 45s.
         from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
-        CHUNK_SIZE = 25
-        CHUNK_TIMEOUT = 45  # seconds
+        CHUNK_SIZE = 15
+        CHUNK_TIMEOUT = 25  # seconds
         yf_tickers = [f"{t}.NS" for t in tickers]
         bulk_data = {}  # {yf_sym: per-ticker OHLCV DataFrame}
 
