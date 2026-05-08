@@ -81,7 +81,39 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     # reconstitution) → exit with a clearer reason.
     fallback_ranks = unfiltered_ranks or {}
 
+    # ETF tickers (e.g. MODEFENCE, HEALTHIETF) bought via the Q2 sector
+    # top-up land in current_tickers after a tradebook sync but are NOT in
+    # the N200 rank maps — without this branch they'd be misclassified as
+    # "removed from Nifty 200". Exit semantics for ETFs: hold while the
+    # underlying sector is in today's top-5; exit when it drops past 5.
+    from data.sector_etf_map import KNOWN_ETF_SYMBOLS, ETF_TO_SECTOR
+    top5_set = set(top5_sectors or [])
+
     for ticker in current_tickers:
+        if ticker in KNOWN_ETF_SYMBOLS:
+            sec = ETF_TO_SECTOR.get(ticker)
+            price = price_map.get(ticker) or (all_prices or {}).get(ticker, 0)
+            qty = current_qty_map.get(ticker, 0)
+            if sec and sec in top5_set:
+                holds.append({
+                    "ticker":         ticker,
+                    "rank":           "ETF",
+                    "price":          price,
+                    "is_etf":         True,
+                    "etf_for_sector": sec,
+                })
+            else:
+                exits.append({
+                    "ticker":         ticker,
+                    "rank":           "ETF",
+                    "current_price":  price,
+                    "qty":            qty,
+                    "reason":         f"sector {sec or '?'} dropped below top-5",
+                    "is_etf":         True,
+                    "etf_for_sector": sec,
+                })
+            continue
+
         rank = rank_map.get(ticker)
         if rank is None:
             rank = fallback_ranks.get(ticker)

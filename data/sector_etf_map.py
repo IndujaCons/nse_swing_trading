@@ -32,3 +32,10 @@ SECTOR_TO_ETF = {
     "NIFTY MNC":               None,
     "NIFTY FIN SERVICE":       None,
 }
+
+# Derived helpers used by data/mom20_basket.py to detect held ETF tickers
+# and route them through ETF-specific exit semantics (auto-exit when their
+# sector drops below top-5) instead of the stock "removed from Nifty 200"
+# branch. Single source of truth — derived from SECTOR_TO_ETF above.
+KNOWN_ETF_SYMBOLS = {v[0] for v in SECTOR_TO_ETF.values() if v}
+ETF_TO_SECTOR     = {v[0]: k for k, v in SECTOR_TO_ETF.items() if v}

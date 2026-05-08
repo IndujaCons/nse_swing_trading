@@ -2588,9 +2588,14 @@ def api_mom20_basket_preview(user_id):
     # ETF top-up inputs (Q2): today's top-5 sectors + sector classifier + ETF prices
     _top5     = _get_top5_sectors()
     _sec_map  = _load_sector_map()
-    from data.sector_etf_map import SECTOR_TO_ETF
+    from data.sector_etf_map import SECTOR_TO_ETF, KNOWN_ETF_SYMBOLS
     _need_etfs = [SECTOR_TO_ETF[s][0] for s in _top5
                   if SECTOR_TO_ETF.get(s)]
+    # Also fetch LTPs for any *already-held* ETFs so the Tracker / Exit row
+    # shows a real price even after the ETF's sector drops out of top-5.
+    _held_etfs = [item["ticker"] for item in portfolio.get("basket", [])
+                  if item.get("ticker") in KNOWN_ETF_SYMBOLS]
+    _need_etfs = list(set(_need_etfs + _held_etfs))
     _etf_prices = _fetch_etf_ltp(_need_etfs) if _need_etfs else {}
     basket_data = generate_basket(user, signals, portfolio,
                                   unfiltered_ranks=unfiltered_ranks,
@@ -2640,9 +2645,14 @@ def api_mom20_basket_download(user_id):
     # ETF top-up inputs (Q2): today's top-5 sectors + sector classifier + ETF prices
     _top5     = _get_top5_sectors()
     _sec_map  = _load_sector_map()
-    from data.sector_etf_map import SECTOR_TO_ETF
+    from data.sector_etf_map import SECTOR_TO_ETF, KNOWN_ETF_SYMBOLS
     _need_etfs = [SECTOR_TO_ETF[s][0] for s in _top5
                   if SECTOR_TO_ETF.get(s)]
+    # Also fetch LTPs for any *already-held* ETFs so the Tracker / Exit row
+    # shows a real price even after the ETF's sector drops out of top-5.
+    _held_etfs = [item["ticker"] for item in portfolio.get("basket", [])
+                  if item.get("ticker") in KNOWN_ETF_SYMBOLS]
+    _need_etfs = list(set(_need_etfs + _held_etfs))
     _etf_prices = _fetch_etf_ltp(_need_etfs) if _need_etfs else {}
     basket_data = generate_basket(user, signals, portfolio,
                                   unfiltered_ranks=unfiltered_ranks,
