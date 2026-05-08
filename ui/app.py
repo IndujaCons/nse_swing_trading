@@ -2385,38 +2385,121 @@ from data.mom20_basket import generate_basket, to_zerodha_csv, parse_trade_book,
 ensure_all_dirs()
 
 
+# ── Disk-backed caches (Tier-1 perf, plan item A) ────────────────────────────
+# Three caches: sector ranking, ETF LTPs, sector map. All disk-persisted so a
+# `systemctl restart` doesn't cold-start the user's first click. Caches are
+# *also* pre-warmed at startup (see _prewarm_caches in run_server).
+_CACHE_DIR_A = DATA_STORE_PATH
+_SECTOR_RANK_CACHE_FILE = os.path.join(_CACHE_DIR_A, "sector_ranking_cache.json")
+_ETF_LTP_CACHE_FILE     = os.path.join(_CACHE_DIR_A, "etf_ltp_cache.json")
+
+# Sector ranking — 15-min TTL.
+_SECTOR_RANK_CACHE = {"ranking": None, "timestamp": 0}
+
+# ETF LTP — per-symbol 5-min TTL (LTPs change intraday but a few minutes of
+# staleness is fine for our use cases).
+_ETF_LTP_CACHE = {}        # {symbol: (price, fetched_at)}
+_ETF_LTP_TTL   = 300
+
+# Sector map — rarely changes (only on N200 reconstitution / our manual edits)
+# so cache forever once loaded.
+_SECTOR_MAP_CACHE = None
+
+
+def _load_sector_rank_disk():
+    """Load sector_ranking_cache.json into memory if present."""
+    try:
+        with open(_SECTOR_RANK_CACHE_FILE) as f:
+            d = json.load(f)
+        if d.get("ranking"):
+            _SECTOR_RANK_CACHE["ranking"]   = d["ranking"]
+            _SECTOR_RANK_CACHE["timestamp"] = float(d.get("timestamp", 0))
+    except Exception:
+        pass
+
+
+def _save_sector_rank_disk():
+    try:
+        os.makedirs(_CACHE_DIR_A, exist_ok=True)
+        with open(_SECTOR_RANK_CACHE_FILE, "w") as f:
+            json.dump({"ranking":   _SECTOR_RANK_CACHE["ranking"],
+                       "timestamp": _SECTOR_RANK_CACHE["timestamp"]}, f)
+    except Exception as e:
+        print(f"[cache] sector rank disk save failed: {e}")
+
+
+def _load_etf_ltp_disk():
+    """Load etf_ltp_cache.json into memory if present."""
+    try:
+        with open(_ETF_LTP_CACHE_FILE) as f:
+            d = json.load(f)
+        for sym, val in d.items():
+            _ETF_LTP_CACHE[sym] = (float(val.get("price", 0)),
+                                   float(val.get("ts", 0)))
+    except Exception:
+        pass
+
+
+def _save_etf_ltp_disk():
+    try:
+        os.makedirs(_CACHE_DIR_A, exist_ok=True)
+        out = {sym: {"price": p, "ts": ts}
+               for sym, (p, ts) in _ETF_LTP_CACHE.items()}
+        with open(_ETF_LTP_CACHE_FILE, "w") as f:
+            json.dump(out, f)
+    except Exception as e:
+        print(f"[cache] ETF LTP disk save failed: {e}")
+
+
 def _fetch_etf_ltp(symbols):
     """Fetch live close for a list of NSE ETF symbols (no .NS suffix needed
     in input). Returns {symbol: price}, missing symbols simply absent.
-    Uses yfinance 1-day intraday."""
+    Cached per-symbol for 5 min in-memory + disk-persisted."""
     if not symbols:
         return {}
+    import time as _t
+    now = _t.time()
+    out, missing = {}, []
+    for s in symbols:
+        cached = _ETF_LTP_CACHE.get(s)
+        if cached and (now - cached[1]) < _ETF_LTP_TTL and cached[0] > 0:
+            out[s] = cached[0]
+        else:
+            missing.append(s)
+
+    if not missing:
+        return out
+
     import yfinance as yf
-    yf_syms = [s if "." in s else f"{s}.NS" for s in symbols]
+    yf_syms = [s if "." in s else f"{s}.NS" for s in missing]
     try:
         df = yf.download(yf_syms, period="5d", progress=False,
                          auto_adjust=True, group_by="ticker",
                          threads=True, timeout=30)
     except Exception:
-        return {}
-    out = {}
-    for orig, ysym in zip(symbols, yf_syms):
+        return out  # serve whatever we already have cached
+
+    fetched_any = False
+    for orig, ysym in zip(missing, yf_syms):
         try:
             s = (df[ysym]["Close"] if len(yf_syms) > 1 else df["Close"]).dropna()
             if len(s):
-                out[orig] = float(s.iloc[-1])
+                price = float(s.iloc[-1])
+                out[orig] = price
+                _ETF_LTP_CACHE[orig] = (price, now)
+                fetched_any = True
         except Exception:
             pass
+
+    if fetched_any:
+        _save_etf_ltp_disk()
     return out
-
-
-# Sector ranking cache (full ranking + derived top-5). 15-min TTL.
-_SECTOR_RANK_CACHE = {"ranking": None, "timestamp": 0}
 
 
 def _get_sector_ranking(force_refresh=False):
     """Return today's full Phase 1 sector Z-score ranking (list of 19 dicts).
-    15-min in-memory TTL — same shape as live signals cache."""
+    15-min TTL; backed by disk cache so a restart doesn't cold-start the
+    first user click."""
     import time as _t
     if (not force_refresh and _SECTOR_RANK_CACHE["ranking"]
             and (_t.time() - _SECTOR_RANK_CACHE["timestamp"]) < 900):
@@ -2424,12 +2507,15 @@ def _get_sector_ranking(force_refresh=False):
     try:
         from data.score_live_sectors import score_live_sectors
         ranking = score_live_sectors()
-        _SECTOR_RANK_CACHE["ranking"] = ranking
-        _SECTOR_RANK_CACHE["timestamp"] = _t.time()
+        if ranking:
+            _SECTOR_RANK_CACHE["ranking"]   = ranking
+            _SECTOR_RANK_CACHE["timestamp"] = _t.time()
+            _save_sector_rank_disk()
         return ranking
     except Exception as e:
         print(f"[mom20] sector ranking failed: {e}")
-        return []
+        # If compute failed but we have stale disk data, serve it.
+        return _SECTOR_RANK_CACHE["ranking"] or []
 
 
 def _get_top5_sectors(force_refresh=False):
@@ -2438,16 +2524,47 @@ def _get_top5_sectors(force_refresh=False):
 
 
 def _load_sector_map():
-    """ticker → primary_sector for current N200 (from Phase 2 sector map CSV)."""
+    """ticker → primary_sector for current N200 (Phase 2 sector map CSV).
+    Cached for the lifetime of the process — file is small and changes only
+    on N200 reconstitution or manual sector-map updates."""
+    global _SECTOR_MAP_CACHE
+    if _SECTOR_MAP_CACHE is not None:
+        return _SECTOR_MAP_CACHE
     import csv as _csv
     path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         "nse_const", "nifty200_sector_map.csv")
     try:
         with open(path) as f:
-            return {row["ticker"]: row["primary_sector"]
-                    for row in _csv.DictReader(f)}
+            _SECTOR_MAP_CACHE = {row["ticker"]: row["primary_sector"]
+                                 for row in _csv.DictReader(f)}
     except Exception:
-        return {}
+        _SECTOR_MAP_CACHE = {}
+    return _SECTOR_MAP_CACHE
+
+
+def _prewarm_caches():
+    """Background thread: hydrate from disk + refresh in-memory caches so the
+    first user click after restart is fast. Started from run_server() as a
+    daemon thread so it doesn't block Flask boot."""
+    import time as _t
+    _t.sleep(3)  # let Flask finish binding the port
+    try:
+        print("[prewarm] hydrating disk caches…")
+        _load_sector_rank_disk()
+        _load_etf_ltp_disk()
+        _load_sector_map()
+        # If disk cache is missing/old, do one fresh compute.
+        ranking = _get_sector_ranking(force_refresh=False)
+        from data.sector_etf_map import SECTOR_TO_ETF, KNOWN_ETF_SYMBOLS
+        top5 = [r["symbol"] for r in ranking[:5]]
+        etf_syms = list({SECTOR_TO_ETF[s][0] for s in top5
+                         if SECTOR_TO_ETF.get(s)} | KNOWN_ETF_SYMBOLS)
+        if etf_syms:
+            _fetch_etf_ltp(etf_syms)
+        print(f"[prewarm] done — {len(ranking)} sectors, "
+              f"{len(_ETF_LTP_CACHE)} ETFs cached")
+    except Exception as e:
+        print(f"[prewarm] error: {e}")
 
 
 def _load_user_live_prices(user_id):
@@ -3713,6 +3830,10 @@ def run_server():
     # Start ETF signal scheduler (daemon so it exits with the main process)
     scheduler_thread = threading.Thread(target=_etf_signal_scheduler, daemon=True, name="etf-scheduler")
     scheduler_thread.start()
+
+    # Pre-warm disk-backed caches so the first user click is fast (plan A).
+    prewarm_thread = threading.Thread(target=_prewarm_caches, daemon=True, name="cache-prewarm")
+    prewarm_thread.start()
 
     app.run(
         host=FLASK_HOST,
