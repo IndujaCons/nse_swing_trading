@@ -453,15 +453,46 @@ class LiveSignalsEngine:
         rs63_signals = []  # RS63 satellite signals
         actual_date = None  # Track actual last trading date from data
 
+        # ── Bulk-fetch all tickers in ONE HTTP call ───────────────────────────
+        # Was: 200 serial yf.Ticker.history() calls = ~100-400s
+        # Now: one yf.download(...) batch = ~10-30s, then slice in-memory
+        if progress_callback:
+            progress_callback(0, total, "(bulk price fetch…)")
+        yf_tickers = [f"{t}.NS" for t in tickers]
+        bulk_df = None
+        try:
+            bulk_df = yf.download(yf_tickers, start=daily_start, end=end_date,
+                                  progress=False, auto_adjust=True,
+                                  group_by='ticker', threads=True)
+        except Exception as e:
+            print(f"[live_signals] bulk fetch failed: {e} — falling back to per-ticker")
+
+        def _slice_daily(yf_sym):
+            """Pull a single ticker's OHLCV out of the bulk DataFrame, with
+            per-ticker fallback if the batch missed it."""
+            df = pd.DataFrame()
+            try:
+                if bulk_df is not None and not bulk_df.empty:
+                    if isinstance(bulk_df.columns, pd.MultiIndex):
+                        if yf_sym in bulk_df.columns.get_level_values(0):
+                            df = bulk_df[yf_sym].dropna(how='all')
+                    elif len(yf_tickers) == 1:
+                        df = bulk_df.dropna(how='all')
+            except (KeyError, AttributeError):
+                pass
+            if df.empty or len(df) < 210:
+                # Per-ticker fallback for any symbol the batch couldn't resolve
+                try:
+                    df = yf.Ticker(yf_sym).history(start=daily_start, end=end_date)
+                except Exception:
+                    df = pd.DataFrame()
+            return df
+
         for idx, ticker in enumerate(tickers):
             if progress_callback:
                 progress_callback(idx + 1, total, ticker)
 
-            try:
-                daily = yf.Ticker(f"{ticker}.NS").history(
-                    start=daily_start, end=end_date)
-            except Exception:
-                continue
+            daily = _slice_daily(f"{ticker}.NS")
 
             if daily.empty or len(daily) < 210:
                 continue
