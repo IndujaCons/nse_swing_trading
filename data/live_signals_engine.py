@@ -337,6 +337,131 @@ class LiveSignalsEngine:
 
     # ==================== Entry Signal Scanning ====================
 
+    # ── Phase 3 helpers — disk-cached baseline + intraday patch ───────────────
+
+    _BASELINE_MAX_AGE_HOURS = 48  # accept yesterday's snapshot if today's hasn't run
+
+    def _try_load_cached_baseline(self, tickers):
+        """Look for a recent data_store/cache/n200_baseline_<date>.pkl.
+        Returns the loaded payload dict if usable, else None (signals the
+        caller to fall back to a full fetch).
+
+        Constraints for the cache to be 'usable':
+          • File age <= _BASELINE_MAX_AGE_HOURS (default 48h)
+          • The cached `tickers` list must be a superset of the requested set
+            (otherwise an N200 reconstitution would silently drop names).
+        """
+        import glob, pickle, time as _t
+        cache_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                 "data_store", "cache")
+        files = sorted(glob.glob(os.path.join(cache_dir, "n200_baseline_*.pkl")))
+        if not files:
+            return None
+        latest = files[-1]
+        try:
+            age_h = (_t.time() - os.path.getmtime(latest)) / 3600.0
+            if age_h > self._BASELINE_MAX_AGE_HOURS:
+                print(f"[live_signals] cached baseline {os.path.basename(latest)} "
+                      f"is {age_h:.1f}h old — falling back to full fetch")
+                return None
+            with open(latest, "rb") as f:
+                payload = pickle.load(f)
+            cached_tickers = set(payload.get("tickers", []))
+            if not set(tickers).issubset(cached_tickers):
+                missing = set(tickers) - cached_tickers
+                print(f"[live_signals] cached baseline missing {len(missing)} "
+                      f"tickers (e.g. {list(missing)[:3]}) — falling back to full fetch")
+                return None
+            print(f"[live_signals] using cached baseline "
+                  f"{os.path.basename(latest)} (age {age_h:.1f}h)")
+            return payload
+        except Exception as e:
+            print(f"[live_signals] failed to load cached baseline {latest}: {e}")
+            return None
+
+    def _apply_intraday_patch(self, cached, tickers, end_date, progress_callback=None):
+        """Take a loaded baseline and patch each ticker's latest bar with
+        today's intraday close from a single bulk yf.download(period='1d').
+        Returns (nifty_raw, bench_raw, bulk_data) — same contract as the
+        slow path so the caller is unaware of which path served the data.
+
+        If the intraday fetch fails, we still return the cached baseline
+        as-is — slightly stale data is better than no data."""
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
+        import time as _t
+
+        nifty_raw = cached.get("nifty_raw", pd.DataFrame())
+        bench_raw = cached.get("bench_raw", pd.DataFrame())
+        bulk_data = dict(cached.get("bulk_data", {}))  # shallow copy
+
+        if progress_callback:
+            progress_callback(0, len(tickers), "patching latest bar…")
+
+        # One bulk fetch for everything (200 N200 + 2 indices). period='1d'
+        # returns today's incomplete daily bar for each instrument.
+        all_syms = ["^NSEI", "^CNX200"] + [f"{t}.NS" for t in tickers]
+        intraday = None
+        t0 = _t.time()
+        try:
+            with ThreadPoolExecutor(max_workers=1) as _ex:
+                intraday = _ex.submit(
+                    lambda: yf.download(all_syms, period="1d", progress=False,
+                                        auto_adjust=True, group_by="ticker",
+                                        threads=True, timeout=15)
+                ).result(timeout=30)
+        except FutTimeout:
+            print("[live_signals] intraday patch fetch timed out — serving cached")
+            return nifty_raw, bench_raw, bulk_data
+        except Exception as e:
+            print(f"[live_signals] intraday patch failed: {e} — serving cached")
+            return nifty_raw, bench_raw, bulk_data
+
+        if intraday is None or intraday.empty:
+            return nifty_raw, bench_raw, bulk_data
+
+        def _patch(df, sym):
+            """Append/replace today's bar in df with the intraday's bar for sym."""
+            try:
+                if isinstance(intraday.columns, pd.MultiIndex):
+                    if sym not in intraday.columns.get_level_values(0):
+                        return df
+                    today_bar = intraday[sym].dropna(how="all")
+                else:
+                    today_bar = intraday.dropna(how="all")
+                if today_bar.empty:
+                    return df
+                # Strip tz to match cached series
+                if hasattr(today_bar.index, "tz") and today_bar.index.tz is not None:
+                    today_bar = today_bar.copy()
+                    today_bar.index = today_bar.index.tz_localize(None)
+                # Use the LAST row's date as today's bar
+                today_idx = today_bar.index[-1].normalize()
+                row = today_bar.iloc[-1]
+                # Build a one-row frame with the same columns as df
+                new_row = pd.DataFrame(
+                    {col: [float(row.get(col, row.get("Close", float('nan'))))]
+                     for col in df.columns},
+                    index=[today_idx])
+                # Drop any existing today bar then append
+                df = df[df.index < today_idx]
+                return pd.concat([df, new_row])
+            except Exception:
+                return df
+
+        if not nifty_raw.empty:
+            nifty_raw = _patch(nifty_raw, "^NSEI")
+        if not bench_raw.empty:
+            bench_raw = _patch(bench_raw, "^CNX200")
+        for ticker in tickers:
+            yf_sym = f"{ticker}.NS"
+            if yf_sym in bulk_data:
+                bulk_data[yf_sym] = _patch(bulk_data[yf_sym], yf_sym)
+
+        elapsed = _t.time() - t0
+        print(f"[live_signals] intraday patch applied in {elapsed:.1f}s")
+        return nifty_raw, bench_raw, bulk_data
+
+
     def _fetch_baseline(self, tickers, daily_start, end_date, progress_callback=None):
         """Fetch all baseline market data needed for signal computation.
 
@@ -346,17 +471,28 @@ class LiveSignalsEngine:
           • bench_raw — Nifty 200 daily OHLCV (RS calculations + Mom20 regime)
           • bulk_data — dict {yf_sym: per-ticker DataFrame} for the N200 universe
 
-        Implementation details:
+        Fast path (Phase 3 — intraday delta):
+          • If data_store/cache/n200_baseline_<date>.pkl exists and is recent
+            (<48h), load it and patch the latest bar of each series with a
+            small bulk yf.download(period='1d'). ~5-10s instead of 30-60s.
+          • The pkl is built by the daily cron scripts/refresh_n200_baseline.sh
+            running at 08:00 + 16:00 IST.
+
+        Slow path (fallback when the pkl is missing/stale):
           • Indices fetched via yf.Ticker().history() (single-symbol).
           • N200 universe fetched in 15-ticker chunks via yf.download() with
             group_by='ticker' + threads=True. Each chunk capped at 25s by a
             ThreadPoolExecutor so a hung chunk doesn't freeze the whole scan.
           • Tickers missing from bulk_data fall through to the caller's
             _slice_daily() per-ticker fallback (10s cap each).
-
-        Phase 3 will replace this with a disk-cached daily baseline + intraday
-        delta patch; the contract stays the same so callers are unaffected.
         """
+        # Fast path — try the disk-cached baseline + intraday-patch first.
+        cached = self._try_load_cached_baseline(tickers)
+        if cached is not None:
+            return self._apply_intraday_patch(cached, tickers, end_date,
+                                              progress_callback)
+
+        # Slow path — full fetch (existing behaviour).
         # Indices — Nifty 50 (regime, β) and Nifty 200 (RS, Mom20 regime).
         try:
             nifty_raw = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
