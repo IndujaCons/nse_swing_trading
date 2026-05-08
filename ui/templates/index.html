@@ -2485,8 +2485,7 @@
                             <div class="panel">
                                 <div class="panel-header">
                                     <span class="panel-title" style="color:#ff6b35;">Sector Ranking</span>
-                                    <span id="mom20-sector-rank-status" style="font-size:10px;color:var(--text-muted);"></span>
-                                    <button onclick="mom20LoadSectorRanking(true)" title="Force refresh" style="margin-left:auto;padding:2px 8px;font-size:10px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺</button>
+                                    <span id="mom20-sector-rank-status" style="font-size:10px;color:var(--text-muted);margin-left:auto;"></span>
                                 </div>
                                 <div class="panel-body" id="mom20-sector-rank-body" style="padding:0;max-height:520px;overflow-y:auto;">
                                     <div style="padding:24px 16px;text-align:center;color:var(--text-muted);font-size:11px;">Loading sector ranking…</div>
@@ -7970,7 +7969,11 @@ async function mom20LoadSectorRanking(force=false) {
                 <th style="text-align:right;padding:5px 8px;font-family:monospace;">12M</th>
                 <th style="text-align:right;padding:5px 8px;font-family:monospace;">3M</th>
             </tr></thead><tbody>${rows}</tbody></table>`;
-        if (status) status.textContent = `as of ${d.as_of}`;
+        if (status) {
+            const ts = d.cached_at ? new Date(d.cached_at * 1000) : null;
+            const tstr = ts ? ts.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:false}) : d.as_of;
+            status.textContent = `cached @ ${tstr}`;
+        }
     } catch (e) {
         body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:#ef5350;font-size:11px;">Error: ${e.message}</div>`;
         if (status) status.textContent = '';
