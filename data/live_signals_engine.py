@@ -337,6 +337,83 @@ class LiveSignalsEngine:
 
     # ==================== Entry Signal Scanning ====================
 
+    def _fetch_baseline(self, tickers, daily_start, end_date, progress_callback=None):
+        """Fetch all baseline market data needed for signal computation.
+
+        This is the *only* place yfinance is hit during a scan. Returns
+        (nifty_raw, bench_raw, bulk_data) where:
+          • nifty_raw — Nifty 50 daily OHLCV (regime + Alpha20/Mom20 β reference)
+          • bench_raw — Nifty 200 daily OHLCV (RS calculations + Mom20 regime)
+          • bulk_data — dict {yf_sym: per-ticker DataFrame} for the N200 universe
+
+        Implementation details:
+          • Indices fetched via yf.Ticker().history() (single-symbol).
+          • N200 universe fetched in 15-ticker chunks via yf.download() with
+            group_by='ticker' + threads=True. Each chunk capped at 25s by a
+            ThreadPoolExecutor so a hung chunk doesn't freeze the whole scan.
+          • Tickers missing from bulk_data fall through to the caller's
+            _slice_daily() per-ticker fallback (10s cap each).
+
+        Phase 3 will replace this with a disk-cached daily baseline + intraday
+        delta patch; the contract stays the same so callers are unaffected.
+        """
+        # Indices — Nifty 50 (regime, β) and Nifty 200 (RS, Mom20 regime).
+        try:
+            nifty_raw = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
+        except Exception:
+            nifty_raw = pd.DataFrame()
+        try:
+            bench_raw = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
+        except Exception:
+            bench_raw = nifty_raw  # fallback to Nifty 50
+
+        # Chunked N200 bulk fetch.
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
+        CHUNK_SIZE = 15
+        CHUNK_TIMEOUT = 25  # seconds
+        total = len(tickers)
+        yf_tickers = [f"{t}.NS" for t in tickers]
+        bulk_data = {}
+
+        def _fetch_chunk(chunk_syms):
+            return yf.download(chunk_syms, start=daily_start, end=end_date,
+                               progress=False, auto_adjust=True,
+                               group_by='ticker', threads=True, timeout=15)
+
+        for chunk_start in range(0, len(yf_tickers), CHUNK_SIZE):
+            chunk = yf_tickers[chunk_start:chunk_start + CHUNK_SIZE]
+            if progress_callback:
+                progress_callback(chunk_start, total, "fetching prices…")
+            chunk_df = None
+            try:
+                with ThreadPoolExecutor(max_workers=1) as _ex:
+                    chunk_df = _ex.submit(_fetch_chunk, chunk).result(timeout=CHUNK_TIMEOUT)
+            except FutTimeout:
+                print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} "
+                      f"timed out after {CHUNK_TIMEOUT}s — falling back to per-ticker for {chunk}")
+                continue
+            except Exception as e:
+                print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} fetch failed: {e}")
+                continue
+            if chunk_df is None or chunk_df.empty:
+                continue
+            try:
+                if isinstance(chunk_df.columns, pd.MultiIndex):
+                    for sym in chunk:
+                        if sym in chunk_df.columns.get_level_values(0):
+                            sub = chunk_df[sym].dropna(how='all')
+                            if len(sub) > 0:
+                                bulk_data[sym] = sub
+                elif len(chunk) == 1:
+                    sub = chunk_df.dropna(how='all')
+                    if len(sub) > 0:
+                        bulk_data[chunk[0]] = sub
+            except (KeyError, AttributeError):
+                continue
+
+        return nifty_raw, bench_raw, bulk_data
+
+
     def scan_entry_signals(self, force_refresh=False, progress_callback=None, scan_date=None, ltp_map=None):
         """Scan for J, T, and R entry signals across Nifty 50/100.
 
@@ -362,17 +439,12 @@ class LiveSignalsEngine:
             end_date = datetime.now() + timedelta(days=1)
         daily_start = end_date - timedelta(days=500)
 
-        # Fetch Nifty index data once
-        try:
-            nifty_raw = yf.Ticker("^NSEI").history(start=daily_start, end=end_date)
-        except Exception:
-            nifty_raw = pd.DataFrame()
-
-        # Benchmark for RS calculation — Nifty 200
-        try:
-            bench_raw = yf.Ticker("^CNX200").history(start=daily_start, end=end_date)
-        except Exception:
-            bench_raw = nifty_raw  # fallback to Nifty 50
+        # ── Fetch baseline (delegated to _fetch_baseline for Phase 3) ──────────
+        # Returns Nifty 50 + Nifty 200 indices + dict of N200 ticker DataFrames.
+        # The per-ticker fallback for tickers missing from the bulk fetch is
+        # handled by _slice_daily below.
+        nifty_raw, bench_raw, bulk_data = self._fetch_baseline(
+            tickers, daily_start, end_date, progress_callback)
 
         # Overlay Zerodha LTP on benchmark indices
         if ltp_map:
@@ -456,58 +528,8 @@ class LiveSignalsEngine:
         rs63_signals = []  # RS63 satellite signals
         actual_date = None  # Track actual last trading date from data
 
-        # ── Bulk-fetch all tickers in chunks ──────────────────────────────────
-        # Was: 200 serial yf.Ticker.history() calls = ~100-400s
-        # Now: chunked yf.download(group_by='ticker', threads=True) — emits
-        # progress between chunks so the UI never freezes at 0/200, and
-        # smaller chunks are less likely to trigger Yahoo throttling on EC2.
-        # Each chunk is capped via ThreadPoolExecutor so a single hung ticker
-        # (Yahoo throttling, network blip) doesn't freeze the whole scan —
-        # abandoned chunks fall through to the per-ticker fallback.
-        # Tuning: 15-ticker chunks + 25s cap chosen because a 25-ticker burst
-        # was triggering Yahoo throttle on EC2; smaller batches keep the UI
-        # progress bar moving every 3-5s and bail in 25s rather than 45s.
+        # ── Per-ticker slice helper (fallback for misses in bulk_data) ────────
         from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
-        CHUNK_SIZE = 15
-        CHUNK_TIMEOUT = 25  # seconds
-        yf_tickers = [f"{t}.NS" for t in tickers]
-        bulk_data = {}  # {yf_sym: per-ticker OHLCV DataFrame}
-
-        def _fetch_chunk(chunk_syms):
-            return yf.download(chunk_syms, start=daily_start, end=end_date,
-                               progress=False, auto_adjust=True,
-                               group_by='ticker', threads=True, timeout=15)
-
-        for chunk_start in range(0, len(yf_tickers), CHUNK_SIZE):
-            chunk = yf_tickers[chunk_start:chunk_start + CHUNK_SIZE]
-            if progress_callback:
-                progress_callback(chunk_start, total, "fetching prices…")
-            chunk_df = None
-            try:
-                with ThreadPoolExecutor(max_workers=1) as _ex:
-                    chunk_df = _ex.submit(_fetch_chunk, chunk).result(timeout=CHUNK_TIMEOUT)
-            except FutTimeout:
-                print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} "
-                      f"timed out after {CHUNK_TIMEOUT}s — falling back to per-ticker for {chunk}")
-                continue
-            except Exception as e:
-                print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} fetch failed: {e}")
-                continue
-            if chunk_df is None or chunk_df.empty:
-                continue
-            try:
-                if isinstance(chunk_df.columns, pd.MultiIndex):
-                    for sym in chunk:
-                        if sym in chunk_df.columns.get_level_values(0):
-                            sub = chunk_df[sym].dropna(how='all')
-                            if len(sub) > 0:
-                                bulk_data[sym] = sub
-                elif len(chunk) == 1:
-                    sub = chunk_df.dropna(how='all')
-                    if len(sub) > 0:
-                        bulk_data[chunk[0]] = sub
-            except (KeyError, AttributeError):
-                continue
 
         def _slice_daily(yf_sym):
             """Pull a single ticker's OHLCV from the bulk dict; fall back to a
