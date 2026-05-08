@@ -278,12 +278,14 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
     return raw
 
 # ── REBALANCE DATES ───────────────────────────────────────────────────────────
-def get_rebal_dates(trading_days, monthly=False, weekly=False, every_n_days=None, quarterly=False):
+def get_rebal_dates(trading_days, monthly=False, weekly=False, every_n_days=None, quarterly=False, rebal_day="start"):
     """Return rebalance dates.
     weekly=True:      every Monday (or first trading day of each week)
     monthly=False:    first trading day of Feb/Apr/Jun/Aug/Oct/Dec (Mom15 bi-monthly)
     monthly=True:     first trading day of every month (Mom20 monthly)
     every_n_days=N:   every N calendar days from START_DATE
+    rebal_day:        "start" = first trading day of (rebal) month;
+                      "mid"   = first trading day on or after the 15th of (rebal) month
     """
     if every_n_days:
         result = []
@@ -311,6 +313,9 @@ def get_rebal_dates(trading_days, monthly=False, weekly=False, every_n_days=None
     for d in trading_days:
         ym = (d.year, d.month)
         if d.month in rebal_months and ym not in seen and d >= START_DATE:
+            if rebal_day == "mid" and d.day < 15:
+                # Defer until first trading day on or after the 15th
+                continue
             seen.add(ym)
             result.append(d)
     return result
@@ -333,7 +338,9 @@ def print_table(headers, rows, col_widths):
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(row, col_widths)))
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
-def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None):
+def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None,
+        top_n_override=None, buffer_in_override=None, buffer_out_override=None,
+        ema200_exit=False, rebal_day="start"):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, W12, W3, START_DATE
     BETA_MIN = None  # reset each run
@@ -362,8 +369,22 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     if beta_cap_override is not None:
         BETA_CAP = beta_cap_override
         label = label.split("β≤")[0] + f"β≤{beta_cap_override}"
+    # CLI overrides for top_n / buffer_in / buffer_out
+    if top_n_override is not None:
+        MAX_SLOTS = top_n_override
+    if buffer_in_override is not None:
+        BUFFER_IN = buffer_in_override
+    if buffer_out_override is not None:
+        BUFFER_OUT = buffer_out_override
     regime_label = "Regime ON" if use_regime else "Regime OFF"
-    print(f"=== {label} | {regime_label} ===")
+    extra = []
+    if ema200_exit:
+        extra.append("EMA200-exit")
+    if rebal_day == "mid":
+        extra.append("Mid-month rebal")
+    extra_label = (" | " + " | ".join(extra)) if extra else ""
+    print(f"=== {label} | {regime_label}{extra_label} ===")
+    print(f"    top_n={MAX_SLOTS} buffer_in={BUFFER_IN} buffer_out={BUFFER_OUT} beta_cap={BETA_CAP}")
 
     # Load supporting data
     if qqq:
@@ -465,7 +486,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     print(f"  Trading days in backtest: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
 
     rebal_dates = get_rebal_dates(trading_days, monthly=(mom20 or n500 or qqq or overflow),
-                                  weekly=False)
+                                  weekly=False, rebal_day=rebal_day)
     print(f"  Rebalance dates: {len(rebal_dates)}")
 
     # ── Portfolio state ──────────────────────────────────────────────────────
@@ -588,6 +609,33 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 if not pd.isna(n200_sma) and n200_close < float(n200_sma):
                     regime_off = True
                     print(f"\n  [REGIME OFF] {bench_label} {n200_close:,.1f} < SMA200 {float(n200_sma):,.1f} — holding all, skipping exits & entries")
+
+        # ── EMA200 EXIT FILTER ───────────────────────────────────────────────
+        # If --ema200-exit set, force-exit any holding whose close < EMA(200).
+        # Skipped under regime-off (when exits are blocked) so we don't churn.
+        ema200_forced_exits = set()
+        if ema200_exit and not (regime_off and not regime_exit):
+            for t in list(current_set):
+                idx_map = date_to_iloc.get(t, {})
+                ci = idx_map.get(rebal_day)
+                if ci is None:
+                    for off in range(1, 6):
+                        prev = rebal_day - timedelta(days=off)
+                        if prev in idx_map:
+                            ci = idx_map[prev]
+                            break
+                if ci is None or ci < 200:
+                    continue
+                closes_arr = stock_data[t]["Close"].iloc[max(0, ci-400):ci+1]
+                if len(closes_arr) < 200:
+                    continue
+                ema200_val = float(closes_arr.ewm(span=200, adjust=False).mean().iloc[-1])
+                close_val = float(closes_arr.iloc[-1])
+                if close_val < ema200_val:
+                    ema200_forced_exits.add(t)
+                    new_set.discard(t)
+        if ema200_forced_exits:
+            print(f"\n  [EMA200 EXIT] forcing exits on {len(ema200_forced_exits)}: {', '.join(sorted(ema200_forced_exits))}")
 
         # ── EXITS ────────────────────────────────────────────────────────────
         to_sell = current_set - new_set
@@ -849,8 +897,21 @@ if __name__ == "__main__":
                         help="Run MomQQQ variant (Nasdaq-100 universe, top 20, monthly, β≤1.2 vs NDX, QQQ regime)")
     parser.add_argument("--start", default=None,
                         help="Override start date (YYYY-MM-DD), e.g. --start 2025-01-01")
+    parser.add_argument("--top-n", type=int, default=None,
+                        help="Override top_n / number of slots (default: variant-determined)")
+    parser.add_argument("--buffer-in", type=int, default=None,
+                        help="Override entry buffer (rank ≤ N qualifies for entry)")
+    parser.add_argument("--buffer-out", type=int, default=None,
+                        help="Override exit buffer (rank > N triggers exit)")
+    parser.add_argument("--ema200-exit", action="store_true",
+                        help="Exit a holding if close < EMA(200) at rebalance")
+    parser.add_argument("--rebal-day", choices=["start", "mid"], default="start",
+                        help="Rebalance day-of-month: 'start' (1st trading day) or 'mid' (15th or next trading day)")
     args = parser.parse_args()
     run(refresh=args.refresh, mom20=args.mom20, overflow=args.overflow,
         use_regime=not args.no_regime, beta_cap_override=args.beta_cap,
         regime_exit=args.regime_exit, n500=args.n500, qqq=args.qqq, sp500=args.sp500,
-        start_override=args.start)
+        start_override=args.start,
+        top_n_override=args.top_n, buffer_in_override=args.buffer_in,
+        buffer_out_override=args.buffer_out, ema200_exit=args.ema200_exit,
+        rebal_day=args.rebal_day)
