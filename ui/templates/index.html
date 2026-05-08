@@ -1412,6 +1412,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('etf_core')">ETF Core</button>
                 <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
                 <button class="strategy-tab" onclick="switchStrategy('overflow_portfolio')">Overflow</button>
+                <button class="strategy-tab" onclick="switchStrategy('backtest')">Backtest</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2587,6 +2588,105 @@
                 </div><!-- end grid -->
             </div><!-- end #overflow-portfolio-panels -->
 
+            <!-- Backtest panel -->
+            <div id="backtest-panels" class="hidden" style="padding:16px;">
+
+                <!-- Header row -->
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+                    <span style="font-size:14px;font-weight:700;color:var(--blue);letter-spacing:0.5px;">BACKTEST</span>
+                    <span style="font-size:11px;color:var(--text-muted);">Mom strategy parameter sweep — runs <code>mom15_pit_report.py</code> via <code>/api/backtest/run</code></span>
+                </div>
+
+                <!-- Form controls -->
+                <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:end;margin-bottom:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;">
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">UNIVERSE</label><br>
+                        <select id="bt-universe" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:130px;">
+                            <option value="n500" selected>Nifty 500</option>
+                            <option value="qqq">QQQ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">TOP N</label><br>
+                        <select id="bt-top-n" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
+                            <option value="20" selected>20</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER IN (rank &le;)</label><br>
+                        <select id="bt-buffer-in" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="15" selected>15</option>
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                            <option value="30">30</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER OUT (rank &gt;)</label><br>
+                        <select id="bt-buffer-out" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40" selected>40</option>
+                            <option value="50">50</option>
+                            <option value="60">60</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BETA CAP</label><br>
+                        <select id="bt-beta-cap" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
+                            <option value="">None</option>
+                            <option value="1.0">1.0</option>
+                            <option value="1.2" selected>1.2</option>
+                            <option value="1.5">1.5</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">EMA200 EXIT</label><br>
+                        <select id="bt-ema200-exit" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
+                            <option value="false" selected>No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">REBALANCE DAY</label><br>
+                        <select id="bt-rebal-day" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:140px;">
+                            <option value="start" selected>Start of Month</option>
+                            <option value="mid">Mid Month</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button id="bt-run-btn" onclick="btRunBacktest()"
+                            style="padding:8px 16px;font-family:inherit;font-size:12px;font-weight:700;background:var(--green);color:white;border:1px solid var(--green);border-radius:4px;cursor:pointer;white-space:nowrap;">
+                            &#9654; Run Backtest
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div id="bt-status" style="font-size:11px;color:var(--text-muted);margin-bottom:12px;min-height:14px;"></div>
+
+                <!-- Command echo -->
+                <div id="bt-command" style="display:none;font-size:11px;color:var(--text-secondary);margin-bottom:12px;font-family:'SF Mono',monospace;background:var(--bg-card);padding:6px 10px;border-radius:4px;border:1px solid var(--border-color);overflow-x:auto;white-space:nowrap;"></div>
+
+                <!-- Summary -->
+                <div id="bt-summary" style="display:none;"></div>
+
+                <!-- History toggle + panel -->
+                <div style="margin-top:20px;">
+                    <button id="bt-toggle-history" onclick="btToggleHistory()"
+                        style="display:none;padding:6px 14px;font-size:12px;font-weight:600;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">
+                        &#128203; Show Rebalance History
+                    </button>
+                    <div id="bt-history-panel" style="display:none;margin-top:14px;"></div>
+                </div>
+
+            </div><!-- end #backtest-panels -->
+
         </main>
     </div>
 
@@ -3500,6 +3600,7 @@
             else if (strategy === 'etf_core') tabs[2].classList.add('active');
             else if (strategy === 'mom20_portfolio') tabs[3].classList.add('active');
             else if (strategy === 'overflow_portfolio') tabs[4].classList.add('active');
+            else if (strategy === 'backtest') tabs[5].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -3510,6 +3611,7 @@
             document.getElementById('etf-core-panels').classList.toggle('hidden', strategy !== 'etf_core');
             document.getElementById('mom20-portfolio-panels').classList.toggle('hidden', strategy !== 'mom20_portfolio');
             document.getElementById('overflow-portfolio-panels').classList.toggle('hidden', strategy !== 'overflow_portfolio');
+            document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
@@ -8872,6 +8974,182 @@ async function etfExitPosition(posId) {
 
 // Load users on page load
 loadUsers();
+
+// ============ Backtest tab ============
+let _btLastResult = null;
+let _btBusy = false;
+
+async function btRunBacktest() {
+    if (_btBusy) return;
+    const btn = document.getElementById('bt-run-btn');
+    const status = document.getElementById('bt-status');
+    const cmdEl = document.getElementById('bt-command');
+    _btBusy = true;
+    btn.disabled = true;
+    btn.textContent = '⏳ Running…';
+    btn.style.background = 'var(--text-muted)';
+    btn.style.borderColor = 'var(--text-muted)';
+    status.textContent = 'Running… (could take 5-30 seconds)';
+    status.style.color = 'var(--text-muted)';
+    document.getElementById('bt-summary').style.display = 'none';
+    document.getElementById('bt-toggle-history').style.display = 'none';
+    document.getElementById('bt-history-panel').style.display = 'none';
+    cmdEl.style.display = 'none';
+
+    const betaCapRaw = document.getElementById('bt-beta-cap').value;
+    const body = {
+        universe:    document.getElementById('bt-universe').value,
+        top_n:       parseInt(document.getElementById('bt-top-n').value, 10),
+        buffer_in:   parseInt(document.getElementById('bt-buffer-in').value, 10),
+        buffer_out:  parseInt(document.getElementById('bt-buffer-out').value, 10),
+        beta_cap:    betaCapRaw === '' ? null : parseFloat(betaCapRaw),
+        ema200_exit: document.getElementById('bt-ema200-exit').value === 'true',
+        rebal_day:   document.getElementById('bt-rebal-day').value,
+    };
+
+    const t0 = performance.now();
+    try {
+        const r = await fetch('/api/backtest/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const d = await r.json();
+        if (!d.success) throw new Error(d.error || 'backtest failed');
+        _btLastResult = d;
+        btRenderSummary(d);
+        if (d.command) {
+            cmdEl.textContent = d.command;
+            cmdEl.style.display = 'block';
+        }
+        const elapsed = (typeof d.elapsed_sec === 'number') ? d.elapsed_sec.toFixed(1) : ((performance.now() - t0) / 1000).toFixed(1);
+        if (d.cached) {
+            status.textContent = '✅ Cached result (instant)';
+            status.style.color = 'var(--green)';
+        } else {
+            status.textContent = '✅ Completed in ' + elapsed + 's';
+            status.style.color = 'var(--green)';
+        }
+    } catch (e) {
+        status.textContent = '❌ ' + e.message;
+        status.style.color = 'var(--red)';
+    } finally {
+        _btBusy = false;
+        btn.disabled = false;
+        btn.textContent = '▶ Run Backtest';
+        btn.style.background = 'var(--green)';
+        btn.style.borderColor = 'var(--green)';
+    }
+}
+
+function btFmtPct(v, withSign) {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    const sign = (withSign && v > 0) ? '+' : '';
+    return sign + Number(v).toFixed(1) + '%';
+}
+
+function btFmtInr(v) {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    const n = Math.round(Number(v));
+    // Indian comma format
+    const s = n.toString();
+    if (s.length <= 3) return '₹' + s;
+    const last3 = s.slice(-3);
+    const rest = s.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ',');
+    return '₹' + rest + ',' + last3;
+}
+
+function btMetricCard(label, value, color) {
+    const c = color || 'var(--text-primary)';
+    return '<div style="flex:1;min-width:160px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;padding:12px 14px;">'
+         + '<div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:6px;">' + label + '</div>'
+         + '<div style="font-size:18px;font-weight:700;color:' + c + ';">' + value + '</div>'
+         + '</div>';
+}
+
+function btRenderSummary(d) {
+    const s = d.summary || {};
+    const totalRet = s.total_return_pct;
+    const cagr = s.cagr_pct;
+    const winRate = s.win_rate_pct;
+    const winners = (s.winners !== undefined) ? s.winners : '—';
+    const losers  = (s.losers !== undefined) ? s.losers : '—';
+    const totalRetColor = (totalRet >= 0) ? 'var(--green)' : 'var(--red)';
+    const cagrColor = (cagr >= 0) ? 'var(--green)' : 'var(--red)';
+
+    const rebalCount = (typeof d.rebalance_count === 'number') ? (' (' + d.rebalance_count + ' rebalances)') : '';
+
+    let html = '';
+    html += '<div style="font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:1px;margin-bottom:10px;">FINAL SUMMARY' + rebalCount + '</div>';
+
+    // Row 1
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">';
+    html += btMetricCard('PERIOD', (s.period || '—') + (s.years ? '<span style="font-size:11px;color:var(--text-muted);font-weight:500;">  (' + Number(s.years).toFixed(1) + 'y)</span>' : ''));
+    html += btMetricCard('TOTAL RETURN', btFmtPct(totalRet, true), totalRetColor);
+    html += btMetricCard('CAGR', btFmtPct(cagr, true), cagrColor);
+    html += btMetricCard('WIN RATE', btFmtPct(winRate, false) + '<span style="font-size:11px;color:var(--text-muted);font-weight:500;"> (' + winners + 'W / ' + losers + 'L)</span>');
+    html += '</div>';
+
+    // Row 2
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">';
+    html += btMetricCard('PROFIT FACTOR', (s.profit_factor !== undefined && s.profit_factor !== null) ? Number(s.profit_factor).toFixed(2) : '—');
+    html += btMetricCard('AVG HOLD', (s.avg_hold_days !== undefined && s.avg_hold_days !== null) ? (Math.round(s.avg_hold_days) + ' days') : '—');
+    html += btMetricCard('TOTAL CHARGES', btFmtInr(s.total_charges));
+    html += '</div>';
+
+    // Year-by-year chart
+    const yby = Array.isArray(s.year_by_year) ? s.year_by_year : [];
+    if (yby.length) {
+        let maxAbs = 0;
+        yby.forEach(y => { const v = Math.abs(Number(y.return_pct) || 0); if (v > maxAbs) maxAbs = v; });
+        if (maxAbs < 1) maxAbs = 1;
+        const negCount = yby.filter(y => Number(y.return_pct) < 0).length;
+
+        html += '<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;padding:14px;">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
+        html += '<span style="font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:1px;">YEAR-BY-YEAR</span>';
+        html += '<span style="font-size:11px;color:var(--text-muted);">' + yby.length + ' years · ' + negCount + ' negative</span>';
+        html += '</div>';
+
+        yby.forEach(y => {
+            const ret = Number(y.return_pct) || 0;
+            const pct = (Math.abs(ret) / maxAbs) * 100;
+            const color = (ret >= 0) ? 'var(--green)' : 'var(--red)';
+            const lightBg = (ret >= 0) ? 'var(--green-light)' : 'var(--red-light)';
+            html += '<div style="display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:4px;">';
+            html += '<span style="width:50px;font-weight:600;color:var(--text-primary);">' + y.year + '</span>';
+            html += '<span style="width:80px;text-align:right;font-weight:700;color:' + color + ';">' + btFmtPct(ret, true) + '</span>';
+            html += '<div style="flex:1;background:' + lightBg + ';height:18px;border-radius:3px;position:relative;overflow:hidden;">';
+            html += '<div style="background:' + color + ';height:100%;width:' + pct.toFixed(1) + '%;border-radius:3px;"></div>';
+            html += '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+
+    document.getElementById('bt-summary').innerHTML = html;
+    document.getElementById('bt-summary').style.display = 'block';
+    document.getElementById('bt-toggle-history').style.display = 'inline-block';
+    document.getElementById('bt-toggle-history').textContent = '📋 Show Rebalance History';
+    document.getElementById('bt-history-panel').style.display = 'none';
+    document.getElementById('bt-history-panel').innerHTML = '';
+}
+
+function btToggleHistory() {
+    const p = document.getElementById('bt-history-panel');
+    const btn = document.getElementById('bt-toggle-history');
+    const visible = p.style.display === 'block';
+    if (visible) {
+        p.style.display = 'none';
+        btn.textContent = '📋 Show Rebalance History';
+    } else {
+        const raw = (_btLastResult && _btLastResult.raw_report) ? _btLastResult.raw_report : '(no report)';
+        const escaped = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        p.innerHTML = '<pre style="white-space:pre-wrap;font-family:\'SF Mono\',Monaco,monospace;font-size:11px;background:var(--bg-card);padding:12px;border-radius:6px;border:1px solid var(--border-color);max-height:60vh;overflow:auto;color:var(--text-primary);">' + escaped + '</pre>';
+        p.style.display = 'block';
+        btn.textContent = '📋 Hide Rebalance History';
+    }
+}
 
 </script>
 
