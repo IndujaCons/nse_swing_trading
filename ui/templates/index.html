@@ -4130,7 +4130,10 @@
                     const progress = await res.json();
                     if (progress.in_progress && progress.total > 0) {
                         const pct = Math.round((progress.current / progress.total) * 100);
-                        const text = `${progress.current}/${progress.total} (${pct}%)`;
+                        const tk = progress.ticker || '';
+                        const text = tk
+                            ? `${tk} ${progress.current}/${progress.total} (${pct}%)`
+                            : `${progress.current}/${progress.total} (${pct}%)`;
                         document.querySelectorAll('#live-signals-panels .progress-text').forEach(el => {
                             el.textContent = text;
                         });
@@ -4216,7 +4219,10 @@
                     const progress = await res.json();
                     if (progress.in_progress && progress.total > 0) {
                         const pct = Math.round((progress.current / progress.total) * 100);
-                        const text = `${progress.current}/${progress.total} (${pct}%)`;
+                        const tk = progress.ticker || '';
+                        const text = tk
+                            ? `${tk} ${progress.current}/${progress.total} (${pct}%)`
+                            : `${progress.current}/${progress.total} (${pct}%)`;
                         document.querySelectorAll('#live-signals-panels .progress-text').forEach(el => {
                             el.textContent = text;
                         });

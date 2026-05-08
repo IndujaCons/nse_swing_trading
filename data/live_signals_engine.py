@@ -453,35 +453,47 @@ class LiveSignalsEngine:
         rs63_signals = []  # RS63 satellite signals
         actual_date = None  # Track actual last trading date from data
 
-        # ── Bulk-fetch all tickers in ONE HTTP call ───────────────────────────
+        # ── Bulk-fetch all tickers in chunks ──────────────────────────────────
         # Was: 200 serial yf.Ticker.history() calls = ~100-400s
-        # Now: one yf.download(...) batch = ~10-30s, then slice in-memory
-        if progress_callback:
-            progress_callback(0, total, "(bulk price fetch…)")
+        # Now: chunked yf.download(group_by='ticker', threads=True) — emits
+        # progress between chunks so the UI never freezes at 0/200, and
+        # smaller chunks are less likely to trigger Yahoo throttling on EC2.
+        CHUNK_SIZE = 25
         yf_tickers = [f"{t}.NS" for t in tickers]
-        bulk_df = None
-        try:
-            bulk_df = yf.download(yf_tickers, start=daily_start, end=end_date,
-                                  progress=False, auto_adjust=True,
-                                  group_by='ticker', threads=True)
-        except Exception as e:
-            print(f"[live_signals] bulk fetch failed: {e} — falling back to per-ticker")
+        bulk_data = {}  # {yf_sym: per-ticker OHLCV DataFrame}
+
+        for chunk_start in range(0, len(yf_tickers), CHUNK_SIZE):
+            chunk = yf_tickers[chunk_start:chunk_start + CHUNK_SIZE]
+            if progress_callback:
+                progress_callback(chunk_start, total, "fetching prices…")
+            try:
+                chunk_df = yf.download(chunk, start=daily_start, end=end_date,
+                                       progress=False, auto_adjust=True,
+                                       group_by='ticker', threads=True)
+            except Exception as e:
+                print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} fetch failed: {e}")
+                continue
+            if chunk_df is None or chunk_df.empty:
+                continue
+            try:
+                if isinstance(chunk_df.columns, pd.MultiIndex):
+                    for sym in chunk:
+                        if sym in chunk_df.columns.get_level_values(0):
+                            sub = chunk_df[sym].dropna(how='all')
+                            if len(sub) > 0:
+                                bulk_data[sym] = sub
+                elif len(chunk) == 1:
+                    sub = chunk_df.dropna(how='all')
+                    if len(sub) > 0:
+                        bulk_data[chunk[0]] = sub
+            except (KeyError, AttributeError):
+                continue
 
         def _slice_daily(yf_sym):
-            """Pull a single ticker's OHLCV out of the bulk DataFrame, with
-            per-ticker fallback if the batch missed it."""
-            df = pd.DataFrame()
-            try:
-                if bulk_df is not None and not bulk_df.empty:
-                    if isinstance(bulk_df.columns, pd.MultiIndex):
-                        if yf_sym in bulk_df.columns.get_level_values(0):
-                            df = bulk_df[yf_sym].dropna(how='all')
-                    elif len(yf_tickers) == 1:
-                        df = bulk_df.dropna(how='all')
-            except (KeyError, AttributeError):
-                pass
+            """Pull a single ticker's OHLCV from the bulk dict; fall back to a
+            per-ticker fetch if the chunk missed it."""
+            df = bulk_data.get(yf_sym, pd.DataFrame())
             if df.empty or len(df) < 210:
-                # Per-ticker fallback for any symbol the batch couldn't resolve
                 try:
                     df = yf.Ticker(yf_sym).history(start=daily_start, end=end_date)
                 except Exception:
