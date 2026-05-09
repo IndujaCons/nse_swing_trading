@@ -4145,6 +4145,7 @@
 
 
         function renderMom20Overflow(data) {
+            mom20EnsureSectorMap();   // idempotent — fetches /api/sector-map once
             const panel = document.getElementById('ls-mom20-overflow-panel');
             const sigs = data.mom20_overflow || [];
             document.getElementById('ls-mom20-overflow-count').textContent = sigs.length || '0';
@@ -4159,6 +4160,7 @@
                 return `<tr>
                     <td style="font-size:10px;color:var(--text-muted);">#${s.rank}</td>
                     <td class="ticker" style="cursor:pointer;" onclick="lsLoadChart('${s.ticker}')">${s.ticker}</td>
+                    <td style="color:var(--text-muted);font-size:11px;">${mom20SectorLabel(s.ticker)}</td>
                     <td style="font-weight:600;">${s.momentum_score.toFixed(3)}</td>
                     <td style="color:${betaColor};font-weight:700;">${s.beta}</td>
                     <td style="color:${r12Color};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
@@ -4169,7 +4171,7 @@
             panel.innerHTML = `
                 <table class="stock-table">
                     <thead><tr>
-                        <th>#</th><th>Stock</th><th>Score</th>
+                        <th>#</th><th>Stock</th><th>Sector</th><th>Score</th>
                         <th>Beta</th><th>12M</th><th>3M</th><th>Status</th>
                     </tr></thead>
                     <tbody>${rows}</tbody>
@@ -4553,6 +4555,7 @@
             renderMom20Overflow(data);
 
             // Mom20 signals panel
+            mom20EnsureSectorMap();   // idempotent — fetches /api/sector-map once
             const mom20Panel = document.getElementById('ls-mom20-panel');
             const mom20Signals = data.mom20_signals || [];
             const mom20Regime = data.mom20_regime || '—';
@@ -4579,6 +4582,7 @@
                     <tr>
                         <td style="font-size:10px;color:var(--text-muted);">#${rank}</td>
                         <td class="ticker" style="cursor:pointer;" onclick="lsLoadChart('${s.ticker}')">${s.ticker}</td>
+                        <td style="color:var(--text-muted);font-size:11px;">${mom20SectorLabel(s.ticker)}</td>
                         <td style="font-weight:600;">${s.momentum_score.toFixed(3)}</td>
                         <td>${betaStr}</td>
                         <td style="color:${retColor12};font-weight:600;">${s.ret_12m > 0 ? '+' : ''}${s.ret_12m}%</td>
@@ -4589,7 +4593,7 @@
                 mom20Panel.innerHTML = `
                     <table class="stock-table">
                         <thead><tr>
-                            <th>#</th><th>Stock</th><th>Score</th>
+                            <th>#</th><th>Stock</th><th>Sector</th><th>Score</th>
                             <th>Beta</th><th>12M</th><th>3M</th><th>Status</th>
                         </tr></thead>
                         <tbody>${mom20Rows}</tbody>
