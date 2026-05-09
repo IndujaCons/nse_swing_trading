@@ -2608,33 +2608,18 @@
                     </div>
                     <div>
                         <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">TOP N</label><br>
-                        <select id="bt-top-n" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
-                            <option value="20" selected>20</option>
-                            <option value="30">30</option>
-                            <option value="50">50</option>
-                            <option value="10">10</option>
-                        </select>
+                        <input id="bt-top-n" type="number" min="1" max="200" placeholder="e.g. 20"
+                               style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:90px;">
                     </div>
                     <div>
                         <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER IN (rank &le;)</label><br>
-                        <select id="bt-buffer-in" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="15" selected>15</option>
-                            <option value="20">20</option>
-                            <option value="25">25</option>
-                            <option value="30">30</option>
-                        </select>
+                        <input id="bt-buffer-in" type="number" min="1" max="200" placeholder="e.g. 15"
+                               style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:90px;">
                     </div>
                     <div>
                         <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER OUT (rank &gt;)</label><br>
-                        <select id="bt-buffer-out" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
-                            <option value="20">20</option>
-                            <option value="30">30</option>
-                            <option value="40" selected>40</option>
-                            <option value="50">50</option>
-                            <option value="60">60</option>
-                        </select>
+                        <input id="bt-buffer-out" type="number" min="1" max="200" placeholder="e.g. 40"
+                               style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:90px;">
                     </div>
                     <div>
                         <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BETA CAP</label><br>
@@ -8967,9 +8952,10 @@ async function btRunBacktest() {
     const betaCapRaw = document.getElementById('bt-beta-cap').value;
     const body = {
         universe:    document.getElementById('bt-universe').value,
-        top_n:       parseInt(document.getElementById('bt-top-n').value, 10),
-        buffer_in:   parseInt(document.getElementById('bt-buffer-in').value, 10),
-        buffer_out:  parseInt(document.getElementById('bt-buffer-out').value, 10),
+        // Blank → null → backend uses the variant's default (e.g. --qqq → 10/7/20).
+        top_n:       (function(){const v=parseInt(document.getElementById('bt-top-n').value,10);return isNaN(v)?null:v;})(),
+        buffer_in:   (function(){const v=parseInt(document.getElementById('bt-buffer-in').value,10);return isNaN(v)?null:v;})(),
+        buffer_out:  (function(){const v=parseInt(document.getElementById('bt-buffer-out').value,10);return isNaN(v)?null:v;})(),
         beta_cap:    betaCapRaw === '' ? null : parseFloat(betaCapRaw),
         ema200_exit: document.getElementById('bt-ema200-exit').value === 'true',
         rebal_day:   document.getElementById('bt-rebal-day').value,
