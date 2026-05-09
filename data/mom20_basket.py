@@ -148,10 +148,19 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
         else:
             holds.append({"ticker": ticker, "rank": rank, "price": price})
 
-    # Entries: rank-ordered fill with sector cap of 4. When a sector hits the
-    # cap, the next-ranked stock from a non-saturated sector takes the slot
-    # (signals already contains top-40 β-capped, plenty of headroom past 20).
+    # Entries: rank-ordered fill with sector cap of 4.
+    #
+    # Two flavours:
+    #   • Fresh portfolio (no holds): scan signals top-down, fill up to
+    #     N_SLOTS picks. May reach past rank-15 if sector caps force
+    #     replacements (signals contains top-40 β-capped, plenty of headroom).
+    #   • Existing portfolio: only consider stocks ranked ≤ BUFFER_IN (=15)
+    #     for new entries. Stocks ranked 16-40 that are already held stay
+    #     as holds (per BUFFER_OUT=40 logic above) but are NOT eligible to
+    #     be added fresh — that would churn the portfolio against the
+    #     hysteresis spec (entry ≤ 15, hold ≤ 40, exit > 40).
     SECTOR_CAP = 4
+    is_fresh = not current_tickers
     sector_count = {}
     # Seed sector_count from holds — both stocks (via sector_map) and held
     # ETFs (via etf_for_sector) — so existing portfolio respects the cap.
@@ -162,7 +171,11 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
             sector_count[sec] = sector_count.get(sec, 0) + 1
 
     for s in sorted(signals, key=lambda x: x["rank"]):
-        if len(entries) >= N_SLOTS:
+        # Existing-portfolio gate: stop at BUFFER_IN. Fresh portfolio: stop
+        # once we've collected N_SLOTS picks (may scan past rank-15).
+        if not is_fresh and s["rank"] > BUFFER_IN:
+            break
+        if is_fresh and len(entries) >= N_SLOTS:
             break
         ticker = s["ticker"]
         if ticker in current_tickers:
