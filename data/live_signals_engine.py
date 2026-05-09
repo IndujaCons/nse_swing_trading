@@ -22,6 +22,16 @@ from config.settings import (
 )
 from sector_mapping import STOCK_SECTOR_MAP
 
+# Per-strategy compute functions (Phase 2 refactor — see data/strategies/).
+from data.strategies.mom20    import compute_mom20_features
+from data.strategies.alpha20  import compute_alpha20_features
+from data.strategies.rs_ibd   import compute_rs_ibd_features
+from data.strategies.rs63     import compute_rs63_signal
+from data.strategies.j        import compute_j_signal
+from data.strategies.t        import compute_t_signal
+from data.strategies.r        import compute_r_signal
+from data.strategies.mw       import compute_mw_signal
+
 
 def _load_latest_pit_constituents(pit_filename: str):
     """Return the most recent constituent list from an NSE PIT JSON file.
@@ -739,392 +749,77 @@ class LiveSignalsEngine:
                 if open_price < prev_close:
                     no_gap_down = False
 
-            # Strategy RS (IBD): Collect weighted 12-month return for ranking
-            # Also collect last 5 days of weighted scores for consecutive-day filter
-            try:
-                if i >= 252:
-                    # Compute weighted scores for last 5 trading days (for consecutive filter)
-                    day_scores = []
-                    for d_offset in range(4, -1, -1):  # days i-4 through i
-                        di = i - d_offset
-                        if di >= 252:
-                            dq4 = (float(closes.iloc[di]) / float(closes.iloc[di - 63]) - 1) * 100
-                            dq3 = (float(closes.iloc[di - 63]) / float(closes.iloc[di - 126]) - 1) * 100
-                            dq2 = (float(closes.iloc[di - 126]) / float(closes.iloc[di - 189]) - 1) * 100
-                            dq1 = (float(closes.iloc[di - 189]) / float(closes.iloc[di - 252]) - 1) * 100
-                            day_scores.append(0.4 * dq4 + 0.2 * dq3 + 0.2 * dq2 + 0.2 * dq1)
-                    rs_ibd_history[ticker] = day_scores
+            # ── Per-strategy compute (Phase 2 refactor) ──────────────────────
+            # Each strategy is a pure function in data/strategies/*. Logic
+            # is bit-identical to the previous inline blocks; this is purely
+            # code organization. Cross-sectional ranking (Mom20 Z-score,
+            # Alpha20 ranking, IBD percentile filter, RS63 volume rank)
+            # stays here since it operates on the collected lists below.
 
-                    weighted = day_scores[-1] if day_scores else 0
+            # Strategy RS (IBD): per-ticker candidate + 5-day score history
+            cand, day_scores = compute_rs_ibd_features(
+                ticker, daily, closes, highs, lows, i, price,
+                bench_ret123_val, nifty_regime_on, STOCK_SECTOR_MAP)
+            if cand is not None:
+                rs_ibd_candidates.append(cand)
+                rs_ibd_history[ticker] = day_scores
 
-                    # Also compute RS-123d for display
-                    stock_ret123 = (price / float(closes.iloc[i - 123]) - 1) * 100
-                    rs_val = stock_ret123 - bench_ret123_val
+            # Mom20: raw momentum features for cross-sectional Z-score after loop
+            mom_feat = compute_mom20_features(
+                ticker, closes, i, price, n50_ret_series, n50_var)
+            if mom_feat is not None:
+                mom20_raw.append(mom_feat)
 
-                    # Price > 30-week EMA check
-                    weekly_rs = daily.resample("W-FRI").agg({"Close": "last"}).dropna()
-                    ema30w_val = None
-                    if len(weekly_rs) >= 30:
-                        ema30w = weekly_rs["Close"].ewm(span=30, adjust=False).mean()
-                        ema30w_daily = ema30w.reindex(daily.index, method="ffill")
-                        ema30w_val = float(ema30w_daily.iloc[i])
+            # Alpha20: CAPM alpha features for cross-sectional ranking after loop
+            alpha_feat = compute_alpha20_features(
+                ticker, closes, i, price, n50_ret_series, n50_var)
+            if alpha_feat is not None:
+                alpha20_raw.append(alpha_feat)
 
-                    # dist_high: price >= 3% below 20d high
-                    high_20d = float(highs.iloc[max(0, i - 20):i].max()) if i >= 20 else price
-                    dist_high_pct = round((high_20d - price) / high_20d * 100, 1) if high_20d > 0 else 0.0
-
-                    # ATR%
-                    prev_cl_rs = closes.shift(1)
-                    tr_rs = pd.concat([highs - lows, (highs - prev_cl_rs).abs(), (lows - prev_cl_rs).abs()], axis=1).max(axis=1)
-                    atr14_rs = float(tr_rs.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
-                    atr_pct_rs = round(atr14_rs / price * 100, 2) if price > 0 else 99.0
-
-                    rs_ibd_candidates.append({
-                        "ticker": ticker,
-                        "price": round(price, 2),
-                        "weighted": weighted,
-                        "rs_pct": round(rs_val, 1),
-                        "dist_high_pct": dist_high_pct,
-                        "atr_pct": atr_pct_rs,
-                        "stop_pct": 8.0,
-                        "ema30w_val": ema30w_val,
-                        "above_ema": ema30w_val is not None and not pd.isna(ema30w_val) and price > ema30w_val,
-                        "dist_high_ok": not (i >= 20 and high_20d > 0 and (high_20d - price) / high_20d < 0.03),
-                        "sector": STOCK_SECTOR_MAP.get(ticker, "OTHER"),
-                        "regime_off": not nifty_regime_on,
-                    })
-            except Exception:
-                pass
-
-            # Mom20/Mom15: collect raw momentum ratios for Z-scoring after loop
-            try:
-                if i >= 252:
-                    ret_12m = price / float(closes.iloc[i - 252]) - 1
-                    ret_6m = price / float(closes.iloc[i - 126]) - 1
-                    ret_3m = price / float(closes.iloc[i - 63]) - 1 if i >= 63 else None
-                    log_rets = np.log(closes.iloc[i - 251:i + 1] / closes.iloc[i - 252:i].values)
-                    sigma = float(log_rets.std()) * np.sqrt(252)
-                    if sigma > 0.001:  # avoid div-by-zero
-                        # Compute beta vs Nifty 50 for Mom15 beta cap (date-aligned)
-                        mom_beta = None
-                        if n50_ret_series is not None and n50_var > 1e-10:
-                            stock_ret_series = closes.astype(float).pct_change().iloc[i-251:i+1]
-                            # Align on common dates
-                            common_dates = stock_ret_series.index.intersection(n50_ret_series.index)
-                            if len(common_dates) >= 100:
-                                sr = stock_ret_series.loc[common_dates].values
-                                nr = n50_ret_series.loc[common_dates].values
-                                mask = ~(np.isnan(sr) | np.isnan(nr))
-                                if mask.sum() >= 100:
-                                    cov_val = np.cov(sr[mask], nr[mask])
-                                    if cov_val.shape == (2, 2) and cov_val[1, 1] > 1e-10:
-                                        mom_beta = cov_val[0, 1] / cov_val[1, 1]
-                        mom20_raw.append({
-                            "ticker": ticker,
-                            "price": round(price, 2),
-                            "ret_12m": ret_12m,
-                            "ret_6m": ret_6m,
-                            "ret_3m": ret_3m,
-                            "sigma": sigma,
-                            "mr_12": ret_12m / sigma,
-                            "mr_6": ret_6m / sigma,
-                            "mr_3": (ret_3m / sigma) if ret_3m is not None else None,
-                            "beta": round(mom_beta, 2) if mom_beta is not None else None,
-                        })
-            except Exception:
-                pass
-
-            # Alpha20: collect stock returns for CAPM alpha calculation (date-aligned)
-            try:
-                if i >= 252 and n50_ret_series is not None and n50_var > 1e-10:
-                    stock_ret_series_a = closes.astype(float).pct_change().iloc[i-251:i+1]
-                    common_dates_a = stock_ret_series_a.index.intersection(n50_ret_series.index)
-                    if len(common_dates_a) >= 100:
-                        sr_a = stock_ret_series_a.loc[common_dates_a].values
-                        nr_a = n50_ret_series.loc[common_dates_a].values
-                        mask_a = ~(np.isnan(sr_a) | np.isnan(nr_a))
-                        if mask_a.sum() >= 100:
-                            rf_daily = 0.065 / 252
-                            cov_val = np.cov(sr_a[mask_a], nr_a[mask_a])
-                            if cov_val.shape == (2, 2) and cov_val[1, 1] > 1e-10:
-                                beta = cov_val[0, 1] / cov_val[1, 1]
-                                alpha_daily = np.mean(sr_a[mask_a]) - (rf_daily + beta * (float(np.mean(nr_a[mask_a])) - rf_daily))
-                            alpha_annual = alpha_daily * 252
-                            alpha20_raw.append({
-                                "ticker": ticker,
-                                "price": round(price, 2),
-                                "alpha": round(alpha_annual * 100, 2),  # as percentage
-                                "beta": round(beta, 2),
-                            })
-            except Exception:
-                pass
-
-            # RS63 Satellite: RS63(5d avg) > 0 + RSI(3d avg) > 50 + IBS > 0.5 + green
-            try:
-                if i >= 70 and not bench_raw.empty:
-                    bench_aligned = bench_raw["Close"].reindex(daily.index, method="ffill")
-                    rs_ratio = closes / bench_aligned
-                    rs63_raw = (rs_ratio / rs_ratio.shift(63) - 1) * 100
-                    rs63_smooth = rs63_raw.rolling(5, min_periods=1).mean()
-
-                    # RSI(14) smoothed 3-day avg
-                    delta_r = closes.diff()
-                    gain_r = delta_r.clip(lower=0)
-                    loss_r = (-delta_r).clip(lower=0)
-                    avg_gain_r = gain_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
-                    avg_loss_r = loss_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
-                    rsi_raw = 100 - (100 / (1 + avg_gain_r / avg_loss_r.replace(0, 1e-10)))
-                    rsi_smooth = rsi_raw.rolling(3, min_periods=1).mean()
-
-                    rs63_v = float(rs63_smooth.iloc[i]) if not pd.isna(rs63_smooth.iloc[i]) else -1
-                    rsi_v = float(rsi_smooth.iloc[i]) if not pd.isna(rsi_smooth.iloc[i]) else 0
-
-                    if rs63_v > 0 and rsi_v > 50 and ibs > 0.5 and is_green:
-                        # 1-hour RS63 filter: stock must also outperform bench on 1h timeframe
-                        rs63_1h_val = None
-                        try:
-                            h1_stk = yf.Ticker(f"{ticker}.NS").history(period="20d", interval="1h")
-                            h1_bch = yf.Ticker("^CNX200").history(period="20d", interval="1h")
-                            if len(h1_stk) >= 64 and not h1_bch.empty:
-                                h1_cls = h1_stk["Close"].astype(float)
-                                # Align benchmark to stock timestamps
-                                h1_bch_idx = h1_bch["Close"].astype(float)
-                                h1_bch_idx.index = h1_bch_idx.index.tz_localize(None) if h1_bch_idx.index.tzinfo else h1_bch_idx.index
-                                h1_cls.index = h1_cls.index.tz_localize(None) if h1_cls.index.tzinfo else h1_cls.index
-                                h1_bch_aligned = h1_bch_idx.reindex(h1_cls.index, method="ffill").ffill()
-                                rs_1h = h1_cls / h1_bch_aligned
-                                rs63_1h_raw = (rs_1h / rs_1h.shift(63) - 1) * 100
-                                rs63_1h_sma = rs63_1h_raw.rolling(5, min_periods=1).mean()
-                                val = float(rs63_1h_sma.iloc[-1]) if not pd.isna(rs63_1h_sma.iloc[-1]) else None
-                                rs63_1h_val = round(val, 1) if val is not None else None
-                        except Exception:
-                            pass
-
-                        # Skip if 1h RS63 is negative (pass through if data unavailable)
-                        if rs63_1h_val is not None and rs63_1h_val <= 0:
-                            continue
-
-                        # Stop distance (for ranking)
-                        low_20d = float(lows.rolling(20).min().iloc[i]) if i >= 20 else low
-                        stop_pct = round((price - low_20d) / price * 100, 1) if price > 0 else 99
-
-                        # 8% SL level
-                        sl_price = round(price * 0.92, 1)
-
-                        # Volume ratio: today vs 20-day average
-                        vol_today = float(volumes.iloc[i])
-                        vol_20d_avg = float(volumes.iloc[max(0, i-20):i].mean()) if i >= 5 else vol_today
-                        vol_ratio = round(vol_today / vol_20d_avg, 1) if vol_20d_avg > 0 else None
-
-                        rs63_signals.append({
-                            "ticker": ticker,
-                            "price": round(price, 2),
-                            "rs63": round(rs63_v, 1),
-                            "rs63_1h": rs63_1h_val,
-                            "rsi": round(rsi_v, 1),
-                            "ibs": round(ibs, 2),
-                            "stop_pct": stop_pct,
-                            "sl_price": sl_price,
-                            "vol_ratio": vol_ratio,
-                            "rank": 0,  # set after sorting
-                        })
-            except Exception:
-                pass
+            # RS63 Satellite signal
+            rs63_sig = compute_rs63_signal(
+                ticker, daily, closes, lows, volumes, i, price, low,
+                ibs, is_green, bench_raw)
+            if rs63_sig is not None:
+                rs63_signals.append(rs63_sig)
 
             # Skip gap-down stocks for J/T/R/MW
             if not no_gap_down:
                 continue
 
-            # Strategy J: Weekly Close Support Bounce
-            try:
-                weekly = daily.resample("W-FRI").agg({
-                    "Open": "first", "High": "max", "Low": "min",
-                    "Close": "last", "Volume": "sum"
-                }).dropna()
-                if len(weekly) >= 27:
-                    # Skip last 2 weeks (use proven support, not recent noise)
-                    w_support_series = weekly["Close"].rolling(
-                        window=26, min_periods=26).min().shift(2)
-                    w_support_daily = w_support_series.reindex(
-                        daily.index, method="ffill")
-                    ws = float(w_support_daily.iloc[i]) if not pd.isna(
-                        w_support_daily.iloc[i]) else None
+            # Strategy J — weekly support bounce
+            j_sig = compute_j_signal(ticker, daily, closes, opens, highs, lows,
+                                     i, price, low, ibs, is_green)
+            if j_sig is not None:
+                j_signals.append(j_sig)
 
-                    # 26-week weekly low for stop-loss, also skip last 2 weeks
-                    w_low_stop_series = weekly["Low"].rolling(
-                        window=26, min_periods=26).min().shift(2)
-                    w_low_stop_daily = w_low_stop_series.reindex(
-                        daily.index, method="ffill")
-                    wls = float(w_low_stop_daily.iloc[i]) if not pd.isna(
-                        w_low_stop_daily.iloc[i]) else None
+            # Strategy T — Keltner pullback (deduped against J)
+            t_sig = compute_t_signal(ticker, closes, highs, lows, i, price,
+                                     ibs, is_green,
+                                     {s["ticker"] for s in j_signals})
+            if t_sig is not None:
+                t_signals.append(t_sig)
 
-                    if ws is not None and ws > 0:
-                        close_near_pct = ((price - ws) / ws) * 100
-                        # CCI(20) confirmation
-                        tp = (highs + lows + closes) / 3
-                        sma_tp = tp.rolling(window=20, min_periods=20).mean()
-                        mean_dev = tp.rolling(window=20, min_periods=20).apply(
-                            lambda x: np.mean(np.abs(x - x.mean())), raw=True)
-                        cci_series = (tp - sma_tp) / (0.015 * mean_dev)
-                        cci_val = float(cci_series.iloc[i]) if not pd.isna(cci_series.iloc[i]) else 0.0
-                        if (close_near_pct >= 0 and close_near_pct <= 3.0
-                                and ibs > 0.5 and is_green
-                                and cci_val > -100):
-                            raw_stop = wls if wls else ws
-                            j_stop_pct = round((price - raw_stop) / price * 100, 2) if price > 0 else 99.0
-                            # ATR14 for volatility ranking
-                            prev_close_j = closes.shift(1)
-                            tr1_j = highs - lows
-                            tr2_j = (highs - prev_close_j).abs()
-                            tr3_j = (lows - prev_close_j).abs()
-                            tr_j = pd.concat([tr1_j, tr2_j, tr3_j], axis=1).max(axis=1)
-                            atr14_j = float(tr_j.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
-                            atr_norm_j = round(atr14_j / price * 100, 2) if price > 0 else 99.0
-                            j_signals.append({
-                                "ticker": ticker,
-                                "price": round(price, 2),
-                                "support": round(ws, 2),
-                                "stop": round(raw_stop, 2),
-                                "stop_pct": j_stop_pct,
-                                "close_near_pct": round(close_near_pct, 2),
-                                "ibs": round(ibs, 2),
-                                "low": round(low, 2),
-                                "atr_pct": atr_norm_j,
-                            })
-            except Exception:
-                pass
-
-            # Strategy T: Keltner Channel Pullback
-            try:
-                ema20_val = float(closes.ewm(span=20, adjust=False).mean().iloc[i])
-                prev_close_s = closes.shift(1)
-                tr1 = highs - lows
-                tr2 = (highs - prev_close_s).abs()
-                tr3 = (lows - prev_close_s).abs()
-                true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
-                atr14 = float(true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
-                if atr14 > 0:
-                    upper_keltner = ema20_val + 2 * atr14
-                    near_ema20 = abs(price - ema20_val) / ema20_val <= 0.01
-                    was_at_upper = False
-                    ema20_s = closes.ewm(span=20, adjust=False).mean()
-                    atr14_s = true_range.ewm(alpha=1/14, min_periods=14, adjust=False).mean()
-                    for lb_j in range(max(0, i - 10), i):
-                        past_high = float(highs.iloc[lb_j])
-                        past_ema20 = float(ema20_s.iloc[lb_j])
-                        past_atr14 = float(atr14_s.iloc[lb_j]) if not pd.isna(atr14_s.iloc[lb_j]) else 0.0
-                        if past_high >= past_ema20 + 2 * past_atr14:
-                            was_at_upper = True
-                            break
-                    # Skip T if stock already has a J signal (match backtest dedup)
-                    already_j = any(s["ticker"] == ticker for s in j_signals)
-                    if near_ema20 and was_at_upper and is_green and not already_j and ibs > 0.5:
-                        atr_norm_t = round(atr14 / price * 100, 2) if price > 0 else 99.0
-                        t_signals.append({
-                            "ticker": ticker,
-                            "price": round(price, 2),
-                            "ema20": round(ema20_val, 2),
-                            "upper_keltner": round(upper_keltner, 2),
-                            "stop_pct": 5.0,
-                            "atr_pct": atr_norm_t,
-                        })
-            except Exception:
-                pass
-
-            # Strategy R: Bullish RSI Divergence (Regular + Hidden)
-            try:
-                # Skip R if stock already has J or T signal (dedup)
-                already_jt = any(s["ticker"] == ticker for s in j_signals + t_signals)
-                if is_green and ibs > 0.5 and not already_jt:
-                    rsi14_series = _calculate_rsi_series(closes, 14)
-                    swing_lows = _find_swing_lows(lows)
-                    rsi14_vals = rsi14_series.values
-                    lows_vals = lows.values
-                    divergence, swing_low_val, rsi_at_low = _detect_bullish_divergence(
-                        lows_vals, rsi14_vals, i, swing_lows,
-                        rsi_threshold=35)
-                    r_div_type = "regular"
-                    if not divergence:
-                        # Try hidden bullish divergence if price > EMA50 (uptrend)
-                        ema50_val = float(closes.ewm(span=50, adjust=False).mean().iloc[i])
-                        if price > ema50_val:
-                            divergence, swing_low_val, rsi_at_low = _detect_hidden_bullish_divergence(
-                                lows_vals, rsi14_vals, i, swing_lows)
-                            if divergence:
-                                r_div_type = "hidden"
-                    if divergence and swing_low_val is not None:
-                        rsi14_at_bar = float(rsi14_series.iloc[i]) if not pd.isna(rsi14_series.iloc[i]) else 0.0
-                        r_struct_stop = round(swing_low_val * 0.99, 2)
-                        r_stop_pct = round((price - r_struct_stop) / price * 100, 2) if price > 0 else 99.0
-                        r_min_stop = 2.0 if r_div_type == "hidden" else 0.0
-                        if r_min_stop < r_stop_pct <= 6.0:
-                            # ATR14 for volatility ranking
-                            prev_close_r = closes.shift(1)
-                            tr1_r = highs - lows
-                            tr2_r = (highs - prev_close_r).abs()
-                            tr3_r = (lows - prev_close_r).abs()
-                            tr_r = pd.concat([tr1_r, tr2_r, tr3_r], axis=1).max(axis=1)
-                            atr14_r = float(tr_r.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
-                            atr_norm_r = round(atr14_r / price * 100, 2) if price > 0 else 99.0
-                            r_signals.append({
-                                "ticker": ticker,
-                                "price": round(price, 2),
-                                "rsi14": round(rsi14_at_bar, 1),
-                                "rsi_at_low": round(float(rsi_at_low), 1),
-                                "swing_low": round(swing_low_val, 2),
-                                "stop": r_struct_stop,
-                                "stop_pct": r_stop_pct,
-                                "atr_pct": atr_norm_r,
-                                "div_type": r_div_type,
-                            })
-            except Exception:
-                pass
+            # Strategy R — bullish RSI divergence (deduped against J + T)
+            r_sig = compute_r_signal(
+                ticker, closes, highs, lows, i, price, ibs, is_green,
+                {s["ticker"] for s in j_signals} | {s["ticker"] for s in t_signals},
+                _calculate_rsi_series, _find_swing_lows,
+                _detect_bullish_divergence, _detect_hidden_bullish_divergence)
+            if r_sig is not None:
+                r_signals.append(r_sig)
 
             # Strategy RW: DISABLED — weekly RSI divergence (code preserved in momentum_backtest.py)
 
-            # Strategy MW: Weekly ADX >= 20 and rising with DI+ > DI-
-            try:
-                already_any = any(s["ticker"] == ticker for s in j_signals + t_signals + r_signals)
-                if is_green and ibs > 0.5 and not already_any:
-                    weekly_mw = daily.resample("W-FRI").agg({
-                        "Open": "first", "High": "max", "Low": "min",
-                        "Close": "last", "Volume": "sum"
-                    }).dropna()
-                    if len(weekly_mw) >= 28:
-                        mw_adx, mw_pdi, mw_mdi = _calculate_adx_series(
-                            weekly_mw["High"], weekly_mw["Low"], weekly_mw["Close"])
-                        w_dates = weekly_mw.index
-                        day_ts = pd.Timestamp(actual_date or datetime.now().date())
-                        if w_dates.tz:
-                            day_ts = day_ts.tz_localize(w_dates.tz)
-                        w_before = w_dates[w_dates < day_ts]
-                        if len(w_before) >= 2:
-                            w_idx = len(w_before) - 1
-                            curr_adx = float(mw_adx.iloc[w_idx])
-                            prev_adx = float(mw_adx.iloc[w_idx - 1])
-                            plus_di = float(mw_pdi.iloc[w_idx])
-                            minus_di = float(mw_mdi.iloc[w_idx])
-                            if (not np.isnan(curr_adx) and not np.isnan(prev_adx)
-                                    and curr_adx >= 25 and curr_adx > prev_adx
-                                    and plus_di > minus_di):
-                                prev_close_mw = closes.shift(1)
-                                tr1_mw = highs - lows
-                                tr2_mw = (highs - prev_close_mw).abs()
-                                tr3_mw = (lows - prev_close_mw).abs()
-                                tr_mw = pd.concat([tr1_mw, tr2_mw, tr3_mw], axis=1).max(axis=1)
-                                atr14_mw = float(tr_mw.ewm(alpha=1/14, min_periods=14, adjust=False).mean().iloc[i])
-                                atr_norm_mw = round(atr14_mw / price * 100, 2) if price > 0 else 99.0
-                                mw_signals.append({
-                                    "ticker": ticker,
-                                    "price": round(price, 2),
-                                    "adx": round(curr_adx, 1),
-                                    "plus_di": round(plus_di, 1),
-                                    "minus_di": round(minus_di, 1),
-                                    "stop_pct": 5.0,
-                                    "atr_pct": atr_norm_mw,
-                                })
-            except Exception:
-                pass
+            # Strategy MW — weekly ADX trend (deduped against J + T + R)
+            mw_sig = compute_mw_signal(
+                ticker, daily, closes, highs, lows, i, price, ibs, is_green,
+                {s["ticker"] for s in j_signals} |
+                {s["ticker"] for s in t_signals} |
+                {s["ticker"] for s in r_signals},
+                actual_date, _calculate_adx_series)
+            if mw_sig is not None:
+                mw_signals.append(mw_sig)
 
         # Strategy WT: disabled (was scanning full Nifty 500, too slow)
         wt_signals = []
