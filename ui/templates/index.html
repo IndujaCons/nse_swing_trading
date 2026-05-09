@@ -8021,11 +8021,7 @@ function mom20OnUserChange() {
     _mom20HistoryLoaded = false;
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
     // Fire the four loaders in parallel (they don't await each other and
-    // run concurrently in the browser). The bootstrap endpoint added in
-    // (D) used app.test_client() internally which silently returned empty
-    // sub-responses from inside a Flask handler — reverted to direct
-    // fetches which always work. The /api/mom20-bootstrap endpoint stays
-    // live (dead code) in case we revisit a server-side aggregation later.
+    // run concurrently in the browser).
     mom20EnsureSectorMap();
     mom20LoadBasket();
     mom20LoadPerformance();
@@ -8191,9 +8187,7 @@ async function mom20LoadPerformance(live=false) {
     mom20RenderPerformance(d, live);
 }
 
-// Pure render path. Used by mom20LoadPerformance (after fetch) and by
-// mom20LoadBootstrap (when a preloaded perf payload arrives via the
-// /api/mom20-bootstrap single round-trip).
+// Pure render path — separated from the fetch so the render can be reused.
 function mom20RenderPerformance(d, live=false) {
     const status = document.getElementById('mom20-tracker-status');
     if (!d?.success) {

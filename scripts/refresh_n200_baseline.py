@@ -118,6 +118,37 @@ def main():
     yf_tickers = [f"{t}.NS" for t in tickers]
     bulk_data = _fetch_chunked(yf_tickers, start_date, end_date)
 
+    # ── Sector indices for the live Sector Ranking panel ─────────────────────
+    # Pulls the 14 yfinance-served sector indices (the 5 synthetic ones are
+    # built by scripts/refresh_synth.sh) and persists them to
+    # data_store/cache/sector_yf_closes.pkl. score_live_sectors() reads this
+    # pkl as a fallback when its on-demand bulk fetch fails (Yahoo throttling
+    # on EC2). Keeps the Mom20 page's Sector Ranking populated with all 19
+    # sectors even on days when live yfinance is misbehaving.
+    print("Fetching sector indices for sector ranking fallback…")
+    try:
+        from data.sector_zscore_backtest import SECTOR_UNIVERSE
+        sector_yf = [(sec, src) for sec, src in SECTOR_UNIVERSE
+                     if not src.startswith("synth:")]
+        sec_syms = [src for _, src in sector_yf]
+        sec_chunked = _fetch_chunked(sec_syms, start_date, end_date,
+                                     chunk_size=10, chunk_timeout=30)
+        sector_closes = {}
+        for sec, sym in sector_yf:
+            df = sec_chunked.get(sym)
+            if df is None or df.empty:
+                continue
+            close_series = df["Close"].dropna()
+            if len(close_series) > 0:
+                sector_closes[sec] = close_series
+        sec_pkl = os.path.join(CACHE_DIR, "sector_yf_closes.pkl")
+        with open(sec_pkl, "wb") as f:
+            pickle.dump({"saved_at": time.time(), "closes": sector_closes}, f)
+        print(f"  saved {len(sector_closes)}/{len(sector_yf)} sectors → "
+              f"{os.path.basename(sec_pkl)}")
+    except Exception as e:
+        print(f"  sector pre-fetch failed (non-fatal): {e}")
+
     elapsed = time.time() - t0
     print(f"\nFetched: nifty {len(nifty_raw)} rows, bench {len(bench_raw)} rows, "
           f"{len(bulk_data)}/{len(tickers)} tickers in {elapsed:.1f}s")
