@@ -8020,46 +8020,16 @@ function mom20OnUserChange() {
     if (histBtn) histBtn.style.display = 'inline';
     _mom20HistoryLoaded = false;
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
-    // Single bootstrap fetch (Tier-1 perf D) — server runs basket /
-    // performance / sector ranking / sector map in parallel and returns
-    // them in one round-trip. Fall back to the four individual fetches
-    // if the bootstrap endpoint fails for any reason.
-    mom20LoadBootstrap();
-}
-
-async function mom20LoadBootstrap() {
-    const uid = _mom20SelectedUser?.id;
-    if (!uid) return;
-    try {
-        const r = await fetch(`/api/portfolio-users/${uid}/mom20-bootstrap`);
-        const d = await r.json();
-        if (!d.success) throw new Error(d.error || 'bootstrap failed');
-
-        // Sector map first — other render paths depend on it.
-        if (d.sector_map?.success && d.sector_map.map) {
-            _mom20SectorMap = d.sector_map.map;
-        }
-        // Basket
-        if (d.basket?.success) {
-            _mom20BasketData = d.basket;
-            _renderMom20Basket(d.basket);
-            mom20SeedLoad();
-        }
-        // Performance (tracker)
-        if (d.performance?.success) {
-            mom20RenderPerformance(d.performance);
-        }
-        // Sector ranking
-        if (d.sector_ranking?.success) {
-            mom20RenderSectorRanking(d.sector_ranking);
-        }
-    } catch (e) {
-        console.warn('bootstrap failed, falling back to individual fetches:', e);
-        mom20EnsureSectorMap();
-        mom20LoadBasket();
-        mom20LoadPerformance();
-        mom20LoadSectorRanking();
-    }
+    // Fire the four loaders in parallel (they don't await each other and
+    // run concurrently in the browser). The bootstrap endpoint added in
+    // (D) used app.test_client() internally which silently returned empty
+    // sub-responses from inside a Flask handler — reverted to direct
+    // fetches which always work. The /api/mom20-bootstrap endpoint stays
+    // live (dead code) in case we revisit a server-side aggregation later.
+    mom20EnsureSectorMap();
+    mom20LoadBasket();
+    mom20LoadPerformance();
+    mom20LoadSectorRanking();
 }
 
 const SECTOR_LABEL = {
