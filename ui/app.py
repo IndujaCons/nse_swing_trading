@@ -3932,6 +3932,10 @@ def _bt_build_args(payload: dict) -> list:
         args.append("--ema200-exit")
     if (payload.get("rebal_day") or "").lower() == "mid":
         args += ["--rebal-day", "mid"]
+    # Regime filter: "none" | "sma200" (default) | "ema200"
+    regime = (payload.get("regime") or "").lower()
+    if regime in ("none", "sma200", "ema200"):
+        args += ["--regime", regime]
     return args
 
 

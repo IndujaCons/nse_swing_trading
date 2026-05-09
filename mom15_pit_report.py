@@ -340,7 +340,7 @@ def print_table(headers, rows, col_widths):
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
 def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None,
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
-        ema200_exit=False, rebal_day="start"):
+        ema200_exit=False, rebal_day="start", regime_filter="sma200"):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, W12, W3, START_DATE
     BETA_MIN = None  # reset each run
@@ -376,7 +376,16 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         BUFFER_IN = buffer_in_override
     if buffer_out_override is not None:
         BUFFER_OUT = buffer_out_override
-    regime_label = "Regime ON" if use_regime else "Regime OFF"
+    # `regime_filter` resolves which moving-average the regime check uses:
+    #   'sma200' (default) — original behaviour, Nifty200 < SMA200 → off
+    #   'ema200'           — uses EMA(200) instead (slightly more responsive)
+    #   'none'             — no regime filter at all (overrides use_regime)
+    if regime_filter not in ("sma200", "ema200", "none"):
+        regime_filter = "sma200"
+    if regime_filter == "none":
+        use_regime = False
+    regime_label = ("Regime ON [" + regime_filter.upper() + "]"
+                    if use_regime else "Regime OFF")
     extra = []
     if ema200_exit:
         extra.append("EMA200-exit")
@@ -468,6 +477,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     else:
         n200_raw.index = n200_raw.index.tz_localize(None) if n200_raw.index.tzinfo else n200_raw.index
         n200_raw["sma200"] = n200_raw["Close"].rolling(200).mean()
+        # EMA(200) populated whether or not we use it — cheap to compute.
+        n200_raw["ema200"] = n200_raw["Close"].ewm(span=200, adjust=False).mean()
         print(f"  {len(n200_raw)} bars")
     n200_iloc = {n200_raw.index[i].date(): i for i in range(len(n200_raw))}
 
@@ -605,10 +616,13 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                         break
             if n200_ci is not None:
                 n200_close = float(n200_raw["Close"].iloc[n200_ci])
-                n200_sma   = n200_raw["sma200"].iloc[n200_ci]
-                if not pd.isna(n200_sma) and n200_close < float(n200_sma):
+                # Pick MA column based on regime_filter ("sma200" | "ema200").
+                ma_col = "ema200" if regime_filter == "ema200" else "sma200"
+                ma_label = "EMA200" if regime_filter == "ema200" else "SMA200"
+                n200_ma = n200_raw[ma_col].iloc[n200_ci]
+                if not pd.isna(n200_ma) and n200_close < float(n200_ma):
                     regime_off = True
-                    print(f"\n  [REGIME OFF] {bench_label} {n200_close:,.1f} < SMA200 {float(n200_sma):,.1f} — holding all, skipping exits & entries")
+                    print(f"\n  [REGIME OFF] {bench_label} {n200_close:,.1f} < {ma_label} {float(n200_ma):,.1f} — holding all, skipping exits & entries")
 
         # ── EMA200 EXIT FILTER ───────────────────────────────────────────────
         # If --ema200-exit set, force-exit any holding whose close < EMA(200).
@@ -907,11 +921,15 @@ if __name__ == "__main__":
                         help="Exit a holding if close < EMA(200) at rebalance")
     parser.add_argument("--rebal-day", choices=["start", "mid"], default="start",
                         help="Rebalance day-of-month: 'start' (1st trading day) or 'mid' (15th or next trading day)")
+    parser.add_argument("--regime", choices=["none", "sma200", "ema200"], default="sma200",
+                        help="Regime filter on the benchmark: 'none' (no filter), 'sma200' (default — Nifty200 < SMA200 → off), 'ema200' (uses EMA(200) instead)")
     args = parser.parse_args()
+    # `--no-regime` (legacy) takes precedence and forces 'none'.
+    regime_filter = "none" if args.no_regime else args.regime
     run(refresh=args.refresh, mom20=args.mom20, overflow=args.overflow,
-        use_regime=not args.no_regime, beta_cap_override=args.beta_cap,
+        use_regime=(regime_filter != "none"), beta_cap_override=args.beta_cap,
         regime_exit=args.regime_exit, n500=args.n500, qqq=args.qqq, sp500=args.sp500,
         start_override=args.start,
         top_n_override=args.top_n, buffer_in_override=args.buffer_in,
         buffer_out_override=args.buffer_out, ema200_exit=args.ema200_exit,
-        rebal_day=args.rebal_day)
+        rebal_day=args.rebal_day, regime_filter=regime_filter)
