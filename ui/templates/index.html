@@ -9009,13 +9009,46 @@ async function btRunBacktest() {
 
     const t0 = performance.now();
     try {
+        // Phase 1: kick off the run. Cache hit → returns full result inline.
+        // Cache miss → returns {in_progress: true, job_id} (subprocess runs in
+        // a background thread server-side, so the proxy can't 504 us out).
         const r = await fetch('/api/backtest/run', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
         });
-        const d = await r.json();
+        let d;
+        try { d = await r.json(); }
+        catch (jsonErr) {
+            const txt = await r.text().catch(() => '');
+            throw new Error(`Server returned non-JSON (status ${r.status}). First 200 chars: ${txt.slice(0, 200)}`);
+        }
         if (!d.success) throw new Error(d.error || 'backtest failed');
+
+        // Phase 2: if not cached, poll status until done
+        if (d.in_progress && d.job_id) {
+            const jobId = d.job_id;
+            status.textContent = 'Backtest queued… server-side scan (~10–60s)';
+            const poll = async () => {
+                while (true) {
+                    await new Promise(res => setTimeout(res, 1500));
+                    let pr;
+                    try {
+                        pr = await fetch('/api/backtest/status?id=' + encodeURIComponent(jobId));
+                    } catch (netErr) { continue; }
+                    let pd;
+                    try { pd = await pr.json(); } catch (_) { continue; }
+                    if (pd.in_progress) {
+                        status.textContent = `Running… ${pd.elapsed_sec || '?'}s elapsed`;
+                        continue;
+                    }
+                    return pd;
+                }
+            };
+            d = await poll();
+            if (!d.success) throw new Error(d.error || 'backtest failed');
+        }
+
         _btLastResult = d;
         btRenderSummary(d);
         if (d.command) {

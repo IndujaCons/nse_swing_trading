@@ -4027,44 +4027,23 @@ def _bt_run_subprocess(args: list, timeout: int = 600) -> tuple:
     return proc.returncode, proc.stdout, proc.stderr, cmd
 
 
-@app.route("/api/backtest/run", methods=["POST"])
-def api_backtest_run():
-    """Run a Mom15/Mom20/N500/QQQ backtest as a subprocess.
+_BACKTEST_JOBS = {}  # job_id → {"status": "running"|"done"|"error", "started_at": ts, "result": dict|None}
 
-    Body: {universe, top_n, buffer_in, buffer_out, beta_cap, ema200_exit, rebal_day}
-    Returns: {success, summary{...}, raw_report, rebalance_count, command,
-              cached, elapsed_sec}.
 
-    Caches successful runs to data_store/backtest_cache/<key>.json.
-    """
-    payload = request.get_json(silent=True) or {}
-    key = _bt_cache_key(payload)
-    cache_path = os.path.join(_BACKTEST_CACHE_DIR, f"{key}.json")
-
-    # Cache hit → return immediately
-    if os.path.exists(cache_path):
-        try:
-            with open(cache_path) as f:
-                cached = json.load(f)
-            cached["cached"] = True
-            cached["elapsed_sec"] = 0.0
-            return jsonify(cached)
-        except Exception:
-            # Corrupt cache — fall through and re-run
-            pass
-
+def _bt_run_job(job_id, payload, key, cache_path):
+    """Background worker — runs the subprocess and stores the result/error
+    in _BACKTEST_JOBS[job_id]. Designed so GET /api/backtest/status can poll."""
     args = _bt_build_args(payload)
-
-    # Serialize concurrent runs — yfinance/pickle cache is not thread-safe
     with _BACKTEST_LOCK:
-        # Re-check cache after acquiring lock (another thread may have populated it)
+        # Another concurrent job may have populated the cache while we waited
         if os.path.exists(cache_path):
             try:
                 with open(cache_path) as f:
                     cached = json.load(f)
                 cached["cached"] = True
                 cached["elapsed_sec"] = 0.0
-                return jsonify(cached)
+                _BACKTEST_JOBS[job_id] = {"status": "done", "result": cached}
+                return
             except Exception:
                 pass
 
@@ -4072,40 +4051,38 @@ def api_backtest_run():
         try:
             rc, stdout, stderr, cmd = _bt_run_subprocess(args, timeout=600)
         except subprocess.TimeoutExpired:
-            return jsonify({
-                "success": False,
-                "error": "backtest timed out after 600 seconds",
-                "command": " ".join([sys.executable, _BACKTEST_SCRIPT] + args),
-            }), 504
+            _BACKTEST_JOBS[job_id] = {"status": "error", "result": {
+                "success": False, "error": "backtest timed out after 600 seconds",
+                "command": " ".join([sys.executable, _BACKTEST_SCRIPT] + args)}}
+            return
         except Exception as e:
-            return jsonify({
-                "success": False,
-                "error": f"subprocess failed: {e}",
-                "command": " ".join([sys.executable, _BACKTEST_SCRIPT] + args),
-            }), 500
+            _BACKTEST_JOBS[job_id] = {"status": "error", "result": {
+                "success": False, "error": f"subprocess failed: {e}",
+                "command": " ".join([sys.executable, _BACKTEST_SCRIPT] + args)}}
+            return
         elapsed = _bt_time.time() - t0
 
         if rc != 0:
-            return jsonify({
+            _BACKTEST_JOBS[job_id] = {"status": "error", "result": {
                 "success": False,
                 "error": f"mom15_pit_report.py exited with code {rc}",
                 "stderr": (stderr or "")[-2000:],
                 "stdout_tail": (stdout or "")[-2000:],
                 "command": " ".join(cmd),
-                "elapsed_sec": round(elapsed, 2),
-            }), 500
+                "elapsed_sec": round(elapsed, 2)}}
+            return
 
         summary = _bt_parse_summary(stdout)
         rebalance_count = len(re.findall(r"REBALANCE #", stdout))
 
         if "cagr_pct" not in summary:
-            return jsonify({
+            _BACKTEST_JOBS[job_id] = {"status": "error", "result": {
                 "success": False,
                 "error": "failed to parse FINAL SUMMARY from stdout",
                 "stdout_tail": (stdout or "")[-2000:],
                 "command": " ".join(cmd),
-                "elapsed_sec": round(elapsed, 2),
-            }), 500
+                "elapsed_sec": round(elapsed, 2)}}
+            return
 
         response = {
             "success": True,
@@ -4117,17 +4094,77 @@ def api_backtest_run():
             "elapsed_sec": round(elapsed, 2),
             "cache_key": key,
         }
-
-        # Persist to cache
         try:
             os.makedirs(_BACKTEST_CACHE_DIR, exist_ok=True)
             with open(cache_path, "w") as f:
                 json.dump(response, f)
         except Exception as e:
-            # Non-fatal — log but still return
             print(f"[backtest] cache write failed: {e}")
 
-        return jsonify(response)
+        _BACKTEST_JOBS[job_id] = {"status": "done", "result": response}
+
+
+@app.route("/api/backtest/run", methods=["POST"])
+def api_backtest_run():
+    """Start (or fetch) a backtest run. Async — long subprocesses run in
+    a background thread so the proxy can't 504 us out.
+
+    Body: {universe, top_n, buffer_in, buffer_out, beta_cap, ema200_exit, rebal_day}
+    Cache hit → returns full result inline (success: true, cached: true).
+    Cache miss → spawns a background thread, returns immediately
+                 (success: true, in_progress: true, job_id, cache_key).
+    Frontend then polls GET /api/backtest/status?id=<job_id> until done.
+    """
+    payload = request.get_json(silent=True) or {}
+    key = _bt_cache_key(payload)
+    cache_path = os.path.join(_BACKTEST_CACHE_DIR, f"{key}.json")
+
+    # Cache hit — instant
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path) as f:
+                cached = json.load(f)
+            cached["cached"] = True
+            cached["elapsed_sec"] = 0.0
+            return jsonify(cached)
+        except Exception:
+            # Corrupt cache — fall through to fresh run
+            pass
+
+    # Spawn background job
+    import uuid as _uuid
+    job_id = _uuid.uuid4().hex[:12]
+    _BACKTEST_JOBS[job_id] = {"status": "running", "started_at": _bt_time.time()}
+    threading.Thread(target=_bt_run_job,
+                     args=(job_id, payload, key, cache_path),
+                     daemon=True, name=f"backtest-{job_id}").start()
+    return jsonify({
+        "success":     True,
+        "in_progress": True,
+        "job_id":      job_id,
+        "cache_key":   key,
+        "message":     "Backtest started in background. Poll /api/backtest/status?id=<job_id>.",
+    })
+
+
+@app.route("/api/backtest/status", methods=["GET"])
+def api_backtest_status():
+    """Poll the status of a backtest job started via POST /api/backtest/run."""
+    job_id = (request.args.get("id") or "").strip()
+    if not re.fullmatch(r"[0-9a-f]{6,32}", job_id):
+        return jsonify({"success": False, "error": "missing or invalid id"}), 400
+    job = _BACKTEST_JOBS.get(job_id)
+    if not job:
+        return jsonify({"success": False, "error": "unknown job_id (expired or never existed)"}), 404
+    if job["status"] == "running":
+        elapsed = _bt_time.time() - job.get("started_at", _bt_time.time())
+        return jsonify({
+            "success":     True,
+            "in_progress": True,
+            "elapsed_sec": round(elapsed, 1),
+        })
+    # done or error → return the stored result (which already has success flag set)
+    return jsonify(job["result"])
 
 
 @app.route("/api/backtest/history", methods=["GET"])
