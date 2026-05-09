@@ -59,12 +59,42 @@ def _load_synth(synth_name: str) -> pd.Series:
     return s
 
 
+_YF_SECTORS_PKL = os.path.join(CACHE_DIR, "sector_yf_closes.pkl")
+_YF_SECTORS_MAX_AGE_H = 72   # accept up to 3-day-old disk fallback
+
+
+def _save_yf_sector_closes(yf_closes):
+    """Persist successful yfinance sector closes to disk for fallback use."""
+    try:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(_YF_SECTORS_PKL, "wb") as f:
+            import time as _t
+            pickle.dump({"saved_at": _t.time(), "closes": yf_closes}, f)
+    except Exception as e:
+        print(f"[score_live_sectors] disk persist failed: {e}")
+
+
+def _load_cached_yf_sector_closes():
+    """Return on-disk yfinance closes if recent, else {}."""
+    try:
+        if not os.path.exists(_YF_SECTORS_PKL):
+            return {}
+        import time as _t
+        age_h = (_t.time() - os.path.getmtime(_YF_SECTORS_PKL)) / 3600.0
+        if age_h > _YF_SECTORS_MAX_AGE_H:
+            return {}
+        with open(_YF_SECTORS_PKL, "rb") as f:
+            return pickle.load(f).get("closes", {})
+    except Exception:
+        return {}
+
+
 def _fetch_live_sector_prices() -> dict:
-    """Pull each sector's close series. Synth-prefixed entries load from
-    pkl; yfinance entries fetch in ONE bulk call with a hard 30s timeout
-    so a single hung Yahoo response can't freeze /api/sector-ranking
-    (the freeze used to surface as 'Error: Unexpected token <' in the UI
-    because the Flask worker was 504'ing back to the proxy)."""
+    """Pull each sector's close series. Synth-prefixed entries load from pkl;
+    yfinance entries fetch in ONE bulk call with a hard 60s timeout. If the
+    bulk fetch fails or returns empty for a sector (Yahoo throttling on EC2
+    is the common cause), fall back to the on-disk pkl from the last
+    successful fetch — better stale-but-complete than fresh-but-only-5-synth."""
     from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
     start = (pd.Timestamp.today() - pd.Timedelta(days=400)).strftime('%Y-%m-%d')
     end   = (date.today() + timedelta(days=1)).isoformat()
@@ -80,7 +110,7 @@ def _fetch_live_sector_prices() -> dict:
         else:
             yf_pairs.append((sec, source))
 
-    # Bulk yfinance for the remaining sectors, hard-capped at 30s.
+    # Bulk yfinance for the remaining sectors, hard-capped at 60s.
     if yf_pairs:
         yf_syms = [src for _, src in yf_pairs]
         bulk_df = None
@@ -88,14 +118,16 @@ def _fetch_live_sector_prices() -> dict:
             def _bulk():
                 return yf.download(yf_syms, start=start, end=end, progress=False,
                                    auto_adjust=True, group_by='ticker',
-                                   threads=True, timeout=15)
+                                   threads=True, timeout=20)
             with ThreadPoolExecutor(max_workers=1) as _e:
-                bulk_df = _e.submit(_bulk).result(timeout=30)
+                bulk_df = _e.submit(_bulk).result(timeout=60)
         except FutTimeout:
-            print("[score_live_sectors] bulk yfinance fetch timed out after 30s")
+            print("[score_live_sectors] bulk yfinance fetch timed out after 60s")
         except Exception as e:
             print(f"[score_live_sectors] bulk fetch failed: {e}")
 
+        # First pass: extract whatever we got from bulk_df.
+        fresh_closes = {}
         for sec, sym in yf_pairs:
             s = pd.Series(dtype=float)
             try:
@@ -108,7 +140,25 @@ def _fetch_live_sector_prices() -> dict:
                     s.index = s.index.tz_localize(None)
             except Exception:
                 pass
-            closes[sec] = s
+            if len(s) > 0:
+                fresh_closes[sec] = s
+
+        # Second pass: any sector missing from fresh_closes → load from disk fallback.
+        disk_closes = None
+        for sec, _sym in yf_pairs:
+            if sec in fresh_closes:
+                closes[sec] = fresh_closes[sec]
+            else:
+                if disk_closes is None:
+                    disk_closes = _load_cached_yf_sector_closes()
+                fallback = disk_closes.get(sec, pd.Series(dtype=float))
+                closes[sec] = fallback
+                if len(fallback) > 0:
+                    print(f"[score_live_sectors] {sec}: using disk fallback ({len(fallback)} bars)")
+
+        # Persist if we got at least 80% of sectors fresh — keeps disk pkl current.
+        if len(fresh_closes) >= int(0.8 * len(yf_pairs)):
+            _save_yf_sector_closes(fresh_closes)
 
     return closes
 
