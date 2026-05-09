@@ -27,7 +27,8 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
                     unfiltered_ranks: dict = None, all_prices: dict = None,
                     sector_map: dict = None,
                     top5_sectors: list = None,
-                    etf_prices: dict = None) -> dict:
+                    etf_prices: dict = None,
+                    mom20_overflow: list = None) -> dict:
     """
     Compute exits + entries for a Mom20 rebalance and return basket data.
 
@@ -147,19 +148,40 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
         else:
             holds.append({"ticker": ticker, "rank": rank, "price": price})
 
-    # Entries: entry universe not already held
-    for ticker in entry_universe:
-        if ticker not in current_tickers:
-            price = price_map.get(ticker, 0)
-            qty = int(math.floor(capital_per_slot / price)) if price > 0 else 0
-            entries.append({
-                "ticker": ticker,
-                "rank": rank_map[ticker],
-                "price": price,
-                "qty": qty,
-                "capital_allocated": round(qty * price, 2),
-                "score": round(score_map.get(ticker, 0), 3),
-            })
+    # Entries: rank-ordered fill with sector cap of 4. When a sector hits the
+    # cap, the next-ranked stock from a non-saturated sector takes the slot
+    # (signals already contains top-40 β-capped, plenty of headroom past 20).
+    SECTOR_CAP = 4
+    sector_count = {}
+    # Seed sector_count from holds — both stocks (via sector_map) and held
+    # ETFs (via etf_for_sector) — so existing portfolio respects the cap.
+    for h in holds:
+        sec = (h.get("etf_for_sector") if h.get("is_etf")
+               else (sector_map or {}).get(h["ticker"]))
+        if sec:
+            sector_count[sec] = sector_count.get(sec, 0) + 1
+
+    for s in sorted(signals, key=lambda x: x["rank"]):
+        if len(entries) >= N_SLOTS:
+            break
+        ticker = s["ticker"]
+        if ticker in current_tickers:
+            continue
+        sec = (sector_map or {}).get(ticker)
+        if sec and sector_count.get(sec, 0) >= SECTOR_CAP:
+            continue   # sector saturated — try next ranked stock
+        price = price_map.get(ticker, 0)
+        qty = int(math.floor(capital_per_slot / price)) if price > 0 else 0
+        entries.append({
+            "ticker": ticker,
+            "rank":   rank_map[ticker],
+            "price":  price,
+            "qty":    qty,
+            "capital_allocated": round(qty * price, 2),
+            "score":  round(score_map.get(ticker, 0), 3),
+        })
+        if sec:
+            sector_count[sec] = sector_count.get(sec, 0) + 1
 
     entries.sort(key=lambda x: x["rank"])
 
@@ -211,6 +233,51 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
                 "etf_name":          etf_name,
             })
     entries.extend(etf_entries)
+
+    # ── Overflow → ETF top-up (top-3 by stock count) ──────────────────────
+    # The mom20_overflow list contains high-momentum names with β > 1.2 that
+    # the β-cap blocked us from picking directly. If a sector shows up
+    # repeatedly in overflow, that's strong sector-momentum signal — add the
+    # corresponding ETF so the basket still gets exposure. Deduped against
+    # the top-5 ETF top-up above and any held ETFs.
+    if mom20_overflow and sector_map:
+        from data.sector_etf_map import SECTOR_TO_ETF
+        overflow_sec_count = {}
+        for o in (mom20_overflow or []):
+            sec = sector_map.get(o.get("ticker"))
+            if sec:
+                overflow_sec_count[sec] = overflow_sec_count.get(sec, 0) + 1
+        top_overflow_secs = [s for s, _ in
+                             sorted(overflow_sec_count.items(),
+                                    key=lambda x: -x[1])[:3]]
+        existing_etf_syms = ({e["ticker"] for e in entries if e.get("is_etf_topup")}
+                             | {h["ticker"] for h in holds if h.get("is_etf")})
+        for sec in top_overflow_secs:
+            mapping = SECTOR_TO_ETF.get(sec)
+            if not mapping:                    # no ETF in our map (MNC/MEDIA/…)
+                continue
+            etf_sym, etf_name = mapping
+            if etf_sym in existing_etf_syms:   # already covered by top-5 logic
+                continue
+            etf_price = (etf_prices or {}).get(etf_sym, 0)
+            if etf_price <= 0:
+                continue
+            qty = int(math.floor(capital_per_slot / etf_price))
+            if qty <= 0:
+                continue
+            entries.append({
+                "ticker":            etf_sym,
+                "rank":              _etf_rank_str(sec),
+                "price":             round(etf_price, 2),
+                "qty":               qty,
+                "capital_allocated": round(qty * etf_price, 2),
+                "score":             None,
+                "is_etf_topup":      True,
+                "is_overflow_etf":   True,     # marker: came from overflow path
+                "etf_for_sector":    sec,
+                "etf_name":          etf_name,
+            })
+            existing_etf_syms.add(etf_sym)
 
     # Min capital = need at least 1 share per slot for the most expensive entry
     max_entry_price = max((e["price"] for e in entries if e["price"] > 0), default=0)

@@ -2736,6 +2736,7 @@ def api_mom20_basket_preview(user_id):
         signals = result.get("mom20_signals", [])
         unfiltered_ranks = result.get("mom20_unfiltered_ranks", {})
         all_prices = dict(result.get("mom20_all_prices", {}))
+        mom20_overflow = result.get("mom20_overflow", [])
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
 
@@ -2763,14 +2764,26 @@ def api_mom20_basket_preview(user_id):
     # shows a real price even after the ETF's sector drops out of top-5.
     _held_etfs = [item["ticker"] for item in portfolio.get("basket", [])
                   if item.get("ticker") in KNOWN_ETF_SYMBOLS]
-    _need_etfs = list(set(_need_etfs + _held_etfs))
+    # Top-3 overflow sectors → also need their ETF prices for the new
+    # overflow→ETF top-up path inside generate_basket.
+    _overflow_sec_count = {}
+    for o in mom20_overflow:
+        _sec = _sec_map.get(o.get("ticker"))
+        if _sec:
+            _overflow_sec_count[_sec] = _overflow_sec_count.get(_sec, 0) + 1
+    _top_overflow_secs = [s for s, _ in
+                          sorted(_overflow_sec_count.items(), key=lambda x: -x[1])[:3]]
+    _overflow_etfs = [SECTOR_TO_ETF[s][0] for s in _top_overflow_secs
+                      if SECTOR_TO_ETF.get(s)]
+    _need_etfs = list(set(_need_etfs + _held_etfs + _overflow_etfs))
     _etf_prices = _fetch_etf_ltp(_need_etfs) if _need_etfs else {}
     basket_data = generate_basket(user, signals, portfolio,
                                   unfiltered_ranks=unfiltered_ranks,
                                   all_prices=all_prices,
                                   sector_map=_sec_map,
                                   top5_sectors=_top5,
-                                  etf_prices=_etf_prices)
+                                  etf_prices=_etf_prices,
+                                  mom20_overflow=mom20_overflow)
     return jsonify({"success": True, **basket_data})
 
 
@@ -2794,6 +2807,7 @@ def api_mom20_basket_download(user_id):
         signals = result.get("mom20_signals", [])
         unfiltered_ranks = result.get("mom20_unfiltered_ranks", {})
         all_prices = dict(result.get("mom20_all_prices", {}))
+        mom20_overflow = result.get("mom20_overflow", [])
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
 
@@ -2820,14 +2834,25 @@ def api_mom20_basket_download(user_id):
     # shows a real price even after the ETF's sector drops out of top-5.
     _held_etfs = [item["ticker"] for item in portfolio.get("basket", [])
                   if item.get("ticker") in KNOWN_ETF_SYMBOLS]
-    _need_etfs = list(set(_need_etfs + _held_etfs))
+    # Top-3 overflow sectors → also need their ETF prices.
+    _overflow_sec_count = {}
+    for o in mom20_overflow:
+        _sec = _sec_map.get(o.get("ticker"))
+        if _sec:
+            _overflow_sec_count[_sec] = _overflow_sec_count.get(_sec, 0) + 1
+    _top_overflow_secs = [s for s, _ in
+                          sorted(_overflow_sec_count.items(), key=lambda x: -x[1])[:3]]
+    _overflow_etfs = [SECTOR_TO_ETF[s][0] for s in _top_overflow_secs
+                      if SECTOR_TO_ETF.get(s)]
+    _need_etfs = list(set(_need_etfs + _held_etfs + _overflow_etfs))
     _etf_prices = _fetch_etf_ltp(_need_etfs) if _need_etfs else {}
     basket_data = generate_basket(user, signals, portfolio,
                                   unfiltered_ranks=unfiltered_ranks,
                                   all_prices=all_prices,
                                   sector_map=_sec_map,
                                   top5_sectors=_top5,
-                                  etf_prices=_etf_prices)
+                                  etf_prices=_etf_prices,
+                                  mom20_overflow=mom20_overflow)
     from data.mom20_basket import to_zerodha_json
     json_content = to_zerodha_json(basket_data)
 
