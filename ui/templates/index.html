@@ -1413,6 +1413,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
                 <button class="strategy-tab" onclick="switchStrategy('overflow_portfolio')">Overflow</button>
                 <button class="strategy-tab" onclick="switchStrategy('backtest')">Backtest</button>
+                <button class="strategy-tab" onclick="switchStrategy('journal')">Journal</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2437,6 +2438,7 @@
                                     <th style="text-align:right;padding:5px 8px;font-family:monospace;">Qty</th>
                                     <th style="text-align:right;padding:5px 8px;font-family:monospace;">Unreal P&amp;L</th>
                                     <th id="th-return" onclick="mom20TrackerSetSort('return')" style="text-align:right;padding:5px 8px;cursor:pointer;user-select:none;font-family:monospace;">P&amp;L% <span id="th-return-arrow">▼</span></th>
+                                    <th style="text-align:left;padding:5px 8px;font-family:monospace;color:#a78bfa;">Note</th>
                                 </tr>
                             </thead>
                             <tbody id="mom20-tracker-tbody"></tbody>
@@ -2679,6 +2681,62 @@
                 </div>
 
             </div><!-- end #backtest-panels -->
+
+            <!-- Journal panel -->
+            <div id="journal-panels" class="hidden" style="padding:16px;max-width:860px;">
+
+                <!-- Header -->
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                    <span style="font-size:14px;font-weight:700;color:#a78bfa;letter-spacing:0.5px;">MARKET JOURNAL</span>
+                    <span style="font-size:11px;color:var(--text-muted);">Trade context, sector observations, macro themes</span>
+                </div>
+
+                <!-- Entry composer -->
+                <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:14px;margin-bottom:18px;">
+                    <textarea id="journal-text-input" placeholder="Add observation, macro note, sector watchlist note, or trade context…" rows="3"
+                        style="width:100%;box-sizing:border-box;padding:8px 10px;font-family:inherit;font-size:13px;background:var(--bg-white);color:var(--text-primary);border:1px solid var(--border-color);border-radius:5px;resize:vertical;outline:none;"></textarea>
+                    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;">
+                        <select id="journal-type-select" style="padding:4px 8px;font-family:inherit;font-size:12px;background:var(--bg-white);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;">
+                            <option value="observation">Observation</option>
+                            <option value="pre_trade">Pre-Trade Context</option>
+                            <option value="post_trade">Post-Trade Context</option>
+                            <option value="macro">Macro</option>
+                            <option value="sector">Sector Watch</option>
+                        </select>
+                        <input id="journal-tags-input" type="text" placeholder="Tags (comma-separated: FMCG, Energy, ONGC)" style="flex:1;min-width:180px;padding:4px 8px;font-family:inherit;font-size:12px;background:var(--bg-white);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;outline:none;">
+                        <button onclick="journalAdd()" style="padding:5px 16px;font-size:12px;font-weight:700;background:#a78bfa;color:white;border:none;border-radius:5px;cursor:pointer;">+ Add</button>
+                    </div>
+                </div>
+
+                <!-- Filter bar -->
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                    <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">FILTER:</span>
+                    <button class="journal-filter-btn active" data-filter="all" onclick="journalSetFilter('all')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">All</button>
+                    <button class="journal-filter-btn" data-filter="observation" onclick="journalSetFilter('observation')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Observation</button>
+                    <button class="journal-filter-btn" data-filter="pre_trade" onclick="journalSetFilter('pre_trade')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Pre-Trade</button>
+                    <button class="journal-filter-btn" data-filter="post_trade" onclick="journalSetFilter('post_trade')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Post-Trade</button>
+                    <button class="journal-filter-btn" data-filter="macro" onclick="journalSetFilter('macro')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Macro</button>
+                    <button class="journal-filter-btn" data-filter="sector" onclick="journalSetFilter('sector')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Sector Watch</button>
+                </div>
+
+                <!-- Entries list -->
+                <div id="journal-entries-list" style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="color:var(--text-muted);font-size:12px;padding:20px 0;">Loading…</div>
+                </div>
+
+            </div><!-- end #journal-panels -->
+
+            <!-- Note modal (shared for Mom20 position notes) -->
+            <div id="note-modal" style="display:none;position:fixed;z-index:9999;background:var(--bg-white);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);padding:14px;width:320px;">
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:8px;">POSITION NOTE — <span id="note-modal-ticker"></span></div>
+                <textarea id="note-modal-text" rows="4" placeholder="Why did you take this? Context, sector score, macro theme…"
+                    style="width:100%;box-sizing:border-box;padding:7px 9px;font-family:inherit;font-size:12px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;resize:vertical;outline:none;"></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
+                    <button onclick="noteModalClear()" style="padding:4px 12px;font-size:11px;background:transparent;color:#dc3545;border:1px solid #dc3545;border-radius:4px;cursor:pointer;">Clear</button>
+                    <button onclick="noteModalClose()" style="padding:4px 12px;font-size:11px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Cancel</button>
+                    <button onclick="noteModalSave()" style="padding:4px 12px;font-size:11px;background:#a78bfa;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700;">Save</button>
+                </div>
+            </div>
 
         </main>
     </div>
@@ -3594,6 +3652,7 @@
             else if (strategy === 'mom20_portfolio') tabs[3].classList.add('active');
             else if (strategy === 'overflow_portfolio') tabs[4].classList.add('active');
             else if (strategy === 'backtest') tabs[5].classList.add('active');
+            else if (strategy === 'journal') tabs[6].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -3605,6 +3664,8 @@
             document.getElementById('mom20-portfolio-panels').classList.toggle('hidden', strategy !== 'mom20_portfolio');
             document.getElementById('overflow-portfolio-panels').classList.toggle('hidden', strategy !== 'overflow_portfolio');
             document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
+            document.getElementById('journal-panels').classList.toggle('hidden', strategy !== 'journal');
+            if (strategy === 'journal') journalLoad();
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
@@ -8451,16 +8512,19 @@ function mom20TrackerRender() {
         const unrealPnl = Math.round((h.current_price - h.entry_price) * h.qty);
         const pnlSign = unrealPnl >= 0 ? '+' : '';
         const td = 'padding:4px 8px;font-family:monospace;';
-        return `<tr data-ticker="${h.ticker}" onclick="openTrackerChart('${h.ticker}')" style="border-bottom:1px solid var(--border-color);cursor:pointer;">
-            <td style="${td}font-weight:700;">${h.ticker}</td>
-            <td style="${td}color:var(--text-muted);font-size:11px;">${mom20SectorLabel(h.ticker)}</td>
-            <td style="${td}text-align:right;font-weight:700;color:${rankColor};">${rank}</td>
-            <td style="${td}text-align:right;color:var(--text-muted);">${sinceStr}</td>
-            <td style="${td}text-align:right;color:var(--text-muted);">${h.entry_price.toLocaleString('en-IN')}</td>
-            <td style="${td}text-align:right;">${h.current_price.toLocaleString('en-IN')}</td>
-            <td style="${td}text-align:right;color:var(--text-muted);">${h.qty}</td>
-            <td style="${td}text-align:right;font-weight:700;color:${color};">${pnlSign}₹${Math.abs(unrealPnl).toLocaleString('en-IN')}</td>
-            <td style="${td}text-align:right;font-weight:700;color:${color};">${sign}${h.return_pct.toFixed(1)}%</td>
+        const noteText = h.note || '';
+        const noteDisplay = noteText ? `<span title="${noteText.replace(/"/g,'&quot;')}" style="color:#a78bfa;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle;">${noteText.length > 28 ? noteText.slice(0,28)+'…' : noteText}</span>` : `<span style="color:var(--text-muted);font-size:13px;">＋</span>`;
+        return `<tr data-ticker="${h.ticker}" style="border-bottom:1px solid var(--border-color);">
+            <td style="${td}font-weight:700;cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${h.ticker}</td>
+            <td style="${td}color:var(--text-muted);font-size:11px;cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${mom20SectorLabel(h.ticker)}</td>
+            <td style="${td}text-align:right;font-weight:700;color:${rankColor};cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${rank}</td>
+            <td style="${td}text-align:right;color:var(--text-muted);cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${sinceStr}</td>
+            <td style="${td}text-align:right;color:var(--text-muted);cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${h.entry_price.toLocaleString('en-IN')}</td>
+            <td style="${td}text-align:right;cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${h.current_price.toLocaleString('en-IN')}</td>
+            <td style="${td}text-align:right;color:var(--text-muted);cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${h.qty}</td>
+            <td style="${td}text-align:right;font-weight:700;color:${color};cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${pnlSign}₹${Math.abs(unrealPnl).toLocaleString('en-IN')}</td>
+            <td style="${td}text-align:right;font-weight:700;color:${color};cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${sign}${h.return_pct.toFixed(1)}%</td>
+            <td style="${td}cursor:pointer;" onclick="noteModalOpen('${h.ticker}', ${JSON.stringify(noteText).replace(/</g,'\\u003c')})">${noteDisplay}</td>
         </tr>`;
     }).join('');
 }
@@ -9146,6 +9210,172 @@ function btToggleHistory() {
         btn.textContent = '📋 Hide Rebalance History';
     }
 }
+
+// ── Trading Journal ───────────────────────────────────────────────────────────
+
+let _journalEntries = [];
+let _journalFilter  = 'all';
+
+const _journalTypeColors = {
+    observation: '#78909c',
+    pre_trade:   '#27ae60',
+    post_trade:  '#3498db',
+    macro:       '#e67e22',
+    sector:      '#a78bfa',
+};
+const _journalTypeLabels = {
+    observation: 'Observation',
+    pre_trade:   'Pre-Trade',
+    post_trade:  'Post-Trade',
+    macro:       'Macro',
+    sector:      'Sector Watch',
+};
+
+async function journalLoad() {
+    try {
+        const r = await fetch('/api/journal');
+        const d = await r.json();
+        if (d.success) {
+            _journalEntries = d.entries;
+            journalRender();
+        }
+    } catch(e) {
+        document.getElementById('journal-entries-list').innerHTML =
+            '<div style="color:#dc3545;font-size:12px;">Failed to load journal.</div>';
+    }
+}
+
+function journalSetFilter(f) {
+    _journalFilter = f;
+    document.querySelectorAll('.journal-filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === f);
+        b.style.background = b.dataset.filter === f ? 'var(--bg-primary)' : 'var(--bg-card)';
+        b.style.fontWeight  = b.dataset.filter === f ? '700' : 'normal';
+    });
+    journalRender();
+}
+
+function journalRender() {
+    const list = document.getElementById('journal-entries-list');
+    if (!list) return;
+    const entries = _journalFilter === 'all'
+        ? _journalEntries
+        : _journalEntries.filter(e => e.type === _journalFilter);
+    if (!entries.length) {
+        list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;">No entries yet.</div>';
+        return;
+    }
+    list.innerHTML = entries.map(e => {
+        const typeColor = _journalTypeColors[e.type] || '#78909c';
+        const typeLabel = _journalTypeLabels[e.type] || e.type;
+        const ts = e.timestamp ? e.timestamp.replace('T', ' ').slice(0, 16) : '';
+        const tagsHtml = (e.tags || []).map(t =>
+            `<span style="display:inline-block;padding:1px 7px;font-size:10px;background:rgba(167,139,250,0.15);color:#a78bfa;border-radius:3px;border:1px solid rgba(167,139,250,0.3);">${t}</span>`
+        ).join('');
+        const textEsc = e.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+        return `<div style="background:var(--bg-card);border:1px solid var(--border-color);border-left:3px solid ${typeColor};border-radius:6px;padding:11px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap;">
+                <span style="font-size:10px;color:var(--text-muted);">${ts}</span>
+                <span style="font-size:10px;font-weight:700;padding:1px 7px;background:${typeColor}22;color:${typeColor};border-radius:3px;">${typeLabel}</span>
+                ${tagsHtml}
+                <button onclick="journalDelete('${e.id}')" style="margin-left:auto;padding:1px 8px;font-size:10px;background:transparent;color:var(--text-muted);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;" title="Delete">✕</button>
+            </div>
+            <div style="font-size:13px;color:var(--text-primary);line-height:1.5;">${textEsc}</div>
+        </div>`;
+    }).join('');
+}
+
+async function journalAdd() {
+    const text = (document.getElementById('journal-text-input').value || '').trim();
+    if (!text) return;
+    const type = document.getElementById('journal-type-select').value;
+    const tagsRaw = document.getElementById('journal-tags-input').value || '';
+    const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+    try {
+        const r = await fetch('/api/journal', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text, type, tags}),
+        });
+        const d = await r.json();
+        if (d.success) {
+            document.getElementById('journal-text-input').value = '';
+            document.getElementById('journal-tags-input').value = '';
+            _journalEntries.unshift(d.entry);
+            journalRender();
+        }
+    } catch(e) { showToast('Failed to save entry', 'error'); }
+}
+
+async function journalDelete(id) {
+    try {
+        const r = await fetch(`/api/journal/${id}`, {method: 'DELETE'});
+        const d = await r.json();
+        if (d.success) {
+            _journalEntries = _journalEntries.filter(e => e.id !== id);
+            journalRender();
+        }
+    } catch(e) { showToast('Failed to delete', 'error'); }
+}
+
+// ── Position note modal ───────────────────────────────────────────────────────
+
+let _noteModalTicker = null;
+
+function noteModalOpen(ticker, existingNote) {
+    _noteModalTicker = ticker;
+    document.getElementById('note-modal-ticker').textContent = ticker;
+    document.getElementById('note-modal-text').value = existingNote || '';
+    const modal = document.getElementById('note-modal');
+    modal.style.display = 'block';
+    // Centre on screen
+    modal.style.top  = '50%';
+    modal.style.left = '50%';
+    modal.style.transform = 'translate(-50%, -50%)';
+    document.getElementById('note-modal-text').focus();
+}
+
+function noteModalClose() {
+    document.getElementById('note-modal').style.display = 'none';
+    _noteModalTicker = null;
+}
+
+function noteModalClear() {
+    document.getElementById('note-modal-text').value = '';
+    noteModalSave();
+}
+
+async function noteModalSave() {
+    if (!_noteModalTicker) return;
+    const note = (document.getElementById('note-modal-text').value || '').trim();
+    const uid  = _mom20SelectedUser?.id;
+    if (!uid) { showToast('No user selected', 'error'); return; }
+    try {
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-position-note`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ticker: _noteModalTicker, note}),
+        });
+        const d = await r.json();
+        if (d.success) {
+            const h = _mom20TrackerHoldings.find(x => x.ticker === _noteModalTicker);
+            if (h) h.note = note;
+            mom20TrackerRender();
+            noteModalClose();
+            showToast('Note saved', 'success');
+        } else {
+            showToast(d.error || 'Error saving note', 'error');
+        }
+    } catch(e) { showToast('Failed to save note', 'error'); }
+}
+
+// Close note modal on backdrop click
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('note-modal');
+    if (modal && modal.style.display !== 'none' && !modal.contains(e.target)) {
+        noteModalClose();
+    }
+});
 
 </script>
 

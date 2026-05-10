@@ -3134,6 +3134,7 @@ def api_mom20_performance(user_id):
             "entry_value":   entry_val,
             "current_value": curr_val,
             "return_pct":    ret_pct,
+            "note":          h.get("note", ""),
         })
 
     holdings.sort(key=lambda x: x["return_pct"], reverse=True)
@@ -3149,6 +3150,103 @@ def api_mom20_performance(user_id):
         "tracking_since":     earliest_date,
         "prices_updated_at":  prices_updated_at,
     })
+
+
+# ── Mom20 per-position note ───────────────────────────────────────────────────
+
+@app.route("/api/portfolio-users/<user_id>/mom20-position-note", methods=["POST"])
+def api_mom20_position_note(user_id):
+    """Save (or clear) a free-text note on a Mom20 basket holding."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    body = request.get_json(silent=True) or {}
+    ticker = (body.get("ticker") or "").strip().upper()
+    note   = (body.get("note") or "").strip()
+    if not ticker:
+        return jsonify({"success": False, "error": "ticker required"})
+    pf_path = mom20_portfolio_path(user_id)
+    try:
+        with open(pf_path) as f:
+            pf = json.load(f)
+    except Exception:
+        return jsonify({"success": False, "error": "portfolio not found"})
+    matched = False
+    for h in pf.get("basket", []):
+        if h.get("ticker") == ticker:
+            if note:
+                h["note"] = note
+            else:
+                h.pop("note", None)
+            matched = True
+            break
+    if not matched:
+        return jsonify({"success": False, "error": f"{ticker} not in basket"})
+    with open(pf_path, "w") as f:
+        json.dump(pf, f, indent=2)
+    return jsonify({"success": True})
+
+
+# ── Trading Journal ───────────────────────────────────────────────────────────
+
+import uuid as _uuid
+
+_JOURNAL_FILE = os.path.join(DATA_STORE_PATH, "journal.json")
+_journal_lock = threading.Lock()
+
+
+def _load_journal():
+    try:
+        with open(_JOURNAL_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def _save_journal(entries):
+    with open(_JOURNAL_FILE, "w") as f:
+        json.dump(entries, f, indent=2)
+
+
+@app.route("/api/journal", methods=["GET"])
+def api_journal_get():
+    with _journal_lock:
+        entries = _load_journal()
+    entries.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
+    return jsonify({"success": True, "entries": entries})
+
+
+@app.route("/api/journal", methods=["POST"])
+def api_journal_add():
+    body = request.get_json(silent=True) or {}
+    text = (body.get("text") or "").strip()
+    if not text:
+        return jsonify({"success": False, "error": "text required"})
+    from datetime import datetime, timezone, timedelta
+    ist = timezone(timedelta(hours=5, minutes=30))
+    entry = {
+        "id":        str(_uuid.uuid4())[:8],
+        "timestamp": datetime.now(ist).strftime("%Y-%m-%dT%H:%M:%S"),
+        "text":      text,
+        "tags":      [t.strip() for t in (body.get("tags") or []) if t.strip()],
+        "type":      body.get("type", "observation"),
+    }
+    with _journal_lock:
+        entries = _load_journal()
+        entries.append(entry)
+        _save_journal(entries)
+    return jsonify({"success": True, "entry": entry})
+
+
+@app.route("/api/journal/<entry_id>", methods=["DELETE"])
+def api_journal_delete(entry_id):
+    with _journal_lock:
+        entries = _load_journal()
+        before = len(entries)
+        entries = [e for e in entries if e.get("id") != entry_id]
+        if len(entries) == before:
+            return jsonify({"success": False, "error": "entry not found"})
+        _save_journal(entries)
+    return jsonify({"success": True})
 
 
 # ── Mom20 portfolio chart ──────────────────────────────────────────────────────
