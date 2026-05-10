@@ -3359,81 +3359,133 @@ _AI_BRIEFING_CACHE: dict = {}          # user_id → {ts, text}
 _AI_BRIEFING_TTL   = 1800              # 30-min cache so we don't burn tokens on refresh
 
 
-def _build_briefing_prompt(holdings, sector_ranking, news_items, regime_str, today_str):
+def _build_briefing_prompt(holdings, sector_ranking, news_items, regime_str, today_str,
+                           live_signals=None, sector_momentum=None):
+    held_tickers = {h['ticker'] for h in holdings}
+    held_sectors  = {h.get('sector', '') for h in holdings if h.get('sector')}
+
     lines = [
-        f"You are a concise Indian equity analyst assistant. Today is {today_str}. "
-        f"Nifty200 regime: {regime_str}.",
+        f"You are a senior Indian equity analyst providing a daily market intelligence briefing.",
+        f"Today: {today_str}. Mom20 Regime filter: {regime_str} "
+        f"({'CAUTION — market below SMA200, no new entries' if regime_str == 'OFF' else 'regime ON, entries permitted'}).",
         "",
-        "## Portfolio Holdings (all users combined)",
     ]
+
+    # ── 1. Portfolio Holdings ───────────────────────────────────────────────
+    lines += ["## PORTFOLIO HOLDINGS (all users)"]
     if holdings:
-        lines.append("User | Ticker | Sector | Rank | Entry₹ | Now₹ | P&L%")
-        for h in holdings:
+        lines.append("User | Ticker | Sector | Mom-Rank | Entry₹ | Now₹ | P&L%")
+        for h in sorted(holdings, key=lambda x: (x.get('rank') or 9999) if isinstance(x.get('rank'), (int, float)) else 9999):
             lines.append(
                 f"{h.get('user','?')} | {h['ticker']} | {h.get('sector','?')} | "
                 f"{h.get('rank','?')} | ₹{h.get('entry_price',0):.0f} | "
                 f"₹{h.get('current_price',0):.0f} | {h.get('return_pct',0):+.1f}%"
             )
     else:
-        lines.append("(no holdings across any user)")
+        lines.append("(no holdings)")
 
-    # Sector ranking — key is 'score' (normalized momentum score), not 'zscore'
-    scores_valid = any((r.get('score') or 0) != 0 for r in (sector_ranking or []))
-    lines += ["", "## Sector Momentum Ranking (score = normalized Z-score blend of 12m+3m momentum)"]
-    if not scores_valid:
-        lines.append("⚠️ Live sector scores unavailable — listing order only.")
-    held_sectors = {h.get('sector','') for h in holdings}
-    for r in (sector_ranking or [])[:15]:
-        sc    = r.get('score', 0) or 0
-        sym   = r.get('symbol', '?')
-        rnk   = r.get('rank', '?')
-        r12   = r.get('ret_12m') or r.get('ret12m') or 0
-        r3    = r.get('ret_3m')  or r.get('ret3m')  or 0
-        has_holding = '★' if sym in held_sectors else ''
-        lines.append(f"#{rnk} {sym}{has_holding}  score={sc:.3f}  12m={r12:+.1f}%  3m={r3:+.1f}%")
-
-    lines += ["", "## Recent News — Portfolio Stocks"]
-    held = {h['ticker'] for h in holdings} if holdings else set()
-    stock_news = [n for n in news_items if n.get('tag') in held]
-    if stock_news:
-        for n in stock_news[:25]:
-            ago = n.get('published', '')[:10]
-            lines.append(f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({ago})")
+    # ── 2. Live Signals — Mom20 top-40 ranking ─────────────────────────────
+    lines += ["", "## MOM20 LIVE RANKING (top 40 by momentum score; rank ≤ 20 = entry zone)"]
+    signals = (live_signals or {}).get('mom20_signals', [])
+    if signals:
+        lines.append("Rank | Ticker | In-Portfolio? | 12m% | 3m% | Score | Beta")
+        for s in signals[:40]:
+            tk   = s.get('ticker', '')
+            held = '✓ HELD' if tk in held_tickers else 'NEW'
+            lines.append(
+                f"#{s.get('rank','?')} | {tk} | {held} | "
+                f"{s.get('ret_12m',0):+.1f}% | {s.get('ret_3m',0):+.1f}% | "
+                f"{s.get('momentum_score',0):.3f} | β{s.get('beta',0):.2f}"
+            )
     else:
-        lines.append("(no portfolio-specific news in cache — see market news below)")
+        lines.append("(signals not available)")
 
-    lines += ["", "## Recent News — Sectors & Market"]
-    sector_news = [n for n in news_items if n.get('tag_type') in ('sector', 'market')]
-    for n in sector_news[:20]:
-        ago = n.get('published', '')[:10]
-        lines.append(f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({ago})")
+    # Overflow basket
+    overflow = (live_signals or {}).get('mom20_overflow', [])
+    if overflow:
+        lines += ["", "### Mom20 Overflow (high-beta β>1.2 candidates)"]
+        for s in overflow[:7]:
+            tk = s.get('ticker', '')
+            lines.append(f"  {tk} rank#{s.get('rank','?')}  12m={s.get('ret_12m',0):+.1f}%  "
+                         f"3m={s.get('ret_3m',0):+.1f}%  β{s.get('beta',0):.2f}")
 
+    # ── 3. Sector Momentum Ranking (Z-score based) ─────────────────────────
+    scores_valid = any((r.get('score') or 0) != 0 for r in (sector_ranking or []))
+    lines += ["", "## SECTOR Z-SCORE RANKING (score = blend of 12m+3m momentum, cross-sectional)"]
+    if not scores_valid:
+        lines.append("⚠️ Live sector scores unavailable this cycle.")
+    for r in (sector_ranking or [])[:15]:
+        sc  = r.get('score', 0) or 0
+        sym = r.get('symbol', '?')
+        r12 = r.get('ret_12m', 0) or 0
+        r3  = r.get('ret_3m', 0) or 0
+        star = ' ★HELD' if sym in held_sectors else ''
+        lines.append(f"#{r.get('rank','?')} {sym}{star}  score={sc:.3f}  12m={r12:+.1f}%  3m={r3:+.1f}%")
+
+    # ── 4. Sector RS Momentum (5d / 10d delta vs Nifty200) ─────────────────
+    sm = sector_momentum or {}
+    if sm:
+        lines += ["", "## SECTOR RS MOMENTUM (RS vs Nifty200; momentum = composite score)"]
+        items = sorted(sm.items(), key=lambda x: x[1].get('momentum', 0), reverse=True)
+        lines.append("Sector | RS now | 5d Δ | 10d Δ | Composite")
+        for sec, v in items:
+            star = ' ★' if sec in held_sectors else ''
+            lines.append(
+                f"{sec}{star} | {v.get('rs',0):+.2f} | {v.get('delta_5d',0):+.2f} | "
+                f"{v.get('delta_10d',0):+.2f} | {v.get('momentum',0):+.1f}"
+            )
+
+    # ── 5. News ─────────────────────────────────────────────────────────────
+    lines += ["", "## NEWS — PORTFOLIO STOCKS (last 7 days)"]
+    stock_news = [n for n in news_items if n.get('tag') in held_tickers]
+    for n in stock_news[:30]:
+        lines.append(f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({n.get('published','')[:10]})")
+    if not stock_news:
+        lines.append("(no stock-specific news fetched)")
+
+    lines += ["", "## NEWS — SECTORS & MARKET"]
+    mkt_news = [n for n in news_items if n.get('tag_type') in ('sector','market','Results')]
+    for n in mkt_news[:25]:
+        lines.append(f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({n.get('published','')[:10]})")
+
+    # ── 6. Task ─────────────────────────────────────────────────────────────
     lines += [
         "",
-        "## Task",
-        "Write a structured market intelligence briefing. Use markdown. Be specific and actionable.",
+        "---",
+        "## YOUR TASK — write a detailed market intelligence report with these sections:",
         "",
-        "### ⚠️ Portfolio Warnings",
-        "Flag stocks with rank > 40, drawdown > 15%, or in bottom-5 sectors. "
-        "Name the user, ticker, rank, and why it's a concern.",
+        "### ⚠️ Portfolio Warnings & Risk Flags",
+        "Go through each holding. Flag: rank > 40 (exit signal per Mom20 rules), "
+        "rank 21-40 (buffer zone — watch), negative P&L > 10%, stocks in sectors with "
+        "negative RS momentum. For each flag: user, ticker, rank, what specifically to watch.",
         "",
-        "### 📊 Why Did It Move?",
-        "For any portfolio stock that has a large P&L% (positive or negative), "
-        "or where you see relevant news explaining a recent price move — explain what happened. "
-        "Use the news headlines as evidence. E.g. 'TITAN up — Akshaya Tritiya strong sales data (ET, May 8)'.",
+        "### 📊 Price Move Explainer",
+        "For holdings with notable P&L (positive or negative) — explain WHY using the news. "
+        "Be specific: cite headline, source, date. E.g. 'TITAN +18%: Strong Akshaya Tritiya "
+        "sales (ET Mar 31) + Q4 beat (BS Apr 15). Jewellery demand holding despite gold price spike.'",
         "",
-        "### 📅 Results Season Watch",
-        "It's Q4 results season (April–May 2026). From the news, flag which held stocks "
-        "have announced results, what the outcome was (beat/miss/in-line), and which are still pending.",
+        "### 📅 Q4 Results Season (April–May 2026)",
+        "From the news, report for each held stock: result announced (beat/miss/in-line with numbers) "
+        "OR upcoming (expected date if known) OR no news. Also flag any held stock with "
+        "a significant corporate event (merger, fund-raise, regulatory action).",
         "",
-        "### 📈 Sectors — Rising & Falling",
-        "Top 3 rising sectors (high score) and bottom 2 falling (low/negative score). "
-        "For each: score, 12m/3m return, any portfolio exposure (★), and 1-line news catalyst.",
+        "### 🆕 Live Signal Commentary — New Entry Candidates",
+        "Look at the Mom20 ranking. Stocks ranked ≤ 20 that are NOT currently held = potential new entries. "
+        "For each of the top 5 new candidates: ticker, rank, 12m/3m momentum, sector, "
+        "and what the news says about them. Should these be considered at next rebalance?",
         "",
-        "### 💡 Watch List",
-        "1-2 strong sectors not yet in portfolio worth considering at next rebalance. Why now?",
+        "### 📈 Sectors — Deep Dive",
+        "Cover ALL sectors in the ranking. Group into: Rising (top 5), Neutral (middle), "
+        "Falling (bottom 5). For each group: which sectors, what the RS momentum trend shows "
+        "(5d/10d delta), news catalyst if any, and portfolio exposure. "
+        "Note any sector with rapidly changing RS (big delta_5d or delta_10d).",
         "",
-        "Keep the whole report under 500 words. No filler. Every sentence should have a fact.",
+        "### 💡 Strategic Watch List",
+        "Given regime=" + regime_str + " and current rankings: what sectors/stocks to add at next rebalance? "
+        "What to exit? Any theme emerging (defence rally, IT selloff, FMCG recovery)?",
+        "",
+        "Write in professional analyst style. Use bullet points within sections. "
+        "Aim for ~700-800 words total. Every claim must reference a data point from above.",
     ]
     return "\n".join(lines)
 
@@ -3570,16 +3622,29 @@ def api_ai_briefing_stream():
             filtered.append(n)
     news_items = filtered
 
-    ist = _tz2(timedelta(hours=5, minutes=30))
-    today_str  = _dtm2.now(ist).strftime('%d %b %Y')
-    regime_str = 'unknown'
+    # Live signals from cache (no network call needed — scheduler keeps this fresh)
+    live_signals    = {}
+    sector_momentum = {}
+    regime_str      = 'unknown'
     try:
-        regime_badge = _SECTOR_RANK_CACHE.get('regime', '')
-        regime_str = regime_badge if regime_badge else 'unknown'
+        from config.settings import LIVE_SIGNALS_CACHE_FILE
+        with open(LIVE_SIGNALS_CACHE_FILE) as f:
+            ls_cache = json.load(f)
+        live_signals    = ls_cache
+        sector_momentum = ls_cache.get('sector_momentum', {})
+        mom20_regime    = ls_cache.get('mom20_regime', '')
+        nifty_regime    = ls_cache.get('nifty_regime', '')
+        regime_str      = f"Mom20={mom20_regime or '?'} / Nifty={nifty_regime or '?'}"
     except Exception:
         pass
 
-    prompt = _build_briefing_prompt(holdings, sector_ranking, news_items, regime_str, today_str)
+    ist = _tz2(timedelta(hours=5, minutes=30))
+    today_str = _dtm2.now(ist).strftime('%d %b %Y')
+
+    prompt = _build_briefing_prompt(
+        holdings, sector_ranking, news_items, regime_str, today_str,
+        live_signals=live_signals, sector_momentum=sector_momentum,
+    )
 
     # ── Stream Claude response ──────────────────────────────────────────────
     def generate():
@@ -3589,7 +3654,7 @@ def api_ai_briefing_stream():
         try:
             with client.messages.stream(
                 model="claude-sonnet-4-6",
-                max_tokens=1200,
+                max_tokens=2500,
                 messages=[{"role": "user", "content": prompt}],
             ) as stream:
                 for text_chunk in stream.text_stream:
