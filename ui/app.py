@@ -3377,39 +3377,63 @@ def _build_briefing_prompt(holdings, sector_ranking, news_items, regime_str, tod
     else:
         lines.append("(no holdings across any user)")
 
-    lines += ["", "## Sector Z-Score Ranking (top→bottom momentum)"]
-    for r in (sector_ranking or [])[:12]:
-        lines.append(f"#{r.get('rank','?')} {r.get('symbol','?')}  z={r.get('zscore',0):.2f}")
+    # Sector ranking — key is 'score' (normalized momentum score), not 'zscore'
+    scores_valid = any((r.get('score') or 0) != 0 for r in (sector_ranking or []))
+    lines += ["", "## Sector Momentum Ranking (score = normalized Z-score blend of 12m+3m momentum)"]
+    if not scores_valid:
+        lines.append("⚠️ Live sector scores unavailable — listing order only.")
+    held_sectors = {h.get('sector','') for h in holdings}
+    for r in (sector_ranking or [])[:15]:
+        sc    = r.get('score', 0) or 0
+        sym   = r.get('symbol', '?')
+        rnk   = r.get('rank', '?')
+        r12   = r.get('ret_12m') or r.get('ret12m') or 0
+        r3    = r.get('ret_3m')  or r.get('ret3m')  or 0
+        has_holding = '★' if sym in held_sectors else ''
+        lines.append(f"#{rnk} {sym}{has_holding}  score={sc:.3f}  12m={r12:+.1f}%  3m={r3:+.1f}%")
 
-    lines += ["", "## Recent News (last 7 days, portfolio stocks + top sectors)"]
-    # Only feed headlines for held tickers + sector items to keep prompt tight
+    lines += ["", "## Recent News — Portfolio Stocks"]
     held = {h['ticker'] for h in holdings} if holdings else set()
-    relevant = [n for n in news_items if n.get('tag') in held or n.get('tag_type') in ('sector',)]
-    for n in relevant[:30]:
+    stock_news = [n for n in news_items if n.get('tag') in held]
+    if stock_news:
+        for n in stock_news[:25]:
+            ago = n.get('published', '')[:10]
+            lines.append(f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({ago})")
+    else:
+        lines.append("(no portfolio-specific news in cache — see market news below)")
+
+    lines += ["", "## Recent News — Sectors & Market"]
+    sector_news = [n for n in news_items if n.get('tag_type') in ('sector', 'market')]
+    for n in sector_news[:20]:
         ago = n.get('published', '')[:10]
         lines.append(f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({ago})")
 
     lines += [
         "",
         "## Task",
-        "Write a brief market intelligence report in this exact structure (use markdown):",
+        "Write a structured market intelligence briefing. Use markdown. Be specific and actionable.",
         "",
         "### ⚠️ Portfolio Warnings",
-        "List any held stocks with rank > 40 (exit buffer breach), large drawdowns, or "
-        "stocks in sectors with negative Z-scores. Be specific — user, ticker, rank, why it matters.",
+        "Flag stocks with rank > 40, drawdown > 15%, or in bottom-5 sectors. "
+        "Name the user, ticker, rank, and why it's a concern.",
+        "",
+        "### 📊 Why Did It Move?",
+        "For any portfolio stock that has a large P&L% (positive or negative), "
+        "or where you see relevant news explaining a recent price move — explain what happened. "
+        "Use the news headlines as evidence. E.g. 'TITAN up — Akshaya Tritiya strong sales data (ET, May 8)'.",
+        "",
+        "### 📅 Results Season Watch",
+        "It's Q4 results season (April–May 2026). From the news, flag which held stocks "
+        "have announced results, what the outcome was (beat/miss/in-line), and which are still pending.",
         "",
         "### 📈 Sectors — Rising & Falling",
-        "Top 3 rising sectors (high Z-score) and bottom 2 falling sectors. "
-        "For each, note any portfolio stocks exposed. 1-2 sentences per sector.",
-        "",
-        "### 📰 Key News for Portfolio",
-        "Pick 4-6 most relevant recent news headlines for held stocks. "
-        "One line each: ticker, headline, why it matters (bull/bear signal).",
+        "Top 3 rising sectors (high score) and bottom 2 falling (low/negative score). "
+        "For each: score, 12m/3m return, any portfolio exposure (★), and 1-line news catalyst.",
         "",
         "### 💡 Watch List",
-        "1-2 sectors not in portfolio that are rising strongly — worth adding at next rebalance.",
+        "1-2 strong sectors not yet in portfolio worth considering at next rebalance. Why now?",
         "",
-        "Keep the whole report under 400 words. Be direct and actionable, not generic.",
+        "Keep the whole report under 500 words. No filler. Every sentence should have a fact.",
     ]
     return "\n".join(lines)
 
@@ -3487,27 +3511,71 @@ def api_ai_briefing_stream():
         except Exception as e:
             print(f"[ai-briefing] portfolio load error ({uid}): {e}")
 
+    # Force-refresh sector ranking for the briefing (don't rely on stale cache)
     sector_ranking = []
     try:
-        sector_ranking = _get_sector_ranking() or []
+        from data.score_live_sectors import score_live_sectors as _score_sectors
+        sector_ranking = _score_sectors() or []
     except Exception:
-        pass
+        try:
+            sector_ranking = _get_sector_ranking() or []
+        except Exception:
+            pass
 
+    # Start with cached news
     news_items = []
     try:
         with open(_NEWS_CACHE_FILE) as f:
             nc = json.load(f)
-        news_items = nc.get('items', [])[:60]
+        news_items = list(nc.get('items', []))
     except Exception:
         pass
+
+    # Fresh targeted news for portfolio tickers (not relying on cache having them)
+    held_tickers = list({h['ticker'] for h in holdings})
+    if held_tickers:
+        fresh_stock_news = []
+        with _TPE(max_workers=min(len(held_tickers), 12)) as pool:
+            futs = []
+            for ticker in held_tickers[:12]:
+                q = _qp(f"{ticker} NSE India stock")
+                url = f"https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en"
+                futs.append(pool.submit(_parse_rss, url, "Google News", ticker, "stock", 6))
+            # Q4 results calendar search
+            rq = _qp("Q4 results 2026 NSE quarterly earnings India")
+            futs.append(pool.submit(_parse_rss,
+                f"https://news.google.com/rss/search?q={rq}&hl=en-IN&gl=IN&ceid=IN:en",
+                "Google News", "Results", "market", 10))
+            for fut in _as_completed(futs, timeout=15):
+                try:
+                    fresh_stock_news.extend(fut.result())
+                except Exception:
+                    pass
+        # Merge: fresh stock news at the front, then cached
+        existing_urls = {n['url'] for n in fresh_stock_news}
+        for n in news_items:
+            if n['url'] not in existing_urls:
+                fresh_stock_news.append(n)
+        news_items = fresh_stock_news
+
+    # Apply 7-day filter
+    cutoff_ts = _dtm2.now().timestamp() - 7 * 86400
+    filtered = []
+    for n in news_items:
+        try:
+            ok = _dtm2.fromisoformat(n.get('published','')[:19]).timestamp() >= cutoff_ts
+        except Exception:
+            ok = True
+        if ok:
+            filtered.append(n)
+    news_items = filtered
 
     ist = _tz2(timedelta(hours=5, minutes=30))
     today_str  = _dtm2.now(ist).strftime('%d %b %Y')
     regime_str = 'unknown'
     try:
-        from data.live_signals_engine import LiveSignalsEngine
-        ls = LiveSignalsEngine.__new__(LiveSignalsEngine)
-        regime_str = 'ON' if getattr(ls, '_regime_on', True) else 'OFF'
+        regime_badge = _SECTOR_RANK_CACHE.get('regime', '')
+        regime_str = regime_badge if regime_badge else 'unknown'
     except Exception:
         pass
 
