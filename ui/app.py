@@ -3333,8 +3333,7 @@ def api_news_feed():
             continue
         seen.add(it['url'])
         try:
-            import email.utils as _eu2
-            age_ok = _eu2.parsedate_to_datetime(it.get('published', '')).timestamp() >= cutoff
+            age_ok = _dtm.fromisoformat(it.get('published', '')[:19]).timestamp() >= cutoff
         except Exception:
             age_ok = True   # no parseable date → keep
         if age_ok:
