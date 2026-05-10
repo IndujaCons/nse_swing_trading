@@ -3325,11 +3325,19 @@ def api_news_feed():
             except Exception:
                 pass
 
-    # Deduplicate by URL; sort newest first
+    # Deduplicate by URL; drop items older than 7 days; sort newest first
+    cutoff = _dtm.now().timestamp() - 7 * 86400
     seen, deduped = set(), []
     for it in all_items:
-        if it['url'] not in seen:
-            seen.add(it['url'])
+        if it['url'] in seen:
+            continue
+        seen.add(it['url'])
+        try:
+            import email.utils as _eu2
+            age_ok = _eu2.parsedate_to_datetime(it.get('published', '')).timestamp() >= cutoff
+        except Exception:
+            age_ok = True   # no parseable date → keep
+        if age_ok:
             deduped.append(it)
     deduped.sort(key=lambda x: x.get('published', ''), reverse=True)
 
