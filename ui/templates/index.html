@@ -2694,7 +2694,19 @@
                             <option value="">All (no portfolio filter)</option>
                         </select>
                         <button onclick="newsFeedLoad(true)" style="padding:3px 11px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Refresh</button>
+                        <button id="ai-briefing-btn" onclick="aiBriefingToggle()" style="padding:3px 11px;font-size:11px;font-weight:700;background:#a78bfa;color:white;border:none;border-radius:4px;cursor:pointer;">🤖 AI Briefing</button>
                     </div>
+                </div>
+
+                <!-- AI Briefing panel (hidden until triggered) -->
+                <div id="ai-briefing-panel" style="display:none;margin-bottom:14px;background:var(--bg-card);border:1px solid #a78bfa44;border-left:3px solid #a78bfa;border-radius:6px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                        <span style="font-size:11px;font-weight:700;color:#a78bfa;letter-spacing:0.5px;">🤖 CLAUDE — PORTFOLIO BRIEFING</span>
+                        <span id="ai-briefing-status" style="font-size:10px;color:var(--text-muted);"></span>
+                        <button onclick="aiBriefingRefresh()" style="margin-left:auto;padding:1px 9px;font-size:10px;background:transparent;color:#a78bfa;border:1px solid #a78bfa;border-radius:3px;cursor:pointer;">↺ Regenerate</button>
+                        <button onclick="aiBriefingClose()" style="padding:1px 9px;font-size:10px;background:transparent;color:var(--text-muted);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">✕</button>
+                    </div>
+                    <div id="ai-briefing-body" style="font-size:12px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;"></div>
                 </div>
 
                 <!-- Filter bar -->
@@ -9361,6 +9373,89 @@ function nfPopulateUsers() {
     sel.innerHTML = '<option value="">All (no portfolio filter)</option>' +
         kiteUsers.map(u => `<option value="${u.config_user_id}">${u.name || u.config_user_id}</option>`).join('');
     if (cur) sel.value = cur;
+}
+
+// ── AI Portfolio Briefing ─────────────────────────────────────────────────────
+
+let _aiBriefingOpen = false;
+let _aiBriefingESS  = null;   // active EventSource
+
+function aiBriefingToggle() {
+    const panel = document.getElementById('ai-briefing-panel');
+    if (!panel) return;
+    if (_aiBriefingOpen) {
+        aiBriefingClose();
+    } else {
+        panel.style.display = 'block';
+        _aiBriefingOpen = true;
+        const body = document.getElementById('ai-briefing-body');
+        if (!body.textContent.trim()) aiBriefingFetch(false);
+    }
+}
+
+function aiBriefingClose() {
+    const panel = document.getElementById('ai-briefing-panel');
+    if (panel) panel.style.display = 'none';
+    _aiBriefingOpen = false;
+    if (_aiBriefingESS) { _aiBriefingESS.close(); _aiBriefingESS = null; }
+}
+
+function aiBriefingRefresh() {
+    const body = document.getElementById('ai-briefing-body');
+    if (body) body.textContent = '';
+    aiBriefingFetch(true);
+}
+
+function aiBriefingFetch(force) {
+    if (_aiBriefingESS) { _aiBriefingESS.close(); _aiBriefingESS = null; }
+    const body   = document.getElementById('ai-briefing-body');
+    const status = document.getElementById('ai-briefing-status');
+    if (body)   body.textContent = '';
+    if (status) status.textContent = 'generating…';
+    document.getElementById('ai-briefing-btn').textContent = '🤖 …';
+
+    const uid = document.getElementById('nf-user-select')?.value || '';
+    const params = new URLSearchParams();
+    if (uid) params.set('user_id', uid);
+    if (force) params.set('refresh', '1');
+
+    const es = new EventSource('/api/ai-briefing/stream?' + params.toString());
+    _aiBriefingESS = es;
+
+    es.onmessage = function(e) {
+        if (e.data === '[DONE]') {
+            es.close();
+            _aiBriefingESS = null;
+            if (status) status.textContent = 'done · ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('ai-briefing-btn').textContent = '🤖 AI Briefing';
+            // Render markdown-ish formatting
+            _aiBriefingRender();
+            return;
+        }
+        try {
+            const chunk = JSON.parse(e.data);
+            if (body) body.textContent += chunk;
+        } catch(ex) {}
+    };
+    es.onerror = function() {
+        es.close();
+        _aiBriefingESS = null;
+        if (status) status.textContent = 'error — check ANTHROPIC_API_KEY';
+        document.getElementById('ai-briefing-btn').textContent = '🤖 AI Briefing';
+    };
+}
+
+function _aiBriefingRender() {
+    const body = document.getElementById('ai-briefing-body');
+    if (!body) return;
+    let md = body.textContent;
+    // Very minimal markdown: ### → styled headers, **text** → bold, bullets
+    md = md
+        .replace(/### (.+)/g, '<span style="font-size:12px;font-weight:700;color:#a78bfa;display:block;margin-top:12px;margin-bottom:4px;">$1</span>')
+        .replace(/## (.+)/g,  '<span style="font-size:13px;font-weight:700;color:#f5a623;display:block;margin-top:14px;margin-bottom:6px;">$1</span>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^[•\-] (.+)/gm, '<div style="padding-left:12px;">• $1</div>');
+    body.innerHTML = md;
 }
 
 // ── Position note modal ───────────────────────────────────────────────────────

@@ -8,3 +8,4 @@ beautifulsoup4>=4.14
 peewee>=3.19
 kiteconnect>=5.0
 gunicorn>=22.0
+anthropic

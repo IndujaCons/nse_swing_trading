@@ -3353,6 +3353,183 @@ def api_news_feed():
     return jsonify({"success": True, **payload, "from_cache": False})
 
 
+# ── AI Portfolio Briefing (Claude) ────────────────────────────────────────────
+
+_AI_BRIEFING_CACHE: dict = {}          # user_id → {ts, text}
+_AI_BRIEFING_TTL   = 1800              # 30-min cache so we don't burn tokens on refresh
+
+
+def _build_briefing_prompt(holdings, sector_ranking, news_items, regime_str, today_str):
+    lines = [
+        f"You are a concise Indian equity analyst assistant. Today is {today_str}. "
+        f"Nifty200 regime: {regime_str}.",
+        "",
+        "## Portfolio Holdings",
+    ]
+    if holdings:
+        lines.append("Ticker | Sector | Rank | Entry₹ | Now₹ | P&L%")
+        for h in holdings:
+            lines.append(
+                f"{h['ticker']} | {h.get('sector','?')} | {h.get('rank','?')} | "
+                f"₹{h.get('entry_price',0):.0f} | ₹{h.get('current_price',0):.0f} | "
+                f"{h.get('return_pct',0):+.1f}%"
+            )
+    else:
+        lines.append("(no holdings)")
+
+    lines += ["", "## Sector Z-Score Ranking (top→bottom momentum)"]
+    for r in (sector_ranking or [])[:12]:
+        lines.append(f"#{r.get('rank','?')} {r.get('symbol','?')}  z={r.get('zscore',0):.2f}")
+
+    lines += ["", "## Recent News (last 7 days, portfolio stocks + top sectors)"]
+    # Only feed headlines for held tickers + sector items to keep prompt tight
+    held = {h['ticker'] for h in holdings} if holdings else set()
+    relevant = [n for n in news_items if n.get('tag') in held or n.get('tag_type') in ('sector',)]
+    for n in relevant[:30]:
+        ago = n.get('published', '')[:10]
+        lines.append(f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({ago})")
+
+    lines += [
+        "",
+        "## Task",
+        "Write a brief market intelligence report in this exact structure (use markdown):",
+        "",
+        "### ⚠️ Portfolio Warnings",
+        "List any held stocks with rank > 40 (exit buffer breach), large drawdowns, or "
+        "stocks in sectors with negative Z-scores. Be specific — ticker, rank, why it matters.",
+        "",
+        "### 📈 Sectors — Rising & Falling",
+        "Top 3 rising sectors (high Z-score) and bottom 2 falling sectors. "
+        "For each, note any portfolio stocks exposed. 1-2 sentences per sector.",
+        "",
+        "### 📰 Key News for Portfolio",
+        "Pick 4-6 most relevant recent news headlines for held stocks. "
+        "One line each: ticker, headline, why it matters (bull/bear signal).",
+        "",
+        "### 💡 Watch List",
+        "1-2 sectors not in portfolio that are rising strongly — worth adding at next rebalance.",
+        "",
+        "Keep the whole report under 400 words. Be direct and actionable, not generic.",
+    ]
+    return "\n".join(lines)
+
+
+@app.route("/api/ai-briefing/stream")
+def api_ai_briefing_stream():
+    """Stream a Claude-generated portfolio briefing via SSE."""
+    from flask import Response, stream_with_context
+    from datetime import datetime as _dtm2, timezone as _tz2, timedelta
+
+    user_id = request.args.get('user_id', '')
+    force   = request.args.get('refresh') == '1'
+
+    api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        def _err():
+            yield "data: ANTHROPIC_API_KEY not set in environment.\n\n"
+            yield "data: [DONE]\n\n"
+        return Response(stream_with_context(_err()), mimetype='text/event-stream')
+
+    # Serve from cache if fresh
+    cached = _AI_BRIEFING_CACHE.get(user_id)
+    if not force and cached:
+        age = (_dtm2.now().timestamp() - cached['ts'])
+        if age < _AI_BRIEFING_TTL:
+            def _cached_stream():
+                import time as _t
+                for chunk in (cached['text'][i:i+80] for i in range(0, len(cached['text']), 80)):
+                    yield f"data: {json.dumps(chunk)}\n\n"
+                    _t.sleep(0.01)
+                yield "data: [DONE]\n\n"
+            return Response(stream_with_context(_cached_stream()), mimetype='text/event-stream')
+
+    # ── Gather context ──────────────────────────────────────────────────────
+    holdings = []
+    if user_id:
+        try:
+            with open(mom20_portfolio_path(user_id)) as f:
+                pf = json.load(f)
+            basket = pf.get('basket', [])
+            # Load live prices + ranks
+            lp_path = mom20_live_prices_path(user_id)
+            price_map, rank_map = {}, {}
+            try:
+                with open(lp_path) as f:
+                    lp = json.load(f)
+                price_map = {k: float(v) for k, v in (lp.get('prices') or {}).items()}
+                rank_map  = dict(lp.get('ranks') or {})
+            except Exception:
+                pass
+            from data.sector_etf_map import ETF_TO_SECTOR
+            sector_map = _load_sector_map() if callable(_load_sector_map) else {}
+            for h in basket:
+                t  = h['ticker']
+                ep = h.get('entry_price', 0)
+                cp = price_map.get(t, ep)
+                holdings.append({
+                    'ticker':        t,
+                    'sector':        sector_map.get(t) or ETF_TO_SECTOR.get(t, ''),
+                    'rank':          rank_map.get(t, '?'),
+                    'entry_price':   ep,
+                    'current_price': cp,
+                    'return_pct':    round((cp - ep) / ep * 100, 1) if ep else 0,
+                })
+        except Exception as e:
+            print(f"[ai-briefing] portfolio load error: {e}")
+
+    sector_ranking = []
+    try:
+        sector_ranking = _get_sector_ranking() or []
+    except Exception:
+        pass
+
+    news_items = []
+    try:
+        with open(_NEWS_CACHE_FILE) as f:
+            nc = json.load(f)
+        news_items = nc.get('items', [])[:60]
+    except Exception:
+        pass
+
+    ist = _tz2(timedelta(hours=5, minutes=30))
+    today_str  = _dtm2.now(ist).strftime('%d %b %Y')
+    regime_str = 'unknown'
+    try:
+        from data.live_signals_engine import LiveSignalsEngine
+        ls = LiveSignalsEngine.__new__(LiveSignalsEngine)
+        regime_str = 'ON' if getattr(ls, '_regime_on', True) else 'OFF'
+    except Exception:
+        pass
+
+    prompt = _build_briefing_prompt(holdings, sector_ranking, news_items, regime_str, today_str)
+
+    # ── Stream Claude response ──────────────────────────────────────────────
+    def generate():
+        import anthropic as _ant
+        client = _ant.Anthropic(api_key=api_key)
+        full_text = []
+        try:
+            with client.messages.stream(
+                model="claude-sonnet-4-6",
+                max_tokens=1200,
+                messages=[{"role": "user", "content": prompt}],
+            ) as stream:
+                for text_chunk in stream.text_stream:
+                    full_text.append(text_chunk)
+                    yield f"data: {json.dumps(text_chunk)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps(f'Error: {e}')}\n\n"
+        yield "data: [DONE]\n\n"
+        # Cache the full response
+        _AI_BRIEFING_CACHE[user_id] = {
+            'ts':   _dtm2.now().timestamp(),
+            'text': ''.join(full_text),
+        }
+
+    return Response(stream_with_context(generate()), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
+
+
 # ── Mom20 portfolio chart ──────────────────────────────────────────────────────
 
 @app.route("/api/portfolio-users/<user_id>/mom20-chart", methods=["GET"])
