@@ -2691,7 +2691,7 @@
                     <span id="nf-status" style="font-size:11px;color:var(--text-muted);">—</span>
                     <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
                         <select id="nf-user-select" onchange="newsFeedLoad(false)" style="padding:3px 6px;font-family:inherit;font-size:11px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;">
-                            <option value="">All (no portfolio filter)</option>
+                            <option value="">All users</option>
                         </select>
                         <button onclick="newsFeedLoad(true)" style="padding:3px 11px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Refresh</button>
                         <button id="ai-briefing-btn" onclick="aiBriefingToggle()" style="padding:3px 11px;font-size:11px;font-weight:700;background:#a78bfa;color:white;border:none;border-radius:4px;cursor:pointer;">🤖 AI Briefing</button>
@@ -9414,9 +9414,7 @@ function aiBriefingFetch(force) {
     if (status) status.textContent = 'generating…';
     document.getElementById('ai-briefing-btn').textContent = '🤖 …';
 
-    const uid = document.getElementById('nf-user-select')?.value || '';
     const params = new URLSearchParams();
-    if (uid) params.set('user_id', uid);
     if (force) params.set('refresh', '1');
 
     const es = new EventSource('/api/ai-briefing/stream?' + params.toString());

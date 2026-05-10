@@ -3364,18 +3364,18 @@ def _build_briefing_prompt(holdings, sector_ranking, news_items, regime_str, tod
         f"You are a concise Indian equity analyst assistant. Today is {today_str}. "
         f"Nifty200 regime: {regime_str}.",
         "",
-        "## Portfolio Holdings",
+        "## Portfolio Holdings (all users combined)",
     ]
     if holdings:
-        lines.append("Ticker | Sector | Rank | Entry₹ | Now₹ | P&L%")
+        lines.append("User | Ticker | Sector | Rank | Entry₹ | Now₹ | P&L%")
         for h in holdings:
             lines.append(
-                f"{h['ticker']} | {h.get('sector','?')} | {h.get('rank','?')} | "
-                f"₹{h.get('entry_price',0):.0f} | ₹{h.get('current_price',0):.0f} | "
-                f"{h.get('return_pct',0):+.1f}%"
+                f"{h.get('user','?')} | {h['ticker']} | {h.get('sector','?')} | "
+                f"{h.get('rank','?')} | ₹{h.get('entry_price',0):.0f} | "
+                f"₹{h.get('current_price',0):.0f} | {h.get('return_pct',0):+.1f}%"
             )
     else:
-        lines.append("(no holdings)")
+        lines.append("(no holdings across any user)")
 
     lines += ["", "## Sector Z-Score Ranking (top→bottom momentum)"]
     for r in (sector_ranking or [])[:12]:
@@ -3396,7 +3396,7 @@ def _build_briefing_prompt(holdings, sector_ranking, news_items, regime_str, tod
         "",
         "### ⚠️ Portfolio Warnings",
         "List any held stocks with rank > 40 (exit buffer breach), large drawdowns, or "
-        "stocks in sectors with negative Z-scores. Be specific — ticker, rank, why it matters.",
+        "stocks in sectors with negative Z-scores. Be specific — user, ticker, rank, why it matters.",
         "",
         "### 📈 Sectors — Rising & Falling",
         "Top 3 rising sectors (high Z-score) and bottom 2 falling sectors. "
@@ -3420,8 +3420,8 @@ def api_ai_briefing_stream():
     from flask import Response, stream_with_context
     from datetime import datetime as _dtm2, timezone as _tz2, timedelta
 
-    user_id = request.args.get('user_id', '')
     force   = request.args.get('refresh') == '1'
+    cache_key = 'all'
 
     api_key = os.environ.get('ANTHROPIC_API_KEY', '')
     if not api_key:
@@ -3431,7 +3431,7 @@ def api_ai_briefing_stream():
         return Response(stream_with_context(_err()), mimetype='text/event-stream')
 
     # Serve from cache if fresh
-    cached = _AI_BRIEFING_CACHE.get(user_id)
+    cached = _AI_BRIEFING_CACHE.get(cache_key)
     if not force and cached:
         age = (_dtm2.now().timestamp() - cached['ts'])
         if age < _AI_BRIEFING_TTL:
@@ -3443,30 +3443,40 @@ def api_ai_briefing_stream():
                 yield "data: [DONE]\n\n"
             return Response(stream_with_context(_cached_stream()), mimetype='text/event-stream')
 
-    # ── Gather context ──────────────────────────────────────────────────────
-    holdings = []
-    if user_id:
+    # ── Gather context — ALL users' portfolios ──────────────────────────────
+    from data.sector_etf_map import ETF_TO_SECTOR
+    sector_map = {}
+    try:
+        sector_map = _load_sector_map() or {}
+    except Exception:
+        pass
+
+    all_users   = load_users()          # every registered user
+    holdings    = []                    # flat list, each row tagged with user name
+
+    for u in all_users:
+        uid  = u.get('id') or u.get('config_user_id', '')
+        uname = u.get('name', uid)
         try:
-            with open(mom20_portfolio_path(user_id)) as f:
+            with open(mom20_portfolio_path(uid)) as f:
                 pf = json.load(f)
             basket = pf.get('basket', [])
-            # Load live prices + ranks
-            lp_path = mom20_live_prices_path(user_id)
+            if not basket:
+                continue
             price_map, rank_map = {}, {}
             try:
-                with open(lp_path) as f:
+                with open(mom20_live_prices_path(uid)) as f:
                     lp = json.load(f)
                 price_map = {k: float(v) for k, v in (lp.get('prices') or {}).items()}
                 rank_map  = dict(lp.get('ranks') or {})
             except Exception:
                 pass
-            from data.sector_etf_map import ETF_TO_SECTOR
-            sector_map = _load_sector_map() if callable(_load_sector_map) else {}
             for h in basket:
                 t  = h['ticker']
                 ep = h.get('entry_price', 0)
                 cp = price_map.get(t, ep)
                 holdings.append({
+                    'user':          uname,
                     'ticker':        t,
                     'sector':        sector_map.get(t) or ETF_TO_SECTOR.get(t, ''),
                     'rank':          rank_map.get(t, '?'),
@@ -3475,7 +3485,7 @@ def api_ai_briefing_stream():
                     'return_pct':    round((cp - ep) / ep * 100, 1) if ep else 0,
                 })
         except Exception as e:
-            print(f"[ai-briefing] portfolio load error: {e}")
+            print(f"[ai-briefing] portfolio load error ({uid}): {e}")
 
     sector_ranking = []
     try:
@@ -3521,7 +3531,7 @@ def api_ai_briefing_stream():
             yield f"data: {json.dumps(f'Error: {e}')}\n\n"
         yield "data: [DONE]\n\n"
         # Cache the full response
-        _AI_BRIEFING_CACHE[user_id] = {
+        _AI_BRIEFING_CACHE[cache_key] = {
             'ts':   _dtm2.now().timestamp(),
             'text': ''.join(full_text),
         }
