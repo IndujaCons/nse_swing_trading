@@ -8,11 +8,14 @@ if [ -z "$EC2_IP" ]; then
     exit 1
 fi
 
+PEM_KEY="${HOME}/Downloads/strangle-key.pem"
+
 echo "Syncing code to EC2..."
-rsync -avz --exclude='venv/' --exclude='__pycache__/' --exclude='.git/' --exclude='.env' \
+rsync -avz -e "ssh -i ${PEM_KEY}" \
+    --exclude='venv/' --exclude='__pycache__/' --exclude='.git/' --exclude='.env' \
     . ubuntu@${EC2_IP}:/home/ubuntu/relative_strength/
 
 echo "Restarting service..."
-ssh ubuntu@${EC2_IP} "sudo systemctl restart rs-dashboard"
+ssh -i "${PEM_KEY}" ubuntu@${EC2_IP} "sudo systemctl restart rs-dashboard"
 
 echo "Done! http://${EC2_IP}:8080"

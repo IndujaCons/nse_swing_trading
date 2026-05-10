@@ -3358,135 +3358,253 @@ def api_news_feed():
 _AI_BRIEFING_CACHE: dict = {}          # user_id → {ts, text}
 _AI_BRIEFING_TTL   = 1800              # 30-min cache so we don't burn tokens on refresh
 
+# ── Stable system prompt — cached by Anthropic (cache_control ephemeral) ───
+_BRIEFING_SYSTEM_PROMPT = """\
+You are a senior Indian equity analyst producing a daily Mom20 portfolio intelligence briefing. \
+Your role is empirical, sceptical, and action-oriented. Every claim cites a data point or a \
+named, dated source. No hedging without numbers. No themes invented from training data — \
+synthesise only what is provided in the user message.
 
-def _build_briefing_prompt(holdings, sector_ranking, news_items, regime_str, today_str,
-                           live_signals=None, sector_momentum=None):
+# STRATEGY CONTEXT — Mom20
+
+Mom20 is a Nifty200 monthly-rebalance momentum strategy:
+- Universe: Nifty 200, ranked by Z-score (50% 12m return + 50% 3m return)
+- Entry threshold: rank ≤ 15 at rebalance
+- Hold threshold: rank ≤ 40 (asymmetric buffer)
+- Beta cap: ≤ 1.2 at entry; no floor
+- Overflow basket (β > 1.2): tracked but never recommended
+- ETF sleeve: held outside the rank system; must be confirmed within mandate
+
+Beta interpretation:
+- β > 1.0  → High: amplifies sector moves; tighten stops if sector RS weakening
+- β 0.6–1.0 → Moderate: preferred profile
+- β 0.5–0.6 → Defensive: lags bull regimes, cushions drawdowns
+- β < 0.5  → Ultra-low: quality trait, NOT a risk flag
+
+Mom20 must be analysed standalone. Do not reference RS63 Satellite or ETF Core.
+
+# INPUT FORMAT
+
+The user message provides six XML-tagged sections:
+<date>     — today's date and regime flags
+<holdings> — current portfolio (user, ticker, sector, rank, entry, current, P&L%, qty)
+<ranking>  — Mom20 top 40 (rank, score, β, 12m, 3m, status)
+<overflow> — β > 1.2 exclusions
+<sectors>  — sector Z-score top 15 + RS momentum table (5d Δ, 10d Δ, composite)
+<news>     — per-stock (≤30) + sector/market (≤25), each with dated source
+
+If any section is empty or missing, state this under "Data Gaps" at the end. Never fabricate.
+
+# OUTPUT — SIX SECTIONS, IN THIS ORDER
+
+Target 850–1000 words. No preamble. No closing remarks. Markdown headers exactly as below.
+
+## 1. ⚠️ Portfolio Warnings & Risk Flags
+
+Triage in tiers, in this order:
+
+**Tier 1 — Exit candidates (act at next rebalance):**
+- Rank > 40 (out of universe), OR
+- P&L < −10% AND rank ≥ 25, OR
+- Material adverse news (regulatory action, guidance cut, default risk)
+For each: ticker, trigger, evidence.
+
+**Tier 2 — Buffer zone (rank 21–40):**
+For each holding: rank, P&L, sector RS direction, and what would tip it to exit. State trajectory (improving / stable / deteriorating) where inferable.
+
+**Tier 3 — Sector concentration:**
+Compute holdings per sector as % of total positions. Thresholds:
+- > 25% → concentration risk (flag)
+- > 40% → severe concentration (escalate)
+If the dominant sector's RS 5d Δ is negative, escalate one tier regardless of count.
+
+**Tier 4 — Stock-specific event risk:**
+Material corporate events (raids, profit warnings, leadership exits) overriding rank logic.
+
+**ETF sleeve:** state explicitly that ETFs sit outside Mom20 ranking; confirm mandate fit.
+
+## 2. 📊 Price Move Explainer
+
+Top 3 gainers and bottom 3 laggards by P&L%. For each: cite a specific dated headline that \
+explains the move, OR state "no specific catalyst — sector flow / mean reversion." Reject generic narrative.
+
+## 3. 📅 Q4 Results Tracker
+
+Markdown table: Ticker | Status (Announced / Pending / Unknown) | Beat / Miss / Mixed | Source headline (dated).
+If no feed data: "❓ No data in current feed". Do not guess.
+
+## 4. 🆕 New Entry Candidates — with Caution Framework
+
+Top 5 unowned stocks at rank ≤ 20. For EACH, run this framework as a compact table:
+
+| Check | Test | Result |
+|---|---|---|
+| C1 | Sector RS direction (5d Δ) | Pass (>0) / Caution (≈0) / Fail (<0) |
+| C2 | Sector concentration impact | Pass (sector <25%) / Caution (pushes 25–40%) / Fail (pushes >40%) |
+| C3 | Beta-regime fit | Pass (β ≤ 1.0 OR strong market) / Caution |
+| C4 | Momentum balance: 3m vs 12m/4 | Pass (sustained) / Caution (decelerating) |
+| C5 | Late-cycle / extension: 12m > +150% AND 3m < +10% | Pass / Caution |
+| C6 | Pending news / event flag | Pass / Caution / Fail |
+
+Close each candidate with: **STRONG ADD / MODERATE ADD / WAIT / SKIP** + a one-line rationale tied to the framework.
+
+## 5. 📈 Sectors — Deep Dive
+
+Three explicit groups:
+- **Rising:**  composite > 0 AND 5d Δ > 0
+- **Neutral:** composite > 0 OR 5d Δ > 0 (not both)
+- **Falling:** composite < 0 AND 5d Δ < 0
+
+For each group, name the top sector by composite, current portfolio exposure %, and the 5d/10d Δ relationship (5d > 10d = accelerating; 5d < 10d = stalling).
+
+**Rotation events:** any sector that flipped group vs its 10d position — name it explicitly.
+
+## 6. 💡 Strategic Action Queue (next rebalance)
+
+Numbered, prioritised:
+1. EXIT: {ticker} — reason
+2. ADD: {ticker} — Caution Framework verdict
+3. TRIM: {ticker} — reason (typically concentration)
+4. WATCH: {ticker} — trigger to wait for
+
+Mandatory closing line — **DON'T DO:** 1–3 candidates that look strong on raw rank but fail the \
+Caution Framework, with the failed check named.
+
+# OUTPUT RULES
+
+- Professional analyst voice. No exclamations, no marketing language, no "fascinating".
+- Every claim cites a number (rank, P&L, score, β, RS Δ) or a dated source.
+- Name conflicts when data points disagree (e.g., strong rank + weak P&L).
+- Hard refusal: never recommend overflow-basket (β > 1.2) names regardless of score.
+- Hard refusal: do not invent news. If a stock has no headlines in feed, say "no headlines in current feed."
+- If word budget tightens, drop adjectives first; preserve the Action Queue and Caution Framework verdicts in full.
+- End with "## Data Gaps" only if an input section was missing/empty; otherwise omit.
+"""
+
+_BRIEFING_PREFILL = "## 1. ⚠️ Portfolio Warnings & Risk Flags\n\n**Tier 1 — Exit candidates:**"
+
+
+def _build_user_message(holdings, sector_ranking, news_items, today_str,
+                        live_signals=None, sector_momentum=None,
+                        mom20_regime='?', nifty_regime='?'):
     held_tickers = {h['ticker'] for h in holdings}
     held_sectors  = {h.get('sector', '') for h in holdings if h.get('sector')}
+    lines = []
 
-    lines = [
-        f"You are a senior Indian equity analyst providing a daily market intelligence briefing.",
-        f"Today: {today_str}. Mom20 Regime filter: {regime_str} "
-        f"({'CAUTION — market below SMA200, no new entries' if regime_str == 'OFF' else 'regime ON, entries permitted'}).",
-        "",
-    ]
+    # <date>
+    entries_ok = 'BLOCKED' if mom20_regime == 'OFF' else 'PERMITTED'
+    lines.append(f"<date>{today_str}. Mom20 Regime: {mom20_regime}. Nifty Regime: {nifty_regime}. Entries: {entries_ok}.</date>")
+    lines.append("")
 
-    # ── 1. Portfolio Holdings ───────────────────────────────────────────────
-    lines += ["## PORTFOLIO HOLDINGS (all users)"]
+    # <holdings>
+    lines.append("<holdings>")
     if holdings:
-        lines.append("User | Ticker | Sector | Mom-Rank | Entry₹ | Now₹ | P&L%")
+        lines.append("user | ticker | sector | rank | entry_date | entry_₹ | current_₹ | qty | pnl_pct")
         for h in sorted(holdings, key=lambda x: (x.get('rank') or 9999) if isinstance(x.get('rank'), (int, float)) else 9999):
             lines.append(
                 f"{h.get('user','?')} | {h['ticker']} | {h.get('sector','?')} | "
-                f"{h.get('rank','?')} | ₹{h.get('entry_price',0):.0f} | "
-                f"₹{h.get('current_price',0):.0f} | {h.get('return_pct',0):+.1f}%"
+                f"{h.get('rank','?')} | {h.get('entry_date','?')} | "
+                f"₹{h.get('entry_price',0):.0f} | ₹{h.get('current_price',0):.0f} | "
+                f"{h.get('qty','?')} | {h.get('return_pct',0):+.1f}%"
             )
     else:
         lines.append("(no holdings)")
+    lines.append("</holdings>")
+    lines.append("")
 
-    # ── 2. Live Signals — Mom20 top-40 ranking ─────────────────────────────
-    lines += ["", "## MOM20 LIVE RANKING (top 40 by momentum score; rank ≤ 20 = entry zone)"]
+    # <ranking>
     signals = (live_signals or {}).get('mom20_signals', [])
+    lines.append("<ranking>")
     if signals:
-        lines.append("Rank | Ticker | In-Portfolio? | 12m% | 3m% | Score | Beta")
+        lines.append("rank | ticker | score | β | 12m_pct | 3m_pct | status")
         for s in signals[:40]:
-            tk   = s.get('ticker', '')
-            held = '✓ HELD' if tk in held_tickers else 'NEW'
+            tk     = s.get('ticker', '')
+            status = 'HELD' if tk in held_tickers else 'NEW'
             lines.append(
-                f"#{s.get('rank','?')} | {tk} | {held} | "
-                f"{s.get('ret_12m',0):+.1f}% | {s.get('ret_3m',0):+.1f}% | "
-                f"{s.get('momentum_score',0):.3f} | β{s.get('beta',0):.2f}"
+                f"{s.get('rank','?')} | {tk} | {s.get('momentum_score',0):.3f} | "
+                f"β{s.get('beta',0):.2f} | {s.get('ret_12m',0):+.1f}% | "
+                f"{s.get('ret_3m',0):+.1f}% | {status}"
             )
     else:
         lines.append("(signals not available)")
+    lines.append("</ranking>")
+    lines.append("")
 
-    # Overflow basket
+    # <overflow>
     overflow = (live_signals or {}).get('mom20_overflow', [])
+    lines.append("<overflow>")
     if overflow:
-        lines += ["", "### Mom20 Overflow (high-beta β>1.2 candidates)"]
-        for s in overflow[:7]:
-            tk = s.get('ticker', '')
-            lines.append(f"  {tk} rank#{s.get('rank','?')}  12m={s.get('ret_12m',0):+.1f}%  "
-                         f"3m={s.get('ret_3m',0):+.1f}%  β{s.get('beta',0):.2f}")
+        lines.append("rank | ticker | score | β | 12m_pct | 3m_pct")
+        for s in overflow[:10]:
+            lines.append(
+                f"{s.get('rank','?')} | {s.get('ticker','')} | "
+                f"{s.get('momentum_score',0):.3f} | β{s.get('beta',0):.2f} | "
+                f"{s.get('ret_12m',0):+.1f}% | {s.get('ret_3m',0):+.1f}%"
+            )
+    else:
+        lines.append("(none)")
+    lines.append("</overflow>")
+    lines.append("")
 
-    # ── 3. Sector Momentum Ranking (Z-score based) ─────────────────────────
+    # <sectors>
+    lines.append("<sectors>")
+    lines.append("<zscore_top15>")
+    lines.append("sector | score | 12m | 3m")
     scores_valid = any((r.get('score') or 0) != 0 for r in (sector_ranking or []))
-    lines += ["", "## SECTOR Z-SCORE RANKING (score = blend of 12m+3m momentum, cross-sectional)"]
     if not scores_valid:
-        lines.append("⚠️ Live sector scores unavailable this cycle.")
-    for r in (sector_ranking or [])[:15]:
-        sc  = r.get('score', 0) or 0
-        sym = r.get('symbol', '?')
-        r12 = r.get('ret_12m', 0) or 0
-        r3  = r.get('ret_3m', 0) or 0
-        star = ' ★HELD' if sym in held_sectors else ''
-        lines.append(f"#{r.get('rank','?')} {sym}{star}  score={sc:.3f}  12m={r12:+.1f}%  3m={r3:+.1f}%")
+        lines.append("⚠️ live sector scores unavailable")
+    else:
+        for r in (sector_ranking or [])[:15]:
+            star = ' ★' if r.get('symbol', '') in held_sectors else ''
+            lines.append(
+                f"{r.get('symbol','?')}{star} | {r.get('score',0):.3f} | "
+                f"{r.get('ret_12m',0):+.1f}% | {r.get('ret_3m',0):+.1f}%"
+            )
+    lines.append("</zscore_top15>")
 
-    # ── 4. Sector RS Momentum (5d / 10d delta vs Nifty200) ─────────────────
     sm = sector_momentum or {}
+    lines.append("<rs_momentum>")
+    lines.append("sector | composite | 5d_delta | 10d_delta")
     if sm:
-        lines += ["", "## SECTOR RS MOMENTUM (RS vs Nifty200; momentum = composite score)"]
         items = sorted(sm.items(), key=lambda x: x[1].get('momentum', 0), reverse=True)
-        lines.append("Sector | RS now | 5d Δ | 10d Δ | Composite")
         for sec, v in items:
             star = ' ★' if sec in held_sectors else ''
             lines.append(
-                f"{sec}{star} | {v.get('rs',0):+.2f} | {v.get('delta_5d',0):+.2f} | "
-                f"{v.get('delta_10d',0):+.2f} | {v.get('momentum',0):+.1f}"
+                f"{sec}{star} | {v.get('momentum',0):+.1f} | "
+                f"{v.get('delta_5d',0):+.2f} | {v.get('delta_10d',0):+.2f}"
             )
+    else:
+        lines.append("(not available)")
+    lines.append("</rs_momentum>")
+    lines.append("</sectors>")
+    lines.append("")
 
-    # ── 5. News ─────────────────────────────────────────────────────────────
-    lines += ["", "## NEWS — PORTFOLIO STOCKS (last 7 days)"]
+    # <news>
+    lines.append("<news>")
+    lines.append("<per_stock>")
+    lines.append("ticker | date | headline | source")
     stock_news = [n for n in news_items if n.get('tag') in held_tickers]
     for n in stock_news[:30]:
-        lines.append(f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({n.get('published','')[:10]})")
+        lines.append(
+            f"{n.get('tag','')} | {n.get('published','')[:10]} | "
+            f"{n['title']} | {n.get('source','')}"
+        )
     if not stock_news:
-        lines.append("(no stock-specific news fetched)")
+        lines.append("(none)")
+    lines.append("</per_stock>")
 
-    lines += ["", "## NEWS — SECTORS & MARKET"]
-    mkt_news = [n for n in news_items if n.get('tag_type') in ('sector','market','Results')]
+    lines.append("<sector_market>")
+    lines.append("date | headline | source")
+    mkt_news = [n for n in news_items if n.get('tag_type') in ('sector', 'market', 'Results')]
     for n in mkt_news[:25]:
-        lines.append(f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({n.get('published','')[:10]})")
+        lines.append(
+            f"{n.get('published','')[:10]} | {n['title']} | {n.get('source','')}"
+        )
+    if not mkt_news:
+        lines.append("(none)")
+    lines.append("</sector_market>")
+    lines.append("</news>")
 
-    # ── 6. Task ─────────────────────────────────────────────────────────────
-    lines += [
-        "",
-        "---",
-        "## YOUR TASK — write a detailed market intelligence report with these sections:",
-        "",
-        "### ⚠️ Portfolio Warnings & Risk Flags",
-        "Go through each holding. Flag: rank > 40 (exit signal per Mom20 rules), "
-        "rank 21-40 (buffer zone — watch), negative P&L > 10%, stocks in sectors with "
-        "negative RS momentum. For each flag: user, ticker, rank, what specifically to watch.",
-        "",
-        "### 📊 Price Move Explainer",
-        "For holdings with notable P&L (positive or negative) — explain WHY using the news. "
-        "Be specific: cite headline, source, date. E.g. 'TITAN +18%: Strong Akshaya Tritiya "
-        "sales (ET Mar 31) + Q4 beat (BS Apr 15). Jewellery demand holding despite gold price spike.'",
-        "",
-        "### 📅 Q4 Results Season (April–May 2026)",
-        "From the news, report for each held stock: result announced (beat/miss/in-line with numbers) "
-        "OR upcoming (expected date if known) OR no news. Also flag any held stock with "
-        "a significant corporate event (merger, fund-raise, regulatory action).",
-        "",
-        "### 🆕 Live Signal Commentary — New Entry Candidates",
-        "Look at the Mom20 ranking. Stocks ranked ≤ 20 that are NOT currently held = potential new entries. "
-        "For each of the top 5 new candidates: ticker, rank, 12m/3m momentum, sector, "
-        "and what the news says about them. Should these be considered at next rebalance?",
-        "",
-        "### 📈 Sectors — Deep Dive",
-        "Cover ALL sectors in the ranking. Group into: Rising (top 5), Neutral (middle), "
-        "Falling (bottom 5). For each group: which sectors, what the RS momentum trend shows "
-        "(5d/10d delta), news catalyst if any, and portfolio exposure. "
-        "Note any sector with rapidly changing RS (big delta_5d or delta_10d).",
-        "",
-        "### 💡 Strategic Watch List",
-        "Given regime=" + regime_str + " and current rankings: what sectors/stocks to add at next rebalance? "
-        "What to exit? Any theme emerging (defence rally, IT selloff, FMCG recovery)?",
-        "",
-        "Write in professional analyst style. Use bullet points within sections. "
-        "Aim for ~700-800 words total. Every claim must reference a data point from above.",
-    ]
     return "\n".join(lines)
 
 
@@ -3557,6 +3675,8 @@ def api_ai_briefing_stream():
                     'sector':        sector_map.get(t) or ETF_TO_SECTOR.get(t, ''),
                     'rank':          rank_map.get(t, '?'),
                     'entry_price':   ep,
+                    'entry_date':    h.get('entry_date', '?'),
+                    'qty':           h.get('qty', '?'),
                     'current_price': cp,
                     'return_pct':    round((cp - ep) / ep * 100, 1) if ep else 0,
                 })
@@ -3625,37 +3745,49 @@ def api_ai_briefing_stream():
     # Live signals from cache (no network call needed — scheduler keeps this fresh)
     live_signals    = {}
     sector_momentum = {}
-    regime_str      = 'unknown'
+    mom20_regime    = '?'
+    nifty_regime    = '?'
     try:
         from config.settings import LIVE_SIGNALS_CACHE_FILE
         with open(LIVE_SIGNALS_CACHE_FILE) as f:
             ls_cache = json.load(f)
         live_signals    = ls_cache
         sector_momentum = ls_cache.get('sector_momentum', {})
-        mom20_regime    = ls_cache.get('mom20_regime', '')
-        nifty_regime    = ls_cache.get('nifty_regime', '')
-        regime_str      = f"Mom20={mom20_regime or '?'} / Nifty={nifty_regime or '?'}"
+        mom20_regime    = ls_cache.get('mom20_regime', '?') or '?'
+        nifty_regime    = ls_cache.get('nifty_regime', '?') or '?'
     except Exception:
         pass
 
     ist = _tz2(timedelta(hours=5, minutes=30))
     today_str = _dtm2.now(ist).strftime('%d %b %Y')
 
-    prompt = _build_briefing_prompt(
-        holdings, sector_ranking, news_items, regime_str, today_str,
+    user_msg = _build_user_message(
+        holdings, sector_ranking, news_items, today_str,
         live_signals=live_signals, sector_momentum=sector_momentum,
+        mom20_regime=mom20_regime, nifty_regime=nifty_regime,
     )
 
     # ── Stream Claude response ──────────────────────────────────────────────
     def generate():
         import anthropic as _ant
         client = _ant.Anthropic(api_key=api_key)
-        full_text = []
+        full_text = [_BRIEFING_PREFILL]
+        # Emit prefill so the frontend sees the complete output from section 1
+        yield f"data: {json.dumps(_BRIEFING_PREFILL)}\n\n"
         try:
             with client.messages.stream(
                 model="claude-sonnet-4-6",
                 max_tokens=2500,
-                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                system=[{
+                    "type": "text",
+                    "text": _BRIEFING_SYSTEM_PROMPT,
+                    "cache_control": {"type": "ephemeral"},
+                }],
+                messages=[
+                    {"role": "user",      "content": user_msg},
+                    {"role": "assistant", "content": _BRIEFING_PREFILL},
+                ],
             ) as stream:
                 for text_chunk in stream.text_stream:
                     full_text.append(text_chunk)
