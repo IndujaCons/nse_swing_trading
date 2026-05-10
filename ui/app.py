@@ -3186,67 +3186,164 @@ def api_mom20_position_note(user_id):
     return jsonify({"success": True})
 
 
-# ── Trading Journal ───────────────────────────────────────────────────────────
+# ── News Feed (Bloomberg-style RSS aggregator) ────────────────────────────────
 
-import uuid as _uuid
+import urllib.request as _urllib_req
+import xml.etree.ElementTree as _ET
+import email.utils as _email_utils
+import re as _re
+from concurrent.futures import ThreadPoolExecutor as _TPE, as_completed as _as_completed
+from urllib.parse import quote_plus as _qp
 
-_JOURNAL_FILE = os.path.join(DATA_STORE_PATH, "journal.json")
-_journal_lock = threading.Lock()
+_NEWS_CACHE_FILE = os.path.join(DATA_STORE_PATH, "news_cache.json")
+_news_cache_lock = threading.Lock()
+_NEWS_CACHE_TTL  = 600  # 10 minutes
+
+_SECTOR_NEWS_QUERIES = {
+    "NIFTY INDIA DEFENCE":     "defence sector India stock market",
+    "NIFTY METAL":             "metal sector India Nifty stock",
+    "NIFTY HEALTHCARE":        "healthcare pharma sector India Nifty",
+    "NIFTY IT":                "IT technology sector India Nifty",
+    "NIFTY AUTO":              "automobile auto sector India Nifty",
+    "NIFTY FMCG":              "FMCG consumer goods India Nifty",
+    "NIFTY PVT BANK":          "private bank India Nifty stock",
+    "NIFTY PSU BANK":          "PSU bank India Nifty public sector",
+    "NIFTY BANK":              "banking sector India Nifty",
+    "NIFTY INFRA":             "infrastructure sector India Nifty",
+    "NIFTY OIL & GAS":         "oil gas energy India Nifty stock",
+    "NIFTY CONSUMPTION":       "consumption consumer sector India Nifty",
+    "NIFTY REALTY":            "real estate realty India Nifty",
+    "NIFTY PSE":               "PSE CPSE public sector India stock",
+    "NIFTY INDIA MFG":         "manufacturing Make in India sector Nifty",
+    "NIFTY CONSUMER DURABLES": "consumer durables India Nifty stock",
+    "NIFTY ENERGY":            "energy sector India Nifty",
+    "NIFTY MEDIA":             "media sector India Nifty stock",
+    "NIFTY MNC":               "MNC sector India Nifty stock",
+    "NIFTY FIN SERVICE":       "financial services Nifty India stock",
+}
 
 
-def _load_journal():
+def _parse_rss(url, source, tag, tag_type, max_items=8):
+    """Fetch one RSS feed; return list of news item dicts. Never raises."""
     try:
-        with open(_JOURNAL_FILE) as f:
-            return json.load(f)
-    except Exception:
+        req = _urllib_req.Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (compatible; news-reader/1.0)',
+            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+        })
+        with _urllib_req.urlopen(req, timeout=9) as resp:
+            content = resp.read()
+        root = _ET.fromstring(content)
+        channel = root.find('channel') or root
+        items = []
+        for item in list(channel.findall('item'))[:max_items]:
+            title = (item.findtext('title') or '').strip()
+            link  = (item.findtext('link')  or '').strip()
+            desc  = (item.findtext('description') or '').strip()
+            pub   = (item.findtext('pubDate') or '').strip()
+            ts = ''
+            try:
+                ts = _email_utils.parsedate_to_datetime(pub).isoformat()
+            except Exception:
+                ts = pub
+            snippet = _re.sub(r'<[^>]+>', '', desc)[:220].strip()
+            if title and link:
+                items.append({
+                    'title':    title,
+                    'url':      link,
+                    'source':   source,
+                    'published': ts,
+                    'snippet':  snippet,
+                    'tag':      tag,
+                    'tag_type': tag_type,   # 'stock' | 'sector' | 'market'
+                })
+        return items
+    except Exception as e:
+        print(f"[news] {source} ({url[:55]}…): {e}")
         return []
 
 
-def _save_journal(entries):
-    with open(_JOURNAL_FILE, "w") as f:
-        json.dump(entries, f, indent=2)
+@app.route("/api/news-feed")
+def api_news_feed():
+    """Bloomberg-style RSS aggregator: portfolio stocks + top sectors + market."""
+    from datetime import datetime as _dtm
+    user_id = request.args.get('user_id') or ''
+    force   = request.args.get('refresh') == '1'
 
+    if not force:
+        try:
+            with open(_NEWS_CACHE_FILE) as f:
+                cached = json.load(f)
+            age = (_dtm.now() - _dtm.fromisoformat(cached.get('fetched_at', '2000-01-01'))).total_seconds()
+            if age < _NEWS_CACHE_TTL:
+                return jsonify({"success": True, "items": cached['items'],
+                                "fetched_at": cached['fetched_at'], "from_cache": True,
+                                "portfolio_tickers": cached.get('portfolio_tickers', []),
+                                "top_sectors": cached.get('top_sectors', [])})
+        except Exception:
+            pass
 
-@app.route("/api/journal", methods=["GET"])
-def api_journal_get():
-    with _journal_lock:
-        entries = _load_journal()
-    entries.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
-    return jsonify({"success": True, "entries": entries})
+    # Portfolio tickers for this user
+    portfolio_tickers = []
+    if user_id:
+        try:
+            with open(mom20_portfolio_path(user_id)) as f:
+                pf = json.load(f)
+            portfolio_tickers = [h['ticker'] for h in pf.get('basket', [])][:12]
+        except Exception:
+            pass
 
+    # Top sectors from live Z-score ranking
+    top_sectors = []
+    try:
+        top_sectors = [r['symbol'] for r in (_get_sector_ranking() or [])[:5]]
+    except Exception:
+        pass
 
-@app.route("/api/journal", methods=["POST"])
-def api_journal_add():
-    body = request.get_json(silent=True) or {}
-    text = (body.get("text") or "").strip()
-    if not text:
-        return jsonify({"success": False, "error": "text required"})
-    from datetime import datetime, timezone, timedelta
-    ist = timezone(timedelta(hours=5, minutes=30))
-    entry = {
-        "id":        str(_uuid.uuid4())[:8],
-        "timestamp": datetime.now(ist).strftime("%Y-%m-%dT%H:%M:%S"),
-        "text":      text,
-        "tags":      [t.strip() for t in (body.get("tags") or []) if t.strip()],
-        "type":      body.get("type", "observation"),
-    }
-    with _journal_lock:
-        entries = _load_journal()
-        entries.append(entry)
-        _save_journal(entries)
-    return jsonify({"success": True, "entry": entry})
+    # Build fetch task list: (source_label, url, tag, tag_type)
+    tasks = [
+        ("ET Markets",       "https://economictimes.indiatimes.com/markets/rss.cms",      "Market", "market"),
+        ("Business Standard","https://www.business-standard.com/rss/markets-106.rss",     "Market", "market"),
+        ("Moneycontrol",     "https://www.moneycontrol.com/rss/latestnews.xml",            "Market", "market"),
+        ("ET Stocks",        "https://economictimes.indiatimes.com/markets/stocks/rss.cms","Market", "market"),
+    ]
+    for ticker in portfolio_tickers:
+        q = _qp(f"{ticker} NSE India stock")
+        tasks.append(("Google News", f"https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en",
+                       ticker, "stock"))
+    for sector in top_sectors:
+        q = _qp(_SECTOR_NEWS_QUERIES.get(sector, f"{sector} India stock"))
+        tasks.append(("Google News", f"https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en",
+                       sector, "sector"))
 
+    all_items = []
+    with _TPE(max_workers=20) as pool:
+        futs = {pool.submit(_parse_rss, url, src, tag, ttype): (src, tag)
+                for src, url, tag, ttype in tasks}
+        for fut in _as_completed(futs, timeout=15):
+            try:
+                all_items.extend(fut.result())
+            except Exception:
+                pass
 
-@app.route("/api/journal/<entry_id>", methods=["DELETE"])
-def api_journal_delete(entry_id):
-    with _journal_lock:
-        entries = _load_journal()
-        before = len(entries)
-        entries = [e for e in entries if e.get("id") != entry_id]
-        if len(entries) == before:
-            return jsonify({"success": False, "error": "entry not found"})
-        _save_journal(entries)
-    return jsonify({"success": True})
+    # Deduplicate by URL; sort newest first
+    seen, deduped = set(), []
+    for it in all_items:
+        if it['url'] not in seen:
+            seen.add(it['url'])
+            deduped.append(it)
+    deduped.sort(key=lambda x: x.get('published', ''), reverse=True)
+
+    fetched_at = _dtm.now().isoformat()[:19]
+    payload = {"fetched_at": fetched_at, "items": deduped[:200],
+               "portfolio_tickers": portfolio_tickers, "top_sectors": top_sectors}
+    with _news_cache_lock:
+        try:
+            with open(_NEWS_CACHE_FILE, 'w') as f:
+                json.dump(payload, f)
+        except Exception:
+            pass
+
+    return jsonify({"success": True, **payload, "from_cache": False})
 
 
 # ── Mom20 portfolio chart ──────────────────────────────────────────────────────

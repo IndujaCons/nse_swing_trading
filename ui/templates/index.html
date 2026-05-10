@@ -1413,7 +1413,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
                 <button class="strategy-tab" onclick="switchStrategy('overflow_portfolio')">Overflow</button>
                 <button class="strategy-tab" onclick="switchStrategy('backtest')">Backtest</button>
-                <button class="strategy-tab" onclick="switchStrategy('journal')">Journal</button>
+                <button class="strategy-tab" onclick="switchStrategy('journal')">News</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2682,49 +2682,47 @@
 
             </div><!-- end #backtest-panels -->
 
-            <!-- Journal panel -->
-            <div id="journal-panels" class="hidden" style="padding:16px;max-width:860px;">
+            <!-- News Feed panel -->
+            <div id="journal-panels" class="hidden" style="padding:16px;">
 
-                <!-- Header -->
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                    <span style="font-size:14px;font-weight:700;color:#a78bfa;letter-spacing:0.5px;">MARKET JOURNAL</span>
-                    <span style="font-size:11px;color:var(--text-muted);">Trade context, sector observations, macro themes</span>
-                </div>
-
-                <!-- Entry composer -->
-                <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:14px;margin-bottom:18px;">
-                    <textarea id="journal-text-input" placeholder="Add observation, macro note, sector watchlist note, or trade context…" rows="3"
-                        style="width:100%;box-sizing:border-box;padding:8px 10px;font-family:inherit;font-size:13px;background:var(--bg-white);color:var(--text-primary);border:1px solid var(--border-color);border-radius:5px;resize:vertical;outline:none;"></textarea>
-                    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;">
-                        <select id="journal-type-select" style="padding:4px 8px;font-family:inherit;font-size:12px;background:var(--bg-white);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;">
-                            <option value="observation">Observation</option>
-                            <option value="pre_trade">Pre-Trade Context</option>
-                            <option value="post_trade">Post-Trade Context</option>
-                            <option value="macro">Macro</option>
-                            <option value="sector">Sector Watch</option>
+                <!-- Header row -->
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+                    <span style="font-size:14px;font-weight:700;color:#f5a623;letter-spacing:0.5px;">NEWS TERMINAL</span>
+                    <span id="nf-status" style="font-size:11px;color:var(--text-muted);">—</span>
+                    <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+                        <select id="nf-user-select" onchange="newsFeedLoad(false)" style="padding:3px 6px;font-family:inherit;font-size:11px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;">
+                            <option value="">All (no portfolio filter)</option>
                         </select>
-                        <input id="journal-tags-input" type="text" placeholder="Tags (comma-separated: FMCG, Energy, ONGC)" style="flex:1;min-width:180px;padding:4px 8px;font-family:inherit;font-size:12px;background:var(--bg-white);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;outline:none;">
-                        <button onclick="journalAdd()" style="padding:5px 16px;font-size:12px;font-weight:700;background:#a78bfa;color:white;border:none;border-radius:5px;cursor:pointer;">+ Add</button>
+                        <button onclick="newsFeedLoad(true)" style="padding:3px 11px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Refresh</button>
                     </div>
                 </div>
 
                 <!-- Filter bar -->
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-                    <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">FILTER:</span>
-                    <button class="journal-filter-btn active" data-filter="all" onclick="journalSetFilter('all')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">All</button>
-                    <button class="journal-filter-btn" data-filter="observation" onclick="journalSetFilter('observation')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Observation</button>
-                    <button class="journal-filter-btn" data-filter="pre_trade" onclick="journalSetFilter('pre_trade')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Pre-Trade</button>
-                    <button class="journal-filter-btn" data-filter="post_trade" onclick="journalSetFilter('post_trade')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Post-Trade</button>
-                    <button class="journal-filter-btn" data-filter="macro" onclick="journalSetFilter('macro')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Macro</button>
-                    <button class="journal-filter-btn" data-filter="sector" onclick="journalSetFilter('sector')" style="padding:2px 10px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">Sector Watch</button>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+                    <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;white-space:nowrap;">FILTER:</span>
+                    <button class="nf-filter-btn" data-nf="all"    onclick="nfSetFilter('all')"    style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">All</button>
+                    <button class="nf-filter-btn" data-nf="stock"  onclick="nfSetFilter('stock')"  style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">Portfolio</button>
+                    <button class="nf-filter-btn" data-nf="sector" onclick="nfSetFilter('sector')" style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">Sectors</button>
+                    <button class="nf-filter-btn" data-nf="market" onclick="nfSetFilter('market')" style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">Market</button>
+                    <span style="font-size:10px;color:var(--border-color);margin:0 2px;">|</span>
+                    <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;white-space:nowrap;">SOURCE:</span>
+                    <button class="nf-src-btn" data-src="all"              onclick="nfSetSrc('all')"              style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">All</button>
+                    <button class="nf-src-btn" data-src="ET Markets"       onclick="nfSetSrc('ET Markets')"       style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">ET</button>
+                    <button class="nf-src-btn" data-src="ET Stocks"        onclick="nfSetSrc('ET Stocks')"        style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">ET Stocks</button>
+                    <button class="nf-src-btn" data-src="Business Standard" onclick="nfSetSrc('Business Standard')" style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">BS</button>
+                    <button class="nf-src-btn" data-src="Moneycontrol"     onclick="nfSetSrc('Moneycontrol')"     style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">MC</button>
+                    <button class="nf-src-btn" data-src="Google News"      onclick="nfSetSrc('Google News')"      style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">Google</button>
                 </div>
 
-                <!-- Entries list -->
-                <div id="journal-entries-list" style="display:flex;flex-direction:column;gap:10px;">
-                    <div style="color:var(--text-muted);font-size:12px;padding:20px 0;">Loading…</div>
+                <!-- Tag pill filter row (populated by JS) -->
+                <div id="nf-tag-row" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;min-height:22px;"></div>
+
+                <!-- Feed items -->
+                <div id="nf-feed" style="display:flex;flex-direction:column;gap:0;border:1px solid var(--border-color);border-radius:6px;overflow:hidden;font-size:12px;">
+                    <div style="padding:20px;color:var(--text-muted);">Loading news…</div>
                 </div>
 
-            </div><!-- end #journal-panels -->
+            </div><!-- end #journal-panels (news feed) -->
 
             <!-- Note modal (shared for Mom20 position notes) -->
             <div id="note-modal" style="display:none;position:fixed;z-index:9999;background:var(--bg-white);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);padding:14px;width:320px;">
@@ -3665,7 +3663,7 @@
             document.getElementById('overflow-portfolio-panels').classList.toggle('hidden', strategy !== 'overflow_portfolio');
             document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
             document.getElementById('journal-panels').classList.toggle('hidden', strategy !== 'journal');
-            if (strategy === 'journal') journalLoad();
+            if (strategy === 'journal') { nfPopulateUsers(); newsFeedLoad(false); }
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
@@ -9211,111 +9209,158 @@ function btToggleHistory() {
     }
 }
 
-// ── Trading Journal ───────────────────────────────────────────────────────────
+// ── News Feed (Bloomberg-style) ───────────────────────────────────────────────
 
-let _journalEntries = [];
-let _journalFilter  = 'all';
+let _nfItems         = [];
+let _nfFilter        = 'all';   // 'all' | 'stock' | 'sector' | 'market'
+let _nfSrc           = 'all';   // 'all' | source label
+let _nfTagFilter     = null;    // specific ticker/sector tag, or null
+let _nfPortTickers   = [];
+let _nfTopSectors    = [];
 
-const _journalTypeColors = {
-    observation: '#78909c',
-    pre_trade:   '#27ae60',
-    post_trade:  '#3498db',
-    macro:       '#e67e22',
-    sector:      '#a78bfa',
+const _nfSourceColors = {
+    'ET Markets':        '#3498db',
+    'ET Stocks':         '#2980b9',
+    'Business Standard': '#e67e22',
+    'Moneycontrol':      '#27ae60',
+    'Google News':       '#a78bfa',
 };
-const _journalTypeLabels = {
-    observation: 'Observation',
-    pre_trade:   'Pre-Trade',
-    post_trade:  'Post-Trade',
-    macro:       'Macro',
-    sector:      'Sector Watch',
+const _nfSourceShort = {
+    'ET Markets':        'ET',
+    'ET Stocks':         'ET-S',
+    'Business Standard': 'BS',
+    'Moneycontrol':      'MC',
+    'Google News':       'GN',
 };
 
-async function journalLoad() {
+function _nfTimeAgo(iso) {
+    if (!iso) return '';
     try {
-        const r = await fetch('/api/journal');
+        const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+        if (diff < 60)   return 'just now';
+        if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+        if (diff < 86400)return `${Math.floor(diff/3600)}h ago`;
+        return `${Math.floor(diff/86400)}d ago`;
+    } catch(e) { return ''; }
+}
+
+async function newsFeedLoad(force) {
+    const feed   = document.getElementById('nf-feed');
+    const status = document.getElementById('nf-status');
+    if (feed) feed.innerHTML = '<div style="padding:18px;color:var(--text-muted);">Fetching news…</div>';
+    if (status) status.textContent = 'loading…';
+
+    const uid = document.getElementById('nf-user-select')?.value || '';
+    const params = new URLSearchParams();
+    if (uid) params.set('user_id', uid);
+    if (force) params.set('refresh', '1');
+
+    try {
+        const r = await fetch('/api/news-feed?' + params.toString());
         const d = await r.json();
-        if (d.success) {
-            _journalEntries = d.entries;
-            journalRender();
-        }
+        if (!d.success) throw new Error(d.error || 'feed error');
+        _nfItems       = d.items || [];
+        _nfPortTickers = d.portfolio_tickers || [];
+        _nfTopSectors  = d.top_sectors || [];
+        const age = d.from_cache ? 'cached' : 'live';
+        const ts  = d.fetched_at ? d.fetched_at.replace('T',' ').slice(0,16) : '';
+        if (status) status.textContent = `${_nfItems.length} items · ${ts} (${age})`;
+        nfBuildTagRow();
+        nfRender();
     } catch(e) {
-        document.getElementById('journal-entries-list').innerHTML =
-            '<div style="color:#dc3545;font-size:12px;">Failed to load journal.</div>';
+        if (feed) feed.innerHTML = `<div style="padding:18px;color:#dc3545;">${e.message}</div>`;
+        if (status) status.textContent = 'error';
     }
 }
 
-function journalSetFilter(f) {
-    _journalFilter = f;
-    document.querySelectorAll('.journal-filter-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.filter === f);
-        b.style.background = b.dataset.filter === f ? 'var(--bg-primary)' : 'var(--bg-card)';
-        b.style.fontWeight  = b.dataset.filter === f ? '700' : 'normal';
-    });
-    journalRender();
+function nfBuildTagRow() {
+    const row = document.getElementById('nf-tag-row');
+    if (!row) return;
+    const allTags = [...new Set(_nfItems.map(i => i.tag).filter(Boolean))];
+    row.innerHTML = allTags.map(t => {
+        const isStock  = _nfPortTickers.includes(t);
+        const isSector = _nfTopSectors.includes(t);
+        const color = isStock ? '#3498db' : isSector ? '#f5a623' : '#78909c';
+        const active = _nfTagFilter === t;
+        return `<button onclick="nfSetTag('${t.replace(/'/g,"\\'")}')"
+            style="padding:1px 8px;font-size:10px;border:1px solid ${color};border-radius:3px;cursor:pointer;
+                   background:${active ? color : 'transparent'};color:${active ? 'white' : color};"
+            title="${isStock ? 'Portfolio stock' : isSector ? 'Top sector' : 'Market'}">${t}</button>`;
+    }).join('');
 }
 
-function journalRender() {
-    const list = document.getElementById('journal-entries-list');
-    if (!list) return;
-    const entries = _journalFilter === 'all'
-        ? _journalEntries
-        : _journalEntries.filter(e => e.type === _journalFilter);
-    if (!entries.length) {
-        list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:20px 0;">No entries yet.</div>';
+function nfSetFilter(f) {
+    _nfFilter = f;
+    _nfTagFilter = null;
+    document.querySelectorAll('.nf-filter-btn').forEach(b => {
+        const on = b.dataset.nf === f;
+        b.style.background  = on ? 'var(--blue)'  : 'var(--bg-card)';
+        b.style.color       = on ? 'white'         : 'var(--text-secondary)';
+        b.style.fontWeight  = on ? '700'           : 'normal';
+    });
+    nfBuildTagRow();
+    nfRender();
+}
+
+function nfSetSrc(s) {
+    _nfSrc = s;
+    document.querySelectorAll('.nf-src-btn').forEach(b => {
+        const on = b.dataset.src === s;
+        b.style.background  = on ? 'var(--blue)'  : 'var(--bg-card)';
+        b.style.color       = on ? 'white'         : 'var(--text-secondary)';
+        b.style.fontWeight  = on ? '700'           : 'normal';
+    });
+    nfRender();
+}
+
+function nfSetTag(t) {
+    _nfTagFilter = (_nfTagFilter === t) ? null : t;
+    nfBuildTagRow();
+    nfRender();
+}
+
+function nfRender() {
+    const feed = document.getElementById('nf-feed');
+    if (!feed) return;
+
+    let items = _nfItems;
+    if (_nfFilter !== 'all')  items = items.filter(i => i.tag_type === _nfFilter);
+    if (_nfSrc    !== 'all')  items = items.filter(i => i.source   === _nfSrc);
+    if (_nfTagFilter)          items = items.filter(i => i.tag      === _nfTagFilter);
+
+    if (!items.length) {
+        feed.innerHTML = '<div style="padding:18px;color:var(--text-muted);">No items match the current filter.</div>';
         return;
     }
-    list.innerHTML = entries.map(e => {
-        const typeColor = _journalTypeColors[e.type] || '#78909c';
-        const typeLabel = _journalTypeLabels[e.type] || e.type;
-        const ts = e.timestamp ? e.timestamp.replace('T', ' ').slice(0, 16) : '';
-        const tagsHtml = (e.tags || []).map(t =>
-            `<span style="display:inline-block;padding:1px 7px;font-size:10px;background:rgba(167,139,250,0.15);color:#a78bfa;border-radius:3px;border:1px solid rgba(167,139,250,0.3);">${t}</span>`
-        ).join('');
-        const textEsc = e.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-        return `<div style="background:var(--bg-card);border:1px solid var(--border-color);border-left:3px solid ${typeColor};border-radius:6px;padding:11px 14px;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap;">
-                <span style="font-size:10px;color:var(--text-muted);">${ts}</span>
-                <span style="font-size:10px;font-weight:700;padding:1px 7px;background:${typeColor}22;color:${typeColor};border-radius:3px;">${typeLabel}</span>
-                ${tagsHtml}
-                <button onclick="journalDelete('${e.id}')" style="margin-left:auto;padding:1px 8px;font-size:10px;background:transparent;color:var(--text-muted);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;" title="Delete">✕</button>
-            </div>
-            <div style="font-size:13px;color:var(--text-primary);line-height:1.5;">${textEsc}</div>
+
+    feed.innerHTML = items.map((it, idx) => {
+        const srcColor = _nfSourceColors[it.source] || '#78909c';
+        const srcShort = _nfSourceShort[it.source]  || it.source;
+        const ago      = _nfTimeAgo(it.published);
+        const isStock  = it.tag_type === 'stock';
+        const isSector = it.tag_type === 'sector';
+        const tagColor = isStock ? '#3498db' : isSector ? '#f5a623' : '#78909c';
+        const bg       = idx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-white)';
+        const titleEsc = it.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<div style="display:flex;align-items:baseline;gap:8px;padding:7px 12px;background:${bg};border-bottom:1px solid var(--border-color);line-height:1.4;">
+            <span style="flex:0 0 28px;font-size:10px;font-weight:700;color:${srcColor};white-space:nowrap;">${srcShort}</span>
+            <span style="flex:0 0 52px;font-size:10px;color:var(--text-muted);white-space:nowrap;">${ago}</span>
+            <a href="${it.url}" target="_blank" rel="noopener"
+               style="flex:1;color:var(--text-primary);text-decoration:none;font-size:12px;font-weight:500;"
+               onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='var(--text-primary)'">${titleEsc}</a>
+            ${it.tag && it.tag !== 'Market' ? `<span style="flex:0 0 auto;font-size:10px;padding:1px 6px;border:1px solid ${tagColor};color:${tagColor};border-radius:3px;white-space:nowrap;cursor:pointer;" onclick="nfSetTag('${it.tag.replace(/'/g,"\\'")}')">${it.tag}</span>` : ''}
         </div>`;
     }).join('');
 }
 
-async function journalAdd() {
-    const text = (document.getElementById('journal-text-input').value || '').trim();
-    if (!text) return;
-    const type = document.getElementById('journal-type-select').value;
-    const tagsRaw = document.getElementById('journal-tags-input').value || '';
-    const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
-    try {
-        const r = await fetch('/api/journal', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({text, type, tags}),
-        });
-        const d = await r.json();
-        if (d.success) {
-            document.getElementById('journal-text-input').value = '';
-            document.getElementById('journal-tags-input').value = '';
-            _journalEntries.unshift(d.entry);
-            journalRender();
-        }
-    } catch(e) { showToast('Failed to save entry', 'error'); }
-}
-
-async function journalDelete(id) {
-    try {
-        const r = await fetch(`/api/journal/${id}`, {method: 'DELETE'});
-        const d = await r.json();
-        if (d.success) {
-            _journalEntries = _journalEntries.filter(e => e.id !== id);
-            journalRender();
-        }
-    } catch(e) { showToast('Failed to delete', 'error'); }
+// Populate user dropdown when news tab opens and kiteUsers are known
+function nfPopulateUsers() {
+    const sel = document.getElementById('nf-user-select');
+    if (!sel || !kiteUsers || !kiteUsers.length) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All (no portfolio filter)</option>' +
+        kiteUsers.map(u => `<option value="${u.config_user_id}">${u.name || u.config_user_id}</option>`).join('');
+    if (cur) sel.value = cur;
 }
 
 // ── Position note modal ───────────────────────────────────────────────────────
