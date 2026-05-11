@@ -3276,37 +3276,37 @@ def api_mom20_performance(user_id):
 
     holdings.sort(key=lambda x: x["return_pct"], reverse=True)
     unrealized_pnl = round(total_current - total_entry, 2)
-    unrealized_pct = round(unrealized_pnl / total_entry * 100, 2) if total_entry > 0 else 0
 
-    # Realized P&L — uses retrospective helper so old records without 'pnl'
-    # field are computed on-the-fly from buy history (no re-upload required).
-    realized_pnl = 0.0
+    # Realized P&L + initial capital — single history read.
+    realized_pnl   = 0.0
+    initial_capital = 0.0
     try:
         with open(mom20_history_path(user_id)) as _hf:
             _hist = json.load(_hf)
         realized_pnl = _retrospective_realized_pnl(_hist)
+        if _hist:
+            # Initial capital = total deployed in the first rebalance (Rebalance #01).
+            initial_capital = sum(t.get("qty", 0) * t.get("price", 0)
+                                  for t in _hist[0].get("buys", []))
     except Exception:
         pass
-    realized_pnl = round(realized_pnl, 2)
+    realized_pnl    = round(realized_pnl, 2)
+    initial_capital = round(initial_capital, 2) or round(total_entry, 2)
 
-    total_pnl = round(unrealized_pnl + realized_pnl, 2)
-    # Returns % = unrealized only (cost basis of current holdings vs market value).
-    # Dividing a mix of realized+unrealized by the *current* cost basis is wrong:
-    # exits at a loss shrink cost basis, double-penalising the percentage.
-    # Realized P&L is shown as its own tile — user can add them separately.
-    total_return_pct = unrealized_pct
+    total_pnl        = round(unrealized_pnl + realized_pnl, 2)
+    total_return_pct = round(total_pnl / initial_capital * 100, 2) if initial_capital else 0
 
     return jsonify({
         "success":            True,
         "holdings":           holdings,
         "fresh_prices":       fresh_prices,
-        "total_entry_value":  round(total_entry, 2),
+        "initial_capital":    initial_capital,       # Rebalance #01 total deployed
+        "total_entry_value":  round(total_entry, 2), # current cost basis (internal)
         "total_current_value": round(total_current, 2),
         "unrealized_pnl":     unrealized_pnl,
-        "unrealized_pct":     unrealized_pct,
         "realized_pnl":       realized_pnl,
         "total_pnl":          total_pnl,
-        "total_return_pct":   total_return_pct,
+        "total_return_pct":   total_return_pct,      # total P&L / initial capital
         "tracking_since":     earliest_date,
         "prices_updated_at":  prices_updated_at,
     })
