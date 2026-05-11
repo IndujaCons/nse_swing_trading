@@ -3290,7 +3290,11 @@ def api_mom20_performance(user_id):
     realized_pnl = round(realized_pnl, 2)
 
     total_pnl = round(unrealized_pnl + realized_pnl, 2)
-    total_return_pct = round(total_pnl / total_entry * 100, 2) if total_entry > 0 else 0
+    # Returns % = unrealized only (cost basis of current holdings vs market value).
+    # Dividing a mix of realized+unrealized by the *current* cost basis is wrong:
+    # exits at a loss shrink cost basis, double-penalising the percentage.
+    # Realized P&L is shown as its own tile — user can add them separately.
+    total_return_pct = unrealized_pct
 
     return jsonify({
         "success":            True,

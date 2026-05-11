@@ -2408,7 +2408,7 @@
                     <!-- Summary strip -->
                     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:10px;">
                         <div>
-                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Returns</div>
+                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Unrealized Return</div>
                             <div id="mom20-tracker-returns" style="font-size:20px;font-weight:700;">—</div>
                         </div>
                         <div>
@@ -8317,9 +8317,9 @@ function mom20RenderPerformance(d, live=false) {
         realEl.style.color = rp >= 0 ? 'var(--green)' : '#dc3545';
     }
     const unrEl = document.getElementById('mom20-tracker-unrealized');
-    if (unrEl && d.unrealized_pnl != null) {
-        const up = d.unrealized_pnl;
-        unrEl.textContent = 'Unreal: ' + (up >= 0 ? '+' : '') + fmtInr(up);
+    if (unrEl && d.realized_pnl != null && d.total_pnl != null) {
+        const tp = d.total_pnl;
+        unrEl.textContent = 'Total: ' + (tp >= 0 ? '+' : '') + fmtInr(tp);
     }
 
     try {
