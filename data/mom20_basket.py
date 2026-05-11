@@ -74,12 +74,12 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     holds  = []
     entries = []
 
-    # Exits: prefer the filtered (β-capped) rank for currently held stocks.
-    # Fall back to unfiltered rank only when a stock isn't in the filtered list
-    # (i.e. it got dropped by the β cap, e.g. CGPOWER) so held high-beta names
-    # don't get force-exited just because the filter excluded them.
-    # If absent from BOTH, it's no longer in the live N200 universe (NSE
-    # reconstitution) → exit with a clearer reason.
+    # Exits use the unfiltered N200 rank (full universe, no beta cap).
+    # Strategy spec: "beta cap ≤ 1.2 at entry; no floor" — once held, exit is
+    # purely rank-based on the full N200 universe. Using the beta-capped rank
+    # inflates held stocks' apparent rank (high-beta names above them are
+    # excluded, pushing them up) and masks true exit signals.
+    # If absent from unfiltered_ranks the stock left the N200 (reconstitution).
     fallback_ranks = unfiltered_ranks or {}
 
     # ETF tickers (e.g. MODEFENCE, HEALTHIETF) bought via the Q2 sector
@@ -123,9 +123,10 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
                 })
             continue
 
-        rank = rank_map.get(ticker)
-        if rank is None:
-            rank = fallback_ranks.get(ticker)
+        # Unfiltered N200 rank is the source of truth for exit decisions.
+        # Fall back to beta-capped rank only if the stock is somehow absent
+        # from unfiltered_ranks (shouldn't happen for current N200 constituents).
+        rank = fallback_ranks.get(ticker) or rank_map.get(ticker)
         price = price_map.get(ticker, 0)
         qty = current_qty_map.get(ticker, 0)
 
