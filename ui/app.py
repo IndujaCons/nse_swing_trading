@@ -3024,7 +3024,7 @@ def api_mom20_performance(user_id):
     want_live = request.args.get("live") == "1"
     lp_path = mom20_live_prices_path(user_id)
 
-    # Load persisted prices + ranks (DB is the single source of truth)
+    # Load persisted prices + ranks
     price_map = {}
     rank_map = {}
     prices_updated_at = None
@@ -3034,6 +3034,18 @@ def api_mom20_performance(user_id):
         price_map = {k: float(v) for k, v in (lp.get("prices") or {}).items()}
         rank_map  = dict(lp.get("ranks") or {})
         prices_updated_at = lp.get("updated_at")
+    except Exception:
+        pass
+
+    # Overlay ranks from live signals cache (kept fresh by scheduler) so the
+    # tracker always shows the same rank as the Live Signals tab — no stale data.
+    try:
+        from config.settings import LIVE_SIGNALS_CACHE_FILE
+        with open(LIVE_SIGNALS_CACHE_FILE) as f:
+            ls = json.load(f)
+        live_ranks = ls.get("mom20_unfiltered_ranks", {})
+        if live_ranks:
+            rank_map.update({k: v for k, v in live_ranks.items() if v is not None})
     except Exception:
         pass
 
