@@ -3186,171 +3186,6 @@ def api_mom20_position_note(user_id):
     return jsonify({"success": True})
 
 
-# ── News Feed (Bloomberg-style RSS aggregator) ────────────────────────────────
-
-import urllib.request as _urllib_req
-import xml.etree.ElementTree as _ET
-import email.utils as _email_utils
-import re as _re
-from concurrent.futures import ThreadPoolExecutor as _TPE, as_completed as _as_completed
-from urllib.parse import quote_plus as _qp
-
-_NEWS_CACHE_FILE = os.path.join(DATA_STORE_PATH, "news_cache.json")
-_news_cache_lock = threading.Lock()
-_NEWS_CACHE_TTL  = 600  # 10 minutes
-
-_SECTOR_NEWS_QUERIES = {
-    "NIFTY INDIA DEFENCE":     "defence sector India stock market",
-    "NIFTY METAL":             "metal sector India Nifty stock",
-    "NIFTY HEALTHCARE":        "healthcare pharma sector India Nifty",
-    "NIFTY IT":                "IT technology sector India Nifty",
-    "NIFTY AUTO":              "automobile auto sector India Nifty",
-    "NIFTY FMCG":              "FMCG consumer goods India Nifty",
-    "NIFTY PVT BANK":          "private bank India Nifty stock",
-    "NIFTY PSU BANK":          "PSU bank India Nifty public sector",
-    "NIFTY BANK":              "banking sector India Nifty",
-    "NIFTY INFRA":             "infrastructure sector India Nifty",
-    "NIFTY OIL & GAS":         "oil gas energy India Nifty stock",
-    "NIFTY CONSUMPTION":       "consumption consumer sector India Nifty",
-    "NIFTY REALTY":            "real estate realty India Nifty",
-    "NIFTY PSE":               "PSE CPSE public sector India stock",
-    "NIFTY INDIA MFG":         "manufacturing Make in India sector Nifty",
-    "NIFTY CONSUMER DURABLES": "consumer durables India Nifty stock",
-    "NIFTY ENERGY":            "energy sector India Nifty",
-    "NIFTY MEDIA":             "media sector India Nifty stock",
-    "NIFTY MNC":               "MNC sector India Nifty stock",
-    "NIFTY FIN SERVICE":       "financial services Nifty India stock",
-}
-
-
-def _parse_rss(url, source, tag, tag_type, max_items=8):
-    """Fetch one RSS feed; return list of news item dicts. Never raises."""
-    try:
-        req = _urllib_req.Request(url, headers={
-            'User-Agent': 'Mozilla/5.0 (compatible; news-reader/1.0)',
-            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-        })
-        with _urllib_req.urlopen(req, timeout=9) as resp:
-            content = resp.read()
-        root = _ET.fromstring(content)
-        channel = root.find('channel') or root
-        items = []
-        for item in list(channel.findall('item'))[:max_items]:
-            title = (item.findtext('title') or '').strip()
-            link  = (item.findtext('link')  or '').strip()
-            desc  = (item.findtext('description') or '').strip()
-            pub   = (item.findtext('pubDate') or '').strip()
-            ts = ''
-            try:
-                ts = _email_utils.parsedate_to_datetime(pub).isoformat()
-            except Exception:
-                ts = pub
-            snippet = _re.sub(r'<[^>]+>', '', desc)[:220].strip()
-            if title and link:
-                items.append({
-                    'title':    title,
-                    'url':      link,
-                    'source':   source,
-                    'published': ts,
-                    'snippet':  snippet,
-                    'tag':      tag,
-                    'tag_type': tag_type,   # 'stock' | 'sector' | 'market'
-                })
-        return items
-    except Exception as e:
-        print(f"[news] {source} ({url[:55]}…): {e}")
-        return []
-
-
-@app.route("/api/news-feed")
-def api_news_feed():
-    """Bloomberg-style RSS aggregator: portfolio stocks + top sectors + market."""
-    from datetime import datetime as _dtm
-    user_id = request.args.get('user_id') or ''
-    force   = request.args.get('refresh') == '1'
-
-    if not force:
-        try:
-            with open(_NEWS_CACHE_FILE) as f:
-                cached = json.load(f)
-            age = (_dtm.now() - _dtm.fromisoformat(cached.get('fetched_at', '2000-01-01'))).total_seconds()
-            if age < _NEWS_CACHE_TTL:
-                return jsonify({"success": True, "items": cached['items'],
-                                "fetched_at": cached['fetched_at'], "from_cache": True,
-                                "portfolio_tickers": cached.get('portfolio_tickers', []),
-                                "top_sectors": cached.get('top_sectors', [])})
-        except Exception:
-            pass
-
-    # Portfolio tickers for this user
-    portfolio_tickers = []
-    if user_id:
-        try:
-            with open(mom20_portfolio_path(user_id)) as f:
-                pf = json.load(f)
-            portfolio_tickers = [h['ticker'] for h in pf.get('basket', [])][:12]
-        except Exception:
-            pass
-
-    # Top sectors from live Z-score ranking
-    top_sectors = []
-    try:
-        top_sectors = [r['symbol'] for r in (_get_sector_ranking() or [])[:5]]
-    except Exception:
-        pass
-
-    # Build fetch task list: (source_label, url, tag, tag_type)
-    tasks = [
-        ("ET Markets",       "https://economictimes.indiatimes.com/markets/rss.cms",      "Market", "market"),
-        ("Business Standard","https://www.business-standard.com/rss/markets-106.rss",     "Market", "market"),
-        ("Moneycontrol",     "https://www.moneycontrol.com/rss/latestnews.xml",            "Market", "market"),
-        ("ET Stocks",        "https://economictimes.indiatimes.com/markets/stocks/rss.cms","Market", "market"),
-    ]
-    for ticker in portfolio_tickers:
-        q = _qp(f"{ticker} NSE India stock")
-        tasks.append(("Google News", f"https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en",
-                       ticker, "stock"))
-    for sector in top_sectors:
-        q = _qp(_SECTOR_NEWS_QUERIES.get(sector, f"{sector} India stock"))
-        tasks.append(("Google News", f"https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en",
-                       sector, "sector"))
-
-    all_items = []
-    with _TPE(max_workers=20) as pool:
-        futs = {pool.submit(_parse_rss, url, src, tag, ttype): (src, tag)
-                for src, url, tag, ttype in tasks}
-        for fut in _as_completed(futs, timeout=15):
-            try:
-                all_items.extend(fut.result())
-            except Exception:
-                pass
-
-    # Deduplicate by URL; drop items older than 7 days; sort newest first
-    cutoff = _dtm.now().timestamp() - 7 * 86400
-    seen, deduped = set(), []
-    for it in all_items:
-        if it['url'] in seen:
-            continue
-        seen.add(it['url'])
-        try:
-            age_ok = _dtm.fromisoformat(it.get('published', '')[:19]).timestamp() >= cutoff
-        except Exception:
-            age_ok = True   # no parseable date → keep
-        if age_ok:
-            deduped.append(it)
-    deduped.sort(key=lambda x: x.get('published', ''), reverse=True)
-
-    fetched_at = _dtm.now().isoformat()[:19]
-    payload = {"fetched_at": fetched_at, "items": deduped[:200],
-               "portfolio_tickers": portfolio_tickers, "top_sectors": top_sectors}
-    with _news_cache_lock:
-        try:
-            with open(_NEWS_CACHE_FILE, 'w') as f:
-                json.dump(payload, f)
-        except Exception:
-            pass
-
-    return jsonify({"success": True, **payload, "from_cache": False})
 
 
 # ── AI Portfolio Briefing (Claude) ────────────────────────────────────────────
@@ -3358,7 +3193,7 @@ def api_news_feed():
 _AI_BRIEFING_CACHE: dict = {}          # user_id → {ts, text}
 _AI_BRIEFING_TTL   = 1800              # 30-min cache so we don't burn tokens on refresh
 
-def _build_briefing_prompt(holdings, sector_ranking, news_items, today_str,
+def _build_briefing_prompt(holdings, sector_ranking, today_str,
                            live_signals=None, sector_momentum=None,
                            mom20_regime='?', nifty_regime='?'):
     held_tickers = {h['ticker'] for h in holdings}
@@ -3449,23 +3284,6 @@ def _build_briefing_prompt(holdings, sector_ranking, news_items, today_str,
     else:
         lines.append("(not available)")
 
-    # 6. News
-    lines += ["", "## NEWS — PORTFOLIO STOCKS (last 7 days)"]
-    stock_news = [n for n in news_items if n.get('tag') in held_tickers]
-    for n in stock_news[:30]:
-        lines.append(
-            f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({n.get('published','')[:10]})"
-        )
-    if not stock_news:
-        lines.append("(no stock-specific news fetched)")
-
-    lines += ["", "## NEWS — SECTORS & MARKET"]
-    mkt_news = [n for n in news_items if n.get('tag_type') in ('sector', 'market', 'Results')]
-    for n in mkt_news[:25]:
-        lines.append(
-            f"[{n.get('source','')}] [{n.get('tag','')}] {n['title']} ({n.get('published','')[:10]})"
-        )
-
     # Task instructions
     lines += [
         "",
@@ -3479,18 +3297,9 @@ def _build_briefing_prompt(holdings, sector_ranking, news_items, today_str,
         "concentration risk, > 40% as severe; escalate if the dominant sector's RS 5d Δ is negative. "
         "For each flag: user, ticker, rank, what specifically to watch.",
         "",
-        "### 📊 Price Move Explainer",
-        "Top 3 gainers and bottom 3 laggards by P&L%. For each: cite a specific dated headline "
-        "that explains the move, OR state 'no specific catalyst — sector flow / mean reversion.'",
-        "",
-        "### 📅 Q4 Results Season (April–May 2026)",
-        "For each held stock: result announced (beat/miss/in-line with numbers) "
-        "OR upcoming (expected date if known) OR no news. "
-        "Also flag any significant corporate event (merger, fund-raise, regulatory action).",
-        "",
         "### 🆕 New Entry Candidates",
         "Top 5 non-held stocks at rank ≤ 20. For each candidate, address in prose: "
-        "(i) sector RS direction (5d Δ), "
+        "(i) sector direction in words (rising/stalling/falling) and its Z-score rank — no raw delta numbers, "
         "(ii) impact on portfolio sector concentration — state current sector weight %, "
         "(iii) beta-regime fit, "
         "(iv) 3m-vs-12m momentum balance (sustained or decelerating?), "
@@ -3499,10 +3308,13 @@ def _build_briefing_prompt(holdings, sector_ranking, news_items, today_str,
         "+ one-line rationale.",
         "",
         "### 📈 Sectors — Deep Dive",
+        "Use composite and 5d/10d Δ data INTERNALLY to classify groups — do NOT quote composite scores or RS delta numbers in the output. "
         "Group into Rising (composite > 0 AND 5d Δ > 0), Neutral, Falling (composite < 0 AND 5d Δ < 0). "
-        "For each group: top sector by composite, portfolio exposure %, and whether the 5d/10d Δ "
-        "relationship shows acceleration (5d > 10d) or stalling (5d < 10d). "
-        "Name any sector that flipped group vs its 10d position.",
+        "For each sector cited, quote only: (a) its Z-score rank from the SECTOR Z-SCORE RANKING table (e.g. `Rank #1`), "
+        "and (b) its 12m% or 3m% return — whichever is more relevant. "
+        "State acceleration/stalling in words ('accelerating', 'stalling', 'reversing') — no delta numbers. "
+        "Name any sector that flipped group vs its 10d position. "
+        "Insert `---` between Rising / Neutral / Falling groups.",
         "",
         "### 💡 Strategic Watch List",
         "What to add/exit at next rebalance. Any emerging theme (defence rally, IT selloff, FMCG recovery). "
@@ -3512,6 +3324,33 @@ def _build_briefing_prompt(holdings, sector_ranking, news_items, today_str,
         "",
         "Write in professional analyst style. Use bullet points within sections. "
         "Aim for ~850–950 words. Every claim must reference a data point from above.",
+        "",
+        "---",
+        "## FORMATTING RULES — follow exactly:",
+        "",
+        "1. **Header hierarchy**",
+        "   - Top-level sections use `## ` with emoji (e.g. `## ⚠️ Portfolio Warnings & Risk Flags`)",
+        "   - Sub-sections use `### ` (e.g. `### Tier 1 — Exit Candidates`, `### Buffer Zone`)",
+        "   - Inline labels within paragraphs use **bold** (e.g. **Rank > 40 (Exit Signal):**)",
+        "",
+        "2. **New entry candidate cards**",
+        "   - Each candidate gets its own `### N. TICKER (Rank #X | β X.XX | SECTOR)` header",
+        "   - Verdict on its own line, bolded: `**Verdict: STRONG ADD** — one-line rationale.`",
+        "",
+        "3. **Numerical data in inline code**",
+        "   - Wrap all metrics in backticks: RS composite, 5d Δ, 10d Δ, P&L%, ranks, β values, scores",
+        "   - Example: `Energy RS composite `+22.2`, 5d Δ `+1.59`, 10d Δ `+4.31`.`",
+        "",
+        "4. **Headlines as blockquotes**",
+        "   - Cited news evidence uses blockquote format:",
+        "   - > \"Headline text.\"",
+        "   - > — Source, YYYY-MM-DD",
+        "",
+        "5. **Horizontal rules between sector groups**",
+        "   - Insert `---` between Rising / Neutral / Falling groups in Sectors Deep Dive",
+        "",
+        "6. **Emojis reserved for top-level section headers and ⚠️ risk flags only**",
+        "   - No emojis inside body prose, bullets, sub-bullets, or theme labels",
     ]
     return "\n".join(lines)
 
@@ -3602,54 +3441,6 @@ def api_ai_briefing_stream():
         except Exception:
             pass
 
-    # Start with cached news
-    news_items = []
-    try:
-        with open(_NEWS_CACHE_FILE) as f:
-            nc = json.load(f)
-        news_items = list(nc.get('items', []))
-    except Exception:
-        pass
-
-    # Fresh targeted news for portfolio tickers (not relying on cache having them)
-    held_tickers = list({h['ticker'] for h in holdings})
-    if held_tickers:
-        fresh_stock_news = []
-        with _TPE(max_workers=min(len(held_tickers), 12)) as pool:
-            futs = []
-            for ticker in held_tickers[:12]:
-                q = _qp(f"{ticker} NSE India stock")
-                url = f"https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en"
-                futs.append(pool.submit(_parse_rss, url, "Google News", ticker, "stock", 6))
-            # Q4 results calendar search
-            rq = _qp("Q4 results 2026 NSE quarterly earnings India")
-            futs.append(pool.submit(_parse_rss,
-                f"https://news.google.com/rss/search?q={rq}&hl=en-IN&gl=IN&ceid=IN:en",
-                "Google News", "Results", "market", 10))
-            for fut in _as_completed(futs, timeout=15):
-                try:
-                    fresh_stock_news.extend(fut.result())
-                except Exception:
-                    pass
-        # Merge: fresh stock news at the front, then cached
-        existing_urls = {n['url'] for n in fresh_stock_news}
-        for n in news_items:
-            if n['url'] not in existing_urls:
-                fresh_stock_news.append(n)
-        news_items = fresh_stock_news
-
-    # Apply 7-day filter
-    cutoff_ts = _dtm2.now().timestamp() - 7 * 86400
-    filtered = []
-    for n in news_items:
-        try:
-            ok = _dtm2.fromisoformat(n.get('published','')[:19]).timestamp() >= cutoff_ts
-        except Exception:
-            ok = True
-        if ok:
-            filtered.append(n)
-    news_items = filtered
-
     # Live signals from cache (no network call needed — scheduler keeps this fresh)
     live_signals    = {}
     sector_momentum = {}
@@ -3670,7 +3461,7 @@ def api_ai_briefing_stream():
     today_str = _dtm2.now(ist).strftime('%d %b %Y')
 
     user_msg = _build_briefing_prompt(
-        holdings, sector_ranking, news_items, today_str,
+        holdings, sector_ranking, today_str,
         live_signals=live_signals, sector_momentum=sector_momentum,
         mom20_regime=mom20_regime, nifty_regime=nifty_regime,
     )
@@ -3683,7 +3474,7 @@ def api_ai_briefing_stream():
         try:
             with client.messages.stream(
                 model="claude-sonnet-4-6",
-                max_tokens=4000,
+                max_tokens=8000,
                 temperature=0.2,
                 messages=[{"role": "user", "content": user_msg}],
             ) as stream:

@@ -1413,7 +1413,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
                 <button class="strategy-tab" onclick="switchStrategy('overflow_portfolio')">Overflow</button>
                 <button class="strategy-tab" onclick="switchStrategy('backtest')">Backtest</button>
-                <button class="strategy-tab" onclick="switchStrategy('journal')">News</button>
+                <button class="strategy-tab" onclick="switchStrategy('journal')">AI Briefing</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2687,54 +2687,22 @@
 
                 <!-- Header row -->
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
-                    <span style="font-size:14px;font-weight:700;color:#f5a623;letter-spacing:0.5px;">NEWS TERMINAL</span>
-                    <span id="nf-status" style="font-size:11px;color:var(--text-muted);">—</span>
+                    <span style="font-size:14px;font-weight:700;color:#a78bfa;letter-spacing:0.5px;">🤖 AI PORTFOLIO BRIEFING</span>
+                    <span id="ai-briefing-status" style="font-size:11px;color:var(--text-muted);">—</span>
                     <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
-                        <select id="nf-user-select" onchange="newsFeedLoad(false)" style="padding:3px 6px;font-family:inherit;font-size:11px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;">
-                            <option value="">All users</option>
-                        </select>
-                        <button onclick="newsFeedLoad(true)" style="padding:3px 11px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Refresh</button>
-                        <button id="ai-briefing-btn" onclick="aiBriefingToggle()" style="padding:3px 11px;font-size:11px;font-weight:700;background:#a78bfa;color:white;border:none;border-radius:4px;cursor:pointer;">🤖 AI Briefing</button>
+                        <button id="ai-briefing-btn" onclick="aiBriefingFetch(false)" style="padding:3px 11px;font-size:11px;font-weight:700;background:#a78bfa;color:white;border:none;border-radius:4px;cursor:pointer;">Generate Briefing</button>
+                        <button onclick="aiBriefingFetch(true)" style="padding:3px 11px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Regenerate</button>
                     </div>
                 </div>
 
-                <!-- AI Briefing panel (hidden until triggered) -->
-                <div id="ai-briefing-panel" style="display:none;margin-bottom:14px;background:var(--bg-card);border:1px solid #a78bfa44;border-left:3px solid #a78bfa;border-radius:6px;padding:14px 16px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                        <span style="font-size:11px;font-weight:700;color:#a78bfa;letter-spacing:0.5px;">🤖 CLAUDE — PORTFOLIO BRIEFING</span>
-                        <span id="ai-briefing-status" style="font-size:10px;color:var(--text-muted);"></span>
-                        <button onclick="aiBriefingRefresh()" style="margin-left:auto;padding:1px 9px;font-size:10px;background:transparent;color:#a78bfa;border:1px solid #a78bfa;border-radius:3px;cursor:pointer;">↺ Regenerate</button>
-                        <button onclick="aiBriefingClose()" style="padding:1px 9px;font-size:10px;background:transparent;color:var(--text-muted);border:1px solid var(--border-color);border-radius:3px;cursor:pointer;">✕</button>
+                <!-- AI Briefing body — always visible on this tab -->
+                <div id="ai-briefing-panel" style="background:var(--bg-card);border:1px solid #a78bfa44;border-left:3px solid #a78bfa;border-radius:6px;padding:14px 16px;">
+                    <div id="ai-briefing-body" style="font-size:12px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:80vh;overflow-y:auto;padding-right:6px;">
+                        <div style="color:var(--text-muted);padding:20px 0;">Click "Generate Briefing" to run the AI analysis.</div>
                     </div>
-                    <div id="ai-briefing-body" style="font-size:12px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:70vh;overflow-y:auto;padding-right:6px;"></div>
                 </div>
 
-                <!-- Filter bar -->
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
-                    <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;white-space:nowrap;">FILTER:</span>
-                    <button class="nf-filter-btn" data-nf="all"    onclick="nfSetFilter('all')"    style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">All</button>
-                    <button class="nf-filter-btn" data-nf="stock"  onclick="nfSetFilter('stock')"  style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">Portfolio</button>
-                    <button class="nf-filter-btn" data-nf="sector" onclick="nfSetFilter('sector')" style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">Sectors</button>
-                    <button class="nf-filter-btn" data-nf="market" onclick="nfSetFilter('market')" style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">Market</button>
-                    <span style="font-size:10px;color:var(--border-color);margin:0 2px;">|</span>
-                    <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;white-space:nowrap;">SOURCE:</span>
-                    <button class="nf-src-btn" data-src="all"              onclick="nfSetSrc('all')"              style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">All</button>
-                    <button class="nf-src-btn" data-src="ET Markets"       onclick="nfSetSrc('ET Markets')"       style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">ET</button>
-                    <button class="nf-src-btn" data-src="ET Stocks"        onclick="nfSetSrc('ET Stocks')"        style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">ET Stocks</button>
-                    <button class="nf-src-btn" data-src="Business Standard" onclick="nfSetSrc('Business Standard')" style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">BS</button>
-                    <button class="nf-src-btn" data-src="Moneycontrol"     onclick="nfSetSrc('Moneycontrol')"     style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">MC</button>
-                    <button class="nf-src-btn" data-src="Google News"      onclick="nfSetSrc('Google News')"      style="padding:2px 9px;font-size:11px;border:1px solid var(--border-color);border-radius:3px;cursor:pointer;background:var(--bg-card);color:var(--text-secondary);">Google</button>
-                </div>
-
-                <!-- Tag pill filter row (populated by JS) -->
-                <div id="nf-tag-row" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;min-height:22px;"></div>
-
-                <!-- Feed items -->
-                <div id="nf-feed" style="display:flex;flex-direction:column;gap:0;border:1px solid var(--border-color);border-radius:6px;overflow:hidden;font-size:12px;">
-                    <div style="padding:20px;color:var(--text-muted);">Loading news…</div>
-                </div>
-
-            </div><!-- end #journal-panels (news feed) -->
+            </div><!-- end #journal-panels -->
 
             <!-- Note modal (shared for Mom20 position notes) -->
             <div id="note-modal" style="display:none;position:fixed;z-index:9999;background:var(--bg-white);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);padding:14px;width:320px;">
@@ -3675,7 +3643,7 @@
             document.getElementById('overflow-portfolio-panels').classList.toggle('hidden', strategy !== 'overflow_portfolio');
             document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
             document.getElementById('journal-panels').classList.toggle('hidden', strategy !== 'journal');
-            if (strategy === 'journal') { nfPopulateUsers(); newsFeedLoad(false); }
+            if (strategy === 'journal') { aiBriefingFetch(false); }
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
