@@ -476,24 +476,41 @@ def sync_portfolio_from_trades(portfolio: dict, trades: list, basket_data: dict)
         if action == "SELL" and ticker in basket:
             del basket[ticker]
 
-    # Process buys — weighted average price if multiple fills
+    # Process buys — weighted average price if multiple fills.
+    # If the ticker is already held (added in a prior rebalance), accumulate
+    # qty and compute a weighted average entry price rather than overwriting.
     for (ticker, action), trade_list in grouped.items():
         if action == "BUY":
-            total_qty   = sum(t["qty"] for t in trade_list)
-            avg_price   = sum(t["qty"] * t["price"] for t in trade_list) / total_qty
-            trade_date  = trade_list[0]["trade_date"]
-            # Find entry rank/score from basket_data
-            entry_info  = next((e for e in basket_data.get("entries", [])
-                                if e["ticker"] == ticker), {})
-            basket[ticker] = {
-                "ticker":       ticker,
-                "qty":          total_qty,
-                "entry_price":  round(avg_price, 2),
-                "entry_date":   trade_date,
-                "weight":       round(100 / N_SLOTS, 2),
-                "rank_at_entry": entry_info.get("rank"),
-                "score_at_entry": entry_info.get("score"),
-            }
+            new_qty   = sum(t["qty"] for t in trade_list)
+            new_price = sum(t["qty"] * t["price"] for t in trade_list) / new_qty
+            trade_date = trade_list[0]["trade_date"]
+            entry_info = next((e for e in basket_data.get("entries", [])
+                               if e["ticker"] == ticker), {})
+            if ticker in basket:
+                # Already held — add to position with weighted average price
+                old_qty   = basket[ticker].get("qty", 0)
+                old_price = basket[ticker].get("entry_price", 0)
+                total_qty = old_qty + new_qty
+                wavg      = ((old_qty * old_price + new_qty * new_price) / total_qty
+                             if total_qty > 0 else new_price)
+                basket[ticker] = {
+                    **basket[ticker],
+                    "qty":              total_qty,
+                    "entry_price":      round(wavg, 2),
+                    "last_added_date":  trade_date,
+                    "last_added_price": round(new_price, 2),
+                    "last_added_qty":   new_qty,
+                }
+            else:
+                basket[ticker] = {
+                    "ticker":        ticker,
+                    "qty":           new_qty,
+                    "entry_price":   round(new_price, 2),
+                    "entry_date":    trade_date,
+                    "weight":        round(100 / N_SLOTS, 2),
+                    "rank_at_entry": entry_info.get("rank"),
+                    "score_at_entry": entry_info.get("score"),
+                }
 
     portfolio["basket"]  = list(basket.values())
     portfolio["status"]  = "invested" if basket else "empty"

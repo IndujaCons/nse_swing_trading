@@ -2902,16 +2902,33 @@ def api_mom20_tradebook_upload(user_id):
     except Exception:
         portfolio = {"status": "empty", "basket": []}
 
+    # Enrich SELL trades with entry price + realized P&L from current portfolio
+    # (must happen before sync_portfolio_from_trades removes the positions).
+    basket_lookup = {item["ticker"]: item for item in portfolio.get("basket", [])}
+    for t in trades:
+        if t["action"] == "SELL" and t["ticker"] in basket_lookup:
+            holding    = basket_lookup[t["ticker"]]
+            entry_p    = holding.get("entry_price", 0)
+            t["entry_price"] = entry_p
+            t["entry_date"]  = holding.get("entry_date", "")
+            if entry_p:
+                t["pnl"]     = round((t["price"] - entry_p) * t["qty"], 2)
+                t["pnl_pct"] = round((t["price"] / entry_p - 1) * 100, 2)
+
     updated = sync_portfolio_from_trades(portfolio, trades, basket_data)
 
+    # Compute realized P&L summary for this rebalance
+    sells_with_pnl = [t for t in trades if t["action"] == "SELL" and "pnl" in t]
+    realized_pnl   = round(sum(t["pnl"] for t in sells_with_pnl), 2)
+
     # Save updated portfolio
+    import datetime
     tmp = pf_path + ".tmp"
     with open(tmp, "w") as f:
         json.dump(updated, f, indent=2)
     os.replace(tmp, pf_path)
 
     # Save trade book file
-    import datetime
     tb_fname = f"zerodha_{datetime.date.today().isoformat()}.csv"
     tb_path = os.path.join(trade_books_dir(user_id), tb_fname)
     os.makedirs(trade_books_dir(user_id), exist_ok=True)
@@ -2927,12 +2944,13 @@ def api_mom20_tradebook_upload(user_id):
         history = []
 
     history.append({
-        "rebalance_date":    datetime.date.today().isoformat(),
+        "rebalance_date":      datetime.date.today().isoformat(),
         "trade_book_uploaded": datetime.datetime.now().isoformat(),
-        "trades_parsed":     len(trades),
-        "buys":  [t for t in trades if t["action"] == "BUY"],
-        "sells": [t for t in trades if t["action"] == "SELL"],
-        "status": "synced",
+        "trades_parsed":       len(trades),
+        "buys":                [t for t in trades if t["action"] == "BUY"],
+        "sells":               [t for t in trades if t["action"] == "SELL"],
+        "realized_pnl":        realized_pnl,
+        "status":              "synced",
     })
     with open(hist_path, "w") as f:
         json.dump(history, f, indent=2)
@@ -2984,7 +3002,7 @@ def api_mom20_seed(user_id):
 
 @app.route("/api/portfolio-users/<user_id>/mom20-history", methods=["GET"])
 def api_mom20_history(user_id):
-    """Return rebalance history for a user (most recent first)."""
+    """Return rebalance history for a user (most recent first) with P&L."""
     if not get_user(user_id):
         return jsonify({"success": False, "error": "user not found"})
     try:
@@ -2992,7 +3010,58 @@ def api_mom20_history(user_id):
             history = json.load(f)
     except Exception:
         history = []
-    return jsonify({"success": True, "history": list(reversed(history))})
+
+    # Retrospectively compute P&L for sells that predate the enrichment feature.
+    # Walk history chronologically: build a running position book from buys,
+    # then for each sell look up entry price from that book.
+    pos_book = {}  # ticker → {entry_price, qty}
+    total_invested = 0.0
+    for rb in history:
+        buys  = rb.get("buys",  [])
+        sells = rb.get("sells", [])
+
+        # Track buy prices for future P&L lookup
+        for t in buys:
+            ticker = t.get("ticker")
+            qty    = t.get("qty", 0)
+            price  = t.get("price", 0)
+            if not ticker or not qty or not price:
+                continue
+            if ticker in pos_book:
+                old = pos_book[ticker]
+                new_qty = old["qty"] + qty
+                pos_book[ticker] = {
+                    "entry_price": round((old["qty"] * old["entry_price"] + qty * price) / new_qty, 2),
+                    "qty": new_qty,
+                }
+            else:
+                pos_book[ticker] = {"entry_price": price, "qty": qty}
+            total_invested += qty * price
+
+        # Enrich sells that are missing P&L
+        rebal_pnl = rb.get("realized_pnl")
+        if rebal_pnl is None:
+            rebal_pnl = 0.0
+            for t in sells:
+                if "pnl" not in t and t.get("ticker") in pos_book:
+                    ep = pos_book[t["ticker"]]["entry_price"]
+                    t["entry_price"] = ep
+                    t["pnl"]     = round((t.get("price", 0) - ep) * t.get("qty", 0), 2)
+                    t["pnl_pct"] = round((t.get("price", 0) / ep - 1) * 100, 2) if ep else 0
+                rebal_pnl += t.get("pnl", 0)
+            rb["realized_pnl"] = round(rebal_pnl, 2)
+
+        # Remove sells from position book
+        for t in sells:
+            pos_book.pop(t.get("ticker"), None)
+
+    cumulative_realized = round(sum(rb.get("realized_pnl", 0) for rb in history), 2)
+    return jsonify({
+        "success": True,
+        "history": list(reversed(history)),
+        "cumulative_realized_pnl": cumulative_realized,
+        "total_invested": round(total_invested, 2),
+    })
 
 
 @app.route("/api/portfolio-users/<user_id>/mom20-portfolio", methods=["GET"])
@@ -3152,14 +3221,34 @@ def api_mom20_performance(user_id):
         })
 
     holdings.sort(key=lambda x: x["return_pct"], reverse=True)
-    total_return_pct = round((total_current - total_entry) / total_entry * 100, 2) if total_entry > 0 else 0
+    unrealized_pnl = round(total_current - total_entry, 2)
+    unrealized_pct = round(unrealized_pnl / total_entry * 100, 2) if total_entry > 0 else 0
+
+    # Realized P&L from exits recorded in rebalance history
+    realized_pnl = 0.0
+    try:
+        with open(mom20_history_path(user_id)) as _hf:
+            _hist = json.load(_hf)
+        for rb in _hist:
+            for sell in rb.get("sells", []):
+                realized_pnl += sell.get("pnl", 0)
+    except Exception:
+        pass
+    realized_pnl = round(realized_pnl, 2)
+
+    total_pnl = round(unrealized_pnl + realized_pnl, 2)
+    total_return_pct = round(total_pnl / total_entry * 100, 2) if total_entry > 0 else 0
 
     return jsonify({
         "success":            True,
         "holdings":           holdings,
-        "fresh_prices":       fresh_prices,   # {ticker: price} for tracker + extras
+        "fresh_prices":       fresh_prices,
         "total_entry_value":  round(total_entry, 2),
         "total_current_value": round(total_current, 2),
+        "unrealized_pnl":     unrealized_pnl,
+        "unrealized_pct":     unrealized_pct,
+        "realized_pnl":       realized_pnl,
+        "total_pnl":          total_pnl,
         "total_return_pct":   total_return_pct,
         "tracking_since":     earliest_date,
         "prices_updated_at":  prices_updated_at,

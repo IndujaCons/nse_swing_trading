@@ -2405,7 +2405,7 @@
                         <span id="mom20-tracker-status" style="font-size:10px;color:var(--text-muted);"></span>
                     </div>
                     <!-- Summary strip -->
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:10px;">
+                    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:10px;">
                         <div>
                             <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Returns</div>
                             <div id="mom20-tracker-returns" style="font-size:20px;font-weight:700;">—</div>
@@ -2421,6 +2421,11 @@
                         <div>
                             <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Current Value</div>
                             <div id="mom20-tracker-current" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
+                        </div>
+                        <div>
+                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Realized P&amp;L</div>
+                            <div id="mom20-tracker-realized" style="font-size:15px;font-weight:700;">—</div>
+                            <div id="mom20-tracker-unrealized" style="font-size:10px;color:var(--text-muted);margin-top:2px;"></div>
                         </div>
                     </div>
                     <!-- Holdings table + chart side panel -->
@@ -6701,24 +6706,34 @@
                 <div style="color:#4a9eff;font-weight:700;">REBALANCE #${String(num).padStart(2,'0')} — ${date}${uploaded ? `  <span style="color:${color.m};font-size:10px;font-weight:400;">uploaded ${uploaded}</span>` : ''}</div>`;
 
             // Sells / Exits
+            const rebalPnl = rb.realized_pnl;
+            const rebalPnlStr = rebalPnl != null
+                ? `  <span style="color:${rebalPnl >= 0 ? color.g : color.r};font-weight:700;font-size:11px;">${rebalPnl >= 0 ? '+' : ''}₹${Math.round(rebalPnl).toLocaleString('en-IN')}</span>`
+                : '';
             const sellsHtml = sells.length === 0
                 ? `<div style="color:${color.m};padding-left:4px;">—</div>`
-                : `<div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
-                       <span>Stock</span><span>Qty</span><span>Fill ₹</span><span>Value ₹</span></div>` +
+                : `<div style="display:grid;grid-template-columns:100px 45px 72px 72px 70px 60px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+                       <span>Stock</span><span>Qty</span><span>Entry ₹</span><span>Fill ₹</span><span>Value ₹</span><span>P&L</span></div>` +
                   sells.map(e => {
-                    const ticker = e.ticker || '';
-                    const qty    = e.qty || 0;
-                    const price  = e.price || e.fill_price || e.exit_price || 0;
-                    const val    = qty && price ? Math.round(qty * price) : null;
-                    return `<div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;">
+                    const ticker   = e.ticker || '';
+                    const qty      = e.qty || 0;
+                    const entryP   = e.entry_price || 0;
+                    const price    = e.price || e.fill_price || e.exit_price || 0;
+                    const val      = qty && price ? Math.round(qty * price) : null;
+                    const pnl      = e.pnl != null ? e.pnl : (entryP && price && qty ? (price - entryP) * qty : null);
+                    const pnlColor = pnl == null ? color.m : pnl >= 0 ? color.g : color.r;
+                    const pnlStr   = pnl != null ? (pnl >= 0 ? '+' : '') + Math.round(pnl).toLocaleString('en-IN') : '—';
+                    return `<div style="display:grid;grid-template-columns:100px 45px 72px 72px 70px 60px;gap:4px;">
                         <span style="color:${color.r};">${ticker}</span>
                         <span style="color:${color.m};">${qty}</span>
+                        <span style="color:${color.m};">${entryP ? entryP.toFixed(2) : '—'}</span>
                         <span style="color:${color.m};">${price ? price.toFixed(2) : '—'}</span>
                         <span style="color:${color.m};">${val != null ? fmt(val) : '—'}</span>
+                        <span style="color:${pnlColor};font-weight:600;">${pnlStr}</span>
                     </div>`;
                   }).join('');
             const sellsSection = `
-                <div style="margin-top:10px;color:${color.t};font-weight:700;">EXITS / SELLS (${sells.length})</div>
+                <div style="margin-top:10px;color:${color.t};font-weight:700;">EXITS / SELLS (${sells.length})${rebalPnlStr}</div>
                 ${sellsHtml}`;
 
             // Buys / Entries
@@ -8273,6 +8288,17 @@ function mom20RenderPerformance(d, live=false) {
     if (invEl) invEl.textContent = fmtInr(d.total_entry_value);
     const curEl = document.getElementById('mom20-tracker-current');
     if (curEl) curEl.textContent = fmtInr(d.total_current_value);
+    const realEl = document.getElementById('mom20-tracker-realized');
+    if (realEl && d.realized_pnl != null) {
+        const rp = d.realized_pnl;
+        realEl.textContent = (rp >= 0 ? '+' : '') + fmtInr(rp);
+        realEl.style.color = rp >= 0 ? 'var(--green)' : '#dc3545';
+    }
+    const unrEl = document.getElementById('mom20-tracker-unrealized');
+    if (unrEl && d.unrealized_pnl != null) {
+        const up = d.unrealized_pnl;
+        unrEl.textContent = 'Unreal: ' + (up >= 0 ? '+' : '') + fmtInr(up);
+    }
 
     try {
         _mom20TrackerHoldings = d.holdings;
