@@ -2402,6 +2402,7 @@
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
                         <button id="mom20-live-prices-btn" onclick="mom20LivePricesAndBasket()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
+                        <button id="mom20-rebuild-btn" onclick="mom20RebuildPortfolio()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;" title="Replay all trade books to fix qty discrepancies">↺ Rebuild from History</button>
                         <span id="mom20-tracker-status" style="font-size:10px;color:var(--text-muted);"></span>
                     </div>
                     <!-- Summary strip -->
@@ -8185,6 +8186,27 @@ async function mom20LivePricesAndBasket() {
             btn.style.opacity = '';
             btn.style.cursor = 'pointer';
         }
+    }
+}
+
+async function mom20RebuildPortfolio() {
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) { showToast('Select a user first', 'error'); return; }
+    const btn = document.getElementById('mom20-rebuild-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Rebuilding…'; }
+    try {
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-rebuild`, {method:'POST'});
+        const d = await r.json();
+        if (d.success) {
+            showToast(`Portfolio rebuilt — ${d.positions} positions from history`, 'success');
+            _mom20HistoryLoaded = false;
+            await mom20LoadPerformance(true);
+        } else {
+            showToast(d.error || 'Rebuild failed', 'error');
+        }
+    } catch(e) { showToast(e.message, 'error'); }
+    finally {
+        if (btn) { btn.disabled = false; btn.textContent = '↺ Rebuild from History'; }
     }
 }
 

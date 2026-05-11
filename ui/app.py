@@ -3000,28 +3000,13 @@ def api_mom20_seed(user_id):
     return jsonify({"success": True, "seeded": len(basket)})
 
 
-@app.route("/api/portfolio-users/<user_id>/mom20-history", methods=["GET"])
-def api_mom20_history(user_id):
-    """Return rebalance history for a user (most recent first) with P&L."""
-    if not get_user(user_id):
-        return jsonify({"success": False, "error": "user not found"})
-    try:
-        with open(mom20_history_path(user_id)) as f:
-            history = json.load(f)
-    except Exception:
-        history = []
-
-    # Retrospectively compute P&L for sells that predate the enrichment feature.
-    # Walk history chronologically: build a running position book from buys,
-    # then for each sell look up entry price from that book.
-    pos_book = {}  # ticker → {entry_price, qty}
-    total_invested = 0.0
+def _retrospective_realized_pnl(history: list) -> float:
+    """Walk history chronologically to compute realized P&L for sells that
+    predate the enrichment feature (missing 'pnl' field).  Returns total."""
+    pos_book = {}  # ticker → entry_price (weighted avg across rebalances)
+    total = 0.0
     for rb in history:
-        buys  = rb.get("buys",  [])
-        sells = rb.get("sells", [])
-
-        # Track buy prices for future P&L lookup
-        for t in buys:
+        for t in rb.get("buys", []):
             ticker = t.get("ticker")
             qty    = t.get("qty", 0)
             price  = t.get("price", 0)
@@ -3036,31 +3021,100 @@ def api_mom20_history(user_id):
                 }
             else:
                 pos_book[ticker] = {"entry_price": price, "qty": qty}
-            total_invested += qty * price
 
-        # Enrich sells that are missing P&L
-        rebal_pnl = rb.get("realized_pnl")
-        if rebal_pnl is None:
-            rebal_pnl = 0.0
-            for t in sells:
-                if "pnl" not in t and t.get("ticker") in pos_book:
-                    ep = pos_book[t["ticker"]]["entry_price"]
-                    t["entry_price"] = ep
-                    t["pnl"]     = round((t.get("price", 0) - ep) * t.get("qty", 0), 2)
-                    t["pnl_pct"] = round((t.get("price", 0) / ep - 1) * 100, 2) if ep else 0
-                rebal_pnl += t.get("pnl", 0)
-            rb["realized_pnl"] = round(rebal_pnl, 2)
+        for t in rb.get("sells", []):
+            ticker = t.get("ticker")
+            pnl    = t.get("pnl")
+            if pnl is None and ticker in pos_book:
+                ep  = pos_book[ticker]["entry_price"]
+                pnl = round((t.get("price", 0) - ep) * t.get("qty", 0), 2)
+                t["entry_price"] = ep
+                t["pnl"]         = pnl
+                t["pnl_pct"]     = round((t.get("price", 0) / ep - 1) * 100, 2) if ep else 0
+            total += pnl or 0
+            pos_book.pop(ticker, None)
+    return round(total, 2)
 
-        # Remove sells from position book
-        for t in sells:
-            pos_book.pop(t.get("ticker"), None)
+
+@app.route("/api/portfolio-users/<user_id>/mom20-rebuild", methods=["POST"])
+def api_mom20_rebuild_portfolio(user_id):
+    """Replay all rebalance history records to reconstruct correct portfolio qtys."""
+    import datetime as _dt_mod
+    user = get_user(user_id)
+    if not user:
+        return jsonify({"success": False, "error": "user not found"})
+    hist_path = mom20_history_path(user_id)
+    try:
+        with open(hist_path) as f:
+            history = json.load(f)
+    except Exception:
+        return jsonify({"success": False, "error": "no history found"})
+
+    basket = {}
+    for rb in history:
+        for sell in rb.get("sells", []):
+            basket.pop(sell.get("ticker"), None)
+        for buy in rb.get("buys", []):
+            ticker = buy.get("ticker")
+            qty    = buy.get("qty", 0)
+            price  = buy.get("price", 0)
+            date   = buy.get("trade_date", rb.get("rebalance_date", ""))
+            if not ticker or qty <= 0:
+                continue
+            if ticker in basket:
+                old_qty   = basket[ticker]["qty"]
+                old_price = basket[ticker]["entry_price"]
+                new_qty   = old_qty + qty
+                wavg      = (old_qty * old_price + qty * price) / new_qty if new_qty else price
+                basket[ticker] = {**basket[ticker],
+                                  "qty": new_qty,
+                                  "entry_price": round(wavg, 2),
+                                  "last_added_date": date,
+                                  "last_added_price": round(price, 2)}
+            else:
+                basket[ticker] = {"ticker": ticker, "qty": qty,
+                                  "entry_price": round(price, 2),
+                                  "entry_date": date,
+                                  "weight": round(100 / 20, 2)}
+
+    pf_path = mom20_portfolio_path(user_id)
+    portfolio = {"status": "invested" if basket else "empty",
+                 "basket": list(basket.values()),
+                 "last_synced": _dt_mod.date.today().isoformat(),
+                 "rebuilt_from_history": _dt_mod.datetime.now().isoformat()}
+    tmp = pf_path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(portfolio, f, indent=2)
+    os.replace(tmp, pf_path)
+    return jsonify({"success": True, "positions": len(basket),
+                    "basket": list(basket.values())})
+
+
+@app.route("/api/portfolio-users/<user_id>/mom20-history", methods=["GET"])
+def api_mom20_history(user_id):
+    """Return rebalance history for a user (most recent first) with P&L."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(mom20_history_path(user_id)) as f:
+            history = json.load(f)
+    except Exception:
+        history = []
+
+    # Enrich sells missing P&L (pre-enrichment uploads) and patch rebal totals
+    _retrospective_realized_pnl(history)
+    for rb in history:
+        if rb.get("realized_pnl") is None:
+            rb["realized_pnl"] = round(sum(t.get("pnl", 0) for t in rb.get("sells", [])), 2)
 
     cumulative_realized = round(sum(rb.get("realized_pnl", 0) for rb in history), 2)
+    total_invested = round(sum(t.get("qty", 0) * t.get("price", 0)
+                               for rb in history for t in rb.get("buys", [])), 2)
     return jsonify({
         "success": True,
         "history": list(reversed(history)),
         "cumulative_realized_pnl": cumulative_realized,
-        "total_invested": round(total_invested, 2),
+        "total_invested": total_invested,
     })
 
 
@@ -3224,14 +3278,13 @@ def api_mom20_performance(user_id):
     unrealized_pnl = round(total_current - total_entry, 2)
     unrealized_pct = round(unrealized_pnl / total_entry * 100, 2) if total_entry > 0 else 0
 
-    # Realized P&L from exits recorded in rebalance history
+    # Realized P&L — uses retrospective helper so old records without 'pnl'
+    # field are computed on-the-fly from buy history (no re-upload required).
     realized_pnl = 0.0
     try:
         with open(mom20_history_path(user_id)) as _hf:
             _hist = json.load(_hf)
-        for rb in _hist:
-            for sell in rb.get("sells", []):
-                realized_pnl += sell.get("pnl", 0)
+        realized_pnl = _retrospective_realized_pnl(_hist)
     except Exception:
         pass
     realized_pnl = round(realized_pnl, 2)
