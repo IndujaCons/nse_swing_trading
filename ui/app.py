@@ -2740,11 +2740,12 @@ def api_mom20_basket_preview(user_id):
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
 
-    # Merge user's persisted live prices for held tickers no longer in the live
-    # N200 universe (e.g. TORNTPOWER after the 2026-03-30 reconstitution) so
-    # the exit row in the basket shows a real price instead of ₹0.
+    # User's live prices (from "⚡ Live Prices" click) are fresher than the
+    # scanner cache — override scanner prices so exits/entries show current ₹.
+    # Also covers held tickers no longer in N200 (e.g. post-reconstitution).
     for _t, _p in _load_user_live_prices(user_id).items():
-        all_prices.setdefault(_t, _p)
+        if _p:
+            all_prices[_t] = _p
 
     # Load user's current portfolio
     pf_path = mom20_portfolio_path(user_id)
@@ -2811,11 +2812,12 @@ def api_mom20_basket_download(user_id):
     except Exception as e:
         return jsonify({"success": False, "error": f"signals unavailable: {e}"})
 
-    # Merge user's persisted live prices for held tickers no longer in the live
-    # N200 universe (e.g. TORNTPOWER after the 2026-03-30 reconstitution) so
-    # the exit row in the basket shows a real price instead of ₹0.
+    # User's live prices (from "⚡ Live Prices" click) are fresher than the
+    # scanner cache — override scanner prices so exits/entries show current ₹.
+    # Also covers held tickers no longer in N200 (e.g. post-reconstitution).
     for _t, _p in _load_user_live_prices(user_id).items():
-        all_prices.setdefault(_t, _p)
+        if _p:
+            all_prices[_t] = _p
 
     pf_path = mom20_portfolio_path(user_id)
     try:

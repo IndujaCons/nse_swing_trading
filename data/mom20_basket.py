@@ -55,10 +55,12 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     rank_map  = {s["ticker"]: s["rank"]  for s in signals}
     price_map = {s["ticker"]: s.get("price", 0) for s in signals}
     score_map = {s["ticker"]: s.get("momentum_score", 0) for s in signals}
-    # Merge all N200 prices so held high-beta stocks get correct prices
+    # all_prices contains user's freshly-fetched live prices (highest priority)
+    # plus scanner prices for the rest of N200. Override signals prices so
+    # exits and entries always reflect the most recent ₹ the user fetched.
     if all_prices:
         for ticker, price in all_prices.items():
-            if ticker not in price_map or not price_map[ticker]:
+            if price:
                 price_map[ticker] = price
 
     current_tickers = {item["ticker"] for item in current_portfolio.get("basket", [])}
