@@ -3175,9 +3175,11 @@ def api_mom20_performance(user_id):
         pass
 
     if not basket:
-        return jsonify({"success": True, "holdings": [], "total_entry_value": 0,
-                        "total_current_value": 0, "total_return_pct": 0,
-                        "tracking_since": None, "prices_updated_at": prices_updated_at})
+        return jsonify({"success": True, "holdings": [], "initial_capital": 0,
+                        "total_entry_value": 0, "total_current_value": 0,
+                        "unrealized_pnl": 0, "realized_pnl": 0, "total_pnl": 0,
+                        "total_return_pct": 0, "tracking_since": None,
+                        "prices_updated_at": prices_updated_at})
 
     tickers = [h["ticker"] for h in basket]
 
@@ -3782,12 +3784,49 @@ def api_mom20_chart(user_id):
     except Exception:
         pass
 
-    # Rebase from entry prices (matches tracker P&L); day-1 close diverges from fills
-    base_port  = total_invested
+    # Load history to build a cumulative-realized-P&L offset per calendar date.
+    # Exits recorded in rebalance history reduce portfolio value on the rebalance date;
+    # applying this offset makes the chart line end at the same figure as the tracker.
+    hist_realized_by_date = {}  # date_str → cumulative realized P&L up to and including that date
+    initial_capital = 0.0
+    try:
+        with open(mom20_history_path(user_id)) as _hf:
+            _hist = json.load(_hf)
+        _retrospective_realized_pnl(_hist)          # enriches sells with pnl in-place
+        if _hist:
+            initial_capital = sum(t.get("qty", 0) * t.get("price", 0)
+                                  for t in _hist[0].get("buys", []))
+        running = 0.0
+        for rb in _hist:
+            running += sum(s.get("pnl", 0) for s in rb.get("sells", []))
+            hist_realized_by_date[rb.get("rebalance_date", "")] = round(running, 2)
+    except Exception:
+        pass
+
+    # Use initial_capital as base if available, else fall back to current cost basis
+    base_port  = initial_capital if initial_capital > 0 else total_invested
     base_n500  = float(bench_n500.iloc[0]) if not bench_n500.empty else None
     base_n200  = float(bench_n200.iloc[0]) if not bench_n200.empty else None
     dates_out  = [d.strftime("%Y-%m-%d") for d in all_dates]
-    port_pct   = [round((v / base_port - 1) * 100, 3) for v in port_values]
+
+    # Build sorted list of (date, cumulative_realized) so we can look up the running
+    # realized offset for each chart date efficiently.
+    sorted_realized = sorted(hist_realized_by_date.items())
+
+    def _realized_offset(dt_str):
+        """Cumulative realized P&L on or before dt_str."""
+        offset = 0.0
+        for rd, pnl in sorted_realized:
+            if rd <= dt_str:
+                offset = pnl
+            else:
+                break
+        return offset
+
+    port_pct = [
+        round(((v + _realized_offset(d.strftime("%Y-%m-%d"))) / base_port - 1) * 100, 3)
+        for v, d in zip(port_values, all_dates)
+    ]
 
     def bench_series(raw, base):
         if raw.empty or base is None:
@@ -3813,9 +3852,9 @@ def api_mom20_chart(user_id):
         "n500":         n500_pct,
         "n200":         n200_pct,
         "start_date":   start_date,
-        "total_return": port_pct[-1],
-        "n500_return":  n500_pct[-1],
-        "n200_return":  n200_pct[-1],
+        "total_return": port_pct[-1] if port_pct else None,
+        "n500_return":  n500_pct[-1] if n500_pct else None,
+        "n200_return":  n200_pct[-1] if n200_pct else None,
     })
 
 
