@@ -2690,20 +2690,75 @@
             <!-- News Feed panel -->
             <div id="journal-panels" class="hidden" style="padding:16px;">
 
-                <!-- Header row -->
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+                <!-- Header -->
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
                     <span style="font-size:14px;font-weight:700;color:#a78bfa;letter-spacing:0.5px;">🤖 AI PORTFOLIO BRIEFING</span>
-                    <span id="ai-briefing-status" style="font-size:11px;color:var(--text-muted);">—</span>
-                    <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
-                        <button id="ai-briefing-btn" onclick="aiBriefingFetch(false)" style="padding:3px 11px;font-size:11px;font-weight:700;background:#a78bfa;color:white;border:none;border-radius:4px;cursor:pointer;">Generate Briefing</button>
-                        <button onclick="aiBriefingFetch(true)" style="padding:3px 11px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Regenerate</button>
-                    </div>
+                    <span style="font-size:11px;color:var(--text-muted);">Click a section tile to generate it</span>
                 </div>
 
-                <!-- AI Briefing body — always visible on this tab -->
+                <!-- Section tiles (3-column grid) -->
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+
+                    <div id="btile-risk" onclick="aiBriefingSection('risk')"
+                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
+                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-risk').dataset.bg||'#e8eaef'">
+                        <div style="font-size:18px;margin-bottom:6px;">⚠️</div>
+                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">RISK FLAGS</div>
+                        <div id="btile-status-risk" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
+                    </div>
+
+                    <div id="btile-entries" onclick="aiBriefingSection('entries')"
+                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
+                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-entries').dataset.bg||'#e8eaef'">
+                        <div style="font-size:18px;margin-bottom:6px;">🆕</div>
+                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">ENTRY CANDIDATES</div>
+                        <div id="btile-status-entries" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
+                    </div>
+
+                    <div id="btile-overflow" onclick="aiBriefingSection('overflow')"
+                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
+                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-overflow').dataset.bg||'#e8eaef'">
+                        <div style="font-size:18px;margin-bottom:6px;">🔀</div>
+                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">OVERFLOW</div>
+                        <div id="btile-status-overflow" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
+                    </div>
+
+                    <div id="btile-sectors" onclick="aiBriefingSection('sectors')"
+                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
+                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-sectors').dataset.bg||'#e8eaef'">
+                        <div style="font-size:18px;margin-bottom:6px;">📈</div>
+                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">SECTOR DEEP DIVE</div>
+                        <div id="btile-status-sectors" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
+                    </div>
+
+                    <div id="btile-watchlist" onclick="aiBriefingSection('watchlist')"
+                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
+                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-watchlist').dataset.bg||'#e8eaef'">
+                        <div style="font-size:18px;margin-bottom:6px;">💡</div>
+                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">STRATEGIC WATCHLIST</div>
+                        <div id="btile-status-watchlist" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
+                    </div>
+
+                    <!-- Placeholder tile for symmetry / future section -->
+                    <div style="background:#f3f4f6;border-radius:8px;padding:18px 12px;text-align:center;opacity:0.4;">
+                        <div style="font-size:18px;margin-bottom:6px;">🗓️</div>
+                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">CATALYST WATCH</div>
+                        <div style="font-size:10px;color:#6b7280;margin-top:5px;">coming soon</div>
+                    </div>
+
+                </div>
+
+                <!-- Output panel — shows the selected section's content -->
                 <div id="ai-briefing-panel" style="background:var(--bg-card);border:1px solid #a78bfa44;border-left:3px solid #a78bfa;border-radius:6px;padding:14px 16px;">
-                    <div id="ai-briefing-body" style="font-size:12px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:80vh;overflow-y:auto;padding-right:6px;">
-                        <div style="color:var(--text-muted);padding:20px 0;">Click "Generate Briefing" to run the AI analysis.</div>
+                    <!-- Output header with section title + regenerate -->
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                        <span id="ai-briefing-section-title" style="font-size:12px;font-weight:700;color:#a78bfa;">—</span>
+                        <span id="ai-briefing-status" style="font-size:11px;color:var(--text-muted);">—</span>
+                        <button id="ai-briefing-btn" onclick="aiBriefingRegenerate()"
+                                style="margin-left:auto;padding:2px 9px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;display:none;">↺ Regenerate</button>
+                    </div>
+                    <div id="ai-briefing-body" style="font-size:12px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:75vh;overflow-y:auto;padding-right:6px;">
+                        <div style="color:var(--text-muted);padding:20px 0;text-align:center;">Select a section above to generate it.</div>
                     </div>
                 </div>
 
@@ -3648,12 +3703,11 @@
             document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
             document.getElementById('journal-panels').classList.toggle('hidden', strategy !== 'journal');
             if (strategy === 'journal') {
-                if (_aiBriefingCachedHTML) {
-                    document.getElementById('ai-briefing-body').innerHTML = _aiBriefingCachedHTML;
-                    const _bst = document.getElementById('ai-briefing-status');
-                    if (_bst) _bst.textContent = _aiBriefingCachedStatus;
-                } else {
-                    aiBriefingFetch(false);
+                // Restore tile statuses from JS cache (no server call on tab switch)
+                if (typeof _aiBriefingCache !== 'undefined') {
+                    Object.keys(_BRIEF_TILE_LABELS || {}).forEach(k => {
+                        _tileSetStatus(k, _aiBriefingCache[k] ? 'cached' : 'click to generate', false);
+                    });
                 }
             }
 
@@ -9413,71 +9467,88 @@ function nfPopulateUsers() {
 
 // ── AI Portfolio Briefing ─────────────────────────────────────────────────────
 
-let _aiBriefingOpen       = false;
-let _aiBriefingESS        = null;   // active EventSource
-let _aiBriefingCachedHTML = '';     // rendered HTML — restored on tab switch without a server call
-let _aiBriefingCachedStatus = '';
+let _aiBriefingESS       = null;          // active EventSource
+let _aiBriefingSection   = null;          // currently active section key
+let _aiBriefingCache     = {};            // section → {html, statusText}
 
-function aiBriefingToggle() {
-    const panel = document.getElementById('ai-briefing-panel');
-    if (!panel) return;
-    if (_aiBriefingOpen) {
-        aiBriefingClose();
-    } else {
-        panel.style.display = 'block';
-        _aiBriefingOpen = true;
-        const body = document.getElementById('ai-briefing-body');
-        if (!body.textContent.trim()) aiBriefingFetch(false);
+const _BRIEF_TILE_LABELS = {
+    risk:      '⚠️ Risk Flags',
+    entries:   '🆕 Entry Candidates',
+    overflow:  '🔀 Overflow',
+    sectors:   '📈 Sector Deep Dive',
+    watchlist: '💡 Strategic Watchlist',
+};
+
+function _tileSetStatus(key, text, isActive) {
+    const el = document.getElementById('btile-status-' + key);
+    const tile = document.getElementById('btile-' + key);
+    if (el) el.textContent = text;
+    if (tile) {
+        const cached = _aiBriefingCache[key];
+        const bg = isActive ? '#c7d2fe' : (cached ? '#ddf3e4' : '#e8eaef');
+        tile.style.background = bg;
+        tile.dataset.bg = bg;
     }
 }
 
-function aiBriefingClose() {
-    const panel = document.getElementById('ai-briefing-panel');
-    if (panel) panel.style.display = 'none';
-    _aiBriefingOpen = false;
-    if (_aiBriefingESS) { _aiBriefingESS.close(); _aiBriefingESS = null; }
-}
+function aiBriefingSection(key, force) {
+    // If cached and not forcing: restore from JS cache instantly
+    if (!force && _aiBriefingCache[key]) {
+        _aiBriefingSection = key;
+        const body   = document.getElementById('ai-briefing-body');
+        const status = document.getElementById('ai-briefing-status');
+        const title  = document.getElementById('ai-briefing-section-title');
+        const regen  = document.getElementById('ai-briefing-btn');
+        if (body)   body.innerHTML = _aiBriefingCache[key].html;
+        if (status) status.textContent = _aiBriefingCache[key].statusText;
+        if (title)  title.textContent  = _BRIEF_TILE_LABELS[key] || key;
+        if (regen)  regen.style.display = 'inline-block';
+        // Highlight active tile
+        Object.keys(_BRIEF_TILE_LABELS).forEach(k => _tileSetStatus(k, _aiBriefingCache[k] ? 'cached' : 'click to generate', k === key));
+        return;
+    }
 
-function aiBriefingRefresh() {
-    const body = document.getElementById('ai-briefing-body');
-    if (body) body.textContent = '';
-    aiBriefingFetch(true);
-}
-
-function aiBriefingFetch(force) {
+    // Stream from server
     if (_aiBriefingESS) { _aiBriefingESS.close(); _aiBriefingESS = null; }
-    if (force) { _aiBriefingCachedHTML = ''; _aiBriefingCachedStatus = ''; }
+    _aiBriefingSection = key;
+
     const body   = document.getElementById('ai-briefing-body');
     const status = document.getElementById('ai-briefing-status');
-    if (body)   body.textContent = '';
-    if (status) status.textContent = 'generating…';
-    document.getElementById('ai-briefing-btn').textContent = '🤖 …';
+    const title  = document.getElementById('ai-briefing-section-title');
+    const regen  = document.getElementById('ai-briefing-btn');
 
-    const params = new URLSearchParams();
+    if (body)   { body.textContent = ''; }
+    if (status) status.textContent = 'generating…';
+    if (title)  title.textContent  = _BRIEF_TILE_LABELS[key] || key;
+    if (regen)  regen.style.display = 'none';
+
+    _tileSetStatus(key, '⏳ generating…', true);
+
+    const params = new URLSearchParams({ section: key });
     if (force) params.set('refresh', '1');
 
     const es = new EventSource('/api/ai-briefing/stream?' + params.toString());
     _aiBriefingESS = es;
 
     es.onmessage = function(e) {
-        // Cached response — server signals when it was generated
         if (e.data.startsWith('[CACHED:')) {
             const genTime = e.data.slice(8, -1);
             if (status) status.textContent = 'cached · ' + genTime;
-            document.getElementById('ai-briefing-btn').textContent = '🤖 AI Briefing';
             return;
         }
         if (e.data === '[DONE]') {
-            es.close();
-            _aiBriefingESS = null;
-            if (status && !status.textContent.startsWith('cached')) {
-                status.textContent = 'done · ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
-            }
-            document.getElementById('ai-briefing-btn').textContent = '🤖 AI Briefing';
+            es.close(); _aiBriefingESS = null;
+            const timeStr = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+            if (status && !status.textContent.startsWith('cached'))
+                status.textContent = 'done · ' + timeStr;
+            if (regen) regen.style.display = 'inline-block';
             _aiBriefingRender();
-            // Save rendered HTML so tab switches don't hit the server again
-            _aiBriefingCachedHTML   = body ? body.innerHTML : '';
-            _aiBriefingCachedStatus = status ? status.textContent : '';
+            // Store in per-section cache
+            _aiBriefingCache[key] = {
+                html:       body ? body.innerHTML : '',
+                statusText: status ? status.textContent : '',
+            };
+            _tileSetStatus(key, _aiBriefingCache[key].statusText, false);
             return;
         }
         try {
@@ -9486,11 +9557,17 @@ function aiBriefingFetch(force) {
         } catch(ex) {}
     };
     es.onerror = function() {
-        es.close();
-        _aiBriefingESS = null;
-        if (status) status.textContent = 'error — check ANTHROPIC_API_KEY';
-        document.getElementById('ai-briefing-btn').textContent = '🤖 AI Briefing';
+        es.close(); _aiBriefingESS = null;
+        if (status) status.textContent = 'error';
+        _tileSetStatus(key, 'error', false);
     };
+}
+
+function aiBriefingRegenerate() {
+    if (_aiBriefingSection) {
+        delete _aiBriefingCache[_aiBriefingSection];
+        aiBriefingSection(_aiBriefingSection, true);
+    }
 }
 
 function _aiBriefingRender() {

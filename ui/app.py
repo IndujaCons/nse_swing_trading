@@ -3436,7 +3436,8 @@ except Exception:
 
 def _build_briefing_prompt(holdings, sector_ranking, today_str,
                            live_signals=None, sector_momentum=None,
-                           mom20_regime='?', nifty_regime='?', sector_map=None):
+                           mom20_regime='?', nifty_regime='?', sector_map=None,
+                           section=None):
     held_tickers = {h['ticker'] for h in holdings}
     held_sectors  = {h.get('sector', '') for h in holdings if h.get('sector')}
     _smap = sector_map or {}
@@ -3558,69 +3559,71 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
     else:
         lines.append("(not available)")
 
-    # Task instructions
-    lines += [
-        "",
-        "---",
-        "## YOUR TASK — write a market intelligence report with these sections:",
-        "",
-        "### ⚠️ Portfolio Warnings & Risk Flags",
-        "Go through each holding. Flag: rank > 40 (exit signal), rank 21–40 (buffer zone — watch), "
-        "P&L < −10%, stocks in sectors with negative RS momentum. "
-        "ALSO compute holdings per sector as % of total positions; flag any sector > 25% as "
-        "concentration risk, > 40% as severe; escalate if the dominant sector's RS 5d Δ is negative. "
-        "For each flag: user, ticker, rank, what specifically to watch. "
-        "HIGH-BETA HOLDINGS (β > 1.0, marked ⚡ in holdings table): for each, state whether the stock's "
-        "sector RS is rising, stalling, or falling — high-beta + falling sector RS is an elevated risk.",
-        "",
-        "### 🆕 New Entry Candidates",
-        "Top 5 non-held stocks at rank ≤ 20. For each candidate, address in prose: "
-        "(i) sector direction in words (rising/stalling/falling) and its Z-score rank — no raw delta numbers, "
-        "(ii) impact on portfolio sector concentration — state current sector weight %, "
-        "(iii) beta-regime fit, "
-        "(iv) 3m-vs-12m momentum balance (sustained or decelerating?), "
-        "(v) any pending news or corporate event from the feed. "
-        "End each candidate with a bolded verdict: **STRONG ADD / MODERATE ADD / WAIT / SKIP** "
-        "+ one-line rationale.",
-        "",
-        "### 🔀 Overflow & High-Beta Signals",
-        "Analyse the overflow basket (β > 1.2 stocks excluded from main basket). "
-        "Group overflow stocks by sector. For each sector group:",
-        "  (i)  Name the overflow stocks, their ranks and 12m/3m momentum.",
-        "  (ii) State the sector's RS direction (rising/stalling/falling from the momentum table).",
-        "  (iii) Check the SECTOR → ETF PROXY TABLE. If an ETF exists for the sector AND the sector "
-        "        is in the Rising group: recommend adding the ETF as a proxy, naming the ETF symbol "
-        "        and rationale (captures sector momentum without high-beta single-stock risk). "
-        "        If no ETF exists: state this explicitly — do not invent a proxy.",
-        "  (iv)  If the sector is Neutral or Falling: state that the ETF proxy is NOT recommended "
-        "        despite overflow stock momentum — sector tailwind is absent.",
-        "For already-held ETF proxies (e.g. MODEFENCE, HEALTHIETF in portfolio): "
-        "confirm whether the underlying sector is still Rising; flag if it has deteriorated. "
-        "Close with a one-line summary of which overflow sectors are actionable vs. which to ignore.",
-        "",
-        "### 📈 Sectors — Deep Dive",
-        "Use composite and 5d/10d Δ data INTERNALLY to classify groups — do NOT quote composite scores or RS delta numbers in the output. "
-        "Group into Rising (composite > 0 AND 5d Δ > 0), Neutral, Falling (composite < 0 AND 5d Δ < 0). "
-        "For each sector cited, quote only: (a) its Z-score rank from the SECTOR Z-SCORE RANKING table (e.g. `Rank #1`), "
-        "and (b) its 12m% or 3m% return — whichever is more relevant. "
-        "For EVERY sector named, prepend a plain-English week-on-week trend label using ONLY the four labels below — "
-        "derive it from the relationship between 5d Δ and 10d Δ: "
-        "**Improving (going strong)** — 5d Δ > 0 AND 5d Δ > 10d Δ (momentum accelerating week-on-week); "
-        "**Steady** — 5d Δ > 0 AND 5d Δ ≤ 10d Δ (positive but stalling); "
-        "**Decreasing strength** — 5d Δ < 0 AND 10d Δ ≥ 0 (was positive, now turning down); "
-        "**Weakening** — 5d Δ < 0 AND 10d Δ < 0 (sustained decline). "
-        "Format: lead each sector bullet with the label in square brackets, e.g. [Improving (going strong)] Defence — ... "
-        "Name any sector that flipped group vs its 10d position. "
-        "Insert `---` between Rising / Neutral / Falling groups.",
-        "",
-        "### 💡 Strategic Watch List",
-        "What to add/exit at next rebalance. Any emerging theme (defence rally, IT selloff, FMCG recovery). "
-        "Close with a mandatory **Don't-Do** line: 1–3 candidates that look attractive on raw rank but "
-        "should be passed over, naming the failed dimension "
-        "(concentration / extension / event risk / sector RS deterioration).",
-        "",
-        "Write in professional analyst style. Use bullet points within sections. "
-        "Aim for ~1000–1100 words (extra section added). Every claim must reference a data point from above.",
+    # ── Section task definitions ───────────────────────────────────────────────
+    _TASKS = {
+        'risk': [
+            "### ⚠️ Portfolio Warnings & Risk Flags",
+            "Go through each holding. Flag: rank > 40 (exit signal), rank 21–40 (buffer zone — watch), "
+            "P&L < −10%, stocks in sectors with negative RS momentum. "
+            "ALSO compute holdings per sector as % of total positions; flag any sector > 25% as "
+            "concentration risk, > 40% as severe; escalate if the dominant sector's RS 5d Δ is negative. "
+            "For each flag: user, ticker, rank, what specifically to watch. "
+            "HIGH-BETA HOLDINGS (β > 1.0, marked ⚡ in holdings table): for each, state whether the stock's "
+            "sector RS is rising, stalling, or falling — high-beta + falling sector RS is an elevated risk.",
+        ],
+        'entries': [
+            "### 🆕 New Entry Candidates",
+            "Top 5 non-held stocks at rank ≤ 20. For each candidate, address in prose: "
+            "(i) sector direction in words (rising/stalling/falling) and its Z-score rank — no raw delta numbers, "
+            "(ii) impact on portfolio sector concentration — state current sector weight %, "
+            "(iii) beta-regime fit, "
+            "(iv) 3m-vs-12m momentum balance (sustained or decelerating?), "
+            "(v) any pending news or corporate event from the feed. "
+            "End each candidate with a bolded verdict: **STRONG ADD / MODERATE ADD / WAIT / SKIP** "
+            "+ one-line rationale.",
+        ],
+        'overflow': [
+            "### 🔀 Overflow & High-Beta Signals",
+            "Analyse the overflow basket (β > 1.2 stocks excluded from main basket). "
+            "Group overflow stocks by sector. For each sector group:",
+            "  (i)  Name the overflow stocks, their ranks and 12m/3m momentum.",
+            "  (ii) State the sector's RS direction (rising/stalling/falling from the momentum table).",
+            "  (iii) Check the SECTOR → ETF PROXY TABLE. If an ETF exists for the sector AND the sector "
+            "        is in the Rising group: recommend adding the ETF as a proxy, naming the ETF symbol "
+            "        and rationale (captures sector momentum without high-beta single-stock risk). "
+            "        If no ETF exists: state this explicitly — do not invent a proxy.",
+            "  (iv)  If the sector is Neutral or Falling: state that the ETF proxy is NOT recommended "
+            "        despite overflow stock momentum — sector tailwind is absent.",
+            "For already-held ETF proxies (e.g. MODEFENCE, HEALTHIETF in portfolio): "
+            "confirm whether the underlying sector is still Rising; flag if it has deteriorated. "
+            "Close with a one-line summary of which overflow sectors are actionable vs. which to ignore.",
+        ],
+        'sectors': [
+            "### 📈 Sectors — Deep Dive",
+            "Use composite and 5d/10d Δ data INTERNALLY to classify groups — do NOT quote composite scores or RS delta numbers in the output. "
+            "Group into Rising (composite > 0 AND 5d Δ > 0), Neutral, Falling (composite < 0 AND 5d Δ < 0). "
+            "For each sector cited, quote only: (a) its Z-score rank from the SECTOR Z-SCORE RANKING table (e.g. `Rank #1`), "
+            "and (b) its 12m% or 3m% return — whichever is more relevant. "
+            "For EVERY sector named, prepend a plain-English week-on-week trend label using ONLY the four labels below — "
+            "derive it from the relationship between 5d Δ and 10d Δ: "
+            "**Improving (going strong)** — 5d Δ > 0 AND 5d Δ > 10d Δ (momentum accelerating week-on-week); "
+            "**Steady** — 5d Δ > 0 AND 5d Δ ≤ 10d Δ (positive but stalling); "
+            "**Decreasing strength** — 5d Δ < 0 AND 10d Δ ≥ 0 (was positive, now turning down); "
+            "**Weakening** — 5d Δ < 0 AND 10d Δ < 0 (sustained decline). "
+            "Format: lead each sector bullet with the label in square brackets, e.g. [Improving (going strong)] Defence — ... "
+            "Name any sector that flipped group vs its 10d position. "
+            "Insert `---` between Rising / Neutral / Falling groups.",
+        ],
+        'watchlist': [
+            "### 💡 Strategic Watch List",
+            "What to add/exit at next rebalance. Any emerging theme (defence rally, IT selloff, FMCG recovery). "
+            "Close with a mandatory **Don't-Do** line: 1–3 candidates that look attractive on raw rank but "
+            "should be passed over, naming the failed dimension "
+            "(concentration / extension / event risk / sector RS deterioration).",
+        ],
+    }
+    _SECTION_ORDER = ['risk', 'entries', 'overflow', 'sectors', 'watchlist']
+    _FORMAT_RULES  = [
         "",
         "---",
         "## FORMATTING RULES — follow exactly:",
@@ -3636,19 +3639,26 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
         "",
         "3. **Numerical data in inline code**",
         "   - Wrap all metrics in backticks: RS composite, 5d Δ, 10d Δ, P&L%, ranks, β values, scores",
-        "   - Example: `Energy RS composite `+22.2`, 5d Δ `+1.59`, 10d Δ `+4.31`.`",
         "",
-        "4. **Headlines as blockquotes**",
-        "   - Cited news evidence uses blockquote format:",
-        "   - > \"Headline text.\"",
-        "   - > — Source, YYYY-MM-DD",
-        "",
-        "5. **Horizontal rules between sector groups**",
-        "   - Insert `---` between Rising / Neutral / Falling groups in Sectors Deep Dive",
-        "",
-        "6. **Emojis reserved for top-level section headers and ⚠️ risk flags only**",
+        "4. **Emojis reserved for top-level section headers and ⚠️ risk flags only**",
         "   - No emojis inside body prose, bullets, sub-bullets, or theme labels",
     ]
+
+    lines += ["", "---"]
+    if section and section in _TASKS:
+        lines += ["## YOUR TASK — write ONLY this section (no preamble, no other sections):", ""]
+        lines += _TASKS[section]
+        lines += ["", "Write in professional analyst style. Every claim must reference a data point from the tables above."]
+    else:
+        lines += ["## YOUR TASK — write a market intelligence report with these sections:", ""]
+        for key in _SECTION_ORDER:
+            lines += _TASKS[key]
+            lines.append("")
+        lines += [
+            "Write in professional analyst style. Use bullet points within sections. "
+            "Aim for ~1000–1100 words. Every claim must reference a data point from above.",
+        ]
+    lines += _FORMAT_RULES
     return "\n".join(lines)
 
 
@@ -3658,8 +3668,9 @@ def api_ai_briefing_stream():
     from flask import Response, stream_with_context
     from datetime import datetime as _dtm2, timezone as _tz2, timedelta
 
-    force   = request.args.get('refresh') == '1'
-    cache_key = 'all'
+    force     = request.args.get('refresh') == '1'
+    section   = request.args.get('section') or None   # e.g. 'risk', 'entries', 'sectors'…
+    cache_key = section or 'all'
 
     api_key = os.environ.get('ANTHROPIC_API_KEY', '')
     if not api_key:
@@ -3779,6 +3790,7 @@ def api_ai_briefing_stream():
         live_signals=live_signals, sector_momentum=sector_momentum,
         mom20_regime=mom20_regime, nifty_regime=nifty_regime,
         sector_map=sector_map,
+        section=section,
     )
 
     # ── Stream Claude response ──────────────────────────────────────────────
