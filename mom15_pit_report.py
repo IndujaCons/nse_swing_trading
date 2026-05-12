@@ -29,7 +29,8 @@ BUFFER_IN    = 10             # new stock enters if rank ≤ 10
 BUFFER_OUT   = 30             # existing stays if rank ≤ 30
 BETA_CAP     = 1.0
 BETA_MIN     = None           # None = no minimum beta filter (set to 1.2 for overflow)
-W12, W3      = 0.50, 0.50    # 12m + 3m, 6m dropped
+W12, W3          = 0.50, 0.50    # 12m + 3m, 6m dropped
+PARABOLIC_FILTER = False          # skip new entries where Ret12m>300% AND Ret3m/Ret12m>0.5
 LONG_PD      = 252            # 12m in trading days
 SHORT_PD     = 63             # 3m in trading days
 WARMUP_DAYS  = 450            # extra history before START_DATE for warmup
@@ -340,9 +341,10 @@ def print_table(headers, rows, col_widths):
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
 def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None,
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
-        ema200_exit=False, rebal_day="start", regime_filter="sma200"):
+        ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, W12, W3, START_DATE
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, W12, W3, START_DATE, PARABOLIC_FILTER
+    PARABOLIC_FILTER = parabolic_filter
     BETA_MIN = None  # reset each run
     if start_override:
         START_DATE = date.fromisoformat(start_override)
@@ -589,17 +591,30 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 new_set.add(t)
 
         # New entries: add if rank ≤ BUFFER_IN and not already held
+        skipped_parabolic = []
         for r, (t, _) in enumerate(ranked):
             if r + 1 > BUFFER_IN:
                 break
-            if t not in current_set:
+            if t not in current_set and t not in new_set:
+                if PARABOLIC_FILTER:
+                    ret12 = scores[t].get("ret_12m", 0)
+                    ret3  = scores[t].get("ret_3m", 0)
+                    if ret12 > 3.0 and ret3 > 0 and (ret3 / ret12) > 0.5:
+                        skipped_parabolic.append((t, ret12, ret3))
+                        continue
                 new_set.add(t)
 
         # Fill remaining slots to reach slots_available from top of ranking
         for r, (t, _) in enumerate(ranked):
             if len(new_set) >= slots_available:
                 break
-            new_set.add(t)
+            if t not in new_set:
+                if PARABOLIC_FILTER:
+                    ret12 = scores[t].get("ret_12m", 0)
+                    ret3  = scores[t].get("ret_3m", 0)
+                    if ret12 > 3.0 and ret3 > 0 and (ret3 / ret12) > 0.5:
+                        continue
+                new_set.add(t)
 
         # Cap at slots_available (keep highest-ranked)
         if len(new_set) > slots_available:
@@ -741,13 +756,15 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 "entry_price": ep,
                 "shares": shares,
             }
+            r12, r3 = s['ret_12m'], s['ret_3m']
+            para_warn = r12 > 3.0 and r3 > 0 and (r3 / r12) > 0.5
             entry_rows.append((
                 t,
                 ticker_rank[t],
                 f"{s['norm_score']:.3f}",
                 f"{s['beta']:.2f}",
-                f"{s['ret_12m']*100:+.1f}%",
-                f"{s['ret_3m']*100:+.1f}%",
+                f"{r12*100:+.1f}%" + (" ⚠" if para_warn else ""),
+                f"{r3*100:+.1f}%",
                 f"{ep:,.1f}",
                 shares,
                 inr(cost),
@@ -757,6 +774,11 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         if skipped_52w:
             print(f"  [52w filter blocked {len(skipped_52w)}: "
                   + ", ".join(f"{r[0]}({r[4]})" for r in skipped_52w) + "]")
+        if skipped_parabolic:
+            parts = [f"{t}(12m:{r12*100:+.0f}%,3m:{r3*100:+.0f}%,ratio:{r3/r12:.2f})"
+                     for t, r12, r3 in skipped_parabolic]
+            print(f"  [PARABOLIC FILTER 3m/12m>0.5] skipped {len(skipped_parabolic)}: "
+                  f"{', '.join(parts)}")
         if entry_rows:
             print_table(
                 ["Ticker","Rank","Score","Beta","Ret12m","Ret3m","Entry₹","Qty","Capital"],
@@ -923,6 +945,8 @@ if __name__ == "__main__":
                         help="Rebalance day-of-month: 'start' (1st trading day) or 'mid' (15th or next trading day)")
     parser.add_argument("--regime", choices=["none", "sma200", "ema200"], default="sma200",
                         help="Regime filter on the benchmark: 'none' (no filter), 'sma200' (default — Nifty200 < SMA200 → off), 'ema200' (uses EMA(200) instead)")
+    parser.add_argument("--parabolic-filter", action="store_true",
+                        help="Skip new entries where Ret12m > 300%% AND Ret3m/Ret12m > 0.5 (blowoff top)")
     args = parser.parse_args()
     # `--no-regime` (legacy) takes precedence and forces 'none'.
     regime_filter = "none" if args.no_regime else args.regime
@@ -932,4 +956,5 @@ if __name__ == "__main__":
         start_override=args.start,
         top_n_override=args.top_n, buffer_in_override=args.buffer_in,
         buffer_out_override=args.buffer_out, ema200_exit=args.ema200_exit,
-        rebal_day=args.rebal_day, regime_filter=regime_filter)
+        rebal_day=args.rebal_day, regime_filter=regime_filter,
+        parabolic_filter=args.parabolic_filter)

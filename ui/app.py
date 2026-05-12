@@ -2954,6 +2954,7 @@ def api_mom20_tradebook_upload(user_id):
     })
     with open(hist_path, "w") as f:
         json.dump(history, f, indent=2)
+    _AI_BRIEFING_CACHE.clear()   # portfolio changed — bust briefing cache
 
     return jsonify({"success": True, "trades_synced": len(trades),
                     "portfolio_size": len(updated.get("basket", []))})
@@ -3086,8 +3087,75 @@ def api_mom20_rebuild_portfolio(user_id):
     with open(tmp, "w") as f:
         json.dump(portfolio, f, indent=2)
     os.replace(tmp, pf_path)
+    _AI_BRIEFING_CACHE.clear()   # portfolio changed — bust briefing cache
     return jsonify({"success": True, "positions": len(basket),
                     "basket": list(basket.values())})
+
+
+@app.route("/api/portfolio-users/<user_id>/mom20-history/<int:idx>", methods=["DELETE"])
+def api_mom20_delete_history(user_id, idx):
+    """Delete one rebalance history record by its 0-based storage index, then rebuild portfolio."""
+    import datetime as _dt_mod
+    user = get_user(user_id)
+    if not user:
+        return jsonify({"success": False, "error": "user not found"})
+    hist_path = mom20_history_path(user_id)
+    try:
+        with open(hist_path) as f:
+            history = json.load(f)
+    except Exception:
+        return jsonify({"success": False, "error": "no history found"})
+    if idx < 0 or idx >= len(history):
+        return jsonify({"success": False, "error": f"index {idx} out of range (0–{len(history)-1})"})
+
+    removed = history.pop(idx)
+    tmp = hist_path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(history, f, indent=2)
+    os.replace(tmp, hist_path)
+
+    # Rebuild portfolio from remaining history
+    basket = {}
+    for rb in history:
+        for sell in rb.get("sells", []):
+            basket.pop(sell.get("ticker"), None)
+        for buy in rb.get("buys", []):
+            ticker = buy.get("ticker")
+            qty    = buy.get("qty", 0)
+            price  = buy.get("price", 0)
+            date   = buy.get("trade_date", rb.get("rebalance_date", ""))
+            if not ticker or qty <= 0:
+                continue
+            if ticker in basket:
+                old_qty   = basket[ticker]["qty"]
+                old_price = basket[ticker]["entry_price"]
+                new_qty   = old_qty + qty
+                wavg      = (old_qty * old_price + qty * price) / new_qty if new_qty else price
+                basket[ticker] = {**basket[ticker], "qty": new_qty,
+                                  "entry_price": round(wavg, 2),
+                                  "last_added_date": date,
+                                  "last_added_price": round(price, 2)}
+            else:
+                basket[ticker] = {"ticker": ticker, "qty": qty,
+                                  "entry_price": round(price, 2),
+                                  "entry_date": date,
+                                  "weight": round(100 / 20, 2)}
+
+    pf_path = mom20_portfolio_path(user_id)
+    portfolio = {"status": "invested" if basket else "empty",
+                 "basket": list(basket.values()),
+                 "last_synced": _dt_mod.date.today().isoformat(),
+                 "rebuilt_from_history": _dt_mod.datetime.now().isoformat()}
+    tmp = pf_path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(portfolio, f, indent=2)
+    os.replace(tmp, pf_path)
+
+    _AI_BRIEFING_CACHE.clear()   # portfolio changed — bust briefing cache
+    return jsonify({"success": True,
+                    "deleted": removed.get("rebalance_date"),
+                    "remaining": len(history),
+                    "positions": len(basket)})
 
 
 @app.route("/api/portfolio-users/<user_id>/mom20-history", methods=["GET"])
@@ -3279,17 +3347,23 @@ def api_mom20_performance(user_id):
     holdings.sort(key=lambda x: x["return_pct"], reverse=True)
     unrealized_pnl = round(total_current - total_entry, 2)
 
-    # Realized P&L + initial capital — single history read.
-    realized_pnl   = 0.0
+    # Realized P&L + total invested capital — single history read.
+    # total_invested = sum of net capital injected across all rebalances:
+    #   each rebalance contributes max(0, buy_total − sell_total).
+    #   Pure rebalances contribute 0 (sells fund buys).
+    #   Capital additions (e.g. top-up buys with no sells) contribute their full buy amount.
+    realized_pnl    = 0.0
     initial_capital = 0.0
     try:
         with open(mom20_history_path(user_id)) as _hf:
             _hist = json.load(_hf)
         realized_pnl = _retrospective_realized_pnl(_hist)
-        if _hist:
-            # Initial capital = total deployed in the first rebalance (Rebalance #01).
-            initial_capital = sum(t.get("qty", 0) * t.get("price", 0)
-                                  for t in _hist[0].get("buys", []))
+        for rb in _hist:
+            buy_tot  = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("buys",  []))
+            sell_tot = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("sells", []))
+            net = buy_tot - sell_tot
+            if net > 0:
+                initial_capital += net
     except Exception:
         pass
     realized_pnl    = round(realized_pnl, 2)
@@ -3357,9 +3431,17 @@ _AI_BRIEFING_TTL   = 1800              # 30-min cache so we don't burn tokens on
 
 def _build_briefing_prompt(holdings, sector_ranking, today_str,
                            live_signals=None, sector_momentum=None,
-                           mom20_regime='?', nifty_regime='?'):
+                           mom20_regime='?', nifty_regime='?', sector_map=None):
     held_tickers = {h['ticker'] for h in holdings}
     held_sectors  = {h.get('sector', '') for h in holdings if h.get('sector')}
+    _smap = sector_map or {}
+
+    # Build beta lookup from live signals for portfolio holdings
+    _beta_lookup = {}
+    for s in (live_signals or {}).get('mom20_signals', []):
+        _beta_lookup[s.get('ticker', '')] = s.get('beta', 0)
+    for s in (live_signals or {}).get('mom20_overflow', []):
+        _beta_lookup[s.get('ticker', '')] = s.get('beta', 0)
 
     lines = [
         "You are a senior Indian equity analyst providing a daily market intelligence briefing.",
@@ -3369,23 +3451,44 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
         "## STRATEGY CONTEXT",
         "Mom20 = Nifty200 momentum strategy: top 20 by Z-score (50% 12m + 50% 3m).",
         "Beta cap ≤ 1.2 (no minimum). Beta bands:",
-        "  β > 1.0   → High beta: caution if sector RS weakening",
+        "  β > 1.2   → OVERFLOW: excluded from main basket; ETF proxy may be used as substitute",
+        "  β 1.0–1.2 → High: amplifies sector moves; caution if sector RS weakening",
         "  β 0.6–1.0 → Moderate: preferred profile",
         "  β < 0.6   → Defensive: may lag bull markets",
         "  β < 0.5   → Ultra-low: positive quality trait, NOT a risk flag",
         "",
+        "## SECTOR → ETF PROXY TABLE",
+        "Use this when overflow stocks or momentum sectors have no eligible direct stock.",
+        "Sector | ETF Symbol | ETF Name",
+        "NIFTY INDIA DEFENCE     | MODEFENCE  | Motilal Oswal Nifty India Defence ETF",
+        "NIFTY METAL             | METALIETF  | Nippon Nifty Metal ETF",
+        "NIFTY HEALTHCARE        | HEALTHIETF | Nippon Nifty Healthcare ETF",
+        "NIFTY IT                | ITBEES     | Nippon Nifty IT ETF",
+        "NIFTY AUTO              | AUTOBEES   | Nippon Nifty Auto ETF",
+        "NIFTY FMCG              | FMCGIETF   | ICICI Pru Nifty FMCG ETF",
+        "NIFTY PSU BANK          | PSUBNKBEES | Nippon Nifty PSU Bank ETF",
+        "NIFTY BANK              | BANKBEES   | Nippon Nifty Bank ETF",
+        "NIFTY INFRA             | INFRABEES  | Nippon Nifty Infra ETF",
+        "NIFTY OIL & GAS         | OILIETF    | ICICI Pru Nifty Oil & Gas ETF",
+        "NIFTY REALTY            | MOREALTY   | Motilal Oswal Realty ETF",
+        "NIFTY INDIA MFG         | MAKEINDIA  | Mirae Asset Make-in-India ETF",
+        "NIFTY ENERGY            | —          | No tradeable NSE ETF available",
+        "",
     ]
 
-    # 1. Portfolio Holdings
+    # 1. Portfolio Holdings (with beta)
     lines += ["## PORTFOLIO HOLDINGS (all users)"]
     if holdings:
-        lines.append("User | Ticker | Sector | Rank | Entry Date | Entry₹ | Now₹ | Qty | P&L%")
+        lines.append("User | Ticker | Sector | Rank | Entry₹ | Now₹ | P&L% | β")
         for h in sorted(holdings, key=lambda x: (x.get('rank') or 9999) if isinstance(x.get('rank'), (int, float)) else 9999):
+            tk   = h['ticker']
+            beta = _beta_lookup.get(tk, 0)
+            beta_flag = ' ⚡' if beta > 1.0 else ''
             lines.append(
-                f"{h.get('user','?')} | {h['ticker']} | {h.get('sector','?')} | "
-                f"{h.get('rank','?')} | {h.get('entry_date','?')} | "
+                f"{h.get('user','?')} | {tk} | {h.get('sector','?')} | "
+                f"{h.get('rank','?')} | "
                 f"₹{h.get('entry_price',0):.0f} | ₹{h.get('current_price',0):.0f} | "
-                f"{h.get('qty','?')} | {h.get('return_pct',0):+.1f}%"
+                f"{h.get('return_pct',0):+.1f}% | β{beta:.2f}{beta_flag}"
             )
     else:
         lines.append("(no holdings)")
@@ -3406,16 +3509,20 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
     else:
         lines.append("(signals not available)")
 
-    # 3. Overflow basket
+    # 3. Overflow basket (with sector)
     overflow = (live_signals or {}).get('mom20_overflow', [])
     if overflow:
-        lines += ["", "## OVERFLOW BASKET (β > 1.2, excluded from main basket)"]
-        lines.append("Rank | Ticker | 12m% | 3m% | Beta")
-        for s in overflow[:10]:
+        lines += ["", "## OVERFLOW BASKET (β > 1.2 — excluded from main basket; ETF proxy may substitute)"]
+        lines.append("Rank | Ticker | Sector | 12m% | 3m% | Beta")
+        for s in overflow[:15]:
+            tk  = s.get('ticker', '')
+            sec = _smap.get(tk, s.get('sector', '?'))
             lines.append(
-                f"#{s.get('rank','?')} | {s.get('ticker','')} | "
+                f"#{s.get('rank','?')} | {tk} | {sec} | "
                 f"{s.get('ret_12m',0):+.1f}% | {s.get('ret_3m',0):+.1f}% | β{s.get('beta',0):.2f}"
             )
+    else:
+        lines += ["", "## OVERFLOW BASKET", "(empty — no β > 1.2 stocks in top rankings)"]
 
     # 4. Sector Z-Score Ranking
     scores_valid = any((r.get('score') or 0) != 0 for r in (sector_ranking or []))
@@ -3457,7 +3564,9 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
         "P&L < −10%, stocks in sectors with negative RS momentum. "
         "ALSO compute holdings per sector as % of total positions; flag any sector > 25% as "
         "concentration risk, > 40% as severe; escalate if the dominant sector's RS 5d Δ is negative. "
-        "For each flag: user, ticker, rank, what specifically to watch.",
+        "For each flag: user, ticker, rank, what specifically to watch. "
+        "HIGH-BETA HOLDINGS (β > 1.0, marked ⚡ in holdings table): for each, state whether the stock's "
+        "sector RS is rising, stalling, or falling — high-beta + falling sector RS is an elevated risk.",
         "",
         "### 🆕 New Entry Candidates",
         "Top 5 non-held stocks at rank ≤ 20. For each candidate, address in prose: "
@@ -3469,12 +3578,33 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
         "End each candidate with a bolded verdict: **STRONG ADD / MODERATE ADD / WAIT / SKIP** "
         "+ one-line rationale.",
         "",
+        "### 🔀 Overflow & High-Beta Signals",
+        "Analyse the overflow basket (β > 1.2 stocks excluded from main basket). "
+        "Group overflow stocks by sector. For each sector group:",
+        "  (i)  Name the overflow stocks, their ranks and 12m/3m momentum.",
+        "  (ii) State the sector's RS direction (rising/stalling/falling from the momentum table).",
+        "  (iii) Check the SECTOR → ETF PROXY TABLE. If an ETF exists for the sector AND the sector "
+        "        is in the Rising group: recommend adding the ETF as a proxy, naming the ETF symbol "
+        "        and rationale (captures sector momentum without high-beta single-stock risk). "
+        "        If no ETF exists: state this explicitly — do not invent a proxy.",
+        "  (iv)  If the sector is Neutral or Falling: state that the ETF proxy is NOT recommended "
+        "        despite overflow stock momentum — sector tailwind is absent.",
+        "For already-held ETF proxies (e.g. MODEFENCE, HEALTHIETF in portfolio): "
+        "confirm whether the underlying sector is still Rising; flag if it has deteriorated. "
+        "Close with a one-line summary of which overflow sectors are actionable vs. which to ignore.",
+        "",
         "### 📈 Sectors — Deep Dive",
         "Use composite and 5d/10d Δ data INTERNALLY to classify groups — do NOT quote composite scores or RS delta numbers in the output. "
         "Group into Rising (composite > 0 AND 5d Δ > 0), Neutral, Falling (composite < 0 AND 5d Δ < 0). "
         "For each sector cited, quote only: (a) its Z-score rank from the SECTOR Z-SCORE RANKING table (e.g. `Rank #1`), "
         "and (b) its 12m% or 3m% return — whichever is more relevant. "
-        "State acceleration/stalling in words ('accelerating', 'stalling', 'reversing') — no delta numbers. "
+        "For EVERY sector named, prepend a plain-English week-on-week trend label using ONLY the four labels below — "
+        "derive it from the relationship between 5d Δ and 10d Δ: "
+        "**Improving (going strong)** — 5d Δ > 0 AND 5d Δ > 10d Δ (momentum accelerating week-on-week); "
+        "**Steady** — 5d Δ > 0 AND 5d Δ ≤ 10d Δ (positive but stalling); "
+        "**Decreasing strength** — 5d Δ < 0 AND 10d Δ ≥ 0 (was positive, now turning down); "
+        "**Weakening** — 5d Δ < 0 AND 10d Δ < 0 (sustained decline). "
+        "Format: lead each sector bullet with the label in square brackets, e.g. [Improving (going strong)] Defence — ... "
         "Name any sector that flipped group vs its 10d position. "
         "Insert `---` between Rising / Neutral / Falling groups.",
         "",
@@ -3485,7 +3615,7 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
         "(concentration / extension / event risk / sector RS deterioration).",
         "",
         "Write in professional analyst style. Use bullet points within sections. "
-        "Aim for ~850–950 words. Every claim must reference a data point from above.",
+        "Aim for ~1000–1100 words (extra section added). Every claim must reference a data point from above.",
         "",
         "---",
         "## FORMATTING RULES — follow exactly:",
@@ -3533,11 +3663,40 @@ def api_ai_briefing_stream():
             yield "data: [DONE]\n\n"
         return Response(stream_with_context(_err()), mimetype='text/event-stream')
 
-    # Serve from cache if fresh
+    # ── Load live signals cache FIRST — freshest rank source ────────────────
+    # Ranks come from here (updated by Live Signals refresh), NOT from the
+    # per-user live_prices file (which only updates when "Live Prices" is clicked).
+    live_signals    = {}
+    sector_momentum = {}
+    mom20_regime    = '?'
+    nifty_regime    = '?'
+    ls_updated_at   = 0.0
+    fresh_ranks     = {}   # ticker → rank, from live signals (freshest source)
+    try:
+        from config.settings import LIVE_SIGNALS_CACHE_FILE
+        with open(LIVE_SIGNALS_CACHE_FILE) as f:
+            ls_cache = json.load(f)
+        live_signals    = ls_cache
+        sector_momentum = ls_cache.get('sector_momentum', {})
+        mom20_regime    = ls_cache.get('mom20_regime', '?') or '?'
+        nifty_regime    = ls_cache.get('nifty_regime', '?') or '?'
+        fresh_ranks     = ls_cache.get('mom20_unfiltered_ranks', {}) or {}
+        # Parse updated_at to a UNIX timestamp for cache-busting comparison
+        _ua = ls_cache.get('updated_at') or ls_cache.get('timestamp') or ''
+        if _ua:
+            try:
+                ls_updated_at = _dtm2.fromisoformat(_ua.replace('Z', '+00:00')).timestamp()
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # Serve from cache only if fresh AND live signals haven't been refreshed since
     cached = _AI_BRIEFING_CACHE.get(cache_key)
     if not force and cached:
         age = (_dtm2.now().timestamp() - cached['ts'])
-        if age < _AI_BRIEFING_TTL:
+        signals_refreshed_after_cache = ls_updated_at > cached['ts']
+        if age < _AI_BRIEFING_TTL and not signals_refreshed_after_cache:
             def _cached_stream():
                 import time as _t
                 for chunk in (cached['text'][i:i+80] for i in range(0, len(cached['text']), 80)):
@@ -3554,11 +3713,11 @@ def api_ai_briefing_stream():
     except Exception:
         pass
 
-    all_users   = load_users()          # every registered user
-    holdings    = []                    # flat list, each row tagged with user name
+    all_users   = load_users()
+    holdings    = []
 
     for u in all_users:
-        uid  = u.get('id') or u.get('config_user_id', '')
+        uid   = u.get('id') or u.get('config_user_id', '')
         uname = u.get('name', uid)
         try:
             with open(mom20_portfolio_path(uid)) as f:
@@ -3566,23 +3725,25 @@ def api_ai_briefing_stream():
             basket = pf.get('basket', [])
             if not basket:
                 continue
-            price_map, rank_map = {}, {}
+            price_map = {}
             try:
                 with open(mom20_live_prices_path(uid)) as f:
                     lp = json.load(f)
                 price_map = {k: float(v) for k, v in (lp.get('prices') or {}).items()}
-                rank_map  = dict(lp.get('ranks') or {})
             except Exception:
                 pass
             for h in basket:
                 t  = h['ticker']
                 ep = h.get('entry_price', 0)
                 cp = price_map.get(t, ep)
+                # Prefer fresh_ranks (from live signals, just refreshed by user)
+                # over rank_map from live_prices file (only updated on "Live Prices" click)
+                rank = fresh_ranks.get(t) or '?'
                 holdings.append({
                     'user':          uname,
                     'ticker':        t,
                     'sector':        sector_map.get(t) or ETF_TO_SECTOR.get(t, ''),
-                    'rank':          rank_map.get(t, '?'),
+                    'rank':          rank,
                     'entry_price':   ep,
                     'entry_date':    h.get('entry_date', '?'),
                     'qty':           h.get('qty', '?'),
@@ -3603,22 +3764,6 @@ def api_ai_briefing_stream():
         except Exception:
             pass
 
-    # Live signals from cache (no network call needed — scheduler keeps this fresh)
-    live_signals    = {}
-    sector_momentum = {}
-    mom20_regime    = '?'
-    nifty_regime    = '?'
-    try:
-        from config.settings import LIVE_SIGNALS_CACHE_FILE
-        with open(LIVE_SIGNALS_CACHE_FILE) as f:
-            ls_cache = json.load(f)
-        live_signals    = ls_cache
-        sector_momentum = ls_cache.get('sector_momentum', {})
-        mom20_regime    = ls_cache.get('mom20_regime', '?') or '?'
-        nifty_regime    = ls_cache.get('nifty_regime', '?') or '?'
-    except Exception:
-        pass
-
     ist = _tz2(timedelta(hours=5, minutes=30))
     today_str = _dtm2.now(ist).strftime('%d %b %Y')
 
@@ -3626,6 +3771,7 @@ def api_ai_briefing_stream():
         holdings, sector_ranking, today_str,
         live_signals=live_signals, sector_momentum=sector_momentum,
         mom20_regime=mom20_regime, nifty_regime=nifty_regime,
+        sector_map=sector_map,
     )
 
     # ── Stream Claude response ──────────────────────────────────────────────
@@ -3661,43 +3807,103 @@ def api_ai_briefing_stream():
 @app.route("/api/portfolio-users/<user_id>/mom20-chart", methods=["GET"])
 def api_mom20_chart(user_id):
     """
-    Daily cumulative return: portfolio vs Nifty 500, from earliest entry date.
-    Returns: dates[], portfolio_pct[], bench_pct[]
+    Daily cumulative return: portfolio vs Nifty 500, from first rebalance date.
+    Uses rebalance history to reconstruct the actual holdings on each date so the
+    chart's final point matches the RETURNS tile exactly.
     """
     import yfinance as yf
     import pandas as pd
 
     if not get_user(user_id):
         return jsonify({"success": False, "error": "user not found"})
+
+    # ── Load history to build an accurate holdings timeline ──────────────────
+    _hist = []
+    try:
+        with open(mom20_history_path(user_id)) as _hf:
+            _hist = json.load(_hf)
+        _retrospective_realized_pnl(_hist)
+    except Exception:
+        pass
+
+    # Load current basket as fallback when there is no history
+    basket = []
     try:
         with open(mom20_portfolio_path(user_id)) as f:
-            pf = json.load(f)
+            basket = json.load(f).get("basket", [])
     except Exception:
+        pass
+
+    if not _hist and not basket:
         return jsonify({"success": False, "error": "no portfolio"})
 
-    basket = pf.get("basket", [])
-    if not basket:
-        return jsonify({"success": False, "error": "no holdings"})
+    # Build a holdings timeline: list of (effective_from_date, {ticker: {qty, entry_price}})
+    # Each entry represents post-rebalance holdings from that date onward.
+    holdings_timeline = []
+    initial_capital   = 0.0
 
-    # Determine start date
-    dates_list = [h.get("entry_date","")[:10] for h in basket if h.get("entry_date")]
-    if not dates_list:
-        return jsonify({"success": False, "error": "no entry dates"})
-    start_date = min(dates_list)
+    if _hist:
+        current_h = {}
+        for rb in _hist:
+            rb_date = (rb.get("rebalance_date") or "")[:10]
+            if not rb_date:
+                continue
+            # Apply sells (remove positions)
+            for s in rb.get("sells", []):
+                current_h.pop(s.get("ticker"), None)
+            # Apply buys (add or accumulate)
+            for b in rb.get("buys", []):
+                t     = b.get("ticker")
+                qty   = b.get("qty", 0)
+                price = b.get("price", 0)
+                if not t or qty <= 0:
+                    continue
+                if t in current_h:
+                    old_qty   = current_h[t]["qty"]
+                    old_price = current_h[t]["entry_price"]
+                    new_qty   = old_qty + qty
+                    wavg      = (old_qty * old_price + qty * price) / new_qty
+                    current_h[t] = {"qty": new_qty, "entry_price": round(wavg, 2)}
+                else:
+                    current_h[t] = {"qty": qty, "entry_price": round(price, 2)}
+            holdings_timeline.append((rb_date, dict(current_h)))
 
-    tickers    = [h["ticker"] for h in basket]
+        initial_capital = sum(
+            t.get("qty", 0) * t.get("price", 0)
+            for t in _hist[0].get("buys", [])
+        )
+
+    # Fallback: seed the timeline from current basket
+    if not holdings_timeline and basket:
+        dates_list = [h.get("entry_date", "")[:10] for h in basket if h.get("entry_date")]
+        if not dates_list:
+            return jsonify({"success": False, "error": "no entry dates"})
+        seed_date = min(dates_list)
+        seed_h    = {h["ticker"]: {"qty": h.get("qty", 0),
+                                    "entry_price": h.get("entry_price", 0)}
+                     for h in basket}
+        holdings_timeline = [(seed_date, seed_h)]
+        initial_capital   = sum(h.get("entry_price", 0) * h.get("qty", 0) for h in basket)
+
+    if not holdings_timeline or initial_capital <= 0:
+        return jsonify({"success": False, "error": "insufficient history data"})
+
+    start_date = holdings_timeline[0][0]
+
+    # ── Collect all tickers ever held and download prices ────────────────────
+    all_tickers = sorted({t for _, h in holdings_timeline for t in h})
     bench_syms  = ["^CRSLDX", "^CNX200"]
-    yf_tickers  = [f"{t}.NS" for t in tickers] + bench_syms
+    yf_syms     = [f"{t}.NS" for t in all_tickers] + bench_syms
 
     try:
-        raw = yf.download(yf_tickers, start=start_date, progress=False,
+        raw = yf.download(yf_syms, start=start_date, progress=False,
                           auto_adjust=True, group_by="ticker", threads=True)
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
     def get_close(sym):
         try:
-            if len(yf_tickers) == 1:
+            if len(yf_syms) == 1:
                 return raw["Close"].dropna()
             return raw[sym]["Close"].dropna()
         except Exception:
@@ -3709,72 +3915,65 @@ def api_mom20_chart(user_id):
     if bench_raw.empty:
         return jsonify({"success": False, "error": "benchmark data unavailable"})
 
-    # Build per-ticker close series
     ticker_closes = {}
-    for t, sym in zip(tickers, yf_tickers[:-1]):
+    for t, sym in zip(all_tickers, yf_syms[:-2]):
         s = get_close(sym)
         if not s.empty:
             ticker_closes[t] = s
 
-    # Align all series to benchmark trading days from start_date
+    # ── Compute portfolio value on each trading day ───────────────────────────
     all_dates = bench_raw.index
+
+    def get_holdings_for_date(dt_str):
+        """Return the active post-rebalance holdings for dt_str (sorted ascending by date)."""
+        active = holdings_timeline[0][1]
+        for rb_date, h in holdings_timeline:
+            if dt_str >= rb_date:
+                active = h
+            else:
+                break
+        return active
+
     port_values = []
-
-    total_invested = sum(h.get("entry_price", 0) * h.get("qty", 0) for h in basket)
-    if total_invested <= 0:
-        return jsonify({"success": False, "error": "no invested capital"})
-
-    entry_price_map = {h["ticker"]: h.get("entry_price", 0) for h in basket}
-    entry_date_map  = {h["ticker"]: h.get("entry_date", "")[:10] for h in basket}
-    qty_map         = {h["ticker"]: h.get("qty", 0) for h in basket}
-
     for dt in all_dates:
         dt_str = dt.strftime("%Y-%m-%d")
+        holdings = get_holdings_for_date(dt_str)
         val = 0.0
-        for t in tickers:
-            qty = qty_map.get(t, 0)
-            ep  = entry_price_map.get(t, 0)
-            if qty <= 0 or ep <= 0:
+        for t, h in holdings.items():
+            qty = h.get("qty", 0)
+            ep  = h.get("entry_price", 0)
+            if qty <= 0:
                 continue
-            if dt_str < entry_date_map.get(t, ""):
-                val += qty * ep          # not yet entered — treat as cash at cost
+            s = ticker_closes.get(t)
+            if s is not None and dt in s.index:
+                val += qty * float(s.loc[dt])
             else:
-                s = ticker_closes.get(t)
-                if s is not None and dt in s.index:
-                    val += qty * float(s.loc[dt])
-                else:
-                    val += qty * ep      # no data — hold at cost
+                val += qty * ep     # fallback to cost when price unavailable
         port_values.append(val)
 
     if not port_values:
         return jsonify({"success": False, "error": "could not compute portfolio values"})
 
-    # Today bar: prefer live_prices over yfinance's intraday-formed daily bar
-    # so the chart's last point matches the RETURNS header exactly. yfinance
-    # returns a forming "today" daily during market hours; replace it.
+    # ── Today bar: replace with live prices so chart tip matches RETURNS tile ─
     import datetime as _dt
-    today_str = _dt.date.today().isoformat()
+    today_str    = _dt.date.today().isoformat()
     last_yf_date = all_dates[-1].strftime("%Y-%m-%d") if len(all_dates) else ""
     try:
         live_prices = {}
         try:
             with open(mom20_live_prices_path(user_id)) as f:
-                live_prices = {k: float(v) for k, v in (json.load(f).get("prices") or {}).items()}
+                live_prices = {k: float(v)
+                               for k, v in (json.load(f).get("prices") or {}).items()}
         except Exception:
             pass
 
         if live_prices:
-            today_val = 0.0
-            for t in tickers:
-                qty = qty_map.get(t, 0)
-                ep  = entry_price_map.get(t, 0)
-                if qty <= 0 or ep <= 0:
-                    continue
-                if today_str < entry_date_map.get(t, ""):
-                    today_val += qty * ep
-                else:
-                    today_val += qty * live_prices.get(t, ep)
-
+            latest_h  = holdings_timeline[-1][1]
+            today_val = sum(
+                h.get("qty", 0) * live_prices.get(t, h.get("entry_price", 0))
+                for t, h in latest_h.items()
+                if h.get("qty", 0) > 0
+            )
             if today_val > 0:
                 if last_yf_date == today_str:
                     port_values[-1] = today_val
@@ -3784,37 +3983,19 @@ def api_mom20_chart(user_id):
     except Exception:
         pass
 
-    # Load history to build a cumulative-realized-P&L offset per calendar date.
-    # Exits recorded in rebalance history reduce portfolio value on the rebalance date;
-    # applying this offset makes the chart line end at the same figure as the tracker.
-    hist_realized_by_date = {}  # date_str → cumulative realized P&L up to and including that date
-    initial_capital = 0.0
-    try:
-        with open(mom20_history_path(user_id)) as _hf:
-            _hist = json.load(_hf)
-        _retrospective_realized_pnl(_hist)          # enriches sells with pnl in-place
-        if _hist:
-            initial_capital = sum(t.get("qty", 0) * t.get("price", 0)
-                                  for t in _hist[0].get("buys", []))
+    # ── Build realized P&L and per-period cost-basis helpers ─────────────────
+    # Correct formula: return = (unrealized + cumulative_realized) / initial_capital
+    # where unrealized = portfolio_value - cost_basis_of_active_holdings
+    hist_realized_by_date = {}
+    if _hist:
         running = 0.0
         for rb in _hist:
             running += sum(s.get("pnl", 0) for s in rb.get("sells", []))
-            hist_realized_by_date[rb.get("rebalance_date", "")] = round(running, 2)
-    except Exception:
-        pass
+            hist_realized_by_date[(rb.get("rebalance_date") or "")[:10]] = round(running, 2)
 
-    # Use initial_capital as base if available, else fall back to current cost basis
-    base_port  = initial_capital if initial_capital > 0 else total_invested
-    base_n500  = float(bench_n500.iloc[0]) if not bench_n500.empty else None
-    base_n200  = float(bench_n200.iloc[0]) if not bench_n200.empty else None
-    dates_out  = [d.strftime("%Y-%m-%d") for d in all_dates]
-
-    # Build sorted list of (date, cumulative_realized) so we can look up the running
-    # realized offset for each chart date efficiently.
     sorted_realized = sorted(hist_realized_by_date.items())
 
     def _realized_offset(dt_str):
-        """Cumulative realized P&L on or before dt_str."""
         offset = 0.0
         for rd, pnl in sorted_realized:
             if rd <= dt_str:
@@ -3823,10 +4004,52 @@ def api_mom20_chart(user_id):
                 break
         return offset
 
+    # Cost basis is constant within each rebalance period
+    period_cost_bases = [
+        (rb_date, sum(h["qty"] * h["entry_price"] for h in snapshot.values()))
+        for rb_date, snapshot in holdings_timeline
+    ]
+
+    def _cost_basis_for_date(dt_str):
+        cb = period_cost_bases[0][1]
+        for rb_date, cost in period_cost_bases:
+            if dt_str >= rb_date:
+                cb = cost
+            else:
+                break
+        return cb
+
+    # ── Compute return series ─────────────────────────────────────────────────
+    base_port = initial_capital
+    base_n500 = float(bench_n500.iloc[0]) if not bench_n500.empty else None
+    base_n200 = float(bench_n200.iloc[0]) if not bench_n200.empty else None
+    dates_out = [d.strftime("%Y-%m-%d") for d in all_dates]
+
     port_pct = [
-        round(((v + _realized_offset(d.strftime("%Y-%m-%d"))) / base_port - 1) * 100, 3)
+        round(
+            (v - _cost_basis_for_date(d.strftime("%Y-%m-%d"))
+             + _realized_offset(d.strftime("%Y-%m-%d"))) / base_port * 100,
+            3,
+        )
         for v, d in zip(port_values, all_dates)
     ]
+
+    # Force last point to exactly match the RETURNS tile:
+    # (basket × live_prices − cost_basis + total_realized) / initial_capital
+    if basket and port_pct:
+        try:
+            cost_basis_now  = sum(h.get("qty", 0) * h.get("entry_price", 0) for h in basket)
+            lp              = live_prices if live_prices else {}
+            current_val_now = sum(
+                h.get("qty", 0) * lp.get(h["ticker"], h.get("entry_price", 0))
+                for h in basket if h.get("qty", 0) > 0
+            )
+            realized_now  = sum(s.get("pnl", 0) for rb in _hist for s in rb.get("sells", []))
+            port_pct[-1]  = round(
+                (current_val_now - cost_basis_now + realized_now) / base_port * 100, 3
+            )
+        except Exception:
+            pass
 
     def bench_series(raw, base):
         if raw.empty or base is None:
@@ -3839,7 +4062,7 @@ def api_mom20_chart(user_id):
                 last_val = v
                 out.append(v)
             except Exception:
-                out.append(last_val)  # carry forward for today if not yet in index
+                out.append(last_val)
         return out
 
     n500_pct = bench_series(bench_n500, base_n500)

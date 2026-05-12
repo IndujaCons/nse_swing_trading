@@ -1411,7 +1411,6 @@
                 <button class="strategy-tab active" onclick="switchStrategy('live_signals')">Live Signals</button>
                 <button class="strategy-tab" onclick="switchStrategy('etf_core')">ETF Core</button>
                 <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
-                <button class="strategy-tab" onclick="switchStrategy('overflow_portfolio')">Overflow</button>
                 <button class="strategy-tab" onclick="switchStrategy('backtest')">Backtest</button>
                 <button class="strategy-tab" onclick="switchStrategy('journal')">AI Briefing</button>
             </div>
@@ -3634,9 +3633,8 @@
             else if (strategy === 'live_signals') tabs[1].classList.add('active');
             else if (strategy === 'etf_core') tabs[2].classList.add('active');
             else if (strategy === 'mom20_portfolio') tabs[3].classList.add('active');
-            else if (strategy === 'overflow_portfolio') tabs[4].classList.add('active');
-            else if (strategy === 'backtest') tabs[5].classList.add('active');
-            else if (strategy === 'journal') tabs[6].classList.add('active');
+            else if (strategy === 'backtest') tabs[4].classList.add('active');
+            else if (strategy === 'journal') tabs[5].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -6703,8 +6701,12 @@
             const sells  = rb.sells  || rb.exits   || [];
             const buys   = rb.buys   || rb.entries  || [];
 
+            const storageIdx = num - 1;  // num=1 → oldest (idx 0), num=6 → newest (idx 5)
             const header = `
-                <div style="color:#4a9eff;font-weight:700;">REBALANCE #${String(num).padStart(2,'0')} — ${date}${uploaded ? `  <span style="color:${color.m};font-size:10px;font-weight:400;">uploaded ${uploaded}</span>` : ''}</div>`;
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="color:#4a9eff;font-weight:700;flex:1;">REBALANCE #${String(num).padStart(2,'0')} — ${date}${uploaded ? `  <span style="color:${color.m};font-size:10px;font-weight:400;">uploaded ${uploaded}</span>` : ''}</div>
+                  <button onclick="mom20DeleteRebalance(${storageIdx}, '${date}')" style="padding:1px 6px;font-size:10px;background:transparent;color:var(--red);border:1px solid var(--red);border-radius:3px;cursor:pointer;opacity:0.6;" title="Delete this rebalance record and rebuild portfolio">✕ Delete</button>
+                </div>`;
 
             // Sells / Exits
             const rebalPnl = rb.realized_pnl;
@@ -8187,6 +8189,24 @@ async function mom20LivePricesAndBasket() {
             btn.style.cursor = 'pointer';
         }
     }
+}
+
+async function mom20DeleteRebalance(storageIdx, dateLabel) {
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) { showToast('Select a user first', 'error'); return; }
+    if (!confirm(`Delete Rebalance record for ${dateLabel}?\n\nThis will remove this entry from history and rebuild the portfolio. This cannot be undone.`)) return;
+    try {
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-history/${storageIdx}`, {method:'DELETE'});
+        const d = await r.json();
+        if (d.success) {
+            showToast(`Deleted rebalance ${dateLabel} — ${d.positions} positions remaining`, 'success');
+            _mom20HistoryLoaded = false;
+            await loadMom20RebalanceHistory();
+            await mom20LoadPerformance(true);
+        } else {
+            showToast(d.error || 'Delete failed', 'error');
+        }
+    } catch(e) { showToast(e.message, 'error'); }
 }
 
 async function mom20RebuildPortfolio() {
