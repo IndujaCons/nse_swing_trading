@@ -3647,7 +3647,15 @@
             document.getElementById('overflow-portfolio-panels').classList.toggle('hidden', strategy !== 'overflow_portfolio');
             document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
             document.getElementById('journal-panels').classList.toggle('hidden', strategy !== 'journal');
-            if (strategy === 'journal') { aiBriefingFetch(false); }
+            if (strategy === 'journal') {
+                if (_aiBriefingCachedHTML) {
+                    document.getElementById('ai-briefing-body').innerHTML = _aiBriefingCachedHTML;
+                    const _bst = document.getElementById('ai-briefing-status');
+                    if (_bst) _bst.textContent = _aiBriefingCachedStatus;
+                } else {
+                    aiBriefingFetch(false);
+                }
+            }
 
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
@@ -9405,8 +9413,10 @@ function nfPopulateUsers() {
 
 // ── AI Portfolio Briefing ─────────────────────────────────────────────────────
 
-let _aiBriefingOpen = false;
-let _aiBriefingESS  = null;   // active EventSource
+let _aiBriefingOpen       = false;
+let _aiBriefingESS        = null;   // active EventSource
+let _aiBriefingCachedHTML = '';     // rendered HTML — restored on tab switch without a server call
+let _aiBriefingCachedStatus = '';
 
 function aiBriefingToggle() {
     const panel = document.getElementById('ai-briefing-panel');
@@ -9436,6 +9446,7 @@ function aiBriefingRefresh() {
 
 function aiBriefingFetch(force) {
     if (_aiBriefingESS) { _aiBriefingESS.close(); _aiBriefingESS = null; }
+    if (force) { _aiBriefingCachedHTML = ''; _aiBriefingCachedStatus = ''; }
     const body   = document.getElementById('ai-briefing-body');
     const status = document.getElementById('ai-briefing-status');
     if (body)   body.textContent = '';
@@ -9449,13 +9460,24 @@ function aiBriefingFetch(force) {
     _aiBriefingESS = es;
 
     es.onmessage = function(e) {
+        // Cached response — server signals when it was generated
+        if (e.data.startsWith('[CACHED:')) {
+            const genTime = e.data.slice(8, -1);
+            if (status) status.textContent = 'cached · ' + genTime;
+            document.getElementById('ai-briefing-btn').textContent = '🤖 AI Briefing';
+            return;
+        }
         if (e.data === '[DONE]') {
             es.close();
             _aiBriefingESS = null;
-            if (status) status.textContent = 'done · ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+            if (status && !status.textContent.startsWith('cached')) {
+                status.textContent = 'done · ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+            }
             document.getElementById('ai-briefing-btn').textContent = '🤖 AI Briefing';
-            // Render markdown-ish formatting
             _aiBriefingRender();
+            // Save rendered HTML so tab switches don't hit the server again
+            _aiBriefingCachedHTML   = body ? body.innerHTML : '';
+            _aiBriefingCachedStatus = status ? status.textContent : '';
             return;
         }
         try {

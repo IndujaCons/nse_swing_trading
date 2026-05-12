@@ -2954,7 +2954,6 @@ def api_mom20_tradebook_upload(user_id):
     })
     with open(hist_path, "w") as f:
         json.dump(history, f, indent=2)
-    _AI_BRIEFING_CACHE.clear()   # portfolio changed — bust briefing cache
 
     return jsonify({"success": True, "trades_synced": len(trades),
                     "portfolio_size": len(updated.get("basket", []))})
@@ -3087,7 +3086,6 @@ def api_mom20_rebuild_portfolio(user_id):
     with open(tmp, "w") as f:
         json.dump(portfolio, f, indent=2)
     os.replace(tmp, pf_path)
-    _AI_BRIEFING_CACHE.clear()   # portfolio changed — bust briefing cache
     return jsonify({"success": True, "positions": len(basket),
                     "basket": list(basket.values())})
 
@@ -3151,7 +3149,6 @@ def api_mom20_delete_history(user_id, idx):
         json.dump(portfolio, f, indent=2)
     os.replace(tmp, pf_path)
 
-    _AI_BRIEFING_CACHE.clear()   # portfolio changed — bust briefing cache
     return jsonify({"success": True,
                     "deleted": removed.get("rebalance_date"),
                     "remaining": len(history),
@@ -3426,8 +3423,16 @@ def api_mom20_position_note(user_id):
 
 # ── AI Portfolio Briefing (Claude) ────────────────────────────────────────────
 
-_AI_BRIEFING_CACHE: dict = {}          # user_id → {ts, text}
-_AI_BRIEFING_TTL   = 1800              # 30-min cache so we don't burn tokens on refresh
+_AI_BRIEFING_CACHE: dict = {}          # cache_key → {ts, text}
+_AI_BRIEFING_TTL   = 86400             # 24h — only manual Regenerate busts this
+_AI_BRIEFING_DISK  = os.path.join(DATA_STORE_PATH, "ai_briefing_cache.json")
+
+# Load persisted cache from disk so it survives server restarts
+try:
+    with open(_AI_BRIEFING_DISK) as _bf:
+        _AI_BRIEFING_CACHE.update(json.load(_bf))
+except Exception:
+    pass
 
 def _build_briefing_prompt(holdings, sector_ranking, today_str,
                            live_signals=None, sector_momentum=None,
@@ -3691,17 +3696,19 @@ def api_ai_briefing_stream():
     except Exception:
         pass
 
-    # Serve from cache only if fresh AND live signals haven't been refreshed since
+    # Serve from cache; only force=True (Regenerate button) bypasses it
     cached = _AI_BRIEFING_CACHE.get(cache_key)
     if not force and cached:
         age = (_dtm2.now().timestamp() - cached['ts'])
-        signals_refreshed_after_cache = ls_updated_at > cached['ts']
-        if age < _AI_BRIEFING_TTL and not signals_refreshed_after_cache:
+        if age < _AI_BRIEFING_TTL:
             def _cached_stream():
                 import time as _t
+                ist = _tz2(timedelta(hours=5, minutes=30))
+                gen_time = _dtm2.fromtimestamp(cached['ts'], tz=ist).strftime('%d %b %H:%M')
+                yield f"data: [CACHED:{gen_time}]\n\n"
                 for chunk in (cached['text'][i:i+80] for i in range(0, len(cached['text']), 80)):
                     yield f"data: {json.dumps(chunk)}\n\n"
-                    _t.sleep(0.01)
+                    _t.sleep(0.005)
                 yield "data: [DONE]\n\n"
             return Response(stream_with_context(_cached_stream()), mimetype='text/event-stream')
 
@@ -3792,11 +3799,16 @@ def api_ai_briefing_stream():
         except Exception as e:
             yield f"data: {json.dumps(f'Error: {e}')}\n\n"
         yield "data: [DONE]\n\n"
-        # Cache the full response
+        # Cache the full response (memory + disk)
         _AI_BRIEFING_CACHE[cache_key] = {
             'ts':   _dtm2.now().timestamp(),
             'text': ''.join(full_text),
         }
+        try:
+            with open(_AI_BRIEFING_DISK, 'w') as _bf:
+                json.dump(_AI_BRIEFING_CACHE, _bf)
+        except Exception:
+            pass
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
