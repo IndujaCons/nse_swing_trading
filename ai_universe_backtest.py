@@ -384,14 +384,24 @@ def select_portfolio(ranked, ticker_rank, current_set, scores):
 
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
 def run(refresh=False, use_regime=True, start_override=None,
-        ret12m_cap=None, half_slot_cap=None, decay_filter=False, parabolic_filter=False):
+        ret12m_cap=None, half_slot_cap=None, decay_filter=False, parabolic_filter=False,
+        top_n=None, buffer_in=None, buffer_out=None, max_per_sector=None):
     global START_DATE, RET12M_CAP, HALF_SLOT_CAP, DECAY_FILTER, PARABOLIC_FILTER
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, MAX_PER_SECTOR
     if start_override:
         START_DATE = date.fromisoformat(start_override)
     RET12M_CAP       = ret12m_cap
     HALF_SLOT_CAP    = half_slot_cap
     DECAY_FILTER     = decay_filter
     PARABOLIC_FILTER = parabolic_filter
+    if top_n is not None:
+        MAX_SLOTS = top_n
+    if buffer_in is not None:
+        BUFFER_IN = buffer_in
+    if buffer_out is not None:
+        BUFFER_OUT = buffer_out
+    if max_per_sector is not None:
+        MAX_PER_SECTOR = max_per_sector
 
     n_sectors = len(SECTOR_ORDER)
     regime_label = "Regime ON [QQQ SMA200]" if use_regime else "Regime OFF"
@@ -779,23 +789,26 @@ def run(refresh=False, use_regime=True, start_override=None,
         print(f"\n  Rebalance NAV → ai_universe_rebal.csv ({len(rebal_nav)} rows)")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AI Universe Momentum Backtest (94 stocks, 16 sectors)")
-    parser.add_argument("--refresh",   action="store_true", help="Re-download price data")
-    parser.add_argument("--no-regime", action="store_true", help="Disable QQQ regime filter")
-    parser.add_argument("--start", default=None,
-                        help="Override start date YYYY-MM-DD (default 2025-05-01)")
-    parser.add_argument("--ret12m-cap", type=float, default=None,
-                        help="Exclude new entries with Ret12m above this multiple (e.g. 5.0 = 500%%)")
-    parser.add_argument("--half-slot-cap", type=float, default=None,
-                        help="Half-size new entries with Ret12m above this multiple (e.g. 3.0 = 300%%)")
-    parser.add_argument("--decay-filter", action="store_true",
-                        help="Skip entries where Ret12m > 300%% AND Ret3m < 20%% (deceleration)")
-    parser.add_argument("--parabolic-filter", action="store_true",
-                        help="Skip entries where Ret12m > 300%% AND Ret3m/Ret12m > 0.5 (blowoff)")
+    parser = argparse.ArgumentParser(description="AI Universe Momentum Backtest (89 stocks, 16 sectors)")
+    parser.add_argument("--refresh",        action="store_true", help="Re-download price data")
+    parser.add_argument("--no-regime",      action="store_true", help="Disable QQQ regime filter")
+    parser.add_argument("--start",          default=None,        help="Override start date YYYY-MM-DD")
+    parser.add_argument("--top-n",          type=int,   default=None, help="Number of slots (default 10)")
+    parser.add_argument("--buffer-in",      type=int,   default=None, help="Entry buffer rank (default 7)")
+    parser.add_argument("--buffer-out",     type=int,   default=None, help="Exit buffer rank (default 20)")
+    parser.add_argument("--max-per-sector", type=int,   default=None, help="Max stocks per sector (default 2)")
+    parser.add_argument("--ret12m-cap",     type=float, default=None, help="Exclude new entries above this Ret12m multiple (e.g. 5.0=500%%)")
+    parser.add_argument("--half-slot-cap",  type=float, default=None, help="Half-size new entries above this Ret12m multiple")
+    parser.add_argument("--decay-filter",   action="store_true", help="Skip entries where Ret12m>300%% AND Ret3m<20%%")
+    parser.add_argument("--parabolic-filter", action="store_true", help="Skip entries where Ret12m>300%% AND Ret3m/Ret12m>0.5")
     args = parser.parse_args()
     run(refresh=args.refresh,
         use_regime=not args.no_regime,
         start_override=args.start,
+        top_n=args.top_n,
+        buffer_in=args.buffer_in,
+        buffer_out=args.buffer_out,
+        max_per_sector=args.max_per_sector,
         ret12m_cap=args.ret12m_cap,
         half_slot_cap=args.half_slot_cap,
         decay_filter=args.decay_filter,

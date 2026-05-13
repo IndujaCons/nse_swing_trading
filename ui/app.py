@@ -4390,11 +4390,19 @@ def _bt_build_args(payload: dict) -> tuple:
     """
     universe = (payload.get("universe") or "").lower()
 
-    # ── AI Universe — separate script, limited flags ──────────────────────────
+    # ── AI Universe — separate script ─────────────────────────────────────────
     if universe == "ai":
         args = []
         if payload.get("no_regime"):
             args.append("--no-regime")
+        if payload.get("top_n") is not None:
+            args += ["--top-n", str(int(payload["top_n"]))]
+        if payload.get("buffer_in") is not None:
+            args += ["--buffer-in", str(int(payload["buffer_in"]))]
+        if payload.get("buffer_out") is not None:
+            args += ["--buffer-out", str(int(payload["buffer_out"]))]
+        if payload.get("max_per_sector") is not None:
+            args += ["--max-per-sector", str(int(payload["max_per_sector"]))]
         if payload.get("ret12m_cap") is not None:
             args += ["--ret12m-cap", str(float(payload["ret12m_cap"]))]
         if payload.get("parabolic_filter"):

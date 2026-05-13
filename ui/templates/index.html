@@ -2616,7 +2616,27 @@
                         </div>
                     </div>
                     <!-- AI Universe-specific controls (shown only for AI universe) -->
-                    <div id="bt-ai-controls" style="display:none;">
+                    <div id="bt-ai-controls" style="display:none;contents;">
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">TOP N</label><br>
+                            <input id="bt-ai-top-n" type="number" min="1" max="30" placeholder="10"
+                                   style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:70px;">
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER IN (rank &le;)</label><br>
+                            <input id="bt-ai-buffer-in" type="number" min="1" max="30" placeholder="7"
+                                   style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:70px;">
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER OUT (rank &gt;)</label><br>
+                            <input id="bt-ai-buffer-out" type="number" min="1" max="60" placeholder="20"
+                                   style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:70px;">
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">MAX/SECTOR</label><br>
+                            <input id="bt-ai-max-sector" type="number" min="1" max="10" placeholder="2"
+                                   style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:70px;">
+                        </div>
                         <div>
                             <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">REGIME</label><br>
                             <select id="bt-ai-regime" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:110px;">
@@ -8724,10 +8744,18 @@ async function btRunBacktest() {
     let body;
     if (universe === 'ai') {
         const capRaw = document.getElementById('bt-ai-ret12m-cap').value;
+        const aiTopN    = parseInt(document.getElementById('bt-ai-top-n').value, 10);
+        const aiBufIn   = parseInt(document.getElementById('bt-ai-buffer-in').value, 10);
+        const aiBufOut  = parseInt(document.getElementById('bt-ai-buffer-out').value, 10);
+        const aiMaxSec  = parseInt(document.getElementById('bt-ai-max-sector').value, 10);
         body = {
-            universe:        'ai',
-            no_regime:       document.getElementById('bt-ai-regime').value === 'off',
-            ret12m_cap:      capRaw === '' ? null : parseFloat(capRaw),
+            universe:         'ai',
+            no_regime:        document.getElementById('bt-ai-regime').value === 'off',
+            top_n:            isNaN(aiTopN)   ? null : aiTopN,
+            buffer_in:        isNaN(aiBufIn)  ? null : aiBufIn,
+            buffer_out:       isNaN(aiBufOut) ? null : aiBufOut,
+            max_per_sector:   isNaN(aiMaxSec) ? null : aiMaxSec,
+            ret12m_cap:       capRaw === '' ? null : parseFloat(capRaw),
             parabolic_filter: document.getElementById('bt-ai-parabolic').value === 'true',
         };
     } else {
