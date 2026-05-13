@@ -2758,7 +2758,7 @@
                         <button id="ai-briefing-btn" onclick="aiBriefingRegenerate()"
                                 style="margin-left:auto;padding:2px 9px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;display:none;">↺ Regenerate</button>
                     </div>
-                    <div id="ai-briefing-body" style="font-size:12px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;max-height:75vh;overflow-y:auto;padding-right:6px;">
+                    <div id="ai-briefing-body" style="font-size:12px;line-height:1.7;color:var(--text-primary);max-height:75vh;overflow-y:auto;padding-right:6px;overflow-x:auto;">
                         <div style="color:var(--text-muted);padding:20px 0;text-align:center;">Select a section above to generate it.</div>
                     </div>
                 </div>
@@ -9213,21 +9213,75 @@ function aiBriefingRegenerate() {
     }
 }
 
+function _aiBriefingInline(text) {
+    return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`(.+?)`/g, '<code style="background:var(--bg-primary);padding:1px 4px;border-radius:2px;font-size:11px;">$1</code>');
+}
+
 function _aiBriefingRender() {
     const body = document.getElementById('ai-briefing-body');
     if (!body) return;
-    let md = body.textContent;
-    md = md
-        .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid var(--border-color);margin:10px 0;">')
-        .replace(/^#### (.+)$/gm, '<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;margin-top:10px;margin-bottom:3px;text-transform:uppercase;">$1</div>')
-        .replace(/^### (.+)$/gm, '<div style="font-size:13px;font-weight:700;color:#a78bfa;margin-top:14px;margin-bottom:5px;border-left:3px solid #a78bfa;padding-left:8px;">$1</div>')
-        .replace(/^## (.+)$/gm,  '<div style="font-size:14px;font-weight:700;color:#f5a623;margin-top:16px;margin-bottom:6px;">$1</div>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/`(.+?)`/g, '<code style="background:var(--bg-primary);padding:1px 4px;border-radius:2px;font-size:11px;">$1</code>')
-        .replace(/^[•\-\*] (.+)$/gm, '<div style="padding:2px 0 2px 14px;border-left:2px solid var(--border-color);margin:2px 0;">• $1</div>')
-        .replace(/\n\n/g, '<div style="height:6px;"></div>')
-        .replace(/\n/g, '<br>');
-    body.innerHTML = md;
+    const lines = body.textContent.split('\n');
+    let html = '';
+    let i = 0;
+
+    while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trimStart();
+
+        // ── Markdown table ────────────────────────────────────────────────────
+        if (trimmed.startsWith('|') && i + 1 < lines.length && /^\s*\|[\s\-:|]+\|/.test(lines[i + 1])) {
+            // Collect all consecutive | lines
+            const tblLines = [];
+            while (i < lines.length && lines[i].trimStart().startsWith('|')) {
+                tblLines.push(lines[i]);
+                i++;
+            }
+            const headerCells = tblLines[0].split('|').slice(1, -1).map(c => c.trim());
+            const dataRows    = tblLines.slice(2); // skip header + separator
+
+            html += '<div style="overflow-x:auto;margin:10px 0;">'
+                  + '<table style="border-collapse:collapse;font-size:11px;width:100%;">'
+                  + '<thead><tr>';
+            headerCells.forEach(c => {
+                html += `<th style="padding:5px 10px;background:var(--bg-secondary);border:1px solid var(--border-color);font-weight:700;text-align:left;white-space:nowrap;">${_aiBriefingInline(c)}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            dataRows.forEach((row, ri) => {
+                const cells = row.split('|').slice(1, -1).map(c => c.trim());
+                const rowBg = ri % 2 === 0 ? '' : 'background:var(--bg-card);';
+                html += `<tr style="${rowBg}">`;
+                cells.forEach(c => {
+                    html += `<td style="padding:4px 10px;border:1px solid var(--border-color);white-space:nowrap;">${_aiBriefingInline(c)}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            continue;
+        }
+
+        // ── Block-level markdown ──────────────────────────────────────────────
+        if (/^---+$/.test(trimmed)) {
+            html += '<hr style="border:none;border-top:1px solid var(--border-color);margin:10px 0;">';
+        } else if (trimmed.startsWith('#### ')) {
+            html += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;margin-top:10px;margin-bottom:3px;text-transform:uppercase;">${_aiBriefingInline(trimmed.slice(5))}</div>`;
+        } else if (trimmed.startsWith('### ')) {
+            html += `<div style="font-size:13px;font-weight:700;color:#a78bfa;margin-top:14px;margin-bottom:5px;border-left:3px solid #a78bfa;padding-left:8px;">${_aiBriefingInline(trimmed.slice(4))}</div>`;
+        } else if (trimmed.startsWith('## ')) {
+            html += `<div style="font-size:14px;font-weight:700;color:#f5a623;margin-top:16px;margin-bottom:6px;">${_aiBriefingInline(trimmed.slice(3))}</div>`;
+        } else if (/^[•\-\*] /.test(trimmed)) {
+            html += `<div style="padding:2px 0 2px 14px;border-left:2px solid var(--border-color);margin:2px 0;">• ${_aiBriefingInline(trimmed.slice(2))}</div>`;
+        } else if (trimmed === '') {
+            html += '<div style="height:5px;"></div>';
+        } else {
+            html += `<div>${_aiBriefingInline(line)}</div>`;
+        }
+        i++;
+    }
+
+    body.innerHTML = html;
 }
 
 // ── Position note modal ───────────────────────────────────────────────────────
