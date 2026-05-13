@@ -4373,7 +4373,8 @@ import time as _bt_time
 _BACKTEST_LOCK = threading.Lock()
 _BACKTEST_CACHE_DIR = os.path.join(DATA_STORE_PATH, "backtest_cache")
 _BACKTEST_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_BACKTEST_SCRIPT = os.path.join(_BACKTEST_PROJECT_ROOT, "mom15_pit_report.py")
+_BACKTEST_SCRIPT    = os.path.join(_BACKTEST_PROJECT_ROOT, "mom15_pit_report.py")
+_AI_BACKTEST_SCRIPT = os.path.join(_BACKTEST_PROJECT_ROOT, "ai_universe_backtest.py")
 
 
 def _bt_cache_key(payload: dict) -> str:
@@ -4382,15 +4383,33 @@ def _bt_cache_key(payload: dict) -> str:
     return hashlib.sha256(canon.encode("utf-8")).hexdigest()[:12]
 
 
-def _bt_build_args(payload: dict) -> list:
-    """Map request JSON → CLI flags for mom15_pit_report.py."""
-    args = []
+def _bt_build_args(payload: dict) -> tuple:
+    """Map request JSON → (script_path, CLI flags).
+
+    Returns (script, args) so the caller can pick the right executable.
+    """
     universe = (payload.get("universe") or "").lower()
+
+    # ── AI Universe — separate script, limited flags ──────────────────────────
+    if universe == "ai":
+        args = []
+        if payload.get("no_regime"):
+            args.append("--no-regime")
+        if payload.get("ret12m_cap") is not None:
+            args += ["--ret12m-cap", str(float(payload["ret12m_cap"]))]
+        if payload.get("parabolic_filter"):
+            args.append("--parabolic-filter")
+        return _AI_BACKTEST_SCRIPT, args
+
+    # ── mom15_pit_report.py universes ─────────────────────────────────────────
+    args = []
     if universe == "n500":
         args.append("--n500")
     elif universe == "qqq":
         args.append("--qqq")
-    # else: default Nifty200 (Mom20 monthly) — script's default
+    elif universe == "n200":
+        args.append("--mom20")
+    # else: default Nifty200 Mom15 bi-monthly — script's default
 
     if payload.get("top_n") is not None:
         args += ["--top-n", str(int(payload["top_n"]))]
@@ -4408,7 +4427,7 @@ def _bt_build_args(payload: dict) -> list:
     regime = (payload.get("regime") or "").lower()
     if regime in ("none", "sma200", "ema200"):
         args += ["--regime", regime]
-    return args
+    return _BACKTEST_SCRIPT, args
 
 
 def _bt_parse_summary(stdout: str) -> dict:
@@ -4447,7 +4466,7 @@ def _bt_parse_summary(stdout: str) -> dict:
     if m:
         summary["avg_hold_days"] = int(m.group(1))
 
-    m = re.search(r"Total charges\s*:\s*₹\s*([\d,]+)", stdout)
+    m = re.search(r"Total charges\s*:\s*[₹$]\s*([\d,]+)", stdout)
     if m:
         summary["total_charges"] = int(m.group(1).replace(",", ""))
 
@@ -4474,9 +4493,9 @@ def _bt_parse_summary(stdout: str) -> dict:
     return summary
 
 
-def _bt_run_subprocess(args: list, timeout: int = 600) -> tuple:
-    """Run mom15_pit_report.py with given args. Returns (returncode, stdout, stderr)."""
-    cmd = [sys.executable, _BACKTEST_SCRIPT] + args
+def _bt_run_subprocess(script: str, args: list, timeout: int = 600) -> tuple:
+    """Run backtest script with given args. Returns (returncode, stdout, stderr, cmd)."""
+    cmd = [sys.executable, script] + args
     proc = subprocess.run(
         cmd,
         capture_output=True,
@@ -4493,7 +4512,7 @@ _BACKTEST_JOBS = {}  # job_id → {"status": "running"|"done"|"error", "started_
 def _bt_run_job(job_id, payload, key, cache_path):
     """Background worker — runs the subprocess and stores the result/error
     in _BACKTEST_JOBS[job_id]. Designed so GET /api/backtest/status can poll."""
-    args = _bt_build_args(payload)
+    script, args = _bt_build_args(payload)
     with _BACKTEST_LOCK:
         # Another concurrent job may have populated the cache while we waited
         if os.path.exists(cache_path):
@@ -4509,23 +4528,24 @@ def _bt_run_job(job_id, payload, key, cache_path):
 
         t0 = _bt_time.time()
         try:
-            rc, stdout, stderr, cmd = _bt_run_subprocess(args, timeout=600)
+            rc, stdout, stderr, cmd = _bt_run_subprocess(script, args, timeout=600)
         except subprocess.TimeoutExpired:
             _BACKTEST_JOBS[job_id] = {"status": "error", "result": {
                 "success": False, "error": "backtest timed out after 600 seconds",
-                "command": " ".join([sys.executable, _BACKTEST_SCRIPT] + args)}}
+                "command": " ".join([sys.executable, script] + args)}}
             return
         except Exception as e:
             _BACKTEST_JOBS[job_id] = {"status": "error", "result": {
                 "success": False, "error": f"subprocess failed: {e}",
-                "command": " ".join([sys.executable, _BACKTEST_SCRIPT] + args)}}
+                "command": " ".join([sys.executable, script] + args)}}
             return
         elapsed = _bt_time.time() - t0
 
+        script_name = os.path.basename(script)
         if rc != 0:
             _BACKTEST_JOBS[job_id] = {"status": "error", "result": {
                 "success": False,
-                "error": f"mom15_pit_report.py exited with code {rc}",
+                "error": f"{script_name} exited with code {rc}",
                 "stderr": (stderr or "")[-2000:],
                 "stdout_tail": (stdout or "")[-2000:],
                 "command": " ".join(cmd),

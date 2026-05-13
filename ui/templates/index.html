@@ -2552,63 +2552,93 @@
                 <!-- Header row -->
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
                     <span style="font-size:14px;font-weight:700;color:var(--blue);letter-spacing:0.5px;">BACKTEST</span>
-                    <span style="font-size:11px;color:var(--text-muted);">Mom strategy parameter sweep — runs <code>mom15_pit_report.py</code> via <code>/api/backtest/run</code></span>
+                    <span style="font-size:11px;color:var(--text-muted);">Mom strategy sweep — N200/N500/QQQ via <code>mom15_pit_report.py</code> · AI Universe via <code>ai_universe_backtest.py</code></span>
                 </div>
 
                 <!-- Form controls -->
                 <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:end;margin-bottom:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;">
                     <div>
                         <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">UNIVERSE</label><br>
-                        <select id="bt-universe" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:130px;">
-                            <option value="n500" selected>Nifty 500</option>
-                            <option value="qqq">QQQ</option>
+                        <select id="bt-universe" onchange="btOnUniverseChange()" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:140px;">
+                            <option value="n200">N200 Mom20 ★ (PIT)</option>
+                            <option value="n500">Nifty 500 (PIT)</option>
+                            <option value="qqq">QQQ (PIT)</option>
+                            <option value="ai">AI Universe (89 stocks)</option>
                         </select>
                     </div>
-                    <div>
-                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">TOP N</label><br>
-                        <input id="bt-top-n" type="number" min="1" max="200" placeholder="e.g. 20"
-                               style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:90px;">
+                    <!-- NSE-specific controls (hidden for AI universe) -->
+                    <div id="bt-nse-controls" style="display:contents;">
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">TOP N</label><br>
+                            <input id="bt-top-n" type="number" min="1" max="200" placeholder="e.g. 20"
+                                   style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:90px;">
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER IN (rank &le;)</label><br>
+                            <input id="bt-buffer-in" type="number" min="1" max="200" placeholder="e.g. 15"
+                                   style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:90px;">
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER OUT (rank &gt;)</label><br>
+                            <input id="bt-buffer-out" type="number" min="1" max="200" placeholder="e.g. 40"
+                                   style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:90px;">
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BETA CAP</label><br>
+                            <select id="bt-beta-cap" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
+                                <option value="">None</option>
+                                <option value="1.0">1.0</option>
+                                <option value="1.2" selected>1.2</option>
+                                <option value="1.5">1.5</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">EMA200 EXIT</label><br>
+                            <select id="bt-ema200-exit" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
+                                <option value="false" selected>No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">REGIME OFF</label><br>
+                            <select id="bt-regime" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:100px;">
+                                <option value="none">None</option>
+                                <option value="sma200" selected>SMA200</option>
+                                <option value="ema200">EMA200</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">REBALANCE DAY</label><br>
+                            <select id="bt-rebal-day" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:140px;">
+                                <option value="start" selected>Start of Month</option>
+                                <option value="mid">Mid Month</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER IN (rank &le;)</label><br>
-                        <input id="bt-buffer-in" type="number" min="1" max="200" placeholder="e.g. 15"
-                               style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:90px;">
-                    </div>
-                    <div>
-                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BUFFER OUT (rank &gt;)</label><br>
-                        <input id="bt-buffer-out" type="number" min="1" max="200" placeholder="e.g. 40"
-                               style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);width:90px;">
-                    </div>
-                    <div>
-                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">BETA CAP</label><br>
-                        <select id="bt-beta-cap" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
-                            <option value="">None</option>
-                            <option value="1.0">1.0</option>
-                            <option value="1.2" selected>1.2</option>
-                            <option value="1.5">1.5</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">EMA200 EXIT</label><br>
-                        <select id="bt-ema200-exit" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
-                            <option value="false" selected>No</option>
-                            <option value="true">Yes</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">REGIME OFF</label><br>
-                        <select id="bt-regime" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:100px;">
-                            <option value="none">None</option>
-                            <option value="sma200" selected>SMA200</option>
-                            <option value="ema200">EMA200</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">REBALANCE DAY</label><br>
-                        <select id="bt-rebal-day" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:140px;">
-                            <option value="start" selected>Start of Month</option>
-                            <option value="mid">Mid Month</option>
-                        </select>
+                    <!-- AI Universe-specific controls (shown only for AI universe) -->
+                    <div id="bt-ai-controls" style="display:none;">
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">REGIME</label><br>
+                            <select id="bt-ai-regime" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:110px;">
+                                <option value="on" selected>QQQ SMA200</option>
+                                <option value="off">No Regime</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">RET12M CAP</label><br>
+                            <select id="bt-ai-ret12m-cap" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:110px;">
+                                <option value="" selected>None</option>
+                                <option value="5.0">&gt;500% excluded</option>
+                                <option value="3.0">&gt;300% excluded</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;">PARABOLIC FILTER</label><br>
+                            <select id="bt-ai-parabolic" style="margin-top:4px;padding:5px 8px;font-family:inherit;font-size:12px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-white);color:var(--text-primary);min-width:80px;">
+                                <option value="false" selected>Off</option>
+                                <option value="true">On</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <button id="bt-run-btn" onclick="btRunBacktest()"
@@ -8665,6 +8695,14 @@ loadUsers();
 let _btLastResult = null;
 let _btBusy = false;
 
+function btOnUniverseChange() {
+    const u = document.getElementById('bt-universe').value;
+    const isAI = (u === 'ai');
+    // NSE controls: use display:flex so flexbox children wrap properly
+    document.getElementById('bt-nse-controls').style.display = isAI ? 'none' : 'contents';
+    document.getElementById('bt-ai-controls').style.display  = isAI ? 'contents' : 'none';
+}
+
 async function btRunBacktest() {
     if (_btBusy) return;
     const btn = document.getElementById('bt-run-btn');
@@ -8675,25 +8713,37 @@ async function btRunBacktest() {
     btn.textContent = '⏳ Running…';
     btn.style.background = 'var(--text-muted)';
     btn.style.borderColor = 'var(--text-muted)';
-    status.textContent = 'Running… (could take 5-30 seconds)';
+    status.textContent = 'Running… (could take 5-60 seconds)';
     status.style.color = 'var(--text-muted)';
     document.getElementById('bt-summary').style.display = 'none';
     document.getElementById('bt-toggle-history').style.display = 'none';
     document.getElementById('bt-history-panel').style.display = 'none';
     cmdEl.style.display = 'none';
 
-    const betaCapRaw = document.getElementById('bt-beta-cap').value;
-    const body = {
-        universe:    document.getElementById('bt-universe').value,
-        // Blank → null → backend uses the variant's default (e.g. --qqq → 10/7/20).
-        top_n:       (function(){const v=parseInt(document.getElementById('bt-top-n').value,10);return isNaN(v)?null:v;})(),
-        buffer_in:   (function(){const v=parseInt(document.getElementById('bt-buffer-in').value,10);return isNaN(v)?null:v;})(),
-        buffer_out:  (function(){const v=parseInt(document.getElementById('bt-buffer-out').value,10);return isNaN(v)?null:v;})(),
-        beta_cap:    betaCapRaw === '' ? null : parseFloat(betaCapRaw),
-        ema200_exit: document.getElementById('bt-ema200-exit').value === 'true',
-        rebal_day:   document.getElementById('bt-rebal-day').value,
-        regime:      document.getElementById('bt-regime').value,
-    };
+    const universe = document.getElementById('bt-universe').value;
+    let body;
+    if (universe === 'ai') {
+        const capRaw = document.getElementById('bt-ai-ret12m-cap').value;
+        body = {
+            universe:        'ai',
+            no_regime:       document.getElementById('bt-ai-regime').value === 'off',
+            ret12m_cap:      capRaw === '' ? null : parseFloat(capRaw),
+            parabolic_filter: document.getElementById('bt-ai-parabolic').value === 'true',
+        };
+    } else {
+        const betaCapRaw = document.getElementById('bt-beta-cap').value;
+        body = {
+            universe:    universe,
+            // Blank → null → backend uses the variant's default (e.g. --qqq → 10/7/20).
+            top_n:       (function(){const v=parseInt(document.getElementById('bt-top-n').value,10);return isNaN(v)?null:v;})(),
+            buffer_in:   (function(){const v=parseInt(document.getElementById('bt-buffer-in').value,10);return isNaN(v)?null:v;})(),
+            buffer_out:  (function(){const v=parseInt(document.getElementById('bt-buffer-out').value,10);return isNaN(v)?null:v;})(),
+            beta_cap:    betaCapRaw === '' ? null : parseFloat(betaCapRaw),
+            ema200_exit: document.getElementById('bt-ema200-exit').value === 'true',
+            rebal_day:   document.getElementById('bt-rebal-day').value,
+            regime:      document.getElementById('bt-regime').value,
+        };
+    }
 
     const t0 = performance.now();
     try {
@@ -8815,7 +8865,11 @@ function btRenderSummary(d) {
     html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">';
     html += btMetricCard('PROFIT FACTOR', (s.profit_factor !== undefined && s.profit_factor !== null) ? Number(s.profit_factor).toFixed(2) : '—');
     html += btMetricCard('AVG HOLD', (s.avg_hold_days !== undefined && s.avg_hold_days !== null) ? (Math.round(s.avg_hold_days) + ' days') : '—');
-    html += btMetricCard('TOTAL CHARGES', btFmtInr(s.total_charges));
+    const isAiUniverse = (d.command || '').includes('ai_universe_backtest');
+    const chargesStr = (s.total_charges !== undefined && s.total_charges !== null)
+        ? (isAiUniverse ? ('$' + Number(s.total_charges).toLocaleString()) : btFmtInr(s.total_charges))
+        : '—';
+    html += btMetricCard('TOTAL CHARGES', chargesStr);
     html += '</div>';
 
     // Year-by-year chart
