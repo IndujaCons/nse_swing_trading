@@ -3184,14 +3184,15 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
 
     # 2. Mom20 Live Ranking
     signals = (live_signals or {}).get('mom20_signals', [])
-    lines += ["", "## MOM20 LIVE RANKING (top 40; rank ≤ 20 = entry zone)"]
+    lines += ["", "## MOM20 LIVE RANKING (top 40; rank ≤ 15 = buffer-in entry zone)"]
     if signals:
-        lines.append("Rank | Ticker | Status | 12m% | 3m% | Score | Beta")
+        lines.append("Rank | Ticker | Sector | Status | 12m% | 3m% | Score | Beta")
         for s in signals[:40]:
             tk   = s.get('ticker', '')
+            sec  = _smap.get(tk, s.get('sector', '?'))
             held = 'HELD' if tk in held_tickers else 'NEW'
             lines.append(
-                f"#{s.get('rank','?')} | {tk} | {held} | "
+                f"#{s.get('rank','?')} | {tk} | {sec} | {held} | "
                 f"{s.get('ret_12m',0):+.1f}% | {s.get('ret_3m',0):+.1f}% | "
                 f"{s.get('momentum_score',0):.3f} | β{s.get('beta',0):.2f}"
             )
@@ -3297,14 +3298,18 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
             "Rules: sector 🟢/🟡 + stock★ → ✅ Buy; sector 🔵 + stock★ → 🔵 Watch; "
             "sector 🟠 + stock★ → ⚠️ Caution; sector 🔴 + stock★ → ❌ Avoid. Leave blank otherwise.",
             "",
-            "HOLDINGS COLUMN: list all Mom40 stocks for that sector as TICKER#rank. "
-            "Append ★ to any stock with rank ≤ 15 (entry zone). Leave — if no Mom40 holdings.",
+            "HOLDINGS COLUMN: use the MOM20 LIVE RANKING table above — it has a Sector column. "
+            "Group ALL 40 stocks by their sector; list every stock for that sector as TICKER#rank. "
+            "Append ★ to any stock with rank ≤ 15. Do NOT skip any stock. Leave — only if truly no stocks from that sector appear in the top 40.",
             "",
             "SECTOR COLUMN: use short names (drop 'NIFTY '). Sort rows by Z# ascending (sectors without Z# go at bottom). "
             "Include ALL sectors — both those with RS data and those with Z-score only.",
             "",
             "After the table, add a 3-line 'Key Reads' block: one line each for the most important ✅ Buy, "
-            "⚠️ Caution, and ❌ Avoid from the table.",
+            "⚠️ Caution, and ❌ Avoid from the table. "
+            "STRICT: output ONLY the markdown table + those 3 Key Reads lines. "
+            "NO derivation notes. NO signal explanations. NO revised rows. NO extra prose. "
+            "Do NOT show classification reasoning. Do NOT repeat or revise any row. Stop after the 3rd Key Read.",
         ],
         'watchlist': [
             "### 💡 Strategic Watch List",
