@@ -64,23 +64,25 @@ def get_scan_tickers(universe: int):
 
 # Sectoral Indices (Yahoo Finance symbols) for RS momentum
 SECTORAL_INDICES = {
-    "NIFTY PVT BANK": "NIFTY_PVT_BANK.NS",
-    "NIFTY PSU BANK": "^CNXPSUBANK",
-    "NIFTY IT": "^CNXIT",
-    "NIFTY PHARMA": "^CNXPHARMA",
-    "NIFTY AUTO": "^CNXAUTO",
-    "NIFTY METAL": "^CNXMETAL",
-    "NIFTY REALTY": "^CNXREALTY",
-    "NIFTY ENERGY": "^CNXENERGY",
-    "NIFTY FMCG": "^CNXFMCG",
-    "NIFTY MEDIA": "^CNXMEDIA",
-    "NIFTY INFRA": "^CNXINFRA",
-    "NIFTY FIN SERVICE": "NIFTY_FIN_SERVICE.NS",
-    "NIFTY COMMODITIES": "^CNXCMDT",
-    "NIFTY CONSUMPTION": "^CNXCONSUM",
-    "NIFTY HEALTHCARE": "^CNXPHARMA",
-    "NIFTY MNC": "^CNXMNC",
-    "NIFTY PSE": "^CNXPSE",
+    "NIFTY PVT BANK":       "NIFTY_PVT_BANK.NS",
+    "NIFTY PSU BANK":       "^CNXPSUBANK",
+    "NIFTY IT":             "^CNXIT",
+    "NIFTY PHARMA":         "^CNXPHARMA",
+    "NIFTY AUTO":           "^CNXAUTO",
+    "NIFTY METAL":          "^CNXMETAL",
+    "NIFTY REALTY":         "^CNXREALTY",
+    "NIFTY ENERGY":         "^CNXENERGY",
+    "NIFTY FMCG":           "^CNXFMCG",
+    "NIFTY MEDIA":          "^CNXMEDIA",
+    "NIFTY INFRA":          "^CNXINFRA",
+    "NIFTY FIN SERVICE":    "NIFTY_FIN_SERVICE.NS",
+    "NIFTY COMMODITIES":    "^CNXCMDT",
+    "NIFTY CONSUMPTION":    "^CNXCONSUM",
+    "NIFTY HEALTHCARE":     "^CNXPHARMA",
+    "NIFTY MNC":            "^CNXMNC",
+    "NIFTY PSE":            "^CNXPSE",
+    "NIFTY INDIA DEFENCE":  "MODEFENCE.NS",       # Motilal Nifty India Defence ETF
+    "NIFTY OIL & GAS":      "OILIETF.NS",         # ICICI Nifty Oil & Gas ETF
 }
 
 # Actual Nifty 50 constituents

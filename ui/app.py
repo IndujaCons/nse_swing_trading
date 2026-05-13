@@ -3283,19 +3283,28 @@ def _build_briefing_prompt(holdings, sector_ranking, today_str,
         ],
         'sectors': [
             "### 📈 Sectors — Deep Dive",
-            "Use composite and 5d/10d Δ data INTERNALLY to classify groups — do NOT quote composite scores or RS delta numbers in the output. "
-            "Group into Rising (composite > 0 AND 5d Δ > 0), Neutral, Falling (composite < 0 AND 5d Δ < 0). "
-            "For each sector cited, quote only: (a) its Z-score rank from the SECTOR Z-SCORE RANKING table (e.g. `Rank #1`), "
-            "and (b) its 12m% or 3m% return — whichever is more relevant. "
-            "For EVERY sector named, prepend a plain-English week-on-week trend label using ONLY the four labels below — "
-            "derive it from the relationship between 5d Δ and 10d Δ: "
-            "**Improving (going strong)** — 5d Δ > 0 AND 5d Δ > 10d Δ (momentum accelerating week-on-week); "
-            "**Steady** — 5d Δ > 0 AND 5d Δ ≤ 10d Δ (positive but stalling); "
-            "**Decreasing strength** — 5d Δ < 0 AND 10d Δ ≥ 0 (was positive, now turning down); "
-            "**Weakening** — 5d Δ < 0 AND 10d Δ < 0 (sustained decline). "
-            "Format: lead each sector bullet with the label in square brackets, e.g. [Improving (going strong)] Defence — ... "
-            "Name any sector that flipped group vs its 10d position. "
-            "Insert `---` between Rising / Neutral / Falling groups.",
+            "Output a single markdown table with these exact columns (no prose, no bullets, no extra sections): "
+            "| Sector | Signal | Entry | Z# | Ret 12m | Ret 3m | Holdings (★ = rank ≤15, entry zone) |",
+            "",
+            "SIGNAL RULES (derive from composite RS and deltas — do NOT print the raw numbers): "
+            "🟢 Accel → composite>0, 5dΔ>0, 5dΔ>10dΔ; "
+            "🟡 Steady → composite>0, 5dΔ>0, 5dΔ≤10dΔ; "
+            "🔵 Recovering → composite>0, 5dΔ<0, 5dΔ>10dΔ (decline slowing); "
+            "🟠 Fading → composite>0, 5dΔ<0, 5dΔ≤10dΔ; "
+            "🔴 Falling → composite≤0.",
+            "",
+            "ENTRY COLUMN: only fill when the sector has at least one stock at rank ≤15 in the Mom40 holdings column. "
+            "Rules: sector 🟢/🟡 + stock★ → ✅ Buy; sector 🔵 + stock★ → 🔵 Watch; "
+            "sector 🟠 + stock★ → ⚠️ Caution; sector 🔴 + stock★ → ❌ Avoid. Leave blank otherwise.",
+            "",
+            "HOLDINGS COLUMN: list all Mom40 stocks for that sector as TICKER#rank. "
+            "Append ★ to any stock with rank ≤ 15 (entry zone). Leave — if no Mom40 holdings.",
+            "",
+            "SECTOR COLUMN: use short names (drop 'NIFTY '). Sort rows by Z# ascending (sectors without Z# go at bottom). "
+            "Include ALL sectors — both those with RS data and those with Z-score only.",
+            "",
+            "After the table, add a 3-line 'Key Reads' block: one line each for the most important ✅ Buy, "
+            "⚠️ Caution, and ❌ Avoid from the table.",
         ],
         'watchlist': [
             "### 💡 Strategic Watch List",
