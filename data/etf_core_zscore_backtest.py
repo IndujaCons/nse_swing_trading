@@ -84,6 +84,8 @@ UNIVERSE = [
     ("CSKR.L",      "South Korea (UCITS)",  "CSKR.L"),
     ("EMXC.L",      "EM ex-China (UCITS)",  "EMXC.L"),
     ("BOTZ",        "Robotics / AI",        "BOTZ"),
+    ("AIQ",         "AI & Big Data",        "AIQ"),
+    ("AIQU.L",      "AI & Big Data (UCITS)","AIQU.L"),
     ("EWY",         "South Korea",          "EWY"),
     ("EMXC",        "EM ex-China",          "EMXC"),
     ("AVDV",        "Intl SmallCap Value",  "AVDV"),

@@ -64,6 +64,7 @@ ETF_UNIVERSE = [
     {"symbol": "FRDM",        "name": "Freedom 100 EM ETF",              "category": "EM ex-Auth"},
     {"symbol": "SOXX",        "name": "iShares Semiconductor ETF",       "category": "Semiconductors"},
     {"symbol": "BOTZ",        "name": "Global X Robotics & AI ETF",      "category": "AI/Robotics"},
+    {"symbol": "AIQ",         "name": "WisdomTree AI & Big Data ETF",    "category": "AI/Big Data"},
     {"symbol": "EWY",         "name": "iShares MSCI South Korea ETF",    "category": "South Korea"},
     {"symbol": "EMXC",        "name": "EM ex-China ETF",                 "category": "EM ex-China"},
     {"symbol": "AVDV",        "name": "Intl SmallCap Value ETF",         "category": "Intl SmallCap"},
@@ -89,10 +90,10 @@ ETF_MAP = {e["symbol"]: e for e in ETF_UNIVERSE}
 # International ETFs for geography cap (MAX_INTL_SLOTS=3)
 # MON100/MASPTOP50 are NSE-listed but count as international; the rest are US-listed (no .NS)
 INTL_ETFS = {"MON100", "FRDM", "EMXC", "AVDV", "ILF", "XLE", "GDX", "XME", "VGK",
-             "SOXX", "BOTZ", "EWY", "XLK", "XLP", "TLT", "XLV", "ITA",
+             "SOXX", "BOTZ", "AIQ", "EWY", "XLK", "XLP", "TLT", "XLV", "ITA",
              "ISF", "ISAC"}
 US_LISTED_ETFS = {"FRDM", "EMXC", "AVDV", "ILF", "XLE", "GDX", "XME", "VGK",
-                  "SOXX", "BOTZ", "EWY", "XLK", "XLP", "TLT", "XLV", "ITA"}  # no .NS suffix
+                  "SOXX", "BOTZ", "AIQ", "EWY", "XLK", "XLP", "TLT", "XLV", "ITA"}  # no .NS suffix
 LSE_ETFS = {"ISF", "ISAC"}  # .L suffix (LSE-listed)
 MAX_INTL_SLOTS = 5  # geography cap
 
