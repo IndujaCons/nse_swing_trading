@@ -39,6 +39,20 @@ BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 CACHE_FILE   = os.path.join(BASE_DIR, 'data', 'cache', 'mom15_daily.pkl')
 PIT_FILE     = os.path.join(BASE_DIR, 'nse_const', 'nifty200_pit.json')
 EPS_FILE     = os.path.join(BASE_DIR, 'data', 'quarterly_eps.json')
+SECTOR_MAP_N200 = os.path.join(BASE_DIR, 'nse_const', 'nifty200_sector_map_pit.json')
+SECTOR_MAP_N500 = os.path.join(BASE_DIR, 'nse_const', 'nifty500_sector_map_pit.json')
+
+SECTOR_SHORT = {
+    "NIFTY IT": "IT", "NIFTY AUTO": "AUTO", "NIFTY HEALTHCARE": "HEALTH",
+    "NIFTY FIN SERVICE": "FIN SVC", "NIFTY PVT BANK": "PVT BNK",
+    "NIFTY PSU BANK": "PSU BNK", "NIFTY BANK": "BANK",
+    "NIFTY ENERGY": "ENERGY", "NIFTY FMCG": "FMCG", "NIFTY METAL": "METAL",
+    "NIFTY INFRA": "INFRA", "NIFTY INDIA MFG": "MFG",
+    "NIFTY CONSUMER DURABLES": "CON DUR", "NIFTY CONSUMPTION": "CONSUMP",
+    "NIFTY REALTY": "REALTY", "NIFTY MEDIA": "MEDIA",
+    "NIFTY OIL & GAS": "OIL&GAS", "NIFTY INDIA DEFENCE": "DEFENCE",
+    "NIFTY PSE": "PSE", "NIFTY MNC": "MNC", "OTHER": "OTHER",
+}
 
 # Zerodha delivery charges
 def calc_charges(buy_val, sell_val):
@@ -341,7 +355,8 @@ def print_table(headers, rows, col_widths):
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
 def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None,
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
-        ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False):
+        ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False,
+        sector_cap=None):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, W12, W3, START_DATE, PARABOLIC_FILTER
     PARABOLIC_FILTER = parabolic_filter
@@ -368,6 +383,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         label = "Mom20 — Monthly Rebalance, β≤1.2"
     else:
         label = "Mom15 — Bi-monthly Rebalance, β≤1.0"
+    # Default sector cap for N200/N500 mom20 variants
+    if sector_cap is None and (mom20 or n500):
+        sector_cap = 4
     if beta_cap_override is not None:
         BETA_CAP = beta_cap_override
         label = label.split("β≤")[0] + f"β≤{beta_cap_override}"
@@ -393,6 +411,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         extra.append("EMA200-exit")
     if rebal_day == "mid":
         extra.append("Mid-month rebal")
+    if sector_cap is not None:
+        extra.append(f"Sector≤{sector_cap}")
     extra_label = (" | " + " | ".join(extra)) if extra else ""
     print(f"=== {label} | {regime_label}{extra_label} ===")
     print(f"    top_n={MAX_SLOTS} buffer_in={BUFFER_IN} buffer_out={BUFFER_OUT} beta_cap={BETA_CAP}")
@@ -434,6 +454,26 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         with open(EPS_FILE) as f:
             eps_db = json.load(f)
         print(f"  {len(eps_db)} stocks with EPS data")
+
+    # Load sector map for sector cap / display
+    sector_map_pit = {}
+    sector_map_dates = []
+    if not qqq and not sp500:
+        sector_map_file = SECTOR_MAP_N500 if n500 else SECTOR_MAP_N200
+        if os.path.exists(sector_map_file):
+            with open(sector_map_file) as f:
+                sector_map_pit = json.load(f)
+            sector_map_dates = sorted(sector_map_pit.keys())
+            print(f"  Sector map loaded: {len(sector_map_dates)} PIT dates")
+
+    def get_sector(ticker, day_str):
+        if not sector_map_dates:
+            return "—"
+        pit_date = next((d for d in reversed(sector_map_dates) if d <= day_str), None)
+        if not pit_date:
+            return "—"
+        sec = sector_map_pit[pit_date].get(ticker, {}).get("primary_sector", "OTHER")
+        return SECTOR_SHORT.get(sec, sec)
 
     # Date range for data fetch
     fetch_start = START_DATE - timedelta(days=WARMUP_DAYS)
@@ -620,6 +660,45 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         if len(new_set) > slots_available:
             new_set = set(sorted(new_set, key=lambda t: ticker_rank.get(t, 9999))[:slots_available])
 
+        # ── SECTOR CAP ────────────────────────────────────────────────────────
+        if sector_cap is not None and sector_map_dates:
+            day_str = rebal_day.isoformat()
+            pit_date = next((d for d in reversed(sector_map_dates) if d <= day_str), None)
+            if pit_date:
+                day_sectors = sector_map_pit[pit_date]
+                def _get_sec(t):
+                    sec = day_sectors.get(t, {}).get("primary_sector", "OTHER")
+                    return sec
+                # Sort: held stocks first (by unfiltered rank), then new entries (by filtered rank)
+                def _sort_key(t):
+                    if t in current_set:
+                        return (0, ticker_rank_unfiltered.get(t, 9999))
+                    return (1, ticker_rank.get(t, 9999))
+                new_set_ranked = sorted(new_set, key=_sort_key)
+                sec_counts = {}
+                capped_set = set()
+                dropped_by_cap = []
+                for t in new_set_ranked:
+                    sec = _get_sec(t)
+                    if sec_counts.get(sec, 0) < sector_cap:
+                        capped_set.add(t)
+                        sec_counts[sec] = sec_counts.get(sec, 0) + 1
+                    else:
+                        dropped_by_cap.append(t)
+                if dropped_by_cap:
+                    print(f"  [SECTOR CAP≤{sector_cap}] dropped: {', '.join(dropped_by_cap)}")
+                    # Fill freed slots from next-best in ranking
+                    for _, (t, _) in enumerate(ranked):
+                        if len(capped_set) >= slots_available:
+                            break
+                        if t in capped_set:
+                            continue
+                        sec = _get_sec(t)
+                        if sec_counts.get(sec, 0) < sector_cap:
+                            capped_set.add(t)
+                            sec_counts[sec] = sec_counts.get(sec, 0) + 1
+                new_set = capped_set
+
         # ── REGIME CHECK (before exits and entries) ──────────────────────────
         regime_off = False
         if use_regime and not n200_raw.empty:
@@ -694,6 +773,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             exit_rows.append((
                 t,
                 ticker_rank.get(t, "—"),
+                get_sector(t, rebal_day.isoformat()),
                 pos["entry_date"].strftime("%d-%b-%y"),
                 f"{pos['entry_price']:,.1f}",
                 f"{ep:,.1f}",
@@ -707,9 +787,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         print(f"\n  EXITS ({len(exit_rows)})")
         if exit_rows:
             print_table(
-                ["Ticker","Rank","Entry","Entry₹","Exit₹","Qty","Gross P&L","P&L%","Hold"],
-                sorted(exit_rows, key=lambda r: float(r[7].replace('+','').replace('%','')), reverse=True),
-                [10, 5, 10, 10, 10, 5, 12, 8, 6]
+                ["Ticker","Rank","Sector","Entry","Entry₹","Exit₹","Qty","Gross P&L","P&L%","Hold"],
+                sorted(exit_rows, key=lambda r: float(r[8].replace('+','').replace('%','')), reverse=True),
+                [10, 5, 9, 10, 10, 10, 5, 12, 8, 6]
             )
         else:
             print("    —")
@@ -761,6 +841,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             entry_rows.append((
                 t,
                 ticker_rank[t],
+                get_sector(t, rebal_day.isoformat()),
                 f"{s['norm_score']:.3f}",
                 f"{s['beta']:.2f}",
                 f"{r12*100:+.1f}%" + (" ⚠" if para_warn else ""),
@@ -781,9 +862,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                   f"{', '.join(parts)}")
         if entry_rows:
             print_table(
-                ["Ticker","Rank","Score","Beta","Ret12m","Ret3m","Entry₹","Qty","Capital"],
+                ["Ticker","Rank","Sector","Score","Beta","Ret12m","Ret3m","Entry₹","Qty","Capital"],
                 entry_rows,
-                [10, 5, 7, 5, 8, 8, 10, 5, 12]
+                [10, 5, 9, 7, 5, 8, 8, 10, 5, 12]
             )
         else:
             print("    —")
@@ -805,6 +886,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             hold_rows.append((
                 t,
                 ticker_rank.get(t, "—"),
+                get_sector(t, rebal_day.isoformat()),
                 pos["entry_date"].strftime("%d-%b-%y"),
                 f"{pos['entry_price']:,.1f}",
                 f"{cp:,.1f}",
@@ -816,9 +898,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         print(f"\n  HOLDS ({len(hold_rows)})")
         if hold_rows:
             print_table(
-                ["Ticker","Rank","Since","Entry₹","Now₹","Qty","Unreal P&L","P&L%"],
-                sorted(hold_rows, key=lambda r: float(r[7].replace('+','').replace('%','').replace(' ⚠','')), reverse=True),
-                [10, 5, 10, 10, 10, 5, 12, 10]
+                ["Ticker","Rank","Sector","Since","Entry₹","Now₹","Qty","Unreal P&L","P&L%"],
+                sorted(hold_rows, key=lambda r: float(r[8].replace('+','').replace('%','').replace(' ⚠','')), reverse=True),
+                [10, 5, 9, 10, 10, 10, 5, 12, 10]
             )
             if warn_syms:
                 print(f"  ⚠  WAZ < 0 (momentum below universe mean): {', '.join(warn_syms)}")
@@ -947,6 +1029,8 @@ if __name__ == "__main__":
                         help="Regime filter on the benchmark: 'none' (no filter), 'sma200' (default — Nifty200 < SMA200 → off), 'ema200' (uses EMA(200) instead)")
     parser.add_argument("--parabolic-filter", action="store_true",
                         help="Skip new entries where Ret12m > 300%% AND Ret3m/Ret12m > 0.5 (blowoff top)")
+    parser.add_argument("--sector-cap", type=int, default=None,
+                        help="Max holdings per sector (e.g. --sector-cap 5 limits each sector to 5 stocks)")
     args = parser.parse_args()
     # `--no-regime` (legacy) takes precedence and forces 'none'.
     regime_filter = "none" if args.no_regime else args.regime
@@ -957,4 +1041,5 @@ if __name__ == "__main__":
         top_n_override=args.top_n, buffer_in_override=args.buffer_in,
         buffer_out_override=args.buffer_out, ema200_exit=args.ema200_exit,
         rebal_day=args.rebal_day, regime_filter=regime_filter,
-        parabolic_filter=args.parabolic_filter)
+        parabolic_filter=args.parabolic_filter,
+        sector_cap=args.sector_cap)
