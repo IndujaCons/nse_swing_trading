@@ -2912,6 +2912,7 @@ def api_mom20_performance(user_id):
 
     # Overlay ranks from live signals cache (kept fresh by scheduler) so the
     # tracker always shows the same rank as the Live Signals tab — no stale data.
+    prev_ranks = {}
     try:
         from config.settings import LIVE_SIGNALS_CACHE_FILE
         with open(LIVE_SIGNALS_CACHE_FILE) as f:
@@ -2919,6 +2920,7 @@ def api_mom20_performance(user_id):
         live_ranks = ls.get("mom20_unfiltered_ranks", {})
         if live_ranks:
             rank_map.update({k: v for k, v in live_ranks.items() if v is not None})
+        prev_ranks = ls.get("prev_ranks") or {}
     except Exception:
         pass
 
@@ -3011,9 +3013,16 @@ def api_mom20_performance(user_id):
         else:
             row_rank = rank_map.get(t)
 
+        # rank_delta: positive = improved (rank number fell), negative = worsened
+        curr_rank_num = row_rank if isinstance(row_rank, (int, float)) else None
+        prev_rank_num = prev_ranks.get(t)
+        rank_delta = (prev_rank_num - curr_rank_num
+                      if prev_rank_num is not None and curr_rank_num is not None
+                      else None)
         holdings.append({
             "ticker":        t,
             "rank":          row_rank,
+            "rank_delta":    rank_delta,
             "qty":           qty,
             "entry_price":   round(ep, 2),
             "current_price": round(cp, 2),

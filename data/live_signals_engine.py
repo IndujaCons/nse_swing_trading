@@ -1116,6 +1116,36 @@ class LiveSignalsEngine:
         return None
 
     def _save_cache(self, data):
+        today = datetime.now().strftime("%Y-%m-%d")
+        # Promote prev_ranks once per day: when the existing cache is from a
+        # different (earlier) date, its mom20_unfiltered_ranks become prev_ranks.
+        # Intraday re-scans preserve the same prev_ranks so the delta stays
+        # anchored to yesterday throughout the trading session.
+        try:
+            with open(self.cache_file) as _f:
+                _existing = json.load(_f)
+            _existing_date = (_existing.get("last_updated") or "")[:10]
+            if _existing_date and _existing_date < today:
+                data["prev_ranks"]     = _existing.get("mom20_unfiltered_ranks") or {}
+                data["prev_rank_date"] = _existing_date
+            else:
+                data["prev_ranks"]     = _existing.get("prev_ranks") or {}
+                data["prev_rank_date"] = _existing.get("prev_rank_date") or ""
+        except Exception:
+            data["prev_ranks"]     = {}
+            data["prev_rank_date"] = ""
+
+        # Annotate each mom20_signal with rank_delta vs prev_ranks.
+        # delta > 0  → rank number fell (improved), < 0 → rank worsened.
+        prev = data.get("prev_ranks") or {}
+        for s in data.get("mom20_signals", []):
+            prev_r = prev.get(s.get("ticker"))
+            curr_r = s.get("rank")
+            if prev_r is not None and curr_r is not None:
+                s["rank_delta"] = prev_r - curr_r
+            else:
+                s["rank_delta"] = None
+
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)
 
