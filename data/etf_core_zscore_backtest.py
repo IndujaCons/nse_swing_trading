@@ -65,10 +65,9 @@ UNIVERSE = [
     ("MODEFENCE",   "Nifty India Defence",  "MODEFENCE.NS"),
     # Indian factor/thematic
     ("SETFMOMET",   "Nifty200 Mom30",       "MOM30IETF.NS"),
-    ("QUAL30IETF",  "Nifty100 Quality30",   "QUAL30IETF.NS"),
+    ("MOMOMENTUM",  "Nifty500 Mom50",       "MOMOMENTUM.NS"),    ("QUAL30IETF",  "Nifty100 Quality30",   "QUAL30IETF.NS"),
     ("KOTAKLOWV",   "Nifty100 LowVol30",    "LOWVOLIETF.NS"),
     ("ALPL30IETF",  "Nifty Alpha LowVol30", "ALPL30IETF.NS"),
-    ("MOMOMENTUM",  "Nifty500 Mom50",       "MOMOMENTUM.NS"),
     # Commodities
     ("GOLDBEES",    "Gold",                 "GOLDBEES.NS"),
     ("SILVERBEES",  "Silver",               "SILVERBEES.NS"),
