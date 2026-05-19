@@ -2128,7 +2128,8 @@ _SECTOR_RANK_CACHE_FILE = os.path.join(_CACHE_DIR_A, "sector_ranking_cache.json"
 _ETF_LTP_CACHE_FILE     = os.path.join(_CACHE_DIR_A, "etf_ltp_cache.json")
 
 # Sector ranking — 15-min TTL.
-_SECTOR_RANK_CACHE = {"ranking": None, "timestamp": 0}
+_SECTOR_RANK_CACHE = {"ranking": None, "timestamp": 0,
+                      "prev_sector_ranks": {}, "prev_sector_rank_date": ""}
 
 # ETF LTP — per-symbol 5-min TTL (LTPs change intraday but a few minutes of
 # staleness is fine for our use cases).
@@ -2146,8 +2147,10 @@ def _load_sector_rank_disk():
         with open(_SECTOR_RANK_CACHE_FILE) as f:
             d = json.load(f)
         if d.get("ranking"):
-            _SECTOR_RANK_CACHE["ranking"]   = d["ranking"]
-            _SECTOR_RANK_CACHE["timestamp"] = float(d.get("timestamp", 0))
+            _SECTOR_RANK_CACHE["ranking"]               = d["ranking"]
+            _SECTOR_RANK_CACHE["timestamp"]             = float(d.get("timestamp", 0))
+            _SECTOR_RANK_CACHE["prev_sector_ranks"]     = d.get("prev_sector_ranks") or {}
+            _SECTOR_RANK_CACHE["prev_sector_rank_date"] = d.get("prev_sector_rank_date") or ""
     except Exception:
         pass
 
@@ -2155,9 +2158,34 @@ def _load_sector_rank_disk():
 def _save_sector_rank_disk():
     try:
         os.makedirs(_CACHE_DIR_A, exist_ok=True)
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        prev_ranks = {}
+        prev_rank_date = ""
+        try:
+            with open(_SECTOR_RANK_CACHE_FILE) as _f:
+                _existing = json.load(_f)
+            existing_ts = float(_existing.get("timestamp", 0))
+            if existing_ts:
+                existing_date = datetime.fromtimestamp(existing_ts).strftime("%Y-%m-%d")
+                if existing_date < today_str:
+                    # New day: promote existing on-disk ranking as prev_sector_ranks
+                    prev_ranks = {r["symbol"]: r["rank"]
+                                  for r in (_existing.get("ranking") or []) if r.get("rank")}
+                    prev_rank_date = existing_date
+                else:
+                    prev_ranks     = _existing.get("prev_sector_ranks") or {}
+                    prev_rank_date = _existing.get("prev_sector_rank_date") or ""
+        except Exception:
+            pass
         with open(_SECTOR_RANK_CACHE_FILE, "w") as f:
-            json.dump({"ranking":   _SECTOR_RANK_CACHE["ranking"],
-                       "timestamp": _SECTOR_RANK_CACHE["timestamp"]}, f)
+            json.dump({
+                "ranking":               _SECTOR_RANK_CACHE["ranking"],
+                "timestamp":             _SECTOR_RANK_CACHE["timestamp"],
+                "prev_sector_ranks":     prev_ranks,
+                "prev_sector_rank_date": prev_rank_date,
+            }, f)
+        _SECTOR_RANK_CACHE["prev_sector_ranks"]     = prev_ranks
+        _SECTOR_RANK_CACHE["prev_sector_rank_date"] = prev_rank_date
     except Exception as e:
         print(f"[cache] sector rank disk save failed: {e}")
 
@@ -2387,12 +2415,22 @@ def api_sector_ranking():
     ranking = _get_sector_ranking(force_refresh=force)
     if not ranking:
         return jsonify({"success": False, "error": "ranking unavailable"})
+    prev_ranks = _SECTOR_RANK_CACHE.get("prev_sector_ranks") or {}
+    ranked_with_delta = []
+    for r in ranking:
+        entry = dict(r)
+        prev_r = prev_ranks.get(r["symbol"])
+        curr_r = r.get("rank")
+        entry["rank_delta"] = (prev_r - curr_r
+                               if prev_r is not None and curr_r is not None else None)
+        ranked_with_delta.append(entry)
     return jsonify({
-        "success":   True,
-        "as_of":     _date.today().isoformat(),
-        "ranking":   ranking,
-        "top5":      [r["symbol"] for r in ranking[:5]],
-        "cached_at": _SECTOR_RANK_CACHE["timestamp"],
+        "success":        True,
+        "as_of":          _date.today().isoformat(),
+        "ranking":        ranked_with_delta,
+        "top5":           [r["symbol"] for r in ranking[:5]],
+        "cached_at":      _SECTOR_RANK_CACHE["timestamp"],
+        "prev_rank_date": _SECTOR_RANK_CACHE.get("prev_sector_rank_date") or "",
     })
 
 

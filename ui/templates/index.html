@@ -7811,7 +7811,7 @@ function mom20RenderSectorRanking(d) {
             const label = SECTOR_LABEL[row.symbol] || row.symbol.replace('NIFTY ', '');
             const bg = isTop5 ? 'background:rgba(255,107,53,0.08);' : '';
             return `<tr style="${bg}border-bottom:1px solid var(--border-color);">
-                <td style="padding:5px 8px;font-family:monospace;color:${isTop5?'#ff6b35':'var(--text-muted)'};font-weight:${isTop5?'700':'400'};">${row.rank}</td>
+                <td style="padding:5px 8px;font-family:monospace;color:${isTop5?'#ff6b35':'var(--text-muted)'};font-weight:${isTop5?'700':'400'};">${row.rank}${rankDeltaBadge(row.rank_delta)}</td>
                 <td style="padding:5px 8px;font-family:monospace;color:var(--text-primary);${isTop5?'font-weight:700;':''}">${label}</td>
                 <td style="padding:5px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${row.score.toFixed(2)}</td>
                 <td style="padding:5px 8px;font-family:monospace;text-align:right;color:${colour(row.ret_12m)};">${fmt(row.ret_12m)}</td>
