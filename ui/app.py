@@ -3636,10 +3636,15 @@ def api_mom20_chart(user_id):
                     current_h[t] = {"qty": qty, "entry_price": round(price, 2)}
             holdings_timeline.append((rb_date, dict(current_h)))
 
-        initial_capital = sum(
-            t.get("qty", 0) * t.get("price", 0)
-            for t in _hist[0].get("buys", [])
-        )
+        # Match header formula: net new capital injected across ALL rebalances.
+        # Pure rebalances (sells fund buys) contribute 0; top-ups contribute their net.
+        initial_capital = 0.0
+        for rb in _hist:
+            buy_tot  = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("buys",  []))
+            sell_tot = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("sells", []))
+            net = buy_tot - sell_tot
+            if net > 0:
+                initial_capital += net
 
     # Fallback: seed the timeline from current basket
     if not holdings_timeline and basket:
