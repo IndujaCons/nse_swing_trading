@@ -2111,6 +2111,7 @@ def _etf_signal_scheduler():
 from data.user_registry import (
     load_users, add_user, get_user, update_user, delete_user, ensure_all_dirs,
     mom20_portfolio_path, mom20_history_path, mom20_live_prices_path,
+    techmo_portfolio_path, techmo_history_path, techmo_live_prices_path,
     etf_positions_path, etf_history_path,
     baskets_dir, trade_books_dir,
 )
@@ -4108,6 +4109,312 @@ def api_techmo_chart():
         "portfolio":    port_pct,
         "qqq":          qqq_pct,
         "start_date":   start_date,
+        "total_return": port_pct[-1] if port_pct else None,
+        "qqq_return":   qqq_pct[-1] if qqq_pct else None,
+    })
+
+
+# ── TechMo multi-user portfolio ───────────────────────────────────────────────
+
+@app.route("/api/techmo-users/<user_id>/portfolio", methods=["GET"])
+def api_techmo_portfolio_get(user_id):
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(techmo_portfolio_path(user_id)) as f:
+            pf = json.load(f)
+    except Exception:
+        pf = {"status": "empty", "basket": [], "capital": 0}
+    return jsonify({"success": True, "portfolio": pf})
+
+
+@app.route("/api/techmo-users/<user_id>/portfolio", methods=["POST"])
+def api_techmo_portfolio_save(user_id):
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    data = request.get_json() or {}
+    path = techmo_portfolio_path(user_id)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+    return jsonify({"success": True})
+
+
+@app.route("/api/techmo-users/<user_id>/performance", methods=["GET"])
+def api_techmo_performance_user(user_id):
+    """Live P&L for a specific user's TechMo portfolio."""
+    import yfinance as yf
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(techmo_portfolio_path(user_id)) as f:
+            pf = json.load(f)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+    basket = pf.get("basket", [])
+    if not basket:
+        return jsonify({"success": True, "holdings": [], "total_cost": 0,
+                        "total_current": 0, "total_pnl": 0, "total_pnl_pct": 0,
+                        "realized_pnl": 0, "initial_capital": pf.get("capital", 0),
+                        "tracking_since": None})
+
+    live = request.args.get("live", "").lower() in ("1", "true")
+    tickers = [h["ticker"] for h in basket if h.get("ticker")]
+
+    # Load or fetch prices
+    lp_path = techmo_live_prices_path(user_id)
+    prices, prices_updated_at = {}, ""
+    if live:
+        try:
+            raw = yf.download(tickers, period="2d", progress=False,
+                              auto_adjust=True, group_by="ticker", threads=True)
+            for t in tickers:
+                try:
+                    s = (raw[t]["Close"] if len(tickers) > 1 else raw["Close"]).dropna()
+                    if not s.empty:
+                        prices[t] = round(float(s.iloc[-1]), 2)
+                except Exception:
+                    pass
+            prices_updated_at = datetime.now().strftime("%d %b %H:%M")
+            os.makedirs(os.path.dirname(lp_path), exist_ok=True)
+            with open(lp_path, "w") as f:
+                json.dump({"prices": prices, "updated_at": prices_updated_at}, f)
+        except Exception:
+            pass
+    else:
+        try:
+            with open(lp_path) as f:
+                lp = json.load(f)
+            prices = lp.get("prices", {})
+            prices_updated_at = lp.get("updated_at", "")
+        except Exception:
+            pass
+
+    # Realized P&L from history
+    realized_pnl = 0.0
+    initial_capital = pf.get("capital", 0) or 0.0
+    try:
+        with open(techmo_history_path(user_id)) as f:
+            hist = json.load(f)
+        for rb in hist:
+            for s in rb.get("sells", []):
+                realized_pnl += s.get("pnl", 0)
+        if not initial_capital and hist:
+            initial_capital = sum(
+                b.get("qty", 0) * b.get("price", 0)
+                for b in hist[0].get("buys", [])
+            )
+    except Exception:
+        pass
+
+    holdings, total_cost, total_current = [], 0.0, 0.0
+    for h in basket:
+        t   = h.get("ticker", "")
+        qty = h.get("qty", 0) or h.get("shares", 0)
+        ep  = h.get("entry_price", 0)
+        cost = round(qty * ep, 2)
+        now_px = prices.get(t, ep)
+        value  = round(qty * now_px, 2)
+        pnl    = round(value - cost, 2)
+        pnl_pct = round((now_px / ep - 1) * 100, 2) if ep else 0
+        total_cost    += cost
+        total_current += value
+        holdings.append({
+            "ticker":      t,
+            "cluster":     h.get("cluster", TECHMO_UNIVERSE.get(t, "")),
+            "rank":        h.get("rank"),
+            "shares":      qty,
+            "entry_price": ep,
+            "entry_date":  h.get("entry_date", ""),
+            "now_price":   now_px,
+            "cost":        cost,
+            "value":       value,
+            "pnl":         pnl,
+            "pnl_pct":     pnl_pct,
+            "has_price":   t in prices,
+        })
+
+    holdings.sort(key=lambda h: h["rank"] or 99)
+    total_pnl     = round(total_current - total_cost, 2)
+    total_pnl_pct = round(total_pnl / total_cost * 100, 2) if total_cost else 0
+    initial_capital = initial_capital or total_cost
+
+    return jsonify({
+        "success":          True,
+        "holdings":         holdings,
+        "total_cost":       round(total_cost, 2),
+        "total_current":    round(total_current, 2),
+        "total_pnl":        total_pnl,
+        "total_pnl_pct":    total_pnl_pct,
+        "realized_pnl":     round(realized_pnl, 2),
+        "initial_capital":  round(initial_capital, 2),
+        "tracking_since":   pf.get("tracking_since", ""),
+        "next_rebalance":   pf.get("next_rebalance", "2026-06-01"),
+        "prices_updated_at": prices_updated_at,
+    })
+
+
+@app.route("/api/techmo-users/<user_id>/upload-tradebook", methods=["POST"])
+def api_techmo_upload_tradebook(user_id):
+    """Upload IBKR trade CSV — same format as Mom20 trade book."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    import csv, io
+    file = request.files.get("file")
+    if not file:
+        return jsonify({"success": False, "error": "no file"})
+    try:
+        content = file.read().decode("utf-8-sig")
+        reader  = csv.DictReader(io.StringIO(content))
+        trades  = []
+        for row in reader:
+            ticker = (row.get("Symbol") or row.get("ticker") or "").strip().upper()
+            action = (row.get("Action") or row.get("action") or "").strip().upper()
+            qty    = float(row.get("Quantity") or row.get("qty") or 0)
+            price  = float(row.get("Price") or row.get("price") or 0)
+            date_s = (row.get("Date") or row.get("date") or "").strip()
+            if ticker and action in ("BUY", "SELL") and qty > 0 and price > 0:
+                trades.append({"ticker": ticker, "action": action,
+                               "qty": qty, "price": price, "date": date_s})
+        if not trades:
+            return jsonify({"success": False, "error": "no valid trades found"})
+
+        # Apply trades to portfolio
+        pf_path = techmo_portfolio_path(user_id)
+        try:
+            with open(pf_path) as f:
+                pf = json.load(f)
+        except Exception:
+            pf = {"status": "empty", "basket": [], "capital": 0, "next_rebalance": "2026-06-01"}
+
+        basket = {h["ticker"]: h for h in pf.get("basket", [])}
+        hist_path = techmo_history_path(user_id)
+        try:
+            with open(hist_path) as f:
+                hist = json.load(f)
+        except Exception:
+            hist = []
+
+        rb = {"rebalance_date": trades[0]["date"], "buys": [], "sells": []}
+        for t in trades:
+            ticker = t["ticker"]
+            if t["action"] == "BUY":
+                if ticker in basket:
+                    old = basket[ticker]
+                    new_qty   = old["qty"] + t["qty"]
+                    new_price = (old["qty"] * old["entry_price"] + t["qty"] * t["price"]) / new_qty
+                    basket[ticker]["qty"]         = new_qty
+                    basket[ticker]["entry_price"] = round(new_price, 4)
+                else:
+                    basket[ticker] = {
+                        "ticker":      ticker,
+                        "qty":         t["qty"],
+                        "entry_price": t["price"],
+                        "entry_date":  t["date"],
+                        "cluster":     TECHMO_UNIVERSE.get(ticker, ""),
+                        "rank":        None,
+                    }
+                rb["buys"].append({"ticker": ticker, "qty": t["qty"], "price": t["price"]})
+            elif t["action"] == "SELL" and ticker in basket:
+                ep  = basket[ticker]["entry_price"]
+                pnl = round((t["price"] - ep) * t["qty"], 2)
+                rb["sells"].append({"ticker": ticker, "qty": t["qty"],
+                                    "price": t["price"], "pnl": pnl})
+                basket[ticker]["qty"] -= t["qty"]
+                if basket[ticker]["qty"] <= 0:
+                    del basket[ticker]
+
+        hist.append(rb)
+        pf["basket"] = list(basket.values())
+        pf["status"] = "seeded"
+        if not pf.get("tracking_since") and rb["buys"]:
+            pf["tracking_since"] = trades[0]["date"]
+        if not pf.get("capital"):
+            buy_tot  = sum(b["qty"] * b["price"] for b in rb["buys"])
+            sell_tot = sum(s["qty"] * s["price"] for s in rb["sells"])
+            if buy_tot > sell_tot:
+                pf["capital"] = round(pf.get("capital", 0) + buy_tot - sell_tot, 2)
+
+        os.makedirs(os.path.dirname(pf_path), exist_ok=True)
+        with open(pf_path, "w") as f:
+            json.dump(pf, f, indent=2)
+        with open(hist_path, "w") as f:
+            json.dump(hist, f, indent=2)
+
+        return jsonify({"success": True, "trades_processed": len(trades),
+                        "holdings": len(pf["basket"])})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+
+@app.route("/api/techmo-users/<user_id>/history", methods=["GET"])
+def api_techmo_history(user_id):
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(techmo_history_path(user_id)) as f:
+            return jsonify({"success": True, "history": json.load(f)})
+    except Exception:
+        return jsonify({"success": True, "history": []})
+
+
+@app.route("/api/techmo-users/<user_id>/chart", methods=["GET"])
+def api_techmo_chart_user(user_id):
+    """Daily portfolio return vs QQQ for a specific user."""
+    import yfinance as yf
+    import pandas as pd
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        with open(techmo_portfolio_path(user_id)) as f:
+            pf = json.load(f)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+    basket = pf.get("basket", [])
+    tracking_since = pf.get("tracking_since", "")
+    if not basket or not tracking_since:
+        return jsonify({"success": False, "error": "no portfolio data"})
+
+    tickers    = [h["ticker"] for h in basket]
+    total_cost = sum((h.get("qty") or h.get("shares", 0)) * h.get("entry_price", 0) for h in basket)
+    yf_syms    = tickers + ["QQQ"]
+
+    try:
+        raw = yf.download(yf_syms, start=tracking_since, progress=False,
+                          auto_adjust=True, group_by="ticker", threads=True)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+    def get_close(sym):
+        try:
+            return (raw[sym]["Close"] if len(yf_syms) > 1 else raw["Close"]).dropna()
+        except Exception:
+            return pd.Series(dtype=float)
+
+    qqq_s = get_close("QQQ")
+    closes = {h["ticker"]: get_close(h["ticker"]) for h in basket}
+    all_dates = qqq_s.index if not qqq_s.empty else pd.DatetimeIndex([])
+    base_qqq  = float(qqq_s.iloc[0]) if not qqq_s.empty else None
+
+    port_pct, qqq_pct = [], []
+    for dt in all_dates:
+        val = sum(
+            (h.get("qty") or h.get("shares", 0)) *
+            (float(closes[h["ticker"]].loc[dt]) if h["ticker"] in closes and dt in closes[h["ticker"]].index
+             else h.get("entry_price", 0))
+            for h in basket
+        )
+        port_pct.append(round((val - total_cost) / total_cost * 100, 3) if total_cost else 0)
+        qqq_pct.append(round((float(qqq_s.loc[dt]) / base_qqq - 1) * 100, 3)
+                       if base_qqq and dt in qqq_s.index else (qqq_pct[-1] if qqq_pct else 0))
+
+    return jsonify({
+        "success":      True,
+        "dates":        [d.strftime("%Y-%m-%d") for d in all_dates],
+        "portfolio":    port_pct,
+        "qqq":          qqq_pct,
         "total_return": port_pct[-1] if port_pct else None,
         "qqq_return":   qqq_pct[-1] if qqq_pct else None,
     })

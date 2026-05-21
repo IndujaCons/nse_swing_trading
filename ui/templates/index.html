@@ -2788,12 +2788,28 @@
                     <span style="font-size:11px;color:var(--text-muted);">Nasdaq-100 + AI Universe | 12 positions | 2 per cluster</span>
                 </div>
 
-                <!-- PORTFOLIO TRACKER card -->
-                <div id="techmo-tracker-card" style="margin-bottom:20px;">
+                <!-- User selector row -->
+                <div class="user-bar">
+                    <span style="font-size:11px;font-weight:700;color:var(--text-muted);">USER:</span>
+                    <select id="techmo-user-select" onchange="techmoOnUserChange()" style="min-width:140px;">
+                        <option value="">— Select User —</option>
+                    </select>
+                    <button class="add-user-btn" onclick="openAddUserModal()">+ Add User</button>
+                    <button id="techmo-delete-user-btn" onclick="deleteSelectedUser('techmo')" style="display:none;padding:4px 10px;font-size:11px;background:rgba(220,53,69,0.12);color:#dc3545;border:1px solid rgba(220,53,69,0.4);border-radius:5px;cursor:pointer;">✕ Delete User</button>
+                    <button id="techmo-history-btn" onclick="techmoToggleHistory()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">📋 History</button>
+                </div>
+
+                <!-- PORTFOLIO TRACKER card (hidden until user selected) -->
+                <div id="techmo-tracker-card" style="display:none;margin-bottom:20px;">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
                         <button onclick="techmoLoad(true)" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
-                        <span id="techmo-tracker-status" style="font-size:10px;color:var(--text-muted);"></span>
+                        <label style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">
+                            ⬆ Upload Trade Book
+                            <input type="file" accept=".csv" onchange="techmoUploadTradeBook(event)" style="display:none;">
+                        </label>
+                        <span id="techmo-upload-status" style="font-size:11px;color:var(--text-muted);"></span>
+                        <span id="techmo-tracker-status" style="font-size:10px;color:var(--text-muted);margin-left:auto;"></span>
                     </div>
 
                     <!-- Summary strip -->
@@ -2875,8 +2891,17 @@
                     </div>
                 </div>
 
+                <!-- History panel -->
+                <div id="techmo-history-panel" style="display:none;margin-top:20px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-top:1px solid var(--border-color);padding-top:16px;">
+                        <span style="font-size:13px;font-weight:700;color:var(--text-secondary);letter-spacing:1px;">REBALANCE HISTORY</span>
+                        <span id="techmo-history-count" style="font-size:11px;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">0 rebalances</span>
+                    </div>
+                    <div id="techmo-history-body" style="font-family:monospace;font-size:12px;"></div>
+                </div>
+
                 <div style="margin-top:10px;font-size:10px;color:var(--text-muted);">
-                    Exit rule: sell if combined rank &gt; 20 on June 1 rebalance &nbsp;|&nbsp; Entry: 21 May 2026 &nbsp;|&nbsp; IBKR fractional shares
+                    Exit rule: sell if combined rank &gt; 20 on June 1 rebalance &nbsp;|&nbsp; IBKR fractional shares
                 </div>
             </div><!-- end #techmo-panels -->
 
@@ -3852,7 +3877,7 @@
                 ovLoadPortfolio();
             }
             if (strategy === 'techmo') {
-                techmoLoad();
+                if (_techmoSelectedUser) techmoLoad();
             }
         }
 
@@ -7832,8 +7857,9 @@ async function loadUsers() {
         const d = await r.json();
         if (d.success) _allUsers = d.users || [];
     } catch(e) { _allUsers = []; }
-    _populateUserDropdown('mom20-user-select', _mom20SelectedUser?.id);
-    _populateUserDropdown('etf-user-select',   _etfSelectedUser?.id);
+    _populateUserDropdown('mom20-user-select',   _mom20SelectedUser?.id);
+    _populateUserDropdown('etf-user-select',     _etfSelectedUser?.id);
+    _populateUserDropdown('techmo-user-select',  _techmoSelectedUser?.id);
 }
 
 function _populateUserDropdown(selectId, selectedId) {
@@ -7875,10 +7901,11 @@ async function submitAddUser() {
         if (!d.success) { alert(d.error || 'Failed'); return; }
         // Add to local list and repopulate with new user pre-selected
         _allUsers.push(d.user);
-        _populateUserDropdown('mom20-user-select', d.user.id);
-        _populateUserDropdown('etf-user-select',   d.user.id);
+        _populateUserDropdown('mom20-user-select',  d.user.id);
+        _populateUserDropdown('etf-user-select',    d.user.id);
+        _populateUserDropdown('techmo-user-select', d.user.id);
         closeAddUserModal();
-        mom20OnUserChange(); etfOnUserChange();
+        mom20OnUserChange(); etfOnUserChange(); techmoOnUserChange();
     } finally { btn.disabled = false; btn.textContent = 'Add User'; }
 }
 function _selectUserInDropdown(selectId, userId) {
@@ -7887,8 +7914,10 @@ function _selectUserInDropdown(selectId, userId) {
 }
 
 async function deleteSelectedUser(context) {
-    // context = 'mom20' or 'etf'
-    const user = context === 'mom20' ? _mom20SelectedUser : _etfSelectedUser;
+    // context = 'mom20', 'etf', or 'techmo'
+    const user = context === 'mom20' ? _mom20SelectedUser
+               : context === 'etf'   ? _etfSelectedUser
+               :                       _techmoSelectedUser;
     if (!user) return;
     if (!confirm(`Delete user "${user.name}"?\n\nTheir data will be archived (not permanently erased).`)) return;
     try {
@@ -7896,11 +7925,13 @@ async function deleteSelectedUser(context) {
         const d = await r.json();
         if (!d.success) { alert(d.error || 'Delete failed'); return; }
         _allUsers = _allUsers.filter(u => u.id !== user.id);
-        if (context === 'mom20') { _mom20SelectedUser = null; }
-        else                     { _etfSelectedUser   = null; }
-        _populateUserDropdown('mom20-user-select', null);
-        _populateUserDropdown('etf-user-select',   null);
-        mom20OnUserChange(); etfOnUserChange();
+        if (context === 'mom20')  { _mom20SelectedUser  = null; }
+        else if (context === 'etf')    { _etfSelectedUser    = null; }
+        else                           { _techmoSelectedUser = null; }
+        _populateUserDropdown('mom20-user-select',  null);
+        _populateUserDropdown('etf-user-select',    null);
+        _populateUserDropdown('techmo-user-select', null);
+        mom20OnUserChange(); etfOnUserChange(); techmoOnUserChange();
     } catch(e) { alert('Error: ' + e); }
 }
 
@@ -8381,12 +8412,102 @@ let _techmoChartTicker = null;
 let _techmoChartPeriod = '1y';
 let _techmoChart   = null;  // Chart.js instance for perf chart
 let _techmoSideChart = null; // Chart.js instance for side price chart
+let _techmoSelectedUser = null;
+let _techmoHistoryLoaded = false;
+
+function techmoOnUserChange() {
+    const uid = document.getElementById('techmo-user-select').value;
+    _techmoSelectedUser = _allUsers.find(u => u.id === uid) || null;
+    const delBtn   = document.getElementById('techmo-delete-user-btn');
+    const histBtn  = document.getElementById('techmo-history-btn');
+    const trackerCard = document.getElementById('techmo-tracker-card');
+    const historyPanel = document.getElementById('techmo-history-panel');
+    if (!_techmoSelectedUser) {
+        if (delBtn) delBtn.style.display = 'none';
+        if (histBtn) histBtn.style.display = 'none';
+        if (trackerCard) trackerCard.style.display = 'none';
+        if (historyPanel) historyPanel.style.display = 'none';
+        return;
+    }
+    if (delBtn) delBtn.style.display = 'inline';
+    if (histBtn) histBtn.style.display = 'inline';
+    if (trackerCard) trackerCard.style.display = 'block';
+    _techmoHistoryLoaded = false;
+    if (historyPanel && historyPanel.style.display !== 'none') techmoLoadHistory();
+    techmoLoad();
+}
+
+function techmoToggleHistory() {
+    const panel = document.getElementById('techmo-history-panel');
+    const btn   = document.getElementById('techmo-history-btn');
+    const visible = panel.style.display !== 'none';
+    panel.style.display = visible ? 'none' : 'block';
+    if (btn) btn.textContent = visible ? '📋 History' : '📋 Hide History';
+    if (!visible && !_techmoHistoryLoaded) techmoLoadHistory();
+}
+
+async function techmoLoadHistory() {
+    const uid  = _techmoSelectedUser?.id;
+    const body = document.getElementById('techmo-history-body');
+    if (!uid) { if (body) body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">Select a user first.</div>'; return; }
+    if (body) body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">Loading…</div>';
+    try {
+        const r = await fetch(`/api/techmo-users/${uid}/history`);
+        const d = await r.json();
+        if (!d.success) { if (body) body.innerHTML = '<div style="color:var(--red);">Failed to load history</div>'; return; }
+        _techmoHistoryLoaded = true;
+        const history = d.history || [];
+        const countEl = document.getElementById('techmo-history-count');
+        if (countEl) countEl.textContent = `${history.length} rebalance${history.length !== 1 ? 's' : ''}`;
+        if (!history.length) {
+            if (body) body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances recorded yet. Upload a trade book after each rebalance.</div>';
+            return;
+        }
+        if (body) body.innerHTML = history.slice().reverse().map((rb, i) => {
+            const num = history.length - i;
+            const date = rb.rebalance_date || rb.date || '—';
+            const buys  = (rb.buys  || []).map(t => `<div style="display:flex;gap:12px;"><span style="min-width:60px;">${t.ticker}</span><span style="color:var(--green);">+${t.qty} @ $${Number(t.price).toFixed(2)}</span></div>`).join('');
+            const sells = (rb.sells || []).map(t => `<div style="display:flex;gap:12px;"><span style="min-width:60px;">${t.ticker}</span><span style="color:#ef5350;">-${t.qty} @ $${Number(t.price).toFixed(2)}</span></div>`).join('');
+            return `<div style="margin-bottom:16px;padding:12px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:6px;">
+                <div style="color:#4a9eff;font-weight:700;margin-bottom:8px;">REBALANCE #${String(num).padStart(2,'0')} — ${date}</div>
+                ${sells ? `<div style="margin-bottom:6px;"><div style="font-size:10px;color:var(--text-muted);font-weight:700;margin-bottom:3px;">SELLS</div>${sells}</div>` : ''}
+                ${buys  ? `<div><div style="font-size:10px;color:var(--text-muted);font-weight:700;margin-bottom:3px;">BUYS</div>${buys}</div>` : ''}
+            </div>`;
+        }).join('');
+    } catch(e) { if (body) body.innerHTML = `<div style="color:var(--red);">${e.message}</div>`; }
+}
+
+async function techmoUploadTradeBook(event) {
+    const uid = _techmoSelectedUser?.id;
+    if (!uid) { alert('Select a user first'); return; }
+    const file = event.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('techmo-upload-status');
+    if (status) { status.textContent = 'Uploading…'; status.style.color = 'var(--text-muted)'; }
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const r = await fetch(`/api/techmo-users/${uid}/upload-tradebook`, {method:'POST', body:fd});
+        const d = await r.json();
+        if (d.success) {
+            if (status) { status.textContent = `✓ Processed ${d.trades_processed} trades — ${d.holdings} positions`; status.style.color = 'var(--green)'; }
+            techmoLoad();
+        } else {
+            if (status) { status.textContent = '✗ ' + (d.error || 'Upload failed'); status.style.color = '#ef5350'; }
+        }
+    } catch(e) {
+        if (status) { status.textContent = '✗ Error: ' + e; status.style.color = '#ef5350'; }
+    }
+    event.target.value = '';
+}
 
 async function techmoLoad(live=false) {
+    const uid = _techmoSelectedUser?.id;
     const status = document.getElementById('techmo-tracker-status');
+    if (!uid) return;
     if (status) status.textContent = live ? 'Fetching live prices…' : 'Loading…';
     try {
-        const r = await fetch('/api/techmo/performance');
+        const r = await fetch(`/api/techmo-users/${uid}/performance${live ? '?live=1' : ''}`);
         const d = await r.json();
         if (!d.success) throw new Error(d.error || 'failed');
         techmoRender(d);
@@ -8409,7 +8530,7 @@ function techmoRender(d) {
 
     document.getElementById('techmo-tracker-returns').textContent  = (d.total_pnl_pct >= 0 ? '+' : '') + d.total_pnl_pct.toFixed(2) + '%';
     document.getElementById('techmo-tracker-returns').style.color  = pnlColor;
-    document.getElementById('techmo-tracker-since').textContent    = d.entry_date || '—';
+    document.getElementById('techmo-tracker-since').textContent    = d.tracking_since || d.entry_date || '—';
     document.getElementById('techmo-tracker-invested').textContent = fmtUSD(d.total_cost);
     document.getElementById('techmo-tracker-current').textContent  = fmtUSD(d.total_current);
     document.getElementById('techmo-tracker-pnl').textContent      = (d.total_pnl >= 0 ? '+' : '-') + fmtUSD(d.total_pnl);
@@ -8444,8 +8565,10 @@ function techmoRender(d) {
 }
 
 async function techmoLoadChart() {
+    const uid = _techmoSelectedUser?.id;
+    if (!uid) return;
     try {
-        const r = await fetch('/api/techmo/chart');
+        const r = await fetch(`/api/techmo-users/${uid}/chart`);
         const d = await r.json();
         if (!d.success) return;
         const wrap = document.getElementById('techmo-perf-chart-wrap');

@@ -18,8 +18,9 @@ _USER_DEFAULT = {
     "id": "",
     "name": "",
     "strategies": {
-        "mom20": {"active": False, "capital": 0},
-        "etf":   {"active": False, "capital": 0},
+        "mom20":  {"active": False, "capital": 0},
+        "etf":    {"active": False, "capital": 0},
+        "techmo": {"active": False, "capital": 0},
     }
 }
 
@@ -48,7 +49,7 @@ def get_user(user_id: str) -> dict | None:
     return next((u for u in load_users() if u["id"] == user_id), None)
 
 
-def add_user(name: str, mom20_capital: int = 0, etf_capital: int = 0) -> dict:
+def add_user(name: str, mom20_capital: int = 0, etf_capital: int = 0, techmo_capital: float = 0) -> dict:
     users = load_users()
 
     # Generate unique slug id
@@ -63,8 +64,9 @@ def add_user(name: str, mom20_capital: int = 0, etf_capital: int = 0) -> dict:
         "name": name,
         "created": date.today().isoformat(),
         "strategies": {
-            "mom20": {"active": mom20_capital > 0, "capital": mom20_capital},
-            "etf":   {"active": etf_capital  > 0, "capital": etf_capital},
+            "mom20":  {"active": mom20_capital  > 0, "capital": mom20_capital},
+            "etf":    {"active": etf_capital    > 0, "capital": etf_capital},
+            "techmo": {"active": techmo_capital > 0, "capital": techmo_capital},
         }
     }
     users.append(user)
@@ -73,7 +75,7 @@ def add_user(name: str, mom20_capital: int = 0, etf_capital: int = 0) -> dict:
     return user
 
 
-def update_user(user_id: str, mom20_capital: int = None, etf_capital: int = None) -> dict | None:
+def update_user(user_id: str, mom20_capital: int = None, etf_capital: int = None, techmo_capital: float = None) -> dict | None:
     users = load_users()
     for u in users:
         if u["id"] == user_id:
@@ -83,6 +85,10 @@ def update_user(user_id: str, mom20_capital: int = None, etf_capital: int = None
             if etf_capital is not None:
                 u["strategies"]["etf"]["capital"] = etf_capital
                 u["strategies"]["etf"]["active"]  = etf_capital > 0
+            if techmo_capital is not None:
+                u["strategies"].setdefault("techmo", {})
+                u["strategies"]["techmo"]["capital"] = techmo_capital
+                u["strategies"]["techmo"]["active"]  = techmo_capital > 0
             save_users(users)
             return u
     return None
@@ -126,6 +132,18 @@ def mom20_live_prices_path(user_id: str) -> str:
     return os.path.join(user_dir(user_id), "mom20_live_prices.json")
 
 
+def techmo_portfolio_path(user_id: str) -> str:
+    return os.path.join(user_dir(user_id), "techmo_portfolio.json")
+
+
+def techmo_history_path(user_id: str) -> str:
+    return os.path.join(user_dir(user_id), "techmo_history.json")
+
+
+def techmo_live_prices_path(user_id: str) -> str:
+    return os.path.join(user_dir(user_id), "techmo_live_prices.json")
+
+
 def etf_positions_path(user_id: str) -> str:
     return os.path.join(user_dir(user_id), "etf_positions.json")
 
@@ -150,10 +168,12 @@ def _init_user_dir(user_id: str):
     os.makedirs(trade_books_dir(user_id), exist_ok=True)
 
     defaults = {
-        mom20_portfolio_path(user_id): {"status": "empty", "basket": [], "capital": 0},
-        mom20_history_path(user_id):   [],
-        etf_positions_path(user_id):   [],
-        etf_history_path(user_id):     [],
+        mom20_portfolio_path(user_id):   {"status": "empty", "basket": [], "capital": 0},
+        mom20_history_path(user_id):     [],
+        techmo_portfolio_path(user_id):  {"status": "empty", "basket": [], "capital": 0},
+        techmo_history_path(user_id):    [],
+        etf_positions_path(user_id):     [],
+        etf_history_path(user_id):       [],
     }
     for path, default in defaults.items():
         if not os.path.exists(path):
