@@ -1395,6 +1395,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
                 <button class="strategy-tab" onclick="switchStrategy('backtest')">Backtest</button>
                 <button class="strategy-tab" onclick="switchStrategy('journal')">AI Briefing</button>
+                <button class="strategy-tab" onclick="switchStrategy('techmo')">TechMo</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2766,6 +2767,45 @@
 
             </div><!-- end #journal-panels -->
 
+            <!-- TechMo Portfolio Tracker -->
+            <div id="techmo-panels" class="hidden" style="padding:16px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                    <span style="font-size:13px;font-weight:700;color:#ff6b35;letter-spacing:1px;">TECHMO</span>
+                    <span style="font-size:11px;color:var(--text-muted);">Nasdaq-100 + AI Universe | 12 positions | 2 per cluster</span>
+                    <span id="techmo-entry-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">Entry: —</span>
+                    <span id="techmo-rebal-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,0.1);color:#ff6b35;">Next rebal: —</span>
+                    <button onclick="techmoLoad()" style="margin-left:auto;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">↺ Refresh</button>
+                </div>
+
+                <!-- Summary tiles -->
+                <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                    <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:12px 18px;min-width:120px;">
+                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">INVESTED</div>
+                        <div id="techmo-invested" style="font-size:18px;font-weight:700;color:var(--text-primary);">—</div>
+                    </div>
+                    <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:12px 18px;min-width:120px;">
+                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">CURRENT</div>
+                        <div id="techmo-current" style="font-size:18px;font-weight:700;color:var(--text-primary);">—</div>
+                    </div>
+                    <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:12px 18px;min-width:120px;">
+                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">RETURNS</div>
+                        <div id="techmo-returns" style="font-size:18px;font-weight:700;">—</div>
+                    </div>
+                    <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:12px 18px;min-width:120px;">
+                        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">UNREAL P&L</div>
+                        <div id="techmo-pnl" style="font-size:18px;font-weight:700;">—</div>
+                    </div>
+                </div>
+
+                <!-- Holdings table -->
+                <div id="techmo-table-body">
+                    <div style="text-align:center;color:var(--text-muted);padding:24px;font-size:11px;">Loading…</div>
+                </div>
+                <div style="margin-top:10px;font-size:10px;color:var(--text-muted);">
+                    Exit rule: sell if combined rank &gt; 20 on June 1 rebalance &nbsp;|&nbsp; Entry: 21 May 2026 &nbsp;|&nbsp; IBKR fractional shares
+                </div>
+            </div><!-- end #techmo-panels -->
+
             <!-- Note modal (shared for Mom20 position notes) -->
             <div id="note-modal" style="display:none;position:fixed;z-index:9999;background:var(--bg-white);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);padding:14px;width:320px;">
                 <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:8px;">POSITION NOTE — <span id="note-modal-ticker"></span></div>
@@ -3692,6 +3732,7 @@
             else if (strategy === 'mom20_portfolio') tabs[3].classList.add('active');
             else if (strategy === 'backtest') tabs[4].classList.add('active');
             else if (strategy === 'journal') tabs[5].classList.add('active');
+            else if (strategy === 'techmo')  tabs[6].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -3704,6 +3745,7 @@
             document.getElementById('overflow-portfolio-panels').classList.toggle('hidden', strategy !== 'overflow_portfolio');
             document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
             document.getElementById('journal-panels').classList.toggle('hidden', strategy !== 'journal');
+            document.getElementById('techmo-panels').classList.toggle('hidden', strategy !== 'techmo');
             if (strategy === 'journal') {
                 // Restore tile statuses from JS cache (no server call on tab switch)
                 if (typeof _aiBriefingCache !== 'undefined') {
@@ -3734,6 +3776,9 @@
             }
             if (strategy === 'overflow_portfolio') {
                 ovLoadPortfolio();
+            }
+            if (strategy === 'techmo') {
+                techmoLoad();
             }
         }
 
@@ -8189,6 +8234,80 @@ function rankDeltaBadge(delta) {
     else if (abs <= 9) color = '#f59e0b';
     else               color = improved ? 'var(--green)' : '#dc3545';
     return `<span style="font-size:10px;color:${color};font-weight:600;margin-left:3px;">${arrow}${abs}</span>`;
+}
+
+// ── TechMo Tracker ────────────────────────────────────────────────────────────
+let _techmoLoaded = false;
+
+async function techmoLoad() {
+    const body = document.getElementById('techmo-table-body');
+    if (body) body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;font-size:11px;">Loading live prices…</div>';
+    try {
+        const r = await fetch('/api/techmo/performance');
+        const d = await r.json();
+        if (!d.success) throw new Error(d.error || 'failed');
+        techmoRender(d);
+        _techmoLoaded = true;
+    } catch(e) {
+        if (body) body.innerHTML = `<div style="text-align:center;color:#ef5350;padding:24px;font-size:11px;">Error: ${e.message}</div>`;
+    }
+}
+
+function techmoRender(d) {
+    // Update badges
+    const eb = document.getElementById('techmo-entry-badge');
+    const rb = document.getElementById('techmo-rebal-badge');
+    if (eb) eb.textContent = `Entry: ${d.entry_date || '—'}`;
+    if (rb) rb.textContent = `Next rebal: ${d.next_rebalance || '—'}`;
+
+    // Summary tiles
+    const pnlColor = d.total_pnl >= 0 ? 'var(--green)' : '#ef5350';
+    const fmtUSD = v => '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    document.getElementById('techmo-invested').textContent = fmtUSD(d.total_cost);
+    document.getElementById('techmo-current').textContent  = fmtUSD(d.total_current);
+    document.getElementById('techmo-returns').textContent  = (d.total_pnl_pct >= 0 ? '+' : '') + d.total_pnl_pct.toFixed(2) + '%';
+    document.getElementById('techmo-returns').style.color  = pnlColor;
+    document.getElementById('techmo-pnl').textContent      = (d.total_pnl >= 0 ? '+' : '-') + fmtUSD(d.total_pnl);
+    document.getElementById('techmo-pnl').style.color      = pnlColor;
+
+    // Holdings table
+    const CLUSTER_COLORS = {
+        'Compute':'#60a5fa', 'Memory':'#34d399', 'Semicon':'#a78bfa',
+        'Photonics':'#f59e0b', 'Space':'#fb923c', 'Other':'var(--text-muted)'
+    };
+    const rows = (d.holdings || []).map(h => {
+        const pnlC  = h.pnl >= 0 ? 'var(--green)' : '#ef5350';
+        const pnlS  = (h.pnl >= 0 ? '+' : '') + '$' + Math.abs(h.pnl).toFixed(2);
+        const pctS  = (h.pnl_pct >= 0 ? '+' : '') + h.pnl_pct.toFixed(2) + '%';
+        const cColor = CLUSTER_COLORS[h.cluster] || 'var(--text-muted)';
+        const liveTag = h.has_price ? '' : '<span style="font-size:9px;color:#f59e0b;"> ⚠cache</span>';
+        return `<tr style="border-bottom:1px solid var(--border-color);">
+            <td style="padding:6px 8px;font-family:monospace;color:var(--text-muted);">${h.rank}</td>
+            <td style="padding:6px 8px;font-family:monospace;font-weight:700;color:var(--text-primary);">${h.ticker}${liveTag}</td>
+            <td style="padding:6px 8px;font-family:monospace;font-size:10px;color:${cColor};">${h.cluster}</td>
+            <td style="padding:6px 8px;font-family:monospace;text-align:right;color:var(--text-muted);">${h.shares}</td>
+            <td style="padding:6px 8px;font-family:monospace;text-align:right;color:var(--text-secondary);">$${h.entry_price.toFixed(2)}</td>
+            <td style="padding:6px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">$${h.now_price.toFixed(2)}</td>
+            <td style="padding:6px 8px;font-family:monospace;text-align:right;color:var(--text-muted);">$${h.cost.toFixed(2)}</td>
+            <td style="padding:6px 8px;font-family:monospace;text-align:right;color:${pnlC};font-weight:600;">${pnlS}</td>
+            <td style="padding:6px 8px;font-family:monospace;text-align:right;color:${pnlC};font-weight:600;">${pctS}</td>
+        </tr>`;
+    }).join('');
+
+    const body = document.getElementById('techmo-table-body');
+    body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border-color);">
+            <th style="text-align:left;padding:5px 8px;font-family:monospace;">#</th>
+            <th style="text-align:left;padding:5px 8px;font-family:monospace;">Ticker</th>
+            <th style="text-align:left;padding:5px 8px;font-family:monospace;">Cluster</th>
+            <th style="text-align:right;padding:5px 8px;font-family:monospace;">Shares</th>
+            <th style="text-align:right;padding:5px 8px;font-family:monospace;">Entry $</th>
+            <th style="text-align:right;padding:5px 8px;font-family:monospace;">Now $</th>
+            <th style="text-align:right;padding:5px 8px;font-family:monospace;">Cost</th>
+            <th style="text-align:right;padding:5px 8px;font-family:monospace;">P&L $</th>
+            <th style="text-align:right;padding:5px 8px;font-family:monospace;">P&L %</th>
+        </tr></thead><tbody>${rows}</tbody>
+    </table>`;
 }
 
 let _mom20TrackerSortDir = {return: 'desc', rank: 'asc'};

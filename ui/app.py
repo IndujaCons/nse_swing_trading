@@ -3854,6 +3854,83 @@ def api_mom20_chart(user_id):
     })
 
 
+# ── TechMo portfolio tracker ──────────────────────────────────────────────────
+
+TECHMO_FILE = os.path.join(DATA_STORE_PATH, "techmo_portfolio.json")
+
+@app.route("/api/techmo/performance", methods=["GET"])
+def api_techmo_performance():
+    """Live P&L for TechMo portfolio — fetches USD prices via yfinance."""
+    import yfinance as yf
+    try:
+        with open(TECHMO_FILE) as f:
+            port = json.load(f)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+    positions = port.get("positions", [])
+    tickers   = [p["ticker"] for p in positions]
+    yf_syms   = tickers  # US stocks, no suffix
+
+    prices = {}
+    try:
+        raw = yf.download(yf_syms, period="2d", progress=False,
+                          auto_adjust=True, group_by="ticker", threads=True)
+        for t in tickers:
+            try:
+                s = (raw[t]["Close"] if len(yf_syms) > 1 else raw["Close"]).dropna()
+                if not s.empty:
+                    prices[t] = round(float(s.iloc[-1]), 2)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    holdings = []
+    total_cost    = 0.0
+    total_current = 0.0
+    for p in positions:
+        t      = p["ticker"]
+        shares = p["shares"]
+        ep     = p["entry_price"]
+        cost   = round(shares * ep, 2)
+        now_px = prices.get(t, ep)
+        value  = round(shares * now_px, 2)
+        pnl    = round(value - cost, 2)
+        pnl_pct = round((now_px / ep - 1) * 100, 2) if ep else 0
+        total_cost    += cost
+        total_current += value
+        holdings.append({
+            "ticker":      t,
+            "cluster":     p.get("cluster", ""),
+            "rank":        p.get("rank"),
+            "shares":      shares,
+            "entry_price": ep,
+            "now_price":   now_px,
+            "cost":        cost,
+            "value":       value,
+            "pnl":         pnl,
+            "pnl_pct":     pnl_pct,
+            "has_price":   t in prices,
+        })
+
+    holdings.sort(key=lambda h: h["rank"] or 99)
+    total_pnl     = round(total_current - total_cost, 2)
+    total_pnl_pct = round(total_pnl / total_cost * 100, 2) if total_cost else 0
+
+    return jsonify({
+        "success":       True,
+        "universe":      port.get("universe", "TechMo"),
+        "entry_date":    port.get("entry_date", ""),
+        "next_rebalance": port.get("next_rebalance", ""),
+        "holdings":      holdings,
+        "total_cost":    round(total_cost, 2),
+        "total_current": round(total_current, 2),
+        "total_pnl":     total_pnl,
+        "total_pnl_pct": total_pnl_pct,
+    })
+
+
 # ── ETF positions (per user, manual entry) ────────────────────────────────────
 
 @app.route("/api/portfolio-users/<user_id>/etf-positions", methods=["GET"])
