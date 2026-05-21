@@ -7857,17 +7857,20 @@ async function loadUsers() {
         const d = await r.json();
         if (d.success) _allUsers = d.users || [];
     } catch(e) { _allUsers = []; }
-    _populateUserDropdown('mom20-user-select',   _mom20SelectedUser?.id);
-    _populateUserDropdown('etf-user-select',     _etfSelectedUser?.id);
-    _populateUserDropdown('techmo-user-select',  _techmoSelectedUser?.id);
+    _populateUserDropdown('mom20-user-select',   _mom20SelectedUser?.id,  'mom20');
+    _populateUserDropdown('etf-user-select',     _etfSelectedUser?.id,    'etf');
+    _populateUserDropdown('techmo-user-select',  _techmoSelectedUser?.id, 'techmo');
 }
 
-function _populateUserDropdown(selectId, selectedId) {
+function _populateUserDropdown(selectId, selectedId, strategyFilter) {
     const sel = document.getElementById(selectId);
     if (!sel) return;
     const prev = selectedId || sel.value;
     sel.innerHTML = '<option value="">— Select User —</option>';
-    _allUsers.forEach(u => {
+    const users = strategyFilter
+        ? _allUsers.filter(u => u.strategies?.[strategyFilter]?.active)
+        : _allUsers;
+    users.forEach(u => {
         const opt = document.createElement('option');
         opt.value = u.id; opt.textContent = u.name;
         if (u.id === prev) opt.selected = true;
@@ -7877,33 +7880,35 @@ function _populateUserDropdown(selectId, selectedId) {
 
 function openAddUserModal() {
     document.getElementById('add-user-modal').classList.add('open');
-    document.getElementById('aum-name').value  = '';
-    document.getElementById('aum-mom20').value = '';
-    document.getElementById('aum-etf').value   = '';
+    document.getElementById('aum-name').value   = '';
+    document.getElementById('aum-mom20').value  = '';
+    document.getElementById('aum-etf').value    = '';
+    document.getElementById('aum-techmo').value = '';
     setTimeout(() => document.getElementById('aum-name').focus(), 100);
 }
 function closeAddUserModal() {
     document.getElementById('add-user-modal').classList.remove('open');
 }
 async function submitAddUser() {
-    const name  = document.getElementById('aum-name').value.trim();
-    const mom20 = parseInt(document.getElementById('aum-mom20').value) || 0;
-    const etf   = parseInt(document.getElementById('aum-etf').value)   || 0;
+    const name   = document.getElementById('aum-name').value.trim();
+    const mom20  = parseInt(document.getElementById('aum-mom20').value)  || 0;
+    const etf    = parseInt(document.getElementById('aum-etf').value)    || 0;
+    const techmo = parseFloat(document.getElementById('aum-techmo').value) || 0;
     if (!name) { alert('Name is required'); return; }
     const btn = document.getElementById('aum-submit-btn');
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
         const r = await fetch('/api/portfolio-users', {
             method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({name, mom20_capital: mom20, etf_capital: etf})
+            body: JSON.stringify({name, mom20_capital: mom20, etf_capital: etf, techmo_capital: techmo})
         });
         const d = await r.json();
         if (!d.success) { alert(d.error || 'Failed'); return; }
         // Add to local list and repopulate with new user pre-selected
         _allUsers.push(d.user);
-        _populateUserDropdown('mom20-user-select',  d.user.id);
-        _populateUserDropdown('etf-user-select',    d.user.id);
-        _populateUserDropdown('techmo-user-select', d.user.id);
+        _populateUserDropdown('mom20-user-select',  d.user.id,  'mom20');
+        _populateUserDropdown('etf-user-select',    d.user.id,  'etf');
+        _populateUserDropdown('techmo-user-select', d.user.id,  'techmo');
         closeAddUserModal();
         mom20OnUserChange(); etfOnUserChange(); techmoOnUserChange();
     } finally { btn.disabled = false; btn.textContent = 'Add User'; }
@@ -7925,12 +7930,12 @@ async function deleteSelectedUser(context) {
         const d = await r.json();
         if (!d.success) { alert(d.error || 'Delete failed'); return; }
         _allUsers = _allUsers.filter(u => u.id !== user.id);
-        if (context === 'mom20')  { _mom20SelectedUser  = null; }
+        if (context === 'mom20')       { _mom20SelectedUser  = null; }
         else if (context === 'etf')    { _etfSelectedUser    = null; }
         else                           { _techmoSelectedUser = null; }
-        _populateUserDropdown('mom20-user-select',  null);
-        _populateUserDropdown('etf-user-select',    null);
-        _populateUserDropdown('techmo-user-select', null);
+        _populateUserDropdown('mom20-user-select',  null, 'mom20');
+        _populateUserDropdown('etf-user-select',    null, 'etf');
+        _populateUserDropdown('techmo-user-select', null, 'techmo');
         mom20OnUserChange(); etfOnUserChange(); techmoOnUserChange();
     } catch(e) { alert('Error: ' + e); }
 }
@@ -9815,6 +9820,8 @@ document.addEventListener('click', function(e) {
         <input id="aum-mom20" type="number" step="100000" placeholder="e.g. 1000000">
         <label>ETF CAPITAL (₹)</label>
         <input id="aum-etf" type="number" step="100000" placeholder="e.g. 200000">
+        <label>TECHMO CAPITAL ($)</label>
+        <input id="aum-techmo" type="number" step="500" placeholder="e.g. 2959">
         <div style="display:flex;gap:10px;margin-top:6px;">
             <button id="aum-submit-btn" onclick="submitAddUser()"
                 style="flex:1;padding:9px;font-size:13px;font-weight:700;background:var(--green);color:white;border:none;border-radius:6px;cursor:pointer;">
