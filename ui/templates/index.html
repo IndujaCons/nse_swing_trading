@@ -1921,6 +1921,18 @@
                     </div>
                 </div>
 
+                <!-- TechMo momentum ranking -->
+                <div class="panel" style="margin-top:4px;">
+                    <div class="panel-header">
+                        <span class="panel-title" style="color:#60a5fa;">TechMo — Nasdaq-100 + AI Universe Momentum (Top 40)</span>
+                        <span id="ls-techmo-status" style="font-size:10px;color:var(--text-muted);margin-left:8px;"></span>
+                        <button onclick="techmoScanLoad(true)" style="margin-left:auto;padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">↺ Refresh</button>
+                    </div>
+                    <div class="panel-body" id="ls-techmo-panel" style="padding:0;">
+                        <div class="empty-state">Click Refresh to scan</div>
+                    </div>
+                </div>
+
                 </div><!-- end ls-signals-left -->
 
                 <!-- Right: Chart panel (35%) -->
@@ -4381,6 +4393,71 @@
                     </tr></thead>
                     <tbody>${rows}</tbody>
                 </table>`;
+        }
+
+        // ── TechMo Live Scanner ───────────────────────────────────────────────
+        async function techmoScanLoad(force=false) {
+            const status = document.getElementById('ls-techmo-status');
+            const body   = document.getElementById('ls-techmo-panel');
+            if (status) status.textContent = 'Scanning…';
+            if (body)   body.innerHTML = '<div class="empty-state">Fetching US prices… (may take 15–20s)</div>';
+            try {
+                const r = await fetch('/api/techmo/scan' + (force ? '?refresh=1' : ''));
+                const d = await r.json();
+                if (!d.success) throw new Error(d.error || 'failed');
+                techmoScanRender(d);
+                if (status) status.textContent = d.scanned_at + ' | ' + d.universe + ' stocks';
+            } catch(e) {
+                if (body)   body.innerHTML = `<div class="empty-state" style="color:#ef5350;">Error: ${e.message}</div>`;
+                if (status) status.textContent = '';
+            }
+        }
+
+        function techmoScanRender(d) {
+            const body = document.getElementById('ls-techmo-panel');
+            if (!body) return;
+            const CLUSTER_COLORS = {
+                'Compute':'#60a5fa','Memory':'#34d399','Semicon Equip':'#a78bfa',
+                'Foundry':'#c084fc','Photonics':'#f59e0b','Networking':'#38bdf8',
+                'Server OEM':'#94a3b8','Neocloud':'#fb923c','Power/Cool':'#4ade80',
+                'AI Energy':'#facc15','Power Elec':'#f472b6','Robotics':'#e879f9',
+                'Defense':'#f87171','Space':'#fb923c','Materials':'#a3e635',
+                'Frontier AI':'#818cf8','Consumer Tech':'#94a3b8','Wireless':'#94a3b8',
+                'Retail':'#94a3b8','Enterprise SW':'#94a3b8',
+            };
+            const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+            const col  = (v) => v >= 0 ? '#26a69a' : '#ef5350';
+            const rows = (d.signals || []).map(s => {
+                const isEntry = s.rank <= 12;
+                const isHold  = s.rank > 12 && s.rank <= 20;
+                const bg = isEntry ? 'background:rgba(74,158,255,0.07);' : '';
+                const rankStyle = isEntry ? 'color:#60a5fa;font-weight:700;' : isHold ? 'color:#f59e0b;' : 'color:var(--text-muted);';
+                const cCol = CLUSTER_COLORS[s.cluster] || 'var(--text-muted)';
+                return `<tr class="ticker" data-ticker="${s.ticker}" style="${bg}border-bottom:1px solid var(--border-color);">
+                    <td style="padding:4px 8px;font-family:monospace;${rankStyle}">${s.rank}</td>
+                    <td class="ticker" style="padding:4px 8px;font-family:monospace;font-weight:700;color:var(--green);">${s.ticker}</td>
+                    <td style="padding:4px 8px;font-family:monospace;font-size:10px;color:${cCol};">${s.cluster}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;">$${s.price.toFixed(2)}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${col(s.ret12m)};">${fmt(s.ret12m)}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${col(s.ret3m)};">${fmt(s.ret3m)}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${s.score.toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+            body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+                <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border-color);">
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">#</th>
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">Ticker</th>
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">Cluster</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Price $</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">12M</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">3M</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
+                </tr></thead><tbody>${rows}</tbody>
+            </table>
+            <div style="padding:6px 8px;font-size:10px;color:var(--text-muted);">
+                ■ <span style="color:#60a5fa;">Blue rank</span> = entry zone (rank ≤12) &nbsp;|&nbsp;
+                <span style="color:#f59e0b;">Amber</span> = hold zone (13–20) &nbsp;|&nbsp; grey = monitor
+            </div>`;
         }
 
         async function loadLiveSignalsData() {

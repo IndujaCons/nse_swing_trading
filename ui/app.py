@@ -3854,9 +3854,123 @@ def api_mom20_chart(user_id):
     })
 
 
-# ── TechMo portfolio tracker ──────────────────────────────────────────────────
+# ── TechMo universe + scanner ─────────────────────────────────────────────────
 
 TECHMO_FILE = os.path.join(DATA_STORE_PATH, "techmo_portfolio.json")
+
+# Combined Nasdaq-100 + AI Universe, cluster-mapped
+TECHMO_UNIVERSE = {
+    # Compute Silicon
+    "NVDA":"Compute","AMD":"Compute","AVGO":"Compute","INTC":"Compute",
+    "ARM":"Compute","MRVL":"Compute","SNPS":"Compute",
+    # Memory & Storage
+    "MU":"Memory","WDC":"Memory","SNDK":"Memory","STX":"Memory","NTAP":"Memory",
+    # Semicon Equipment
+    "ASML":"Semicon Equip","LRCX":"Semicon Equip","KLAC":"Semicon Equip",
+    "KEYS":"Semicon Equip","CAMT":"Semicon Equip","AMAT":"Semicon Equip",
+    # Packaging & Foundry
+    "TSM":"Foundry","ASX":"Foundry","AMKR":"Foundry",
+    # Photonics / Optical
+    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics",
+    "NOK":"Photonics","CIEN":"Photonics","AAOI":"Photonics",
+    # Networking
+    "ANET":"Networking","CSCO":"Networking","CRDO":"Networking","APH":"Networking",
+    # Server OEMs
+    "SMCI":"Server OEM","DELL":"Server OEM","HPE":"Server OEM",
+    "JBL":"Server OEM","FLEX":"Server OEM",
+    # AI Neoclouds
+    "CRWV":"Neocloud","NBIS":"Neocloud","IREN":"Neocloud","APLD":"Neocloud",
+    "WULF":"Neocloud","CORZ":"Neocloud","CIFR":"Neocloud",
+    # Power & Cooling
+    "VRT":"Power/Cool","ETN":"Power/Cool","GEV":"Power/Cool",
+    "PWR":"Power/Cool","HUBB":"Power/Cool","MOD":"Power/Cool",
+    # Energy / AI Power
+    "CEG":"AI Energy","VST":"AI Energy","NEE":"AI Energy","SMR":"AI Energy",
+    "OKLO":"AI Energy","EOSE":"AI Energy","EQT":"AI Energy",
+    # Power Electronics
+    "STM":"Power Elec","ADI":"Power Elec","MPWR":"Power Elec",
+    "NVTS":"Power Elec","ON":"Power Elec","TXN":"Power Elec",
+    # Robotics & Autonomy
+    "TSLA":"Robotics","PATH":"Robotics","SYM":"Robotics",
+    "SERV":"Robotics","TER":"Robotics","ISRG":"Robotics",
+    # Defense & Drones
+    "KTOS":"Defense","AVAV":"Defense","ONDS":"Defense","RCAT":"Defense",
+    "OSIS":"Defense","LMT":"Defense","NOC":"Defense",
+    # Space & Satellites
+    "ASTS":"Space","RKLB":"Space","LUNR":"Space","PL":"Space",
+    "BKSY":"Space","IRDM":"Space",
+    # Materials
+    "MP":"Materials","UUUU":"Materials","FCX":"Materials",
+    "AA":"Materials","TECK":"Materials",
+    # Frontier AI Models
+    "MSFT":"Frontier AI","GOOGL":"Frontier AI","META":"Frontier AI","AMZN":"Frontier AI",
+    # QQQ-only additions
+    "AAPL":"Consumer Tech","NFLX":"Consumer Tech","QCOM":"Wireless",
+    "COST":"Retail","ORLY":"Retail","ADP":"Enterprise SW",
+}
+
+_TECHMO_SCAN_CACHE = {"data": None, "ts": 0}
+
+@app.route("/api/techmo/scan", methods=["GET"])
+def api_techmo_scan():
+    """Live momentum ranking of the TechMo universe. 15-min cache."""
+    import yfinance as yf
+    import pandas as pd
+    import time as _t
+    force = request.args.get("refresh", "").lower() in ("1", "true", "yes")
+    if (not force and _TECHMO_SCAN_CACHE["data"]
+            and (_t.time() - _TECHMO_SCAN_CACHE["ts"]) < 900):
+        return jsonify(_TECHMO_SCAN_CACHE["data"])
+
+    tickers = list(TECHMO_UNIVERSE.keys())
+    try:
+        raw = yf.download(tickers, period="14mo", progress=False,
+                          auto_adjust=True, group_by="ticker", threads=True)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+    def get_close(t):
+        try:
+            s = (raw[t]["Close"] if len(tickers) > 1 else raw["Close"]).dropna()
+            return s
+        except Exception:
+            return pd.Series(dtype=float)
+
+    rows = []
+    for t in tickers:
+        s = get_close(t)
+        if len(s) < 60:
+            continue
+        p_now = float(s.iloc[-1])
+        p_12m = float(s.iloc[-253]) if len(s) >= 253 else float(s.iloc[0])
+        p_3m  = float(s.iloc[-63])  if len(s) >= 63  else float(s.iloc[0])
+        rows.append({
+            "ticker":  t,
+            "cluster": TECHMO_UNIVERSE[t],
+            "price":   round(p_now, 2),
+            "ret12m":  round((p_now / p_12m - 1) * 100, 1),
+            "ret3m":   round((p_now / p_3m  - 1) * 100, 1),
+        })
+
+    if not rows:
+        return jsonify({"success": False, "error": "no price data"})
+
+    df = pd.DataFrame(rows)
+    df["z12"]  = (df["ret12m"] - df["ret12m"].mean()) / df["ret12m"].std()
+    df["z3"]   = (df["ret3m"]  - df["ret3m"].mean())  / df["ret3m"].std()
+    df["score"] = (0.5 * df["z12"] + 0.5 * df["z3"]).round(3)
+    df = df.sort_values("score", ascending=False).reset_index(drop=True)
+    df["rank"] = (df.index + 1).astype(int)
+
+    result = {
+        "success":    True,
+        "universe":   len(df),
+        "scanned_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "signals":    df.head(40).to_dict(orient="records"),
+    }
+    _TECHMO_SCAN_CACHE["data"] = result
+    _TECHMO_SCAN_CACHE["ts"]   = _t.time()
+    return jsonify(result)
 
 @app.route("/api/techmo/performance", methods=["GET"])
 def api_techmo_performance():
