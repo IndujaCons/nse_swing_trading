@@ -3931,6 +3931,74 @@ def api_techmo_performance():
     })
 
 
+@app.route("/api/techmo/chart", methods=["GET"])
+def api_techmo_chart():
+    """Daily cumulative return: TechMo portfolio vs QQQ from entry date."""
+    import yfinance as yf
+    import pandas as pd
+    try:
+        with open(TECHMO_FILE) as f:
+            port = json.load(f)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+    positions  = port.get("positions", [])
+    start_date = port.get("entry_date", "2026-05-21")
+    tickers    = [p["ticker"] for p in positions]
+    yf_syms    = tickers + ["QQQ"]
+    total_cost = sum(p["shares"] * p["entry_price"] for p in positions)
+
+    try:
+        raw = yf.download(yf_syms, start=start_date, progress=False,
+                          auto_adjust=True, group_by="ticker", threads=True)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+    def get_close(sym):
+        try:
+            s = (raw[sym]["Close"] if len(yf_syms) > 1 else raw["Close"]).dropna()
+            return s
+        except Exception:
+            return pd.Series(dtype=float)
+
+    qqq_s = get_close("QQQ")
+    ticker_closes = {t: get_close(t) for t in tickers}
+
+    all_dates = qqq_s.index if not qqq_s.empty else pd.DatetimeIndex([])
+    if all_dates.empty:
+        return jsonify({"success": False, "error": "no price data"})
+
+    port_pct, qqq_pct = [], []
+    base_qqq = float(qqq_s.iloc[0]) if not qqq_s.empty else None
+
+    for dt in all_dates:
+        val = 0.0
+        for p in positions:
+            t  = p["ticker"]
+            s  = ticker_closes.get(t)
+            ep = p["entry_price"]
+            if s is not None and dt in s.index:
+                val += p["shares"] * float(s.loc[dt])
+            else:
+                val += p["shares"] * ep
+        port_pct.append(round((val - total_cost) / total_cost * 100, 3))
+        if base_qqq and dt in qqq_s.index:
+            qqq_pct.append(round((float(qqq_s.loc[dt]) / base_qqq - 1) * 100, 3))
+        else:
+            qqq_pct.append(qqq_pct[-1] if qqq_pct else 0)
+
+    dates_out = [d.strftime("%Y-%m-%d") for d in all_dates]
+    return jsonify({
+        "success":      True,
+        "dates":        dates_out,
+        "portfolio":    port_pct,
+        "qqq":          qqq_pct,
+        "start_date":   start_date,
+        "total_return": port_pct[-1] if port_pct else None,
+        "qqq_return":   qqq_pct[-1] if qqq_pct else None,
+    })
+
+
 # ── ETF positions (per user, manual entry) ────────────────────────────────────
 
 @app.route("/api/portfolio-users/<user_id>/etf-positions", methods=["GET"])
