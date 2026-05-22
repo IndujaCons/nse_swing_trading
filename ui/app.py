@@ -3863,19 +3863,19 @@ TECHMO_FILE = os.path.join(DATA_STORE_PATH, "techmo_portfolio.json")
 TECHMO_UNIVERSE = {
     # Compute Silicon
     "NVDA":"Compute","AMD":"Compute","AVGO":"Compute","INTC":"Compute",
-    "ARM":"Compute","MRVL":"Compute","SNPS":"Compute",
+    "ARM":"Compute",
     # Memory & Storage
     "MU":"Memory","WDC":"Memory","SNDK":"Memory","STX":"Memory","NTAP":"Memory",
-    # Semicon Equipment
+    # Semicon Equipment (incl. EDA)
     "ASML":"Semicon Equip","LRCX":"Semicon Equip","KLAC":"Semicon Equip",
-    "KEYS":"Semicon Equip","CAMT":"Semicon Equip","AMAT":"Semicon Equip",
-    # Packaging & Foundry
-    "TSM":"Foundry","ASX":"Foundry","AMKR":"Foundry",
-    # Photonics / Optical
-    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics",
-    "NOK":"Photonics","CIEN":"Photonics","AAOI":"Photonics",
-    # Networking
+    "KEYS":"Semicon Equip","AMAT":"Semicon Equip","SNPS":"Semicon Equip",
+    # Packaging (OSAT)
+    "TSM":"Foundry","ASX":"Packaging","AMKR":"Packaging","CAMT":"Packaging",
+    # Photonics / Optical components
+    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics","AAOI":"Photonics",
+    # Networking & Connectivity
     "ANET":"Networking","CSCO":"Networking","CRDO":"Networking","APH":"Networking",
+    "MRVL":"Networking","NOK":"Networking","CIEN":"Networking",
     # Server OEMs
     "SMCI":"Server OEM","DELL":"Server OEM","HPE":"Server OEM",
     "JBL":"Server OEM","FLEX":"Server OEM",
@@ -3883,11 +3883,11 @@ TECHMO_UNIVERSE = {
     "CRWV":"Neocloud","NBIS":"Neocloud","IREN":"Neocloud","APLD":"Neocloud",
     "WULF":"Neocloud","CORZ":"Neocloud","CIFR":"Neocloud",
     # Power & Cooling
-    "VRT":"Power/Cool","ETN":"Power/Cool","GEV":"Power/Cool",
+    "VRT":"Power/Cool","ETN":"Power/Cool",
     "PWR":"Power/Cool","HUBB":"Power/Cool","MOD":"Power/Cool",
     # Energy / AI Power
     "CEG":"AI Energy","VST":"AI Energy","NEE":"AI Energy","SMR":"AI Energy",
-    "OKLO":"AI Energy","EOSE":"AI Energy","EQT":"AI Energy",
+    "OKLO":"AI Energy","EOSE":"AI Energy","EQT":"AI Energy","GEV":"AI Energy",
     # Power Electronics
     "STM":"Power Elec","ADI":"Power Elec","MPWR":"Power Elec",
     "NVTS":"Power Elec","ON":"Power Elec","TXN":"Power Elec",
