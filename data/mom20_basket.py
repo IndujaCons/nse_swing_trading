@@ -402,22 +402,68 @@ def to_zerodha_json(basket_data: dict) -> str:
     return json.dumps(items, indent=2)
 
 
+def _detect_positions_csv(fieldnames: list) -> bool:
+    """Return True if this looks like a Zerodha holdings/positions export."""
+    cols = {f.strip().lower() for f in (fieldnames or [])}
+    has_action = any(c in cols for c in ("type", "trade_type", "transaction type"))
+    has_instrument = any(c in cols for c in ("instrument", "tradingsymbol", "symbol"))
+    has_avg = any(c in cols for c in ("avg.", "avg. price", "average price"))
+    return has_instrument and has_avg and not has_action
+
+
 def parse_trade_book(csv_content: str) -> list:
     """
-    Parse Zerodha order book / trade book CSV export.
-    Returns list of trade dicts with: ticker, action, qty, price, trade_date
+    Parse Zerodha order book / trade book CSV export, or a holdings/positions
+    snapshot.  Returns list of trade dicts:
+        {ticker, action, qty, price, trade_date}
+
+    Positions/holdings format (no BUY/SELL column):
+        Product, Instrument, Qty., Avg., LTP, P&L, Chg.
+    Each row is treated as a BUY at the average price — useful for seeding
+    an existing portfolio from a Zerodha holdings snapshot.
     """
     trades = []
-    # Zerodha sometimes prepends a title row before the actual header — skip it
     lines = csv_content.splitlines()
-    header_keywords = {"time", "instrument", "tradingsymbol", "type", "qty", "quantity"}
+    # Skip leading title/blank rows to find the real header
+    header_keywords = {"time", "instrument", "tradingsymbol", "type", "qty",
+                       "quantity", "avg.", "product"}
     start = 0
     for i, line in enumerate(lines):
         if any(k in line.lower() for k in header_keywords):
             start = i
             break
     reader = csv.DictReader(io.StringIO("\n".join(lines[start:])))
-    for row in reader:
+    rows = list(reader)
+    if not rows:
+        return trades
+
+    # ── Detect format ────────────────────────────────────────────────────────
+    if _detect_positions_csv(reader.fieldnames):
+        # Holdings / positions snapshot — treat every row as a BUY
+        today = date.today().isoformat()
+        for row in rows:
+            ticker = (row.get("Instrument") or row.get("Symbol") or "").strip().upper()
+            qty_raw   = row.get("Qty.") or row.get("Quantity") or "0"
+            price_raw = row.get("Avg.") or row.get("Avg. price") or row.get("Average Price") or "0"
+            qty_str = str(qty_raw).split("/")[0].strip()
+            try:
+                qty   = int(float(qty_str))
+                price = float(str(price_raw).replace(",", ""))
+            except (ValueError, TypeError):
+                continue
+            if not ticker or qty <= 0 or price <= 0:
+                continue
+            trades.append({
+                "ticker":     ticker,
+                "action":     "BUY",
+                "qty":        qty,
+                "price":      round(price, 2),
+                "trade_date": today,
+            })
+        return trades
+
+    # ── Trade book / order book format ──────────────────────────────────────
+    for row in rows:
         # Zerodha order book: Instrument, Type, Qty. (e.g. "35/35"), Avg. price, Time, Status
         # Zerodha trade book: tradingsymbol, trade_type, quantity, price, trade_date
         ticker = (row.get("Instrument") or row.get("tradingsymbol") or
