@@ -7978,12 +7978,25 @@ function mom20OnUserChange() {
     if (histBtn) histBtn.style.display = 'inline';
     _mom20HistoryLoaded = false;
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
-    // Fire the four loaders in parallel (they don't await each other and
-    // run concurrently in the browser).
+    // Clear stale previous-user data immediately before new user's data arrives
+    _mom20ResetTrackerDisplay();
+    // Fire the four loaders in parallel
     mom20EnsureSectorMap();
     mom20LoadBasket();
     mom20LoadPerformance();
     mom20LoadSectorRanking();
+}
+
+function _mom20ResetTrackerDisplay() {
+    const ids = ['mom20-tracker-returns','mom20-tracker-since','mom20-tracker-invested',
+                 'mom20-tracker-current','mom20-tracker-realized','mom20-tracker-unrealized'];
+    ids.forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = '—'; el.style.color = ''; } });
+    const tbody = document.getElementById('mom20-tracker-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">Loading…</td></tr>';
+    const chartWrap = document.getElementById('mom20-perf-chart-wrap');
+    if (chartWrap) chartWrap.style.display = 'none';
+    if (_mom20PerfChart) { _mom20PerfChart.destroy(); _mom20PerfChart = null; }
+    _mom20TrackerHoldings = [];
 }
 
 const SECTOR_LABEL = {
