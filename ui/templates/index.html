@@ -8873,7 +8873,7 @@ function _renderMom20Basket(d) {
                 onclick="openTrackerChart('${e.ticker}','1y');document.getElementById('mom20-tracker-chart-panel').scrollIntoView({behavior:'smooth',block:'nearest'})"
                 >${e.ticker}</span> <span style="font-size:9px;color:#ef5350;font-weight:600;">β${e.beta}</span></td>
             <td style="color:var(--text-muted);font-size:11px">${mom20SectorLabel(e.ticker)}</td>
-            <td style="color:#ef5350;">#${e.rank} OV</td>
+            <td style="color:#ef5350;">#${e.rank} <span style="font-size:9px;">β-OV</span></td>
             <td>${fmtP(e.price)}</td>
             <td style="font-weight:700;color:#ef5350;">${e.qty}</td>
             <td>${fmt(e.capital_allocated)}</td>

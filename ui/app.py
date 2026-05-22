@@ -2508,13 +2508,14 @@ def api_mom20_basket_preview(user_id):
                                   etf_prices=_etf_prices,
                                   mom20_overflow=mom20_overflow)
 
-    # Append overflow candidates (rank ≤ 15, β > 1.2) as optional entries
+    # Append overflow candidates (combined unfiltered rank ≤ 15 = buffer_in, β > 1.2) as optional entries
     capital    = user.get("strategies", {}).get("mom20", {}).get("capital", 0) or 0
     per_slot   = capital / 20 if capital else 0
     held_set   = {h["ticker"] for h in portfolio.get("basket", [])}
     overflow_entries = []
     for ov in mom20_overflow:
-        if ov["rank"] > 15:
+        combined_rank = unfiltered_ranks.get(ov["ticker"], 999)
+        if combined_rank > 15:   # same buffer_in as main basket
             continue
         if ov["ticker"] in held_set:
             continue
@@ -2522,7 +2523,8 @@ def api_mom20_basket_preview(user_id):
         qty = int(per_slot / px) if px > 0 else 0
         overflow_entries.append({
             "ticker":           ov["ticker"],
-            "rank":             ov["rank"],
+            "rank":             combined_rank,   # combined unfiltered rank
+            "ov_rank":          ov["rank"],       # rank within overflow list
             "price":            round(px, 2),
             "qty":              qty,
             "capital_allocated": round(qty * px, 0),
