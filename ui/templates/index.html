@@ -2335,16 +2335,26 @@
                     </div>
 
                     <!-- Exits -->
-                    <div class="basket-section-title">EXITS (<span id="mom20-exits-count-lbl">0</span>)</div>
+                    <div class="basket-section-title" style="display:flex;align-items:center;gap:8px;">
+                        EXITS (<span id="mom20-exits-count-lbl">0</span>)
+                        <label style="font-size:10px;font-weight:400;color:var(--text-muted);cursor:pointer;margin-left:auto;">
+                            <input type="checkbox" id="mom20-exits-select-all" onchange="mom20ToggleAllExits(this.checked)" style="margin-right:3px;">all
+                        </label>
+                    </div>
                     <table class="basket-table" style="margin-bottom:14px;font-family:monospace;">
-                        <thead><tr><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Qty</th><th>Price₹</th><th>Reason</th></tr></thead>
+                        <thead><tr><th style="width:28px;"></th><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Qty</th><th>Price₹</th><th>Reason</th></tr></thead>
                         <tbody id="mom20-basket-exits-body"></tbody>
                     </table>
 
                     <!-- Entries -->
-                    <div class="basket-section-title">ENTRIES (<span id="mom20-entries-count-lbl">0</span>)</div>
+                    <div class="basket-section-title" style="display:flex;align-items:center;gap:8px;">
+                        ENTRIES (<span id="mom20-entries-count-lbl">0</span>)
+                        <label style="font-size:10px;font-weight:400;color:var(--text-muted);cursor:pointer;margin-left:auto;">
+                            <input type="checkbox" id="mom20-entries-select-all" onchange="mom20ToggleAllEntries(this.checked)" style="margin-right:3px;">all
+                        </label>
+                    </div>
                     <table class="basket-table" style="margin-bottom:14px;font-family:monospace;">
-                        <thead><tr><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Price₹</th><th>Qty</th><th>Capital</th><th>Score</th></tr></thead>
+                        <thead><tr><th style="width:28px;"></th><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Price₹</th><th>Qty</th><th>Capital</th><th>Score</th></tr></thead>
                         <tbody id="mom20-basket-entries-body"></tbody>
                     </table>
 
@@ -8809,8 +8819,11 @@ function _renderMom20Basket(d) {
         : mom20SectorLabel(e.ticker);
 
     // Exits
+    const chkExit = (ticker) => `<input type="checkbox" class="mom20-exit-chk" data-ticker="${ticker}" checked
+        style="accent-color:#dc3545;cursor:pointer;" onchange="mom20SyncSelectAll()">`;
     document.getElementById('mom20-basket-exits-body').innerHTML = exits.length
         ? exits.map((e,i) => `<tr>
+            <td style="text-align:center;">${chkExit(e.ticker)}</td>
             <td>${i+1}</td>
             <td>${tickerLink(e.ticker,'var(--red)')}</td>
             <td style="color:var(--text-muted);font-size:11px">${sectorOf(e)}</td>
@@ -8818,12 +8831,15 @@ function _renderMom20Basket(d) {
             <td>${e.qty}</td>
             <td>${fmtP(e.current_price)}</td>
             <td style="font-size:10px;color:var(--text-muted)">${e.reason}</td></tr>`).join('')
-        : '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>';
+        : '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>';
 
     // Entries
     const rankCell = r => (typeof r === 'string' && r.startsWith('ETF')) ? r : `#${r}`;
+    const chkEntry = (ticker) => `<input type="checkbox" class="mom20-entry-chk" data-ticker="${ticker}" checked
+        style="accent-color:var(--green);cursor:pointer;" onchange="mom20SyncSelectAll()">`;
     document.getElementById('mom20-basket-entries-body').innerHTML = entries.length
         ? entries.map((e,i) => `<tr>
+            <td style="text-align:center;">${chkEntry(e.ticker)}</td>
             <td>${i+1}</td>
             <td>${tickerLink(e.ticker,'var(--green)')}</td>
             <td style="color:var(--text-muted);font-size:11px">${sectorOf(e)}</td>
@@ -8832,7 +8848,10 @@ function _renderMom20Basket(d) {
             <td style="font-weight:700">${e.qty}</td>
             <td>${fmt(e.capital_allocated)}</td>
             <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td></tr>`).join('')
-        : '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
+        : '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
+
+    // Sync "all" checkboxes
+    mom20SyncSelectAll();
 
 }
 
@@ -8962,11 +8981,70 @@ async function mom20SeedClear() {
     await mom20LoadBasket();
 }
 
+function mom20SyncSelectAll() {
+    const exitChks  = [...document.querySelectorAll('.mom20-exit-chk')];
+    const entryChks = [...document.querySelectorAll('.mom20-entry-chk')];
+    const saExit  = document.getElementById('mom20-exits-select-all');
+    const saEntry = document.getElementById('mom20-entries-select-all');
+    if (saExit)  saExit.checked  = exitChks.length  > 0 && exitChks.every(c => c.checked);
+    if (saEntry) saEntry.checked = entryChks.length > 0 && entryChks.every(c => c.checked);
+}
+function mom20ToggleAllExits(checked) {
+    document.querySelectorAll('.mom20-exit-chk').forEach(c => c.checked = checked);
+}
+function mom20ToggleAllEntries(checked) {
+    document.querySelectorAll('.mom20-entry-chk').forEach(c => c.checked = checked);
+}
+
+function _basketItem(ticker, txType, qty, weight) {
+    return {
+        id: 0,
+        instrument: {
+            tradingsymbol: ticker, type: 'EQ', symbol: ticker,
+            segment: 'NSE', exchange: 'NSE', tickSize: 0.05, lotSize: 1,
+            company: ticker, tradable: true, precision: 2,
+            fullName: ticker, niceName: ticker, niceNameHTML: ticker,
+            stockWidget: true, exchangeToken: 0, instrumentToken: 0,
+            isin: '', related: [], underlying: null,
+            auctionNumber: null, isEquity: true, isWeekly: false,
+        },
+        weight,
+        params: {
+            transactionType: txType, product: 'CNC', orderType: 'MARKET',
+            validity: 'DAY', validityTTL: 1, quantity: qty, price: 0,
+            triggerPrice: 0, disclosedQuantity: 0, lastPrice: 0,
+            variety: 'regular', tags: [],
+        }
+    };
+}
+
 async function mom20DownloadBasket() {
     const uid = _mom20SelectedUser?.id;
     if (!uid) { alert('Select a user first'); return; }
-    const cap = _mom20ParseCapitalInput();
-    window.location.href = `/api/portfolio-users/${uid}/mom20-basket/download?capital=${cap}`;
+    if (!_mom20BasketData) { alert('Load basket first'); return; }
+
+    // Collect checked tickers
+    const checkedExits  = new Set([...document.querySelectorAll('.mom20-exit-chk:checked')].map(c => c.dataset.ticker));
+    const checkedEntries = new Set([...document.querySelectorAll('.mom20-entry-chk:checked')].map(c => c.dataset.ticker));
+
+    const items = [];
+    let weight = 0;
+    for (const e of (_mom20BasketData.exits || [])) {
+        if (checkedExits.has(e.ticker) && e.qty > 0)
+            items.push(_basketItem(e.ticker, 'SELL', e.qty, weight++));
+    }
+    for (const e of (_mom20BasketData.entries || [])) {
+        if (checkedEntries.has(e.ticker) && e.qty > 0)
+            items.push(_basketItem(e.ticker, 'BUY', e.qty, weight++));
+    }
+    if (items.length === 0) { alert('No items selected — tick at least one checkbox'); return; }
+
+    const fname = `mom20_${new Date().toISOString().slice(0,10)}_${_mom20SelectedUser.name.split(' ')[0].toLowerCase()}.json`;
+    const blob = new Blob([JSON.stringify(items, null, 2)], {type: 'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = fname; a.click();
+    URL.revokeObjectURL(url);
 }
 
 function mom20DownloadSIPBasket() {
