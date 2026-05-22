@@ -8818,7 +8818,8 @@ function _renderMom20Basket(d) {
     const entries = d.entries || [];
 
     document.getElementById('mom20-exits-count-lbl').textContent   = exits.length;
-    document.getElementById('mom20-entries-count-lbl').textContent = entries.length;
+    const ovCount = (d.overflow_entries || []).length;
+    document.getElementById('mom20-entries-count-lbl').textContent = entries.length + (ovCount ? ` + ${ovCount} overflow` : '');
 
     const tickerLink = (ticker, color) =>
         `<span style="font-weight:700;color:${color};cursor:pointer;text-decoration:underline dotted;"
@@ -8848,10 +8849,11 @@ function _renderMom20Basket(d) {
 
     // Entries
     const rankCell = r => (typeof r === 'string' && r.startsWith('ETF')) ? r : `#${r}`;
-    const chkEntry = (ticker) => `<input type="checkbox" class="mom20-entry-chk" data-ticker="${ticker}" checked
-        style="accent-color:var(--green);cursor:pointer;" onchange="mom20SyncSelectAll()">`;
-    document.getElementById('mom20-basket-entries-body').innerHTML = entries.length
-        ? entries.map((e,i) => `<tr>
+    const chkEntry = (ticker, checked=true, cls='mom20-entry-chk') =>
+        `<input type="checkbox" class="${cls}" data-ticker="${ticker}" ${checked ? 'checked' : ''}
+         style="accent-color:${checked ? 'var(--green)' : '#ef5350'};cursor:pointer;" onchange="mom20SyncSelectAll()">`;
+
+    const entryRows = entries.map((e,i) => `<tr>
             <td style="text-align:center;">${chkEntry(e.ticker)}</td>
             <td>${i+1}</td>
             <td>${tickerLink(e.ticker,'var(--green)')}</td>
@@ -8860,8 +8862,27 @@ function _renderMom20Basket(d) {
             <td>${fmtP(e.price)}</td>
             <td style="font-weight:700">${e.qty}</td>
             <td>${fmt(e.capital_allocated)}</td>
-            <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td></tr>`).join('')
-        : '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
+            <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td></tr>`);
+
+    // Overflow entries (β > 1.2, rank ≤ 15) — unchecked, red
+    const overflow = d.overflow_entries || [];
+    const ovRows = overflow.map((e,i) => `<tr style="background:rgba(239,83,80,0.05);">
+            <td style="text-align:center;">${chkEntry(e.ticker, false, 'mom20-entry-chk mom20-overflow-chk')}</td>
+            <td style="color:#ef5350;">${entries.length + i + 1}</td>
+            <td><span style="font-weight:700;color:#ef5350;cursor:pointer;text-decoration:underline dotted;"
+                onclick="openTrackerChart('${e.ticker}','1y');document.getElementById('mom20-tracker-chart-panel').scrollIntoView({behavior:'smooth',block:'nearest'})"
+                >${e.ticker}</span> <span style="font-size:9px;color:#ef5350;font-weight:600;">β${e.beta}</span></td>
+            <td style="color:var(--text-muted);font-size:11px">${mom20SectorLabel(e.ticker)}</td>
+            <td style="color:#ef5350;">#${e.rank} OV</td>
+            <td>${fmtP(e.price)}</td>
+            <td style="font-weight:700;color:#ef5350;">${e.qty}</td>
+            <td>${fmt(e.capital_allocated)}</td>
+            <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td></tr>`);
+
+    document.getElementById('mom20-basket-entries-body').innerHTML =
+        (entryRows.length || ovRows.length)
+            ? [...entryRows, ...ovRows].join('')
+            : '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
 
     // Sync "all" checkboxes
     mom20SyncSelectAll();
@@ -9046,7 +9067,9 @@ async function mom20DownloadBasket() {
         if (checkedExits.has(e.ticker) && e.qty > 0)
             items.push(_basketItem(e.ticker, 'SELL', e.qty, weight++));
     }
-    for (const e of (_mom20BasketData.entries || [])) {
+    // Regular entries + overflow entries (both use mom20-entry-chk)
+    const allEntries = [...(_mom20BasketData.entries || []), ...(_mom20BasketData.overflow_entries || [])];
+    for (const e of allEntries) {
         if (checkedEntries.has(e.ticker) && e.qty > 0)
             items.push(_basketItem(e.ticker, 'BUY', e.qty, weight++));
     }

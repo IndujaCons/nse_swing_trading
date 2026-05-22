@@ -2507,6 +2507,32 @@ def api_mom20_basket_preview(user_id):
                                   top5_sectors=_top5,
                                   etf_prices=_etf_prices,
                                   mom20_overflow=mom20_overflow)
+
+    # Append overflow candidates (rank ≤ 15, β > 1.2) as optional entries
+    capital    = user.get("strategies", {}).get("mom20", {}).get("capital", 0) or 0
+    per_slot   = capital / 20 if capital else 0
+    held_set   = {h["ticker"] for h in portfolio.get("basket", [])}
+    overflow_entries = []
+    for ov in mom20_overflow:
+        if ov["rank"] > 15:
+            continue
+        if ov["ticker"] in held_set:
+            continue
+        px  = all_prices.get(ov["ticker"], ov.get("price", 0)) or 0
+        qty = int(per_slot / px) if px > 0 else 0
+        overflow_entries.append({
+            "ticker":           ov["ticker"],
+            "rank":             ov["rank"],
+            "price":            round(px, 2),
+            "qty":              qty,
+            "capital_allocated": round(qty * px, 0),
+            "score":            ov.get("momentum_score", 0),
+            "beta":             ov.get("beta", 0),
+            "ret_12m":          ov.get("ret_12m", 0),
+            "ret_3m":           ov.get("ret_3m", 0),
+            "is_overflow":      True,
+        })
+    basket_data["overflow_entries"] = overflow_entries
     return jsonify({"success": True, **basket_data})
 
 
