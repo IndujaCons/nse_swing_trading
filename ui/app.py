@@ -3933,6 +3933,9 @@ TECHMO_UNIVERSE = {
     "AA":"Materials","TECK":"Materials",
     # Frontier AI Models
     "MSFT":"Frontier AI","GOOGL":"Frontier AI","META":"Frontier AI","AMZN":"Frontier AI",
+    # Quantum Computing
+    "IONQ":"Quantum","RGTI":"Quantum","QBTS":"Quantum",
+    "QUBT":"Quantum","XNDU":"Quantum","INFQ":"Quantum",
     # QQQ-only additions
     "AAPL":"Consumer Tech","NFLX":"Consumer Tech","QCOM":"Wireless",
     "COST":"Retail","ORLY":"Retail","ADP":"Enterprise SW",
