@@ -3915,7 +3915,7 @@ TECHMO_UNIVERSE = {
     "PWR":"Power/Cool","HUBB":"Power/Cool","MOD":"Power/Cool",
     # Energy / AI Power
     "CEG":"AI Energy","VST":"AI Energy","NEE":"AI Energy","SMR":"AI Energy",
-    "OKLO":"AI Energy","EOSE":"AI Energy","EQT":"AI Energy","GEV":"AI Energy",
+    "OKLO":"AI Energy","EOSE":"AI Energy","EQT":"AI Energy","GEV":"AI Energy","BE":"AI Energy",
     # Power Electronics
     "STM":"Power Elec","ADI":"Power Elec","MPWR":"Power Elec",
     "NVTS":"Power Elec","ON":"Power Elec","TXN":"Power Elec",
