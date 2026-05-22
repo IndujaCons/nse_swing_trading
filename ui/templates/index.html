@@ -2901,7 +2901,7 @@
                 </div>
 
                 <div style="margin-top:10px;font-size:10px;color:var(--text-muted);">
-                    Exit rule: sell if combined rank &gt; 20 on June 1 rebalance &nbsp;|&nbsp; IBKR fractional shares
+                    Entry: rank ≤ 10 (buffer in) &nbsp;|&nbsp; Hold: rank 11–24 &nbsp;|&nbsp; Exit: rank &gt; 24 (buffer out) &nbsp;|&nbsp; Max 2 per cluster &nbsp;|&nbsp; Rebalance: June 1 &nbsp;|&nbsp; IBKR fractional shares
                 </div>
             </div><!-- end #techmo-panels -->
 
@@ -4453,8 +4453,8 @@
             const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
             const col  = (v) => v >= 0 ? '#26a69a' : '#ef5350';
             const rows = (d.signals || []).map(s => {
-                const isEntry = s.rank <= 12;
-                const isHold  = s.rank > 12 && s.rank <= 20;
+                const isEntry = s.rank <= 10;
+                const isHold  = s.rank > 10 && s.rank <= 24;
                 const bg = isEntry ? 'background:rgba(74,158,255,0.07);' : '';
                 const rankStyle = isEntry ? 'color:#60a5fa;font-weight:700;' : isHold ? 'color:#f59e0b;' : 'color:var(--text-muted);';
                 const cCol = CLUSTER_COLORS[s.cluster] || 'var(--text-muted)';
@@ -4480,8 +4480,8 @@
                 </tr></thead><tbody>${rows}</tbody>
             </table>
             <div style="padding:6px 8px;font-size:10px;color:var(--text-muted);">
-                ■ <span style="color:#60a5fa;">Blue rank</span> = entry zone (rank ≤12) &nbsp;|&nbsp;
-                <span style="color:#f59e0b;">Amber</span> = hold zone (13–20) &nbsp;|&nbsp; grey = monitor
+                ■ <span style="color:#60a5fa;">Blue rank</span> = entry zone (rank ≤10) &nbsp;|&nbsp;
+                <span style="color:#f59e0b;">Amber</span> = hold zone (11–24) &nbsp;|&nbsp; grey = exit zone (&gt;24)
             </div>`;
         }
 
