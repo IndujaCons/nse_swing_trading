@@ -3900,7 +3900,7 @@ TECHMO_UNIVERSE = {
     # Packaging (OSAT)
     "TSM":"Foundry","ASX":"Packaging","AMKR":"Packaging","CAMT":"Packaging",
     # Photonics / Optical components
-    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics",
+    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics","AAOI":"Photonics",
     # Networking & Connectivity
     "ANET":"Networking","CSCO":"Networking","CRDO":"Networking","APH":"Networking",
     "MRVL":"Networking","NOK":"Networking","CIEN":"Networking",
@@ -3909,7 +3909,7 @@ TECHMO_UNIVERSE = {
     "JBL":"Server OEM","FLEX":"Server OEM",
     # AI Neoclouds
     "CRWV":"Neocloud","NBIS":"Neocloud","IREN":"Neocloud","APLD":"Neocloud",
-    "WULF":"Neocloud","CORZ":"Neocloud","ORCL":"Neocloud",
+    "WULF":"Neocloud","CORZ":"Neocloud","CIFR":"Neocloud","ORCL":"Neocloud",
     # Power & Cooling
     "VRT":"Power/Cool","ETN":"Power/Cool",
     "PWR":"Power/Cool","HUBB":"Power/Cool","MOD":"Power/Cool",
