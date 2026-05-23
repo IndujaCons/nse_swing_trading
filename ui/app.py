@@ -3914,7 +3914,7 @@ TECHMO_UNIVERSE = {
     "VRT":"Power/Cool","ETN":"Power/Cool",
     "PWR":"Power/Cool","HUBB":"Power/Cool","MOD":"Power/Cool",
     # Energy / AI Power
-    "CEG":"AI Energy","VST":"AI Energy","NEE":"AI Energy","SMR":"AI Energy",
+    "CEG":"AI Energy","VST":"AI Energy","NEE":"AI Energy",
     "OKLO":"AI Energy","EQT":"AI Energy","GEV":"AI Energy","BE":"AI Energy","TE":"AI Energy",
     # Power Electronics
     "STM":"Power Elec","ADI":"Power Elec","MPWR":"Power Elec",
@@ -3923,7 +3923,7 @@ TECHMO_UNIVERSE = {
     "TSLA":"Robotics","PATH":"Robotics","SYM":"Robotics",
     "TER":"Robotics","ISRG":"Robotics",
     # Defense & Drones
-    "KTOS":"Defense","AVAV":"Defense","OSIS":"Defense","LMT":"Defense","NOC":"Defense",
+    "KTOS":"Defense","AVAV":"Defense","LMT":"Defense","NOC":"Defense",
     # Space & Satellites
     "ASTS":"Space","RKLB":"Space","LUNR":"Space","PL":"Space","IRDM":"Space",
     # Materials
