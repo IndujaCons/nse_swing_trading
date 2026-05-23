@@ -3927,7 +3927,7 @@ TECHMO_UNIVERSE = {
     # Space & Satellites
     "ASTS":"Space","RKLB":"Space","LUNR":"Space","PL":"Space","IRDM":"Space",
     # Materials
-    "MP":"Materials","FCX":"Materials","AA":"Materials","TECK":"Materials",
+    "MP":"Materials","FCX":"Materials","AA":"Materials","TECK":"Materials","AXTI":"Materials",
     # Frontier AI Models
     "MSFT":"Frontier AI","GOOGL":"Frontier AI","META":"Frontier AI","AMZN":"Frontier AI",
     # Quantum Computing (IONQ ~$4.5B kept; micro caps removed)
