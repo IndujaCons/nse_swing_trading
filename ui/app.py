@@ -3900,7 +3900,7 @@ TECHMO_UNIVERSE = {
     # Packaging (OSAT)
     "TSM":"Foundry","ASX":"Packaging","AMKR":"Packaging","CAMT":"Packaging",
     # Photonics / Optical components
-    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics","AAOI":"Photonics",
+    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics",
     # Networking & Connectivity
     "ANET":"Networking","CSCO":"Networking","CRDO":"Networking","APH":"Networking",
     "MRVL":"Networking","NOK":"Networking","CIEN":"Networking",
@@ -3909,33 +3909,29 @@ TECHMO_UNIVERSE = {
     "JBL":"Server OEM","FLEX":"Server OEM",
     # AI Neoclouds
     "CRWV":"Neocloud","NBIS":"Neocloud","IREN":"Neocloud","APLD":"Neocloud",
-    "WULF":"Neocloud","CORZ":"Neocloud","CIFR":"Neocloud","ORCL":"Neocloud",
+    "WULF":"Neocloud","CORZ":"Neocloud","ORCL":"Neocloud",
     # Power & Cooling
     "VRT":"Power/Cool","ETN":"Power/Cool",
     "PWR":"Power/Cool","HUBB":"Power/Cool","MOD":"Power/Cool",
     # Energy / AI Power
     "CEG":"AI Energy","VST":"AI Energy","NEE":"AI Energy","SMR":"AI Energy",
-    "OKLO":"AI Energy","EOSE":"AI Energy","EQT":"AI Energy","GEV":"AI Energy","BE":"AI Energy",
+    "OKLO":"AI Energy","EQT":"AI Energy","GEV":"AI Energy","BE":"AI Energy",
     # Power Electronics
     "STM":"Power Elec","ADI":"Power Elec","MPWR":"Power Elec",
-    "NVTS":"Power Elec","ON":"Power Elec","TXN":"Power Elec",
+    "ON":"Power Elec","TXN":"Power Elec",
     # Robotics & Autonomy
     "TSLA":"Robotics","PATH":"Robotics","SYM":"Robotics",
-    "SERV":"Robotics","TER":"Robotics","ISRG":"Robotics",
+    "TER":"Robotics","ISRG":"Robotics",
     # Defense & Drones
-    "KTOS":"Defense","AVAV":"Defense","ONDS":"Defense","RCAT":"Defense",
-    "OSIS":"Defense","LMT":"Defense","NOC":"Defense",
+    "KTOS":"Defense","AVAV":"Defense","OSIS":"Defense","LMT":"Defense","NOC":"Defense",
     # Space & Satellites
-    "ASTS":"Space","RKLB":"Space","LUNR":"Space","PL":"Space",
-    "BKSY":"Space","IRDM":"Space",
+    "ASTS":"Space","RKLB":"Space","LUNR":"Space","PL":"Space","IRDM":"Space",
     # Materials
-    "MP":"Materials","UUUU":"Materials","FCX":"Materials",
-    "AA":"Materials","TECK":"Materials",
+    "MP":"Materials","FCX":"Materials","AA":"Materials","TECK":"Materials",
     # Frontier AI Models
     "MSFT":"Frontier AI","GOOGL":"Frontier AI","META":"Frontier AI","AMZN":"Frontier AI",
-    # Quantum Computing
+    # Quantum Computing (IONQ ~$4.5B kept; micro caps removed)
     "IONQ":"Quantum","RGTI":"Quantum","QBTS":"Quantum",
-    "QUBT":"Quantum","XNDU":"Quantum","INFQ":"Quantum",
     # QQQ-only additions
     "AAPL":"Consumer Tech","NFLX":"Consumer Tech","QCOM":"Wireless",
     "COST":"Retail","ORLY":"Retail","ADP":"Enterprise SW",
