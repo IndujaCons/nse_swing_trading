@@ -3909,7 +3909,7 @@ TECHMO_UNIVERSE = {
     "JBL":"Server OEM","FLEX":"Server OEM",
     # AI Neoclouds
     "CRWV":"Neocloud","NBIS":"Neocloud","IREN":"Neocloud","APLD":"Neocloud",
-    "WULF":"Neocloud","CORZ":"Neocloud","CIFR":"Neocloud",
+    "WULF":"Neocloud","CORZ":"Neocloud","CIFR":"Neocloud","ORCL":"Neocloud",
     # Power & Cooling
     "VRT":"Power/Cool","ETN":"Power/Cool",
     "PWR":"Power/Cool","HUBB":"Power/Cool","MOD":"Power/Cool",
