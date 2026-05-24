@@ -6848,27 +6848,38 @@
 
             const holdsArr = holds || [];
             const holdsSection = holdsArr.length === 0 ? '' : (() => {
-                const cols = '110px 55px 70px 70px 60px';
-                const hdr = `<div style="display:grid;grid-template-columns:${cols};gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
-                    <span>Stock</span><span>Rank</span><span>Entry ₹</span><span>Now ₹</span><span>P&L%</span></div>`;
+                const cols = '110px 42px 70px 60px 70px 70px 42px 80px 58px';
+                const hdr = `<div style="display:grid;grid-template-columns:${cols};gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;border-bottom:1px solid var(--border-color);padding-bottom:3px;">
+                    <span>Ticker</span><span>Rank</span><span>Sector</span><span>Since</span><span>Entry ₹</span><span>Now ₹</span><span>Qty</span><span>Unreal P&L</span><span>P&L%</span></div>`;
                 const rows = holdsArr.map(t => {
-                    const ctx = _mom20HoldingsCtx[t] || {};
+                    const ctx  = _mom20HoldingsCtx[t] || {};
                     const rank = ctx.rank;
                     const ep   = ctx.entry_price;
                     const np   = ctx.current_price;
+                    const qty  = ctx.qty;
                     const pp   = ctx.return_pct;
+                    const ed   = ctx.entry_date ? ctx.entry_date.slice(0,10) : null;
+                    const sec  = mom20SectorLabel(t);
+                    const unreal = (ep != null && np != null && qty != null) ? (np - ep) * qty : null;
                     const pc   = pp == null ? color.m : pp >= 0 ? color.g : color.r;
-                    const rankStr = rank != null ? `#${rank}` : '—';
+                    const uc   = unreal == null ? color.m : unreal >= 0 ? color.g : color.r;
+                    const rankStr = rank != null ? `${rank}` : '—';
                     const rankC   = rank != null && rank <= 20 ? 'var(--green)' : rank != null && rank <= 40 ? '#f59e0b' : color.m;
-                    return `<div style="display:grid;grid-template-columns:${cols};gap:4px;">
-                        <span style="color:${color.m};">${t}</span>
+                    const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    const sinceStr = ed ? (([y,mo,d]) => `${d}-${MO[+mo-1]}-${y.slice(2)}`)(ed.split('-')) : '—';
+                    return `<div style="display:grid;grid-template-columns:${cols};gap:4px;padding:2px 0;">
+                        <span style="color:${color.t};font-weight:600;">${t}</span>
                         <span style="color:${rankC};font-weight:600;">${rankStr}</span>
-                        <span style="color:${color.m};">${ep != null ? Number(ep).toLocaleString('en-IN', {maximumFractionDigits:2}) : '—'}</span>
-                        <span style="color:${color.m};">${np != null ? Number(np).toLocaleString('en-IN', {maximumFractionDigits:2}) : '—'}</span>
-                        <span style="color:${pc};font-weight:600;">${pp != null ? (pp >= 0 ? '+' : '') + pp.toFixed(2) + '%' : '—'}</span>
+                        <span style="color:${color.m};font-size:10px;">${sec || '—'}</span>
+                        <span style="color:${color.m};">${sinceStr}</span>
+                        <span style="color:${color.m};">${ep != null ? ep.toLocaleString('en-IN',{maximumFractionDigits:1}) : '—'}</span>
+                        <span style="color:${color.m};">${np != null ? np.toLocaleString('en-IN',{maximumFractionDigits:1}) : '—'}</span>
+                        <span style="color:${color.m};">${qty ?? '—'}</span>
+                        <span style="color:${uc};font-weight:600;">${unreal != null ? (unreal>=0?'+':'')+Math.round(unreal).toLocaleString('en-IN') : '—'}</span>
+                        <span style="color:${pc};font-weight:600;">${pp != null ? (pp >= 0 ? '+' : '') + pp.toFixed(1) + '%' : '—'}</span>
                     </div>`;
                 }).join('');
-                return `<div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holdsArr.length})</div>${hdr}${rows}`;
+                return `<div style="margin-top:10px;color:${color.t};font-weight:700;margin-bottom:6px;">HOLDS (${holdsArr.length})</div>${hdr}${rows}`;
             })();
 
             return `
@@ -8759,26 +8770,38 @@ function techmoRenderRebalance(rb, num, holds) {
 
     const holdsArr = holds || [];
     const holdsHtml = holdsArr.length === 0 ? '' : (() => {
-        const hdr = `<div style="display:grid;grid-template-columns:90px 55px 72px 72px 72px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
-            <span>Stock</span><span>Rank</span><span>Entry $</span><span>Now $</span><span>P&L%</span></div>`;
+        const _MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const _fmtDate = ed => ed ? (([y,mo,d]) => `${d}-${_MO[+mo-1]}-${y.slice(2)}`)(ed.split('-')) : '—';
+        const cols = '80px 40px 75px 58px 62px 62px 42px 78px 58px';
+        const hdr = `<div style="display:grid;grid-template-columns:${cols};gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;border-bottom:1px solid var(--border-color);padding-bottom:3px;">
+            <span>Ticker</span><span>Rank</span><span>Cluster</span><span>Since</span><span>Entry $</span><span>Now $</span><span>Shares</span><span>Unreal P&L</span><span>P&L%</span></div>`;
         const rows = holdsArr.map(t => {
             const ctx  = _techmoHoldingsCtx[t] || {};
             const rank = _techmoRankCtx[t];
             const ep   = ctx.entry_price;
             const np   = ctx.now_price;
             const pp   = ctx.pnl_pct;
+            const unreal = ctx.pnl;
+            const shares = ctx.shares;
+            const ed   = ctx.entry_date;
+            const cl   = ctx.cluster || '—';
             const pc   = pp == null ? color.m : pp >= 0 ? color.g : color.r;
-            const rankStr = rank != null ? `#${rank}` : '—';
+            const uc   = unreal == null ? color.m : unreal >= 0 ? color.g : color.r;
+            const rankStr = rank != null ? `${rank}` : '—';
             const rankC   = rank != null && rank <= 10 ? '#60a5fa' : rank != null && rank <= 24 ? '#f59e0b' : color.m;
-            return `<div style="display:grid;grid-template-columns:90px 55px 72px 72px 72px;gap:4px;">
-                <span style="color:${color.m};">${t}</span>
-                <span style="color:${rankC};">${rankStr}</span>
+            return `<div style="display:grid;grid-template-columns:${cols};gap:4px;padding:2px 0;">
+                <span style="color:${color.t};font-weight:600;">${t}</span>
+                <span style="color:${rankC};font-weight:600;">${rankStr}</span>
+                <span style="color:${color.m};font-size:10px;">${cl}</span>
+                <span style="color:${color.m};">${_fmtDate(ed)}</span>
                 <span style="color:${color.m};">${ep != null ? ep.toFixed(2) : '—'}</span>
                 <span style="color:${color.m};">${np != null ? np.toFixed(2) : '—'}</span>
-                <span style="color:${pc};font-weight:600;">${pp != null ? (pp >= 0 ? '+' : '') + pp.toFixed(2) + '%' : '—'}</span>
+                <span style="color:${color.m};">${shares ?? '—'}</span>
+                <span style="color:${uc};font-weight:600;">${unreal != null ? (unreal>=0?'+':'')+unreal.toFixed(2) : '—'}</span>
+                <span style="color:${pc};font-weight:600;">${pp != null ? (pp >= 0 ? '+' : '') + pp.toFixed(1) + '%' : '—'}</span>
             </div>`;
         }).join('');
-        return `<div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holdsArr.length})</div>${hdr}${rows}`;
+        return `<div style="margin-top:10px;color:${color.t};font-weight:700;margin-bottom:6px;">HOLDS (${holdsArr.length})</div>${hdr}${rows}`;
     })();
 
     return `<div style="margin-bottom:8px;font-family:monospace;font-size:12px;">
@@ -8950,6 +8973,10 @@ function techmoRender(d) {
             entry_price: h.entry_price,
             now_price:   h.now_price,
             pnl_pct:     h.pnl_pct,
+            pnl:         h.pnl,
+            shares:      h.shares,
+            entry_date:  h.entry_date,
+            cluster:     h.cluster,
         };
     });
 
@@ -9339,7 +9366,14 @@ function mom20TrackerRender() {
     // Rebuild holdings context for history holds display
     _mom20HoldingsCtx = {};
     _mom20TrackerHoldings.forEach(h => {
-        _mom20HoldingsCtx[h.ticker] = { rank: h.rank, entry_price: h.entry_price, current_price: h.current_price, return_pct: h.return_pct };
+        _mom20HoldingsCtx[h.ticker] = {
+            rank:          h.rank,
+            entry_price:   h.entry_price,
+            current_price: h.current_price,
+            return_pct:    h.return_pct,
+            qty:           h.qty,
+            entry_date:    h.entry_date,
+        };
     });
 
     tbody.innerHTML = sorted.map(h => {
