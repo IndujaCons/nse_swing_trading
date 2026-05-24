@@ -2809,12 +2809,38 @@
                     <button id="techmo-history-btn" onclick="techmoToggleHistory()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">📋 History</button>
                 </div>
 
+                <!-- Capital summary strip + Exit/Entry/Hold badges (top, like Mom20) -->
+                <div id="techmo-capital-strip" style="display:none;margin-bottom:14px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:12px 18px;margin-bottom:10px;">
+                        <div>
+                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Capital</div>
+                            <div id="techmo-cap-value" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
+                        </div>
+                        <div>
+                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Per Slot ÷ 12</div>
+                            <div id="techmo-slot-value" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
+                        </div>
+                        <div>
+                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Positions</div>
+                            <div id="techmo-pos-value" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
+                        </div>
+                        <div>
+                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Next Rebalance</div>
+                            <div id="techmo-rebal-value" style="font-size:15px;font-weight:700;color:#ff6b35;">—</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <span id="techmo-strip-exits" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(239,83,80,0.15);color:#ef5350;border:1px solid rgba(239,83,80,0.3);">0 Exits</span>
+                        <span id="techmo-strip-entries" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(38,166,154,0.15);color:#26a69a;border:1px solid rgba(38,166,154,0.3);">0 Entries</span>
+                        <span id="techmo-strip-holds" style="padding:3px 12px;border-radius:12px;font-size:12px;font-weight:700;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);">0 Holds</span>
+                        <button onclick="techmoLoadBasket()" style="margin-left:auto;padding:3px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⟳ Refresh Basket</button>
+                    </div>
+                </div>
+
                 <!-- Basket: Exits + Entries (above tracker) -->
                 <div id="techmo-basket-card" style="display:none;margin-bottom:16px;">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                        <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">CURRENT HOLDINGS</span>
                         <span id="techmo-basket-summary" style="font-size:11px;color:var(--text-muted);"></span>
-                        <button onclick="techmoLoadBasket()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;margin-left:auto;">⟳ Refresh Basket</button>
                     </div>
 
                     <!-- EXITS -->
@@ -8527,18 +8553,21 @@ function techmoOnUserChange() {
     const histBtn  = document.getElementById('techmo-history-btn');
     const trackerCard = document.getElementById('techmo-tracker-card');
     const historyPanel = document.getElementById('techmo-history-panel');
-    const basketCard = document.getElementById('techmo-basket-card');
+    const basketCard   = document.getElementById('techmo-basket-card');
+    const capitalStrip = document.getElementById('techmo-capital-strip');
     if (!_techmoSelectedUser) {
         if (delBtn) delBtn.style.display = 'none';
         if (histBtn) histBtn.style.display = 'none';
         if (trackerCard) trackerCard.style.display = 'none';
         if (basketCard) basketCard.style.display = 'none';
+        if (capitalStrip) capitalStrip.style.display = 'none';
         if (historyPanel) historyPanel.style.display = 'none';
         return;
     }
     if (delBtn) delBtn.style.display = 'inline';
     if (histBtn) histBtn.style.display = 'inline';
     if (trackerCard) trackerCard.style.display = 'block';
+    if (capitalStrip) capitalStrip.style.display = 'block';
     _techmoHistoryLoaded = false;
     if (historyPanel && historyPanel.style.display !== 'none') techmoLoadHistory();
     techmoLoad();
@@ -8632,6 +8661,19 @@ async function techmoLoad(live=false) {
 function techmoRender(d) {
     const rebalBadge = document.getElementById('techmo-rebal-badge');
     if (rebalBadge && d.next_rebalance) rebalBadge.textContent = `Next rebalance: ${d.next_rebalance}`;
+
+    // Populate capital summary strip
+    const fmtUSDShort = v => '$' + v.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+    const cap     = d.initial_capital || d.total_cost || 0;
+    const perSlot = cap > 0 ? cap / 12 : 0;
+    const capEl   = document.getElementById('techmo-cap-value');
+    const slotEl  = document.getElementById('techmo-slot-value');
+    const posEl   = document.getElementById('techmo-pos-value');
+    const rebalEl = document.getElementById('techmo-rebal-value');
+    if (capEl)   capEl.textContent   = cap > 0 ? fmtUSDShort(cap) : '—';
+    if (slotEl)  slotEl.textContent  = perSlot > 0 ? fmtUSDShort(perSlot) : '—';
+    if (posEl)   posEl.textContent   = (d.holdings || []).length + ' / 12';
+    if (rebalEl) rebalEl.textContent = d.next_rebalance || '—';
 
     const pnlColor = d.total_pnl >= 0 ? 'var(--green)' : '#ef5350';
     const fmtUSD = v => '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -8781,11 +8823,19 @@ function techmoRenderBasket(d) {
     };
     const clr = c => CC[c] || 'var(--text-muted)';
 
-    // Summary
-    const smry = document.getElementById('techmo-basket-summary');
-    if (smry) smry.textContent = `${d.holds_count} holds · ${d.exits.length} exits · ${d.entries.length} entries`;
+    // Capital strip badges
+    const stripEx  = document.getElementById('techmo-strip-exits');
+    const stripEn  = document.getElementById('techmo-strip-entries');
+    const stripHo  = document.getElementById('techmo-strip-holds');
+    if (stripEx) stripEx.textContent = `${d.exits.length} Exit${d.exits.length !== 1 ? 's' : ''}`;
+    if (stripEn) stripEn.textContent = `${d.entries.length} ${d.entries.length !== 1 ? 'Entries' : 'Entry'}`;
+    if (stripHo) stripHo.textContent = `${d.holds_count} Holds`;
 
-    // Exit badge
+    // Show basket card only if there's something to show
+    const basketCard = document.getElementById('techmo-basket-card');
+    if (basketCard) basketCard.style.display = (d.exits.length || d.entries.length) ? 'block' : 'none';
+
+    // Exit badge (inside basket card)
     const eb = document.getElementById('techmo-exit-badge');
     if (eb) eb.textContent = `EXITS (${d.exits.length})`;
 
