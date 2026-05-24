@@ -2985,17 +2985,20 @@ def api_mom20_performance(user_id):
     except Exception:
         pass
 
-    # Overlay ranks from live signals cache (kept fresh by scheduler) so the
-    # tracker always shows the same rank as the Live Signals tab — no stale data.
-    prev_ranks = {}
+    # Overlay ranks from live signals cache so the tracker matches the Live Signals tab.
+    # Use filtered (beta ≤ 1.2) ranks from mom20_signals — same scale as the scanner.
+    # rank_delta also comes from mom20_signals (data-driven, prev session from price data).
+    scanner_rank_deltas = {}
     try:
         from config.settings import LIVE_SIGNALS_CACHE_FILE
         with open(LIVE_SIGNALS_CACHE_FILE) as f:
             ls = json.load(f)
-        live_ranks = ls.get("mom20_unfiltered_ranks", {})
-        if live_ranks:
-            rank_map.update({k: v for k, v in live_ranks.items() if v is not None})
-        prev_ranks = ls.get("prev_ranks") or {}
+        # Filtered ranks (beta ≤ 1.2) — matches what the Mom20 scanner shows
+        filtered_ranks = {s["ticker"]: s["rank"] for s in ls.get("mom20_signals", []) if "rank" in s}
+        if filtered_ranks:
+            rank_map.update(filtered_ranks)
+        # rank_delta pre-computed by scanner (data-driven, iloc[-1] vs iloc[-2])
+        scanner_rank_deltas = {s["ticker"]: s.get("rank_delta") for s in ls.get("mom20_signals", [])}
     except Exception:
         pass
 
@@ -3088,12 +3091,8 @@ def api_mom20_performance(user_id):
         else:
             row_rank = rank_map.get(t)
 
-        # rank_delta: positive = improved (rank number fell), negative = worsened
-        curr_rank_num = row_rank if isinstance(row_rank, (int, float)) else None
-        prev_rank_num = prev_ranks.get(t)
-        rank_delta = (prev_rank_num - curr_rank_num
-                      if prev_rank_num is not None and curr_rank_num is not None
-                      else None)
+        # rank_delta from scanner (data-driven, prev session from price data)
+        rank_delta = scanner_rank_deltas.get(t)
         holdings.append({
             "ticker":        t,
             "rank":          row_rank,
