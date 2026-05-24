@@ -900,8 +900,8 @@ INTL_ETF_TICKERS = ["FRDM", "EMXC", "AVDV", "ILF", "XLE", "GDX", "XME", "VGK",
 LSE_ETF_TICKERS = ["GDGB", "VEUR", "ISF", "EMXU", "LTAM", "IUES", "COPX", "WSML", "CJPN", "CSPX"]
 
 def _yf_symbol(ticker):
-    """Return yfinance symbol — skip .NS for international ETFs and index tickers."""
-    if ticker in INTL_ETF_TICKERS or ticker.startswith("^"):
+    """Return yfinance symbol — skip .NS for international ETFs, US stocks, and index tickers."""
+    if ticker in INTL_ETF_TICKERS or ticker in TECHMO_UNIVERSE or ticker.startswith("^"):
         return ticker
     if ticker in LSE_ETF_TICKERS:
         return ticker + ".L"
@@ -1158,10 +1158,11 @@ def watchlist_chart():
         from_date = _date.today() - _timedelta(days=fetch_days)
         to_date = _date.today()
 
+        is_us = base_sym in TECHMO_UNIVERSE
         stock_closes = None
         stock_volumes = None
         broker = _get_connected_broker()
-        if broker and not is_lse:
+        if broker and not is_lse and not is_us:
             stock_closes = _kite_daily_closes(broker, base_sym, from_date, to_date)
 
         # Fallback to yfinance
@@ -1185,12 +1186,19 @@ def watchlist_chart():
                 if stock_volumes.index.tz is not None:
                     stock_volumes.index = stock_volumes.index.tz_localize(None)
 
-        # Benchmark: try Kite first (NIFTY 200), fall back to yfinance
+        # Benchmark: QQQ for US stocks, Nifty 200 for Indian
         bench_closes = None
-        if broker:
-            bench_closes = _kite_daily_closes(broker, "NIFTY 200", from_date, to_date)
+        extra_map = {"1mo": "4mo", "3mo": "1y", "6mo": "2y", "1y": "2y"}
+        if is_us:
+            bench_df = yf.download("QQQ", period=extra_map[period], progress=False)
+            if not bench_df.empty:
+                bench_closes = bench_df["Close"].squeeze().dropna()
+                if bench_closes.index.tz is not None:
+                    bench_closes.index = bench_closes.index.tz_localize(None)
         if bench_closes is None or len(bench_closes) < 5:
-            extra_map = {"1mo": "4mo", "3mo": "1y", "6mo": "2y", "1y": "2y"}
+            if broker and not is_us:
+                bench_closes = _kite_daily_closes(broker, "NIFTY 200", from_date, to_date)
+        if bench_closes is None or len(bench_closes) < 5:
             bench_df = yf.download("^CNX200", period=extra_map[period], progress=False)
             if not bench_df.empty:
                 bench_closes = bench_df["Close"].squeeze().dropna()
@@ -1280,12 +1288,12 @@ def watchlist_chart():
                 volumes_data.append(int(v) if v is not None and not pd.isna(v) and v > 0 else None)
 
         rs_label_map = {"1mo": "RS-21d", "3mo": "RS-63d", "6mo": "RS-123d", "1y": "RS-123d"}
-        is_intl = ticker in INTL_ETF_TICKERS
+        is_intl = ticker in INTL_ETF_TICKERS or is_us
         return jsonify({
             "success": True, "ticker": ticker, "dates": dates,
             "prices": prices, "rs": rs_data, "rs_smooth": rs_smooth_data,
             "rs_label": rs_label_map[period],
-            "bench": bench_prices, "bench_label": "Nifty 200",
+            "bench": bench_prices, "bench_label": "QQQ" if is_us else "Nifty 200",
             "currency": "$" if is_intl else "₹",
             "dma50": dma50_data, "dma100": dma100_data, "dma200": dma200_data,
             "volumes": volumes_data, "rsi": rsi_data,
