@@ -2809,12 +2809,41 @@
                     <button id="techmo-history-btn" onclick="techmoToggleHistory()" style="display:none;padding:4px 12px;font-size:11px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:5px;cursor:pointer;">📋 History</button>
                 </div>
 
+                <!-- Basket: Exits + Entries (above tracker) -->
+                <div id="techmo-basket-card" style="display:none;margin-bottom:16px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                        <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">CURRENT HOLDINGS</span>
+                        <span id="techmo-basket-summary" style="font-size:11px;color:var(--text-muted);"></span>
+                        <button onclick="techmoLoadBasket()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;margin-left:auto;">⟳ Refresh Basket</button>
+                    </div>
+
+                    <!-- EXITS -->
+                    <div style="margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                            <span id="techmo-exit-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(239,83,80,0.15);color:#ef5350;font-weight:700;">EXITS (0)</span>
+                        </div>
+                        <div id="techmo-exits-body">
+                            <div style="padding:8px;font-size:11px;color:var(--text-muted);">—</div>
+                        </div>
+                    </div>
+
+                    <!-- ENTRIES -->
+                    <div style="margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                            <span id="techmo-entry-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(38,166,154,0.15);color:#26a69a;font-weight:700;">ENTRIES (0)</span>
+                            <span id="techmo-basket-slot" style="font-size:10px;color:var(--text-muted);"></span>
+                        </div>
+                        <div id="techmo-entries-body">
+                            <div style="padding:8px;font-size:11px;color:var(--text-muted);">—</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- PORTFOLIO TRACKER card (hidden until user selected) -->
                 <div id="techmo-tracker-card" style="display:none;margin-bottom:20px;">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
                         <button onclick="techmoLoad(true)" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
-                        <button onclick="techmoLoadBasket()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⟳ Refresh Basket</button>
                         <label style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">
                             ⬆ Upload Trade Book
                             <input type="file" accept=".csv" onchange="techmoUploadTradeBook(event)" style="display:none;">
@@ -2898,35 +2927,6 @@
                                     <div style="padding:40px 20px;text-align:center;color:var(--text-muted);">Click any stock to view chart</div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Basket: Exits + Entries -->
-                <div id="techmo-basket-card" style="display:none;margin-bottom:16px;">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;border-top:1px solid var(--border-color);padding-top:14px;">
-                        <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">CURRENT HOLDINGS</span>
-                        <span id="techmo-basket-summary" style="font-size:11px;color:var(--text-muted);"></span>
-                    </div>
-
-                    <!-- EXITS -->
-                    <div style="margin-bottom:14px;">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                            <span id="techmo-exit-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(239,83,80,0.15);color:#ef5350;font-weight:700;">EXITS (0)</span>
-                        </div>
-                        <div id="techmo-exits-body">
-                            <div style="padding:8px;font-size:11px;color:var(--text-muted);">—</div>
-                        </div>
-                    </div>
-
-                    <!-- ENTRIES -->
-                    <div style="margin-bottom:14px;">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                            <span id="techmo-entry-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(38,166,154,0.15);color:#26a69a;font-weight:700;">ENTRIES (0)</span>
-                            <span id="techmo-basket-slot" style="font-size:10px;color:var(--text-muted);"></span>
-                        </div>
-                        <div id="techmo-entries-body">
-                            <div style="padding:8px;font-size:11px;color:var(--text-muted);">—</div>
                         </div>
                     </div>
                 </div>
