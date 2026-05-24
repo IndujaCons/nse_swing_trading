@@ -4531,11 +4531,150 @@ def api_techmo_basket(user_id):
 def api_techmo_history(user_id):
     if not get_user(user_id):
         return jsonify({"success": False, "error": "user not found"})
+    hist = []
     try:
         with open(techmo_history_path(user_id)) as f:
-            return jsonify({"success": True, "history": json.load(f)})
+            hist = json.load(f)
     except Exception:
-        return jsonify({"success": True, "history": []})
+        pass
+    # If history is empty but basket has positions, synthesise an initial entry
+    if not hist:
+        try:
+            with open(techmo_portfolio_path(user_id)) as f:
+                pf = json.load(f)
+            basket = pf.get("basket", [])
+            if basket:
+                hist = [{
+                    "rebalance_date": pf.get("tracking_since", "Initial"),
+                    "note": "Initial holdings (synthesised)",
+                    "buys":  [{"ticker": h["ticker"],
+                               "qty":    h.get("qty") or h.get("shares", 0),
+                               "price":  h.get("entry_price", 0)}
+                              for h in basket],
+                    "sells": [],
+                }]
+        except Exception:
+            pass
+    return jsonify({"success": True, "history": hist})
+
+
+@app.route("/api/techmo-users/<user_id>/add-position", methods=["POST"])
+def api_techmo_add_position(user_id):
+    """Manually add a position to the TechMo portfolio and record in history."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    data   = request.get_json() or {}
+    ticker = data.get("ticker", "").strip().upper()
+    price  = float(data.get("price", 0) or 0)
+    shares = float(data.get("shares", 0) or 0)
+    date   = data.get("date", datetime.now().strftime("%Y-%m-%d"))
+    if not ticker or price <= 0 or shares <= 0:
+        return jsonify({"success": False, "error": "ticker, price, and shares required"})
+
+    pf_path   = techmo_portfolio_path(user_id)
+    hist_path = techmo_history_path(user_id)
+    try:
+        with open(pf_path) as f:
+            pf = json.load(f)
+    except Exception:
+        pf = {"basket": [], "status": "empty", "capital": 0}
+    try:
+        with open(hist_path) as f:
+            hist = json.load(f)
+    except Exception:
+        hist = []
+
+    basket = {h["ticker"]: h for h in pf.get("basket", [])}
+    if ticker in basket:
+        old = basket[ticker]
+        old_qty   = old.get("qty") or old.get("shares", 0)
+        new_qty   = old_qty + shares
+        new_price = (old_qty * old["entry_price"] + shares * price) / new_qty
+        basket[ticker]["qty"]         = round(new_qty, 6)
+        basket[ticker]["entry_price"] = round(new_price, 4)
+    else:
+        basket[ticker] = {
+            "ticker":      ticker,
+            "qty":         round(shares, 6),
+            "entry_price": price,
+            "entry_date":  date,
+            "cluster":     TECHMO_UNIVERSE.get(ticker, "Other"),
+            "rank":        None,
+        }
+
+    hist.append({
+        "rebalance_date": date,
+        "buys":  [{"ticker": ticker, "qty": shares, "price": price}],
+        "sells": [],
+    })
+    pf["basket"] = list(basket.values())
+    pf["status"] = "seeded"
+    if not pf.get("tracking_since"):
+        pf["tracking_since"] = date
+
+    os.makedirs(os.path.dirname(pf_path), exist_ok=True)
+    with open(pf_path, "w") as f:
+        json.dump(pf, f, indent=2)
+    with open(hist_path, "w") as f:
+        json.dump(hist, f, indent=2)
+    return jsonify({"success": True, "holdings": len(pf["basket"])})
+
+
+@app.route("/api/techmo-users/<user_id>/exit-position", methods=["POST"])
+def api_techmo_exit_position(user_id):
+    """Manually exit (partially or fully) a TechMo position and record in history."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    data   = request.get_json() or {}
+    ticker = data.get("ticker", "").strip().upper()
+    price  = float(data.get("price", 0) or 0)
+    shares = float(data.get("shares", 0) or 0)
+    date   = data.get("date", datetime.now().strftime("%Y-%m-%d"))
+    if not ticker or price <= 0 or shares <= 0:
+        return jsonify({"success": False, "error": "ticker, price, and shares required"})
+
+    pf_path   = techmo_portfolio_path(user_id)
+    hist_path = techmo_history_path(user_id)
+    try:
+        with open(pf_path) as f:
+            pf = json.load(f)
+    except Exception:
+        return jsonify({"success": False, "error": "portfolio not found"})
+    try:
+        with open(hist_path) as f:
+            hist = json.load(f)
+    except Exception:
+        hist = []
+
+    basket = {h["ticker"]: h for h in pf.get("basket", [])}
+    if ticker not in basket:
+        return jsonify({"success": False, "error": f"{ticker} not in portfolio"})
+
+    held    = basket[ticker]
+    held_qty = held.get("qty") or held.get("shares", 0)
+    exit_qty = min(shares, held_qty)
+    ep       = held.get("entry_price", 0)
+    pnl      = round((price - ep) * exit_qty, 2)
+
+    hist.append({
+        "rebalance_date": date,
+        "buys":  [],
+        "sells": [{"ticker": ticker, "qty": exit_qty, "price": price, "pnl": pnl}],
+    })
+
+    remaining = round(held_qty - exit_qty, 6)
+    if remaining <= 0.0001:
+        del basket[ticker]
+    else:
+        basket[ticker]["qty"] = remaining
+
+    pf["basket"] = list(basket.values())
+    os.makedirs(os.path.dirname(pf_path), exist_ok=True)
+    with open(pf_path, "w") as f:
+        json.dump(pf, f, indent=2)
+    with open(hist_path, "w") as f:
+        json.dump(hist, f, indent=2)
+    return jsonify({"success": True, "pnl": pnl, "holdings": len(pf["basket"])})
 
 
 @app.route("/api/techmo-users/<user_id>/chart", methods=["GET"])
