@@ -4408,6 +4408,100 @@ def api_techmo_upload_tradebook(user_id):
         return jsonify({"success": False, "error": str(e)})
 
 
+@app.route("/api/techmo-users/<user_id>/basket", methods=["GET"])
+def api_techmo_basket(user_id):
+    """Compute TechMo rebalance basket: exits and entries vs current holdings."""
+    import time as _t
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+
+    # Use cached scan (15-min TTL); if stale/empty tell UI to run scan first
+    if not _TECHMO_SCAN_CACHE["data"] or (_t.time() - _TECHMO_SCAN_CACHE["ts"]) > 1800:
+        return jsonify({"success": False, "error": "scan_required"})
+
+    signals = _TECHMO_SCAN_CACHE["data"].get("signals", [])  # sorted by score desc
+
+    # Greedy top-12 with max 2/cluster (same rule as scanner)
+    target, cluster_count = [], {}
+    for sig in signals:
+        c = sig["cluster"]
+        if cluster_count.get(c, 0) < 2:
+            target.append(sig)
+            cluster_count[c] = cluster_count.get(c, 0) + 1
+        if len(target) == 12:
+            break
+    target_tickers = {s["ticker"] for s in target}
+    unfiltered_rank_map = {sig["ticker"]: sig["rank"] for sig in signals}
+
+    # User portfolio
+    try:
+        with open(techmo_portfolio_path(user_id)) as f:
+            pf = json.load(f)
+    except Exception:
+        pf = {"basket": [], "capital": 0}
+    basket = pf.get("basket", [])
+    held_set = {h["ticker"] for h in basket}
+    held_map = {h["ticker"]: h for h in basket}
+    capital = float(pf.get("capital", 0) or 0)
+    per_slot = capital / 12 if capital > 0 else 0
+
+    # Prices: persisted live prices > scan prices
+    scan_prices = {sig["ticker"]: sig["price"] for sig in signals}
+    live_prices = {}
+    try:
+        with open(techmo_live_prices_path(user_id)) as f:
+            live_prices = json.load(f).get("prices", {})
+    except Exception:
+        pass
+    def get_px(ticker, fallback=0):
+        return live_prices.get(ticker) or scan_prices.get(ticker) or fallback
+
+    BUFFER_OUT = 16
+    exits = []
+    for h in basket:
+        t = h["ticker"]
+        if t not in target_tickers:
+            r = unfiltered_rank_map.get(t, 999)
+            if r > BUFFER_OUT:
+                ep     = h.get("entry_price", 0)
+                now_px = get_px(t, ep)
+                exits.append({
+                    "ticker":      t,
+                    "cluster":     h.get("cluster", TECHMO_UNIVERSE.get(t, "Other")),
+                    "rank":        r,
+                    "entry_price": round(ep, 2),
+                    "now_price":   round(now_px, 2),
+                    "pnl_pct":     round((now_px / ep - 1) * 100, 2) if ep else 0,
+                    "shares":      h.get("qty") or h.get("shares", 0),
+                })
+
+    entries = []
+    for sig in target:
+        if sig["ticker"] not in held_set:
+            px     = get_px(sig["ticker"], sig["price"])
+            shares = round(per_slot / px, 4) if px > 0 and per_slot > 0 else 0
+            entries.append({
+                "ticker":  sig["ticker"],
+                "cluster": sig["cluster"],
+                "rank":    sig["rank"],
+                "price":   round(px, 2),
+                "shares":  shares,
+                "capital": round(shares * px, 2),
+                "score":   sig["score"],
+            })
+
+    holds_count = len(held_set & target_tickers)
+    return jsonify({
+        "success":     True,
+        "exits":       exits,
+        "entries":     entries,
+        "holds_count": holds_count,
+        "buffer_out":  BUFFER_OUT,
+        "per_slot":    round(per_slot, 2),
+        "capital":     capital,
+    })
+
+
 @app.route("/api/techmo-users/<user_id>/history", methods=["GET"])
 def api_techmo_history(user_id):
     if not get_user(user_id):

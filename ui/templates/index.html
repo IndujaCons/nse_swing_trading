@@ -2814,6 +2814,7 @@
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
                         <button onclick="techmoLoad(true)" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
+                        <button onclick="techmoLoadBasket()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⟳ Refresh Basket</button>
                         <label style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">
                             ⬆ Upload Trade Book
                             <input type="file" accept=".csv" onchange="techmoUploadTradeBook(event)" style="display:none;">
@@ -2897,6 +2898,35 @@
                                     <div style="padding:40px 20px;text-align:center;color:var(--text-muted);">Click any stock to view chart</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basket: Exits + Entries -->
+                <div id="techmo-basket-card" style="display:none;margin-bottom:16px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;border-top:1px solid var(--border-color);padding-top:14px;">
+                        <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">CURRENT HOLDINGS</span>
+                        <span id="techmo-basket-summary" style="font-size:11px;color:var(--text-muted);"></span>
+                    </div>
+
+                    <!-- EXITS -->
+                    <div style="margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                            <span id="techmo-exit-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(239,83,80,0.15);color:#ef5350;font-weight:700;">EXITS (0)</span>
+                        </div>
+                        <div id="techmo-exits-body">
+                            <div style="padding:8px;font-size:11px;color:var(--text-muted);">—</div>
+                        </div>
+                    </div>
+
+                    <!-- ENTRIES -->
+                    <div style="margin-bottom:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                            <span id="techmo-entry-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(38,166,154,0.15);color:#26a69a;font-weight:700;">ENTRIES (0)</span>
+                            <span id="techmo-basket-slot" style="font-size:10px;color:var(--text-muted);"></span>
+                        </div>
+                        <div id="techmo-entries-body">
+                            <div style="padding:8px;font-size:11px;color:var(--text-muted);">—</div>
                         </div>
                     </div>
                 </div>
@@ -8497,10 +8527,12 @@ function techmoOnUserChange() {
     const histBtn  = document.getElementById('techmo-history-btn');
     const trackerCard = document.getElementById('techmo-tracker-card');
     const historyPanel = document.getElementById('techmo-history-panel');
+    const basketCard = document.getElementById('techmo-basket-card');
     if (!_techmoSelectedUser) {
         if (delBtn) delBtn.style.display = 'none';
         if (histBtn) histBtn.style.display = 'none';
         if (trackerCard) trackerCard.style.display = 'none';
+        if (basketCard) basketCard.style.display = 'none';
         if (historyPanel) historyPanel.style.display = 'none';
         return;
     }
@@ -8589,6 +8621,7 @@ async function techmoLoad(live=false) {
         _techmoLoaded = true;
         if (status) status.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',hour12:false});
         techmoLoadChart();
+        techmoLoadBasket();
     } catch(e) {
         if (status) status.textContent = 'Error: ' + e.message;
         const tbody = document.getElementById('techmo-tracker-tbody');
@@ -8707,6 +8740,128 @@ function techmoOpenChart(ticker, period) {
                     'techmo-chart-body', data.dma50, data.dma200, data.volumes, data.rsi);
             })
             .catch(() => { body.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Error loading chart</div>'; });
+    }
+}
+
+async function techmoLoadBasket() {
+    const uid = _techmoSelectedUser?.id;
+    if (!uid) return;
+    const basketCard = document.getElementById('techmo-basket-card');
+    const status = document.getElementById('techmo-tracker-status');
+    if (basketCard) basketCard.style.display = 'block';
+    if (status) status.textContent = 'Loading basket…';
+    try {
+        const r = await fetch(`/api/techmo-users/${uid}/basket`);
+        const d = await r.json();
+        if (!d.success) {
+            if (d.error === 'scan_required') {
+                if (status) status.textContent = 'Run TechMo scan first';
+                const eb = document.getElementById('techmo-exits-body');
+                const nb = document.getElementById('techmo-entries-body');
+                if (eb) eb.innerHTML = '<div style="padding:8px;font-size:11px;color:var(--text-muted);">Run TechMo scan (Live Signals tab) to compute entries/exits.</div>';
+                if (nb) nb.innerHTML = '';
+            } else {
+                if (status) status.textContent = 'Basket error: ' + d.error;
+            }
+            return;
+        }
+        techmoRenderBasket(d);
+        if (status) status.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',hour12:false});
+    } catch(e) {
+        if (status) status.textContent = 'Basket error: ' + e.message;
+    }
+}
+
+function techmoRenderBasket(d) {
+    const CC = {
+        'Compute':'#60a5fa','Memory':'#34d399','Semicon':'#a78bfa',
+        'Photonics':'#f59e0b','Space':'#fb923c','Defense':'#a3e635',
+        'Robotics':'#f472b6','Energy':'#facc15','Quantum':'#e879f9',
+        'Networking':'#22d3ee','Biotech':'#4ade80','Other':'var(--text-muted)'
+    };
+    const clr = c => CC[c] || 'var(--text-muted)';
+
+    // Summary
+    const smry = document.getElementById('techmo-basket-summary');
+    if (smry) smry.textContent = `${d.holds_count} holds · ${d.exits.length} exits · ${d.entries.length} entries`;
+
+    // Exit badge
+    const eb = document.getElementById('techmo-exit-badge');
+    if (eb) eb.textContent = `EXITS (${d.exits.length})`;
+
+    // Entry badge + slot size
+    const nb = document.getElementById('techmo-entry-badge');
+    if (nb) nb.textContent = `ENTRIES (${d.entries.length})`;
+    const slotEl = document.getElementById('techmo-basket-slot');
+    if (slotEl && d.per_slot > 0) slotEl.textContent = `$${d.per_slot.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})} per slot`;
+
+    // EXITS table
+    const exitsBody = document.getElementById('techmo-exits-body');
+    if (exitsBody) {
+        if (!d.exits.length) {
+            exitsBody.innerHTML = '<div style="padding:8px 0;font-size:11px;color:var(--text-muted);">No exits — all holdings within top-' + d.buffer_out + '</div>';
+        } else {
+            const rows = d.exits.map((e, i) => {
+                const pc = e.pnl_pct >= 0 ? 'var(--green)' : '#ef5350';
+                const ps = (e.pnl_pct >= 0 ? '+' : '') + e.pnl_pct.toFixed(2) + '%';
+                return `<tr style="border-bottom:1px solid var(--border-color);">
+                    <td style="padding:4px 8px;color:var(--text-muted);font-family:monospace;">${i+1}</td>
+                    <td style="padding:4px 8px;font-weight:700;color:#ef5350;font-family:monospace;cursor:pointer;" onclick="techmoOpenChart('${e.ticker}')">${e.ticker}</td>
+                    <td style="padding:4px 8px;font-size:10px;color:${clr(e.cluster)};font-family:monospace;">${e.cluster}</td>
+                    <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">#${e.rank}</td>
+                    <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">$${e.entry_price.toFixed(2)}</td>
+                    <td style="padding:4px 8px;text-align:right;font-family:monospace;">$${e.now_price.toFixed(2)}</td>
+                    <td style="padding:4px 8px;text-align:right;color:${pc};font-weight:700;font-family:monospace;">${ps}</td>
+                    <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">${e.shares}</td>
+                </tr>`;
+            }).join('');
+            exitsBody.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+                <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border-color);">
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">#</th>
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">Ticker</th>
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">Cluster</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Rank</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Entry $</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Now $</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">P&amp;L%</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Shares</th>
+                </tr></thead><tbody>${rows}</tbody>
+            </table>`;
+        }
+    }
+
+    // ENTRIES table
+    const entriesBody = document.getElementById('techmo-entries-body');
+    if (entriesBody) {
+        if (!d.entries.length) {
+            entriesBody.innerHTML = '<div style="padding:8px 0;font-size:11px;color:var(--text-muted);">No new entries — all top-12 already held</div>';
+        } else {
+            const rows = d.entries.map((e, i) => {
+                const capStr = e.capital > 0 ? '$' + e.capital.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
+                return `<tr style="border-bottom:1px solid var(--border-color);">
+                    <td style="padding:4px 8px;color:var(--text-muted);font-family:monospace;">${i+1}</td>
+                    <td style="padding:4px 8px;font-weight:700;color:var(--green);font-family:monospace;cursor:pointer;" onclick="techmoOpenChart('${e.ticker}')">${e.ticker}</td>
+                    <td style="padding:4px 8px;font-size:10px;color:${clr(e.cluster)};font-family:monospace;">${e.cluster}</td>
+                    <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">#${e.rank}</td>
+                    <td style="padding:4px 8px;text-align:right;font-family:monospace;">$${e.price.toFixed(2)}</td>
+                    <td style="padding:4px 8px;text-align:right;color:#60a5fa;font-weight:700;font-family:monospace;">${e.shares}</td>
+                    <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">${capStr}</td>
+                    <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">${e.score.toFixed(3)}</td>
+                </tr>`;
+            }).join('');
+            entriesBody.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+                <thead><tr style="font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border-color);">
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">#</th>
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">Ticker</th>
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">Cluster</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Rank</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Price $</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Shares</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Capital</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
+                </tr></thead><tbody>${rows}</tbody>
+            </table>`;
+        }
     }
 }
 
