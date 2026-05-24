@@ -1160,20 +1160,6 @@ class LiveSignalsEngine:
             data["prev_ranks"]     = {}
             data["prev_rank_date"] = ""
 
-        # Annotate each mom20_signal with rank_delta vs prev_ranks.
-        # Both prev and curr use UNFILTERED ranks so the scales match.
-        # delta > 0  → rank number fell (improved), < 0 → rank worsened.
-        prev = data.get("prev_ranks") or {}
-        unfiltered = data.get("mom20_unfiltered_ranks") or {}
-        for s in data.get("mom20_signals", []):
-            ticker = s.get("ticker")
-            prev_r = prev.get(ticker)
-            curr_r = unfiltered.get(ticker)
-            if prev_r is not None and curr_r is not None:
-                s["rank_delta"] = prev_r - curr_r
-            else:
-                s["rank_delta"] = None
-
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)
 
