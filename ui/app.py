@@ -3999,8 +3999,6 @@ def api_techmo_scan():
         anomaly_reasons = []
         if n < 260:
             anomaly_reasons.append(f"only {n}d of data — 12m lookback truncated")
-        if ret_12 > 5.0:
-            anomaly_reasons.append(f"{ret_12*100:.0f}% 12m return — verify data/spinoff")
         rows_now.append({
             "ticker":         t,
             "cluster":        TECHMO_UNIVERSE[t],
