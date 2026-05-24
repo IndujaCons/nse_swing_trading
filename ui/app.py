@@ -3995,14 +3995,24 @@ def api_techmo_scan():
         sigma  = float(_np.std(log_r)) * _np.sqrt(252) if len(log_r) > 1 else 0.3
         if sigma < 0.01:
             sigma = 0.01
+        # Anomaly flags
+        anomaly_reasons = []
+        if n < 260:
+            anomaly_reasons.append(f"only {n}d of data — 12m lookback truncated")
+        if ret_12 > 5.0:
+            anomaly_reasons.append(f"{ret_12*100:.0f}% 12m return — verify data/spinoff")
         rows_now.append({
-            "ticker":  t,
-            "cluster": TECHMO_UNIVERSE[t],
-            "price":   round(p_now, 2),
-            "ret12m":  round(ret_12 * 100, 1),
-            "ret3m":   round(ret_3  * 100, 1),
-            "mr_12":   ret_12 / sigma,
-            "mr_3":    ret_3  / sigma,
+            "ticker":         t,
+            "cluster":        TECHMO_UNIVERSE[t],
+            "price":          round(p_now, 2),
+            "ret12m":         round(ret_12 * 100, 1),
+            "ret3m":          round(ret_3  * 100, 1),
+            "sigma":          round(sigma  * 100, 1),
+            "mr_12":          ret_12 / sigma,
+            "mr_3":           ret_3  / sigma,
+            "data_days":      n,
+            "anomaly":        len(anomaly_reasons) > 0,
+            "anomaly_reason": "; ".join(anomaly_reasons) if anomaly_reasons else None,
         })
 
         # previous session
@@ -4541,10 +4551,13 @@ def api_techmo_basket(user_id):
                 "ticker":  sig["ticker"],
                 "cluster": sig["cluster"],
                 "rank":    sig["rank"],
-                "price":   round(px, 2),
-                "shares":  shares,
-                "capital": round(shares * px, 2),
-                "score":   sig["score"],
+                "price":          round(px, 2),
+                "shares":         shares,
+                "capital":        round(shares * px, 2),
+                "score":          sig["score"],
+                "sigma":          sig.get("sigma"),
+                "anomaly":        sig.get("anomaly", False),
+                "anomaly_reason": sig.get("anomaly_reason"),
             })
 
     holds_count = len(held_set & target_tickers)

@@ -4630,11 +4630,14 @@
                 return `<tr class="ticker" data-ticker="${s.ticker}" style="${bg}border-bottom:1px solid var(--border-color);">
                     <td style="padding:4px 8px;font-family:monospace;${rankStyle}">${s.rank}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:center;font-size:10px;">${fmtDelta(s.rank_change)}</td>
-                    <td class="ticker" style="padding:4px 8px;font-family:monospace;font-weight:700;color:var(--green);">${s.ticker}</td>
+                    <td class="ticker" style="padding:4px 8px;font-family:monospace;font-weight:700;color:var(--green);">
+                        ${s.ticker}${s.anomaly ? `<span title="${s.anomaly_reason}" style="margin-left:4px;color:#f5a623;font-size:9px;cursor:help;">⚠</span>` : ''}
+                    </td>
                     <td style="padding:4px 8px;font-family:monospace;font-size:10px;color:${cCol};">${s.cluster}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;">$${s.price.toFixed(2)}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${col(s.ret12m)};">${fmt(s.ret12m)}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${col(s.ret3m)};">${fmt(s.ret3m)}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.sigma ? s.sigma.toFixed(0)+'%' : '—'}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${s.score.toFixed(2)}</td>
                 </tr>`;
             }).join('');
@@ -4647,6 +4650,7 @@
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Price $</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">12M</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">3M</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility">σ</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
                 </tr></thead><tbody>${rows}</tbody>
             </table>
@@ -9050,12 +9054,15 @@ function techmoRenderBasket(d) {
         } else {
             const rows = d.entries.map((e, i) => {
                 const capStr = e.capital > 0 ? '$' + e.capital.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
+                const anomalyBadge = e.anomaly ? `<span title="${e.anomaly_reason}" style="margin-left:4px;color:#f5a623;font-size:9px;cursor:help;">⚠</span>` : '';
+                const sigmaStr = e.sigma != null ? e.sigma.toFixed(0)+'%' : '—';
                 return `<tr style="border-bottom:1px solid var(--border-color);">
                     <td style="padding:4px 8px;color:var(--text-muted);font-family:monospace;">${i+1}</td>
-                    <td style="padding:4px 8px;font-weight:700;color:var(--green);font-family:monospace;cursor:pointer;" onclick="techmoOpenChart('${e.ticker}')">${e.ticker}</td>
+                    <td style="padding:4px 8px;font-weight:700;color:var(--green);font-family:monospace;cursor:pointer;" onclick="techmoOpenChart('${e.ticker}')">${e.ticker}${anomalyBadge}</td>
                     <td style="padding:4px 8px;font-size:10px;color:${clr(e.cluster)};font-family:monospace;">${e.cluster}</td>
                     <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">#${e.rank}</td>
                     <td style="padding:4px 8px;text-align:right;font-family:monospace;">$${e.price.toFixed(2)}</td>
+                    <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-size:10px;font-family:monospace;">${sigmaStr}</td>
                     <td style="padding:4px 8px;text-align:right;color:#60a5fa;font-weight:700;font-family:monospace;">${e.shares}</td>
                     <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">${capStr}</td>
                     <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">${e.score.toFixed(3)}</td>
@@ -9068,6 +9075,7 @@ function techmoRenderBasket(d) {
                     <th style="text-align:left;padding:4px 8px;font-family:monospace;">Cluster</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Rank</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Price $</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility">σ</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Shares</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Capital</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
