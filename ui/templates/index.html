@@ -6755,11 +6755,20 @@
                 const history = d.history || [];
                 document.getElementById('mom20-history-count').textContent = `${history.length} rebalance${history.length !== 1 ? 's' : ''}`;
                 if (!history.length) { body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances recorded yet. Upload a trade book after each rebalance to record history.</div>'; return; }
-                body.innerHTML = history.map((rb, i) => mom20RenderRebalance(rb, history.length - i)).join('');
+                // Compute holds: reconstruct portfolio oldest-first, pass holds to each renderer
+                let _port = new Set();
+                const _holdsArr = history.map(rb => {
+                    const _sells = (rb.sells || rb.exits || []).map(s => s.ticker);
+                    const _buys  = (rb.buys  || rb.entries || []).map(b => b.ticker);
+                    const _holds = Array.from(_port).filter(t => !_sells.includes(t) && !_buys.includes(t));
+                    _port = new Set([..._holds, ..._buys]);
+                    return _holds;
+                });
+                body.innerHTML = history.map((rb, i) => mom20RenderRebalance(rb, history.length - i, _holdsArr[i])).join('');
             } catch(e) { body.innerHTML = `<div style="color:var(--red);">${e.message}</div>`; }
         }
 
-        function mom20RenderRebalance(rb, num) {
+        function mom20RenderRebalance(rb, num, holds) {
             const fmt  = n => n != null ? Number(n).toLocaleString('en-IN', {maximumFractionDigits: 0}) : '—';
             const fmtP = n => n != null ? '₹' + Number(n).toFixed(2) : '—';
             const color = {g: 'var(--green)', r: 'var(--red)', m: 'var(--text-muted)', t: 'var(--text-primary)'};
@@ -6833,6 +6842,13 @@
                 <div style="margin-top:10px;color:${color.t};font-weight:700;">ENTRIES / BUYS (${buys.length})${totalDeployed > 0 ? `  <span style="color:${color.m};font-weight:400;font-size:11px;">₹${fmt(totalDeployed)} deployed</span>` : ''}</div>
                 ${buysHtml}`;
 
+            const holdsArr = holds || [];
+            const holdsSection = holdsArr.length === 0 ? '' : `
+                <div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holdsArr.length})</div>
+                <div style="display:flex;flex-wrap:wrap;gap:4px 8px;padding-top:4px;">
+                    ${holdsArr.map(t => `<span style="color:var(--text-muted);font-family:monospace;font-size:11px;">${t}</span>`).join('')}
+                </div>`;
+
             return `
             <div style="margin-bottom:8px;font-family:monospace;font-size:12px;">
                 ${divider}
@@ -6840,6 +6856,7 @@
                     ${header}
                     ${sellsSection}
                     ${buysSection}
+                    ${holdsSection}
                 </div>
             </div>`;
         }
@@ -8657,7 +8674,7 @@ function techmoToggleHistory() {
     if (!visible && !_techmoHistoryLoaded) techmoLoadHistory();
 }
 
-function techmoRenderRebalance(rb, num) {
+function techmoRenderRebalance(rb, num, holds) {
     const color  = {g:'var(--green)',r:'#ef5350',m:'var(--text-muted)',t:'var(--text-primary)'};
     const divider = `<div style="color:#1e4d8c;margin:4px 0;">${'═'.repeat(60)}</div>`;
     const date   = rb.rebalance_date || rb.date || '—';
@@ -8715,6 +8732,13 @@ function techmoRenderRebalance(rb, num) {
 
     const deployedStr = totalDeployed > 0 ? `  <span style="color:${color.m};font-weight:400;font-size:11px;">$${totalDeployed.toFixed(2)} deployed</span>` : '';
 
+    const holdsArr = holds || [];
+    const holdsHtml = holdsArr.length === 0 ? '' : `
+        <div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holdsArr.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px 8px;padding-top:4px;">
+            ${holdsArr.map(t => `<span style="color:${color.m};font-family:monospace;font-size:11px;">${t}</span>`).join('')}
+        </div>`;
+
     return `<div style="margin-bottom:8px;font-family:monospace;font-size:12px;">
         ${divider}
         <div style="padding:8px 0 6px 0;">
@@ -8723,6 +8747,7 @@ function techmoRenderRebalance(rb, num) {
             ${sellsHtml}
             <div style="margin-top:10px;color:${color.t};font-weight:700;">ENTRIES / BUYS (${buys.length})${deployedStr}</div>
             ${buysHtml}
+            ${holdsHtml}
         </div>
     </div>`;
 }
@@ -8746,8 +8771,17 @@ async function techmoLoadHistory() {
             if (body) body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances yet. Use ➕ Add Position or 📌 Seed Initial Rebalance.</div>';
             return;
         }
+        // Compute holds oldest-first, then render newest-first
+        let _tPort = new Set();
+        const _tHoldsArr = history.map(rb => {
+            const _s = (rb.sells || []).map(s => s.ticker);
+            const _b = (rb.buys  || []).map(b => b.ticker);
+            const _h = Array.from(_tPort).filter(t => !_s.includes(t) && !_b.includes(t));
+            _tPort = new Set([..._h, ..._b]);
+            return _h;
+        });
         if (body) body.innerHTML = history.slice().reverse()
-            .map((rb, i) => techmoRenderRebalance(rb, history.length - i)).join('');
+            .map((rb, i) => techmoRenderRebalance(rb, history.length - i, _tHoldsArr[history.length - 1 - i])).join('');
     } catch(e) { if (body) body.innerHTML = `<div style="color:var(--red);">${e.message}</div>`; }
 }
 

@@ -4693,11 +4693,15 @@ def api_techmo_add_position(user_id):
             "rank":        None,
         }
 
-    hist.append({
-        "rebalance_date": date,
-        "buys":  [{"ticker": ticker, "qty": shares, "price": price}],
-        "sells": [],
-    })
+    # Merge into existing same-date entry so all rebalance actions on one day stay together
+    if hist and hist[-1].get("rebalance_date") == date:
+        hist[-1].setdefault("buys", []).append({"ticker": ticker, "qty": shares, "price": price})
+    else:
+        hist.append({
+            "rebalance_date": date,
+            "buys":  [{"ticker": ticker, "qty": shares, "price": price}],
+            "sells": [],
+        })
     pf["basket"] = list(basket.values())
     pf["status"] = "seeded"
     if not pf.get("tracking_since"):
@@ -4747,11 +4751,16 @@ def api_techmo_exit_position(user_id):
     ep       = held.get("entry_price", 0)
     pnl      = round((price - ep) * exit_qty, 2)
 
-    hist.append({
-        "rebalance_date": date,
-        "buys":  [],
-        "sells": [{"ticker": ticker, "qty": exit_qty, "price": price, "pnl": pnl}],
-    })
+    # Merge into existing same-date entry
+    if hist and hist[-1].get("rebalance_date") == date:
+        hist[-1].setdefault("sells", []).append({"ticker": ticker, "qty": exit_qty, "price": price,
+                                                   "entry_price": ep, "pnl": pnl})
+    else:
+        hist.append({
+            "rebalance_date": date,
+            "buys":  [],
+            "sells": [{"ticker": ticker, "qty": exit_qty, "price": price, "entry_price": ep, "pnl": pnl}],
+        })
 
     remaining = round(held_qty - exit_qty, 6)
     if remaining <= 0.0001:
