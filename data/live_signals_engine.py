@@ -975,6 +975,22 @@ class LiveSignalsEngine:
             # All N200 prices (no beta filter) — used for SIP min capital on held stocks
             mom20_all_prices = {d["ticker"]: d["price"] for d in mom20_raw}
 
+            # rank_delta for overflow: compare uncapped rank vs prev session
+            if len(mom20_raw_prev) >= 5:
+                mr12_ov_p = np.array([d["mr_12"] for d in mom20_raw_prev])
+                mr3_ov_p  = np.array([d["mr_3"] if d.get("mr_3") is not None else d["mr_6"] for d in mom20_raw_prev])
+                z12_ov_p  = (mr12_ov_p - mr12_ov_p.mean()) / mr12_ov_p.std() if mr12_ov_p.std() > 0 else np.zeros_like(mr12_ov_p)
+                z3_ov_p   = (mr3_ov_p  - mr3_ov_p.mean())  / mr3_ov_p.std()  if mr3_ov_p.std()  > 0 else np.zeros_like(mr3_ov_p)
+                wz_ov_p   = 0.5 * z12_ov_p + 0.5 * z3_ov_p
+                for idx_op, d in enumerate(mom20_raw_prev):
+                    z = wz_ov_p[idx_op]
+                    d["norm_score_uc_prev"] = (1 + z) if z >= 0 else 1 / (1 - z)
+                prev_uc_rank_map = {d["ticker"]: (ri + 1) for ri, d in enumerate(sorted(mom20_raw_prev, key=lambda d: -d.get("norm_score_uc_prev", 0)))}
+                for sig in mom20_overflow:
+                    curr_uc = mom20_unfiltered_ranks.get(sig["ticker"])
+                    prev_uc = prev_uc_rank_map.get(sig["ticker"])
+                    sig["rank_delta"] = (prev_uc - curr_uc) if prev_uc is not None and curr_uc is not None else None
+
         # Mom15: same scoring as Mom20 but beta cap 1.0, top 15
         # Load EPS data for TTM growth column + filtered view
         eps_db = {}
