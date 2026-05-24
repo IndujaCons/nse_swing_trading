@@ -671,7 +671,8 @@ class LiveSignalsEngine:
         rs_signals = []
         rs_ibd_candidates = []  # collect IBD weighted scores for ranking
         rs_ibd_history = {}  # ticker -> list of weighted scores for last 5 days
-        mom20_raw = []  # collect momentum data for Mom20/Mom15 scoring after loop
+        mom20_raw = []       # collect momentum data for Mom20/Mom15 scoring after loop
+        mom20_raw_prev = []  # same but at i-1 (previous session) — for rank-change Δ
         alpha20_raw = []  # collect data for Alpha20 CAPM scoring after loop
         rs63_signals = []  # RS63 satellite signals
         actual_date = None  # Track actual last trading date from data
@@ -771,6 +772,11 @@ class LiveSignalsEngine:
                 ticker, closes, i, price, n50_ret_series, n50_var)
             if mom_feat is not None:
                 mom20_raw.append(mom_feat)
+            if i >= 253:  # previous session features for rank-change Δ
+                prev_feat = compute_mom20_features(
+                    ticker, closes, i - 1, float(closes.iloc[i - 1]), n50_ret_series, n50_var)
+                if prev_feat is not None:
+                    mom20_raw_prev.append(prev_feat)
 
             # Alpha20: CAPM alpha features for cross-sectional ranking after loop
             alpha_feat = compute_alpha20_features(
@@ -914,6 +920,25 @@ class LiveSignalsEngine:
                     "stop_pct": 0,
                     "atr_pct": 0,
                 })
+
+            # Rank previous session and inject rank_change into each signal
+            if len(mom20_raw_prev) >= 5:
+                prev_eligible = [d for d in mom20_raw_prev if d.get("beta") is None or abs(d["beta"]) <= 1.2]
+                if len(prev_eligible) < 5:
+                    prev_eligible = mom20_raw_prev
+                mr12_p = np.array([d["mr_12"] for d in prev_eligible])
+                mr3_p  = np.array([d["mr_3"] if d.get("mr_3") is not None else d["mr_6"] for d in prev_eligible])
+                z12_p  = (mr12_p - mr12_p.mean()) / mr12_p.std() if mr12_p.std() > 0 else np.zeros_like(mr12_p)
+                z3_p   = (mr3_p  - mr3_p.mean())  / mr3_p.std()  if mr3_p.std()  > 0 else np.zeros_like(mr3_p)
+                wz_p   = 0.5 * z12_p + 0.5 * z3_p
+                for idx_p, d in enumerate(prev_eligible):
+                    z = wz_p[idx_p]
+                    d["norm_score_prev"] = (1 + z) if z >= 0 else 1 / (1 - z)
+                prev_eligible.sort(key=lambda d: -d["norm_score_prev"])
+                prev_rank_map = {d["ticker"]: (ri + 1) for ri, d in enumerate(prev_eligible)}
+                for sig in mom20_signals:
+                    pr = prev_rank_map.get(sig["ticker"])
+                    sig["rank_delta"] = (pr - sig["rank"]) if pr is not None else None
 
         # Mom20 overflow: top-40 uncapped minus capped — high-beta RS63 candidates
         mom20_overflow = []
