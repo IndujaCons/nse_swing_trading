@@ -6759,15 +6759,25 @@
                 const history = d.history || [];
                 document.getElementById('mom20-history-count').textContent = `${history.length} rebalance${history.length !== 1 ? 's' : ''}`;
                 if (!history.length) { body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances recorded yet. Upload a trade book after each rebalance to record history.</div>'; return; }
-                // API returns newest-first; compute holds oldest-first then map back to display indices
+                // API returns newest-first; compute holds oldest-first then map back to display indices.
+                // _port tracks {ticker → {entry_price, qty, entry_date}} so each hold carries its own
+                // buy data — avoids "—" for stocks no longer in the live portfolio.
                 const _histOld = history.slice().reverse();  // oldest first
-                let _port = new Set();
+                let _portMap = new Map();  // ticker → {entry_price, qty, entry_date}
                 const _holdsOld = _histOld.map(rb => {
-                    const _sells = (rb.sells || rb.exits || []).map(s => s.ticker);
-                    const _buys  = (rb.buys  || rb.entries || []).map(b => b.ticker);
-                    const _holds = Array.from(_port).filter(t => !_sells.includes(t) && !_buys.includes(t));
-                    _port = new Set([..._holds, ..._buys]);
-                    return _holds;
+                    const _sells = new Set((rb.sells || rb.exits || []).map(s => s.ticker));
+                    const _buySet = new Set((rb.buys || rb.entries || []).map(b => b.ticker));
+                    // holds = previous portfolio minus sells and re-entries
+                    const _holds = {};
+                    _portMap.forEach((data, t) => { if (!_sells.has(t) && !_buySet.has(t)) _holds[t] = data; });
+                    // update port: remove sells, add buys
+                    const _newPort = new Map();
+                    _portMap.forEach((data, t) => { if (!_sells.has(t)) _newPort.set(t, data); });
+                    (rb.buys || rb.entries || []).forEach(b => {
+                        _newPort.set(b.ticker, { entry_price: b.price || b.fill_price || b.entry_price, qty: b.qty, entry_date: rb.rebalance_date });
+                    });
+                    _portMap = _newPort;
+                    return _holds;  // {ticker: {entry_price, qty, entry_date}}
                 });
                 // history[i] (newest-first) is chronological position N-1-i → holds = _holdsOld[N-1-i]
                 const N = history.length;
@@ -6849,40 +6859,43 @@
                 <div style="margin-top:10px;color:${color.t};font-weight:700;">ENTRIES / BUYS (${buys.length})${totalDeployed > 0 ? `  <span style="color:${color.m};font-weight:400;font-size:11px;">₹${fmt(totalDeployed)} deployed</span>` : ''}</div>
                 ${buysHtml}`;
 
-            const holdsArr = holds || [];
-            const holdsSection = holdsArr.length === 0 ? '' : (() => {
-                const cols = '110px 42px 70px 60px 70px 70px 42px 80px 58px';
-                const hdr = `<div style="display:grid;grid-template-columns:${cols};gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;border-bottom:1px solid var(--border-color);padding-bottom:3px;">
+            // holds is {ticker: {entry_price, qty, entry_date}} from history chain
+            const holdsMap  = holds || {};
+            const holdsList = Object.keys(holdsMap);
+            const holdsSection = holdsList.length === 0 ? '' : (() => {
+                const MO   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const cols = '100px 36px 62px 66px 68px 68px 38px 76px 50px';
+                const hdr  = `<div style="display:grid;grid-template-columns:${cols};gap:3px;color:${color.m};font-size:10px;margin-bottom:3px;border-bottom:1px solid var(--border-color);padding-bottom:3px;white-space:nowrap;">
                     <span>Ticker</span><span>Rank</span><span>Sector</span><span>Since</span><span>Entry ₹</span><span>Now ₹</span><span>Qty</span><span>Unreal P&L</span><span>P&L%</span></div>`;
-                const rows = holdsArr.map(t => {
-                    const ctx  = _mom20HoldingsCtx[t] || {};
+                const rows = holdsList.map(t => {
+                    const hist = holdsMap[t] || {};           // from history chain: entry_price, qty, entry_date
+                    const ctx  = _mom20HoldingsCtx[t] || {}; // from live tracker: current_price, rank, return_pct
                     const rank = ctx.rank;
-                    const ep   = ctx.entry_price;
+                    const ep   = hist.entry_price ?? ctx.entry_price;
+                    const qty  = hist.qty ?? ctx.qty;
+                    const ed   = (hist.entry_date || ctx.entry_date || '').slice(0, 10);
                     const np   = ctx.current_price;
-                    const qty  = ctx.qty;
-                    const pp   = ctx.return_pct;
-                    const ed   = ctx.entry_date ? ctx.entry_date.slice(0,10) : null;
+                    const pp   = (ep != null && np != null) ? (np / ep - 1) * 100 : ctx.return_pct;
                     const sec  = mom20SectorLabel(t);
-                    const unreal = (ep != null && np != null && qty != null) ? (np - ep) * qty : null;
+                    const unreal = (ep != null && np != null && qty != null) ? Math.round((np - ep) * qty) : null;
                     const pc   = pp == null ? color.m : pp >= 0 ? color.g : color.r;
                     const uc   = unreal == null ? color.m : unreal >= 0 ? color.g : color.r;
                     const rankStr = rank != null ? `${rank}` : '—';
                     const rankC   = rank != null && rank <= 20 ? 'var(--green)' : rank != null && rank <= 40 ? '#f59e0b' : color.m;
-                    const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                     const sinceStr = ed ? (([y,mo,d]) => `${d}-${MO[+mo-1]}-${y.slice(2)}`)(ed.split('-')) : '—';
-                    return `<div style="display:grid;grid-template-columns:${cols};gap:4px;padding:2px 0;">
+                    return `<div style="display:grid;grid-template-columns:${cols};gap:3px;padding:2px 0;white-space:nowrap;">
                         <span style="color:${color.t};font-weight:600;">${t}</span>
                         <span style="color:${rankC};font-weight:600;">${rankStr}</span>
-                        <span style="color:${color.m};font-size:10px;">${sec || '—'}</span>
+                        <span style="color:${color.m};font-size:10px;overflow:hidden;text-overflow:ellipsis;">${sec || '—'}</span>
                         <span style="color:${color.m};">${sinceStr}</span>
                         <span style="color:${color.m};">${ep != null ? ep.toLocaleString('en-IN',{maximumFractionDigits:1}) : '—'}</span>
                         <span style="color:${color.m};">${np != null ? np.toLocaleString('en-IN',{maximumFractionDigits:1}) : '—'}</span>
                         <span style="color:${color.m};">${qty ?? '—'}</span>
-                        <span style="color:${uc};font-weight:600;">${unreal != null ? (unreal>=0?'+':'')+Math.round(unreal).toLocaleString('en-IN') : '—'}</span>
+                        <span style="color:${uc};font-weight:600;">${unreal != null ? (unreal>=0?'+':'')+unreal.toLocaleString('en-IN') : '—'}</span>
                         <span style="color:${pc};font-weight:600;">${pp != null ? (pp >= 0 ? '+' : '') + pp.toFixed(1) + '%' : '—'}</span>
                     </div>`;
                 }).join('');
-                return `<div style="margin-top:10px;color:${color.t};font-weight:700;margin-bottom:6px;">HOLDS (${holdsArr.length})</div>${hdr}${rows}`;
+                return `<div style="margin-top:10px;color:${color.t};font-weight:700;margin-bottom:6px;">HOLDS (${holdsList.length})</div>${hdr}${rows}`;
             })();
 
             return `
@@ -8771,31 +8784,34 @@ function techmoRenderRebalance(rb, num, holds) {
 
     const deployedStr = totalDeployed > 0 ? `  <span style="color:${color.m};font-weight:400;font-size:11px;">$${totalDeployed.toFixed(2)} deployed</span>` : '';
 
-    const holdsArr = holds || [];
-    const holdsHtml = holdsArr.length === 0 ? '' : (() => {
+    // holds is {ticker: {entry_price, shares, entry_date}} from history chain
+    const holdsMap  = holds || {};
+    const holdsList = Object.keys(holdsMap);
+    const holdsHtml = holdsList.length === 0 ? '' : (() => {
         const _MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         const _fmtDate = ed => ed ? (([y,mo,d]) => `${d}-${_MO[+mo-1]}-${y.slice(2)}`)(ed.split('-')) : '—';
-        const cols = '80px 40px 75px 58px 62px 62px 42px 78px 58px';
-        const hdr = `<div style="display:grid;grid-template-columns:${cols};gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;border-bottom:1px solid var(--border-color);padding-bottom:3px;">
+        const cols = '78px 36px 72px 62px 60px 60px 38px 72px 52px';
+        const hdr = `<div style="display:grid;grid-template-columns:${cols};gap:3px;color:${color.m};font-size:10px;margin-bottom:3px;border-bottom:1px solid var(--border-color);padding-bottom:3px;white-space:nowrap;">
             <span>Ticker</span><span>Rank</span><span>Cluster</span><span>Since</span><span>Entry $</span><span>Now $</span><span>Shares</span><span>Unreal P&L</span><span>P&L%</span></div>`;
-        const rows = holdsArr.map(t => {
+        const rows = holdsList.map(t => {
+            const hist = holdsMap[t] || {};
             const ctx  = _techmoHoldingsCtx[t] || {};
             const rank = _techmoRankCtx[t];
-            const ep   = ctx.entry_price;
-            const np   = ctx.now_price;
-            const pp   = ctx.pnl_pct;
-            const unreal = ctx.pnl;
-            const shares = ctx.shares;
-            const ed   = ctx.entry_date;
-            const cl   = ctx.cluster || '—';
+            const ep     = hist.entry_price ?? ctx.entry_price;
+            const shares = hist.shares ?? ctx.shares;
+            const ed     = (hist.entry_date || ctx.entry_date || '').slice(0, 10);
+            const np     = ctx.now_price;
+            const cl     = ctx.cluster || '—';
+            const pp     = (ep != null && np != null) ? (np / ep - 1) * 100 : ctx.pnl_pct;
+            const unreal = (ep != null && np != null && shares != null) ? (np - ep) * shares : null;
             const pc   = pp == null ? color.m : pp >= 0 ? color.g : color.r;
             const uc   = unreal == null ? color.m : unreal >= 0 ? color.g : color.r;
             const rankStr = rank != null ? `${rank}` : '—';
             const rankC   = rank != null && rank <= 10 ? '#60a5fa' : rank != null && rank <= 24 ? '#f59e0b' : color.m;
-            return `<div style="display:grid;grid-template-columns:${cols};gap:4px;padding:2px 0;">
+            return `<div style="display:grid;grid-template-columns:${cols};gap:3px;padding:2px 0;white-space:nowrap;">
                 <span style="color:${color.t};font-weight:600;">${t}</span>
                 <span style="color:${rankC};font-weight:600;">${rankStr}</span>
-                <span style="color:${color.m};font-size:10px;">${cl}</span>
+                <span style="color:${color.m};font-size:10px;overflow:hidden;text-overflow:ellipsis;">${cl}</span>
                 <span style="color:${color.m};">${_fmtDate(ed)}</span>
                 <span style="color:${color.m};">${ep != null ? ep.toFixed(2) : '—'}</span>
                 <span style="color:${color.m};">${np != null ? np.toFixed(2) : '—'}</span>
@@ -8804,7 +8820,7 @@ function techmoRenderRebalance(rb, num, holds) {
                 <span style="color:${pc};font-weight:600;">${pp != null ? (pp >= 0 ? '+' : '') + pp.toFixed(1) + '%' : '—'}</span>
             </div>`;
         }).join('');
-        return `<div style="margin-top:10px;color:${color.t};font-weight:700;margin-bottom:6px;">HOLDS (${holdsArr.length})</div>${hdr}${rows}`;
+        return `<div style="margin-top:10px;color:${color.t};font-weight:700;margin-bottom:6px;">HOLDS (${holdsList.length})</div>${hdr}${rows}`;
     })();
 
     return `<div style="margin-bottom:8px;font-family:monospace;font-size:12px;">
@@ -8839,14 +8855,21 @@ async function techmoLoadHistory() {
             if (body) body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances yet. Use ➕ Add Position or 📌 Seed Initial Rebalance.</div>';
             return;
         }
-        // Compute holds oldest-first, then render newest-first
-        let _tPort = new Set();
+        // Compute holds oldest-first, tracking buy data so history-derived entry/qty/date
+        // are available even for stocks no longer in the live portfolio.
+        let _tPortMap = new Map();  // ticker → {entry_price, shares, entry_date}
         const _tHoldsArr = history.map(rb => {
-            const _s = (rb.sells || []).map(s => s.ticker);
-            const _b = (rb.buys  || []).map(b => b.ticker);
-            const _h = Array.from(_tPort).filter(t => !_s.includes(t) && !_b.includes(t));
-            _tPort = new Set([..._h, ..._b]);
-            return _h;
+            const _sells = new Set((rb.sells || []).map(s => s.ticker));
+            const _buySet = new Set((rb.buys  || []).map(b => b.ticker));
+            const _holds  = {};
+            _tPortMap.forEach((data, t) => { if (!_sells.has(t) && !_buySet.has(t)) _holds[t] = data; });
+            const _newPort = new Map();
+            _tPortMap.forEach((data, t) => { if (!_sells.has(t)) _newPort.set(t, data); });
+            (rb.buys || []).forEach(b => {
+                _newPort.set(b.ticker, { entry_price: b.price || b.fill_price || b.entry_price, shares: b.qty, entry_date: rb.rebalance_date });
+            });
+            _tPortMap = _newPort;
+            return _holds;  // {ticker: {entry_price, shares, entry_date}}
         });
         if (body) body.innerHTML = history.slice().reverse()
             .map((rb, i) => techmoRenderRebalance(rb, history.length - i, _tHoldsArr[history.length - 1 - i])).join('');
