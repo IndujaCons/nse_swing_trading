@@ -4513,7 +4513,7 @@ def api_techmo_basket(user_id):
     def get_px(ticker, fallback=0):
         return live_prices.get(ticker) or scan_prices.get(ticker) or fallback
 
-    BUFFER_OUT = 16
+    BUFFER_OUT = 24
     exits = []
     for h in basket:
         t = h["ticker"]
