@@ -921,24 +921,7 @@ class LiveSignalsEngine:
                     "atr_pct": 0,
                 })
 
-            # Rank previous session and inject rank_change into each signal
-            if len(mom20_raw_prev) >= 5:
-                prev_eligible = [d for d in mom20_raw_prev if d.get("beta") is None or abs(d["beta"]) <= 1.2]
-                if len(prev_eligible) < 5:
-                    prev_eligible = mom20_raw_prev
-                mr12_p = np.array([d["mr_12"] for d in prev_eligible])
-                mr3_p  = np.array([d["mr_3"] if d.get("mr_3") is not None else d["mr_6"] for d in prev_eligible])
-                z12_p  = (mr12_p - mr12_p.mean()) / mr12_p.std() if mr12_p.std() > 0 else np.zeros_like(mr12_p)
-                z3_p   = (mr3_p  - mr3_p.mean())  / mr3_p.std()  if mr3_p.std()  > 0 else np.zeros_like(mr3_p)
-                wz_p   = 0.5 * z12_p + 0.5 * z3_p
-                for idx_p, d in enumerate(prev_eligible):
-                    z = wz_p[idx_p]
-                    d["norm_score_prev"] = (1 + z) if z >= 0 else 1 / (1 - z)
-                prev_eligible.sort(key=lambda d: -d["norm_score_prev"])
-                prev_rank_map = {d["ticker"]: (ri + 1) for ri, d in enumerate(prev_eligible)}
-                for sig in mom20_signals:
-                    pr = prev_rank_map.get(sig["ticker"])
-                    sig["rank_delta"] = (pr - sig["rank"]) if pr is not None else None
+            # rank_delta injected later (overflow block) using uncapped universe ranks
 
         # Mom20 overflow: top-40 uncapped minus capped — high-beta RS63 candidates
         mom20_overflow = []
@@ -986,7 +969,8 @@ class LiveSignalsEngine:
                     z = wz_ov_p[idx_op]
                     d["norm_score_uc_prev"] = (1 + z) if z >= 0 else 1 / (1 - z)
                 prev_uc_rank_map = {d["ticker"]: (ri + 1) for ri, d in enumerate(sorted(mom20_raw_prev, key=lambda d: -d.get("norm_score_uc_prev", 0)))}
-                for sig in mom20_overflow:
+                # Apply uncapped rank_delta to both overflow and main Mom20 signals
+                for sig in mom20_overflow + mom20_signals:
                     curr_uc = mom20_unfiltered_ranks.get(sig["ticker"])
                     prev_uc = prev_uc_rank_map.get(sig["ticker"])
                     sig["rank_delta"] = (prev_uc - curr_uc) if prev_uc is not None and curr_uc is not None else None
