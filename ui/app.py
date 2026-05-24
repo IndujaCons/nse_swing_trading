@@ -3971,50 +3971,82 @@ def api_techmo_scan():
         except Exception:
             return pd.Series(dtype=float)
 
-    # Build rows for current session (iloc[-1]) and previous session (iloc[-2])
-    # This naturally handles weekends, holidays, pre-market: the data itself defines
-    # what the two most-recent trading sessions are — no calendar logic needed.
+    # Build rows for current session (iloc[-1]) and previous session (iloc[-2]).
+    # Formula matches ai_universe_backtest.py / momentum_backtest.py:
+    #   MR = return / annualized_vol  →  cross-sectional Z-score  →  norm (1+z)/(1-z)⁻¹
+    import numpy as _np
     rows_now  = []
     rows_prev = []
     for t in tickers:
         s = get_close(t)
-        if len(s) < 61:  # need at least 2 bars
+        if len(s) < 64:
             continue
-        p_now  = float(s.iloc[-1])
-        p_12m  = float(s.iloc[-253]) if len(s) >= 253 else float(s.iloc[0])
-        p_3m   = float(s.iloc[-63])  if len(s) >= 63  else float(s.iloc[0])
+        closes = s.values.astype(float)
+        n = len(closes)
+
+        # current session
+        p_now  = closes[-1]
+        p_12m  = closes[-253] if n >= 253 else closes[0]
+        p_3m   = closes[-63]  if n >= 63  else closes[0]
+        ret_12 = p_now / p_12m - 1
+        ret_3  = p_now / p_3m  - 1
+        hist   = closes[max(0, n - 253):n]
+        log_r  = _np.diff(_np.log(_np.maximum(hist, 1e-10)))
+        sigma  = float(_np.std(log_r)) * _np.sqrt(252) if len(log_r) > 1 else 0.3
+        if sigma < 0.01:
+            sigma = 0.01
         rows_now.append({
             "ticker":  t,
             "cluster": TECHMO_UNIVERSE[t],
             "price":   round(p_now, 2),
-            "ret12m":  round((p_now / p_12m - 1) * 100, 1),
-            "ret3m":   round((p_now / p_3m  - 1) * 100, 1),
+            "ret12m":  round(ret_12 * 100, 1),
+            "ret3m":   round(ret_3  * 100, 1),
+            "mr_12":   ret_12 / sigma,
+            "mr_3":    ret_3  / sigma,
         })
-        p_prev  = float(s.iloc[-2])
-        p_12m_p = float(s.iloc[-254]) if len(s) >= 254 else float(s.iloc[0])
-        p_3m_p  = float(s.iloc[-64])  if len(s) >= 64  else float(s.iloc[0])
+
+        # previous session
+        p_prev   = closes[-2]
+        p_12m_p  = closes[-254] if n >= 254 else closes[0]
+        p_3m_p   = closes[-64]  if n >= 64  else closes[0]
+        ret_12_p = p_prev / p_12m_p - 1
+        ret_3_p  = p_prev / p_3m_p  - 1
+        hist_p   = closes[max(0, n - 254):n - 1]
+        log_r_p  = _np.diff(_np.log(_np.maximum(hist_p, 1e-10)))
+        sigma_p  = float(_np.std(log_r_p)) * _np.sqrt(252) if len(log_r_p) > 1 else sigma
+        if sigma_p < 0.01:
+            sigma_p = 0.01
         rows_prev.append({
             "ticker": t,
-            "ret12m": round((p_prev / p_12m_p - 1) * 100, 1),
-            "ret3m":  round((p_prev / p_3m_p  - 1) * 100, 1),
+            "mr_12":  ret_12_p / sigma_p,
+            "mr_3":   ret_3_p  / sigma_p,
         })
 
     if not rows_now:
         return jsonify({"success": False, "error": "no price data"})
 
-    # Rank current session
+    def _norm(z):
+        return (1.0 + z) if z >= 0 else 1.0 / (1.0 - z)
+
+    # Rank current session — vol-adjusted MR, cross-sectional Z, normalized score
     df = pd.DataFrame(rows_now)
-    df["z12"]   = (df["ret12m"] - df["ret12m"].mean()) / df["ret12m"].std()
-    df["z3"]    = (df["ret3m"]  - df["ret3m"].mean())  / df["ret3m"].std()
-    df["score"] = (0.5 * df["z12"] + 0.5 * df["z3"]).round(3)
+    mu12, sd12 = df["mr_12"].mean(), df["mr_12"].std()
+    mu3,  sd3  = df["mr_3"].mean(),  df["mr_3"].std()
+    df["z12"]   = (df["mr_12"] - mu12) / sd12
+    df["z3"]    = (df["mr_3"]  - mu3)  / sd3
+    waz         = 0.5 * df["z12"] + 0.5 * df["z3"]
+    df["score"] = waz.apply(lambda z: round(_norm(z), 3))
     df = df.sort_values("score", ascending=False).reset_index(drop=True)
     df["rank"]  = (df.index + 1).astype(int)
 
     # Rank previous session and build lookup
     df_p = pd.DataFrame(rows_prev)
-    df_p["z12"]   = (df_p["ret12m"] - df_p["ret12m"].mean()) / df_p["ret12m"].std()
-    df_p["z3"]    = (df_p["ret3m"]  - df_p["ret3m"].mean())  / df_p["ret3m"].std()
-    df_p["score"] = 0.5 * df_p["z12"] + 0.5 * df_p["z3"]
+    mu12_p, sd12_p = df_p["mr_12"].mean(), df_p["mr_12"].std()
+    mu3_p,  sd3_p  = df_p["mr_3"].mean(),  df_p["mr_3"].std()
+    df_p["z12"]   = (df_p["mr_12"] - mu12_p) / sd12_p
+    df_p["z3"]    = (df_p["mr_3"]  - mu3_p)  / sd3_p
+    waz_p         = 0.5 * df_p["z12"] + 0.5 * df_p["z3"]
+    df_p["score"] = waz_p.apply(_norm)
     df_p = df_p.sort_values("score", ascending=False).reset_index(drop=True)
     prev_rank_map = dict(zip(df_p["ticker"], df_p.index + 1))
 
