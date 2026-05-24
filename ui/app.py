@@ -4200,6 +4200,31 @@ def api_techmo_portfolio_save(user_id):
     return jsonify({"success": True})
 
 
+@app.route("/api/techmo-users/<user_id>/capital", methods=["POST"])
+def api_techmo_capital_save(user_id):
+    """Persist user-edited capital to the TechMo portfolio JSON."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    cap = (request.get_json() or {}).get("capital", 0)
+    try:
+        cap = float(cap)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "invalid capital"})
+    if cap <= 0:
+        return jsonify({"success": False, "error": "capital must be positive"})
+    path = techmo_portfolio_path(user_id)
+    try:
+        with open(path) as f:
+            pf = json.load(f)
+    except Exception:
+        pf = {"basket": [], "status": "empty"}
+    pf["capital"] = cap
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(pf, f, indent=2)
+    return jsonify({"success": True, "capital": cap, "per_slot": round(cap / 12, 2)})
+
+
 @app.route("/api/techmo-users/<user_id>/performance", methods=["GET"])
 def api_techmo_performance_user(user_id):
     """Live P&L for a specific user's TechMo portfolio."""

@@ -2814,7 +2814,9 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:12px 18px;margin-bottom:10px;">
                         <div>
                             <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Capital</div>
-                            <div id="techmo-cap-value" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
+                            <input id="techmo-cap-input" class="basket-capital-input" type="text" placeholder="e.g. 5000"
+                                style="font-size:15px;"
+                                onchange="techmoCapitalChanged()" onkeydown="if(event.key==='Enter')techmoCapitalChanged()">
                         </div>
                         <div>
                             <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Per Slot ÷ 12</div>
@@ -8666,11 +8668,11 @@ function techmoRender(d) {
     const fmtUSDShort = v => '$' + v.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
     const cap     = d.initial_capital || d.total_cost || 0;
     const perSlot = cap > 0 ? cap / 12 : 0;
-    const capEl   = document.getElementById('techmo-cap-value');
+    const capInput = document.getElementById('techmo-cap-input');
     const slotEl  = document.getElementById('techmo-slot-value');
     const posEl   = document.getElementById('techmo-pos-value');
     const rebalEl = document.getElementById('techmo-rebal-value');
-    if (capEl)   capEl.textContent   = cap > 0 ? fmtUSDShort(cap) : '—';
+    if (capInput && !capInput.dataset.userEdited) capInput.value = cap > 0 ? cap.toFixed(2) : '';
     if (slotEl)  slotEl.textContent  = perSlot > 0 ? fmtUSDShort(perSlot) : '—';
     if (posEl)   posEl.textContent   = (d.holdings || []).length + ' / 12';
     if (rebalEl) rebalEl.textContent = d.next_rebalance || '—';
@@ -8913,6 +8915,28 @@ function techmoRenderBasket(d) {
             </table>`;
         }
     }
+}
+
+async function techmoCapitalChanged() {
+    const uid = _techmoSelectedUser?.id;
+    if (!uid) return;
+    const raw = (document.getElementById('techmo-cap-input')?.value || '').replace(/[$,\s]/g, '');
+    const cap = parseFloat(raw);
+    if (!cap || cap <= 0) return;
+    document.getElementById('techmo-cap-input').dataset.userEdited = 'true';
+    // Update per-slot display immediately
+    const slotEl = document.getElementById('techmo-slot-value');
+    if (slotEl) slotEl.textContent = '$' + (cap / 12).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+    // Persist to server
+    try {
+        await fetch(`/api/techmo-users/${uid}/capital`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({capital: cap})
+        });
+        // Re-run basket with updated per-slot
+        techmoLoadBasket();
+    } catch(e) { console.warn('techmoCapitalChanged error:', e); }
 }
 
 let _mom20TrackerSortDir = {return: 'desc', rank: 'asc'};
