@@ -4558,6 +4558,53 @@ def api_techmo_history(user_id):
     return jsonify({"success": True, "history": hist})
 
 
+@app.route("/api/techmo-users/<user_id>/seed-history", methods=["POST"])
+def api_techmo_seed_history(user_id):
+    """Write the current basket as the initial rebalance entry in history.
+    Body: {"date": "2026-05-21"}  (optional, defaults to tracking_since or today)
+    Safe to call only when history is empty — returns error if history already has entries.
+    """
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    pf_path   = techmo_portfolio_path(user_id)
+    hist_path = techmo_history_path(user_id)
+    try:
+        with open(pf_path) as f:
+            pf = json.load(f)
+    except Exception:
+        return jsonify({"success": False, "error": "portfolio not found"})
+    try:
+        with open(hist_path) as f:
+            existing = json.load(f)
+        if existing:
+            return jsonify({"success": False, "error": "history already has entries — delete manually if you want to re-seed"})
+    except Exception:
+        existing = []
+
+    basket = pf.get("basket", [])
+    if not basket:
+        return jsonify({"success": False, "error": "portfolio is empty"})
+
+    data = request.get_json() or {}
+    date = data.get("date") or pf.get("tracking_since") or datetime.now().strftime("%Y-%m-%d")
+
+    entry = {
+        "rebalance_date": date,
+        "note": "Initial positions (seeded)",
+        "buys": [
+            {"ticker": h["ticker"],
+             "qty":    h.get("qty") or h.get("shares", 0),
+             "price":  h.get("entry_price", 0)}
+            for h in basket
+        ],
+        "sells": [],
+    }
+    os.makedirs(os.path.dirname(hist_path), exist_ok=True)
+    with open(hist_path, "w") as f:
+        json.dump([entry], f, indent=2)
+    return jsonify({"success": True, "seeded": len(basket), "date": date})
+
+
 @app.route("/api/techmo-users/<user_id>/add-position", methods=["POST"])
 def api_techmo_add_position(user_id):
     """Manually add a position to the TechMo portfolio and record in history."""

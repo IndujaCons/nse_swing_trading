@@ -2963,9 +2963,11 @@
 
                 <!-- History panel -->
                 <div id="techmo-history-panel" style="display:none;margin-top:20px;">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-top:1px solid var(--border-color);padding-top:16px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-top:1px solid var(--border-color);padding-top:16px;flex-wrap:wrap;">
                         <span style="font-size:13px;font-weight:700;color:var(--text-secondary);letter-spacing:1px;">REBALANCE HISTORY</span>
                         <span id="techmo-history-count" style="font-size:11px;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);">0 rebalances</span>
+                        <button id="techmo-seed-btn" onclick="techmoSeedHistory()" style="margin-left:auto;padding:3px 10px;font-size:10px;background:rgba(245,166,35,0.15);color:#f5a623;border:1px solid rgba(245,166,35,0.4);border-radius:4px;cursor:pointer;">📌 Seed Initial Rebalance</button>
+                        <span id="techmo-seed-status" style="font-size:10px;color:var(--text-muted);"></span>
                     </div>
                     <div id="techmo-history-body" style="font-family:monospace;font-size:12px;"></div>
                 </div>
@@ -8651,6 +8653,76 @@ function techmoToggleHistory() {
     if (!visible && !_techmoHistoryLoaded) techmoLoadHistory();
 }
 
+function techmoRenderRebalance(rb, num) {
+    const color  = {g:'var(--green)',r:'#ef5350',m:'var(--text-muted)',t:'var(--text-primary)'};
+    const divider = `<div style="color:#1e4d8c;margin:4px 0;">${'═'.repeat(60)}</div>`;
+    const date   = rb.rebalance_date || rb.date || '—';
+    const note   = rb.note ? `<span style="color:${color.m};font-size:10px;font-weight:400;margin-left:8px;">${rb.note}</span>` : '';
+    const header = `<div style="color:#4a9eff;font-weight:700;">REBALANCE #${String(num).padStart(2,'0')} — ${date}${note}</div>`;
+
+    const sells = rb.sells || [];
+    const buys  = rb.buys  || [];
+
+    // EXITS / SELLS
+    let rebalPnl = sells.reduce((s, e) => s + (e.pnl || 0), 0);
+    const pnlStr = rebalPnl !== 0
+        ? `  <span style="color:${rebalPnl>=0?color.g:color.r};font-weight:700;font-size:11px;">${rebalPnl>=0?'+':'-'}$${Math.abs(rebalPnl).toFixed(2)}</span>`
+        : '';
+    const sellsHtml = sells.length === 0
+        ? `<div style="color:${color.m};padding-left:4px;">—</div>`
+        : `<div style="display:grid;grid-template-columns:90px 55px 72px 72px 72px 70px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+               <span>Stock</span><span>Shares</span><span>Entry $</span><span>Fill $</span><span>Value $</span><span>P&amp;L</span></div>` +
+          sells.map(e => {
+            const qty  = e.qty || 0;
+            const ep   = e.entry_price || 0;
+            const px   = e.price || e.fill_price || e.exit_price || 0;
+            const val  = qty && px ? (qty * px).toFixed(2) : '—';
+            const pnl  = e.pnl != null ? e.pnl : (ep && px && qty ? (px - ep) * qty : null);
+            const pc   = pnl == null ? color.m : pnl >= 0 ? color.g : color.r;
+            const ps   = pnl != null ? (pnl >= 0 ? '+' : '-') + '$' + Math.abs(pnl).toFixed(2) : '—';
+            return `<div style="display:grid;grid-template-columns:90px 55px 72px 72px 72px 70px;gap:4px;">
+                <span style="color:${color.r};">${e.ticker}</span>
+                <span style="color:${color.m};">${qty}</span>
+                <span style="color:${color.m};">${ep ? ep.toFixed(2) : '—'}</span>
+                <span style="color:${color.m};">${px ? px.toFixed(2) : '—'}</span>
+                <span style="color:${color.m};">${val}</span>
+                <span style="color:${pc};font-weight:600;">${ps}</span>
+            </div>`;
+          }).join('');
+
+    // ENTRIES / BUYS
+    let totalDeployed = 0;
+    const buysHtml = buys.length === 0
+        ? `<div style="color:${color.m};padding-left:4px;">—</div>`
+        : `<div style="display:grid;grid-template-columns:90px 55px 80px 80px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+               <span>Stock</span><span>Shares</span><span>Fill $</span><span>Value $</span></div>` +
+          buys.map(e => {
+            const qty = e.qty || 0;
+            const px  = e.price || e.fill_price || e.entry_price || 0;
+            const val = qty && px ? (qty * px) : null;
+            if (val) totalDeployed += val;
+            return `<div style="display:grid;grid-template-columns:90px 55px 80px 80px;gap:4px;">
+                <span style="color:${color.g};">${e.ticker}</span>
+                <span style="color:${color.m};">${qty}</span>
+                <span style="color:${color.m};">${px ? px.toFixed(2) : '—'}</span>
+                <span style="color:${color.m};">${val != null ? '$'+val.toFixed(2) : '—'}</span>
+            </div>`;
+          }).join('');
+
+    const deployedStr = totalDeployed > 0 ? `  <span style="color:${color.m};font-weight:400;font-size:11px;">$${totalDeployed.toFixed(2)} deployed</span>` : '';
+
+    return `<div style="margin-bottom:8px;font-family:monospace;font-size:12px;">
+        ${divider}
+        <div style="padding:8px 0 6px 0;">
+            ${header}
+            <div style="margin-top:10px;color:${color.t};font-weight:700;">EXITS / SELLS (${sells.length})${pnlStr}</div>
+            ${sellsHtml}
+            <div style="margin-top:10px;color:${color.t};font-weight:700;">ENTRIES / BUYS (${buys.length})${deployedStr}</div>
+            ${buysHtml}
+        </div>
+    </div>`;
+}
+
 async function techmoLoadHistory() {
     const uid  = _techmoSelectedUser?.id;
     const body = document.getElementById('techmo-history-body');
@@ -8664,22 +8736,40 @@ async function techmoLoadHistory() {
         const history = d.history || [];
         const countEl = document.getElementById('techmo-history-count');
         if (countEl) countEl.textContent = `${history.length} rebalance${history.length !== 1 ? 's' : ''}`;
+        const seedBtn = document.getElementById('techmo-seed-btn');
+        if (seedBtn) seedBtn.style.display = history.some(h => !h.note?.includes('synthesised')) ? 'none' : 'inline';
         if (!history.length) {
-            if (body) body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances recorded yet. Upload a trade book after each rebalance.</div>';
+            if (body) body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances yet. Use ➕ Add Position or 📌 Seed Initial Rebalance.</div>';
             return;
         }
-        if (body) body.innerHTML = history.slice().reverse().map((rb, i) => {
-            const num = history.length - i;
-            const date = rb.rebalance_date || rb.date || '—';
-            const buys  = (rb.buys  || []).map(t => `<div style="display:flex;gap:12px;"><span style="min-width:60px;">${t.ticker}</span><span style="color:var(--green);">+${t.qty} @ $${Number(t.price).toFixed(2)}</span></div>`).join('');
-            const sells = (rb.sells || []).map(t => `<div style="display:flex;gap:12px;"><span style="min-width:60px;">${t.ticker}</span><span style="color:#ef5350;">-${t.qty} @ $${Number(t.price).toFixed(2)}</span></div>`).join('');
-            return `<div style="margin-bottom:16px;padding:12px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:6px;">
-                <div style="color:#4a9eff;font-weight:700;margin-bottom:8px;">REBALANCE #${String(num).padStart(2,'0')} — ${date}</div>
-                ${sells ? `<div style="margin-bottom:6px;"><div style="font-size:10px;color:var(--text-muted);font-weight:700;margin-bottom:3px;">SELLS</div>${sells}</div>` : ''}
-                ${buys  ? `<div><div style="font-size:10px;color:var(--text-muted);font-weight:700;margin-bottom:3px;">BUYS</div>${buys}</div>` : ''}
-            </div>`;
-        }).join('');
+        if (body) body.innerHTML = history.slice().reverse()
+            .map((rb, i) => techmoRenderRebalance(rb, history.length - i)).join('');
     } catch(e) { if (body) body.innerHTML = `<div style="color:var(--red);">${e.message}</div>`; }
+}
+
+async function techmoSeedHistory() {
+    const uid = _techmoSelectedUser?.id;
+    if (!uid) return;
+    const date = prompt('Enter the date for the initial rebalance (YYYY-MM-DD):', '2026-05-21');
+    if (!date) return;
+    const status = document.getElementById('techmo-seed-status');
+    if (status) status.textContent = 'Seeding…';
+    try {
+        const r = await fetch(`/api/techmo-users/${uid}/seed-history`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({date})
+        });
+        const d = await r.json();
+        if (!d.success) {
+            if (status) { status.textContent = d.error; status.style.color = '#ef5350'; }
+            return;
+        }
+        if (status) { status.textContent = `✓ Seeded ${d.seeded} positions on ${d.date}`; status.style.color = 'var(--green)'; }
+        techmoLoadHistory();
+    } catch(e) {
+        if (status) { status.textContent = e.message; status.style.color = '#ef5350'; }
+    }
 }
 
 async function techmoUploadTradeBook(event) {
