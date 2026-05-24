@@ -4616,11 +4616,13 @@ def api_techmo_seed_history(user_id):
             pf = json.load(f)
     except Exception:
         return jsonify({"success": False, "error": "portfolio not found"})
+    data = request.get_json() or {}
+    force = data.get("force", False)
     try:
         with open(hist_path) as f:
             existing = json.load(f)
-        if existing:
-            return jsonify({"success": False, "error": "history already has entries — delete manually if you want to re-seed"})
+        if existing and not force:
+            return jsonify({"success": False, "error": "history already has entries — use force=true to clear and re-seed"})
     except Exception:
         existing = []
 
@@ -4628,7 +4630,6 @@ def api_techmo_seed_history(user_id):
     if not basket:
         return jsonify({"success": False, "error": "portfolio is empty"})
 
-    data = request.get_json() or {}
     date = data.get("date") or pf.get("tracking_since") or datetime.now().strftime("%Y-%m-%d")
 
     entry = {

@@ -8758,13 +8758,27 @@ async function techmoSeedHistory() {
     if (!date) return;
     const status = document.getElementById('techmo-seed-status');
     if (status) status.textContent = 'Seeding…';
+    // First attempt without force
     try {
-        const r = await fetch(`/api/techmo-users/${uid}/seed-history`, {
+        let r = await fetch(`/api/techmo-users/${uid}/seed-history`, {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({date})
         });
-        const d = await r.json();
+        let d = await r.json();
+        if (!d.success && d.error && d.error.includes('already has entries')) {
+            // Existing history — ask user to confirm overwrite
+            if (!confirm('History already has entries. Clear all existing history and re-seed with current basket positions?')) {
+                if (status) { status.textContent = 'Cancelled.'; status.style.color = 'var(--text-muted)'; }
+                return;
+            }
+            r = await fetch(`/api/techmo-users/${uid}/seed-history`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({date, force: true})
+            });
+            d = await r.json();
+        }
         if (!d.success) {
             if (status) { status.textContent = d.error; status.style.color = '#ef5350'; }
             return;
