@@ -3938,6 +3938,7 @@ TECHMO_UNIVERSE = {
 }
 
 _TECHMO_SCAN_CACHE = {"data": None, "ts": 0}
+_TECHMO_PREV_RANKS = {"ranks": {}, "date": ""}  # baseline ranks for daily Δ display
 
 @app.route("/api/techmo/scan", methods=["GET"])
 def api_techmo_scan():
@@ -3990,11 +3991,25 @@ def api_techmo_scan():
     df = df.sort_values("score", ascending=False).reset_index(drop=True)
     df["rank"] = (df.index + 1).astype(int)
 
+    # Daily rank-change baseline: snapshot old ranks when the date rolls over
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    if _TECHMO_PREV_RANKS["date"] != today_str:
+        if _TECHMO_SCAN_CACHE["data"]:
+            old_sigs = _TECHMO_SCAN_CACHE["data"].get("signals", [])
+            _TECHMO_PREV_RANKS["ranks"] = {s["ticker"]: s["rank"] for s in old_sigs}
+        _TECHMO_PREV_RANKS["date"] = today_str
+
+    prev_ranks = _TECHMO_PREV_RANKS["ranks"]
+    signals = df.to_dict(orient="records")
+    for sig in signals:
+        t = sig["ticker"]
+        sig["rank_change"] = (prev_ranks[t] - sig["rank"]) if t in prev_ranks else None
+
     result = {
         "success":    True,
-        "universe":   len(df),
+        "universe":   len(signals),
         "scanned_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "signals":    df.head(40).to_dict(orient="records"),
+        "signals":    signals,
     }
     _TECHMO_SCAN_CACHE["data"] = result
     _TECHMO_SCAN_CACHE["ts"]   = _t.time()
