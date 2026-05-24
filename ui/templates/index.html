@@ -4621,6 +4621,10 @@
                 if (rc > 0)   return `<span style="color:#26a69a;">▲${rc}</span>`;
                 return `<span style="color:#ef5350;">▼${Math.abs(rc)}</span>`;
             };
+            // Cache ranks for history holds display
+            _techmoRankCtx = {};
+            (d.signals || []).forEach(s => { _techmoRankCtx[s.ticker] = s.rank; });
+
             const rows = (d.signals || []).map(s => {
                 const isEntry = s.rank <= 10;
                 const isHold  = s.rank > 10 && s.rank <= 24;
@@ -6843,11 +6847,29 @@
                 ${buysHtml}`;
 
             const holdsArr = holds || [];
-            const holdsSection = holdsArr.length === 0 ? '' : `
-                <div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holdsArr.length})</div>
-                <div style="display:flex;flex-wrap:wrap;gap:4px 8px;padding-top:4px;">
-                    ${holdsArr.map(t => `<span style="color:var(--text-muted);font-family:monospace;font-size:11px;">${t}</span>`).join('')}
-                </div>`;
+            const holdsSection = holdsArr.length === 0 ? '' : (() => {
+                const cols = '110px 55px 70px 70px 60px';
+                const hdr = `<div style="display:grid;grid-template-columns:${cols};gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+                    <span>Stock</span><span>Rank</span><span>Entry ₹</span><span>Now ₹</span><span>P&L%</span></div>`;
+                const rows = holdsArr.map(t => {
+                    const ctx = _mom20HoldingsCtx[t] || {};
+                    const rank = ctx.rank;
+                    const ep   = ctx.entry_price;
+                    const np   = ctx.current_price;
+                    const pp   = ctx.return_pct;
+                    const pc   = pp == null ? color.m : pp >= 0 ? color.g : color.r;
+                    const rankStr = rank != null ? `#${rank}` : '—';
+                    const rankC   = rank != null && rank <= 20 ? 'var(--green)' : rank != null && rank <= 40 ? '#f59e0b' : color.m;
+                    return `<div style="display:grid;grid-template-columns:${cols};gap:4px;">
+                        <span style="color:${color.m};">${t}</span>
+                        <span style="color:${rankC};font-weight:600;">${rankStr}</span>
+                        <span style="color:${color.m};">${ep != null ? Number(ep).toLocaleString('en-IN', {maximumFractionDigits:2}) : '—'}</span>
+                        <span style="color:${color.m};">${np != null ? Number(np).toLocaleString('en-IN', {maximumFractionDigits:2}) : '—'}</span>
+                        <span style="color:${pc};font-weight:600;">${pp != null ? (pp >= 0 ? '+' : '') + pp.toFixed(2) + '%' : '—'}</span>
+                    </div>`;
+                }).join('');
+                return `<div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holdsArr.length})</div>${hdr}${rows}`;
+            })();
 
             return `
             <div style="margin-bottom:8px;font-family:monospace;font-size:12px;">
@@ -8055,6 +8077,7 @@ let _etfSelectedUser   = null;
 let _mom20BasketData   = null;  // last fetched basket preview
 let _mom20TrackerSort  = 'return';  // 'return' | 'rank'
 let _mom20TrackerHoldings = [];     // last fetched holdings for re-sort
+let _mom20HoldingsCtx  = {};        // ticker → {rank, entry_price, current_price, return_pct}
 
 async function loadUsers() {
     try {
@@ -8637,6 +8660,8 @@ let _techmoChart   = null;  // Chart.js instance for perf chart
 let _techmoSideChart = null; // Chart.js instance for side price chart
 let _techmoSelectedUser = null;
 let _techmoHistoryLoaded = false;
+let _techmoHoldingsCtx = {};  // ticker → {entry_price, now_price, pnl_pct}
+let _techmoRankCtx     = {};  // ticker → rank
 
 function techmoOnUserChange() {
     const uid = document.getElementById('techmo-user-select').value;
@@ -8733,11 +8758,28 @@ function techmoRenderRebalance(rb, num, holds) {
     const deployedStr = totalDeployed > 0 ? `  <span style="color:${color.m};font-weight:400;font-size:11px;">$${totalDeployed.toFixed(2)} deployed</span>` : '';
 
     const holdsArr = holds || [];
-    const holdsHtml = holdsArr.length === 0 ? '' : `
-        <div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holdsArr.length})</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px 8px;padding-top:4px;">
-            ${holdsArr.map(t => `<span style="color:${color.m};font-family:monospace;font-size:11px;">${t}</span>`).join('')}
-        </div>`;
+    const holdsHtml = holdsArr.length === 0 ? '' : (() => {
+        const hdr = `<div style="display:grid;grid-template-columns:90px 55px 72px 72px 72px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+            <span>Stock</span><span>Rank</span><span>Entry $</span><span>Now $</span><span>P&L%</span></div>`;
+        const rows = holdsArr.map(t => {
+            const ctx  = _techmoHoldingsCtx[t] || {};
+            const rank = _techmoRankCtx[t];
+            const ep   = ctx.entry_price;
+            const np   = ctx.now_price;
+            const pp   = ctx.pnl_pct;
+            const pc   = pp == null ? color.m : pp >= 0 ? color.g : color.r;
+            const rankStr = rank != null ? `#${rank}` : '—';
+            const rankC   = rank != null && rank <= 10 ? '#60a5fa' : rank != null && rank <= 24 ? '#f59e0b' : color.m;
+            return `<div style="display:grid;grid-template-columns:90px 55px 72px 72px 72px;gap:4px;">
+                <span style="color:${color.m};">${t}</span>
+                <span style="color:${rankC};">${rankStr}</span>
+                <span style="color:${color.m};">${ep != null ? ep.toFixed(2) : '—'}</span>
+                <span style="color:${color.m};">${np != null ? np.toFixed(2) : '—'}</span>
+                <span style="color:${pc};font-weight:600;">${pp != null ? (pp >= 0 ? '+' : '') + pp.toFixed(2) + '%' : '—'}</span>
+            </div>`;
+        }).join('');
+        return `<div style="margin-top:10px;color:${color.t};font-weight:700;">HOLDS (${holdsArr.length})</div>${hdr}${rows}`;
+    })();
 
     return `<div style="margin-bottom:8px;font-family:monospace;font-size:12px;">
         ${divider}
@@ -8901,6 +8943,16 @@ function techmoRender(d) {
         'Compute':'#60a5fa','Memory':'#34d399','Semicon':'#a78bfa',
         'Photonics':'#f59e0b','Space':'#fb923c','Other':'var(--text-muted)'
     };
+    // Cache holdings context for history holds display
+    _techmoHoldingsCtx = {};
+    (d.holdings || []).forEach(h => {
+        _techmoHoldingsCtx[h.ticker] = {
+            entry_price: h.entry_price,
+            now_price:   h.now_price,
+            pnl_pct:     h.pnl_pct,
+        };
+    });
+
     const tbody = document.getElementById('techmo-tracker-tbody');
     if (!tbody) return;
     const rows = (d.holdings || []).map(h => {
@@ -9284,6 +9336,12 @@ function mom20TrackerRender() {
         return dir * (a.return_pct - b.return_pct);
     });
     const today = new Date();
+    // Rebuild holdings context for history holds display
+    _mom20HoldingsCtx = {};
+    _mom20TrackerHoldings.forEach(h => {
+        _mom20HoldingsCtx[h.ticker] = { rank: h.rank, entry_price: h.entry_price, current_price: h.current_price, return_pct: h.return_pct };
+    });
+
     tbody.innerHTML = sorted.map(h => {
         const color = h.return_pct >= 0 ? 'var(--green)' : '#dc3545';
         const sign  = h.return_pct >= 0 ? '+' : '';
