@@ -3938,7 +3938,6 @@ TECHMO_UNIVERSE = {
 }
 
 _TECHMO_SCAN_CACHE = {"data": None, "ts": 0}
-_TECHMO_PREV_RANKS = {"ranks": {}, "date": ""}  # baseline ranks for daily Δ display
 
 @app.route("/api/techmo/scan", methods=["GET"])
 def api_techmo_scan():
@@ -3965,45 +3964,57 @@ def api_techmo_scan():
         except Exception:
             return pd.Series(dtype=float)
 
-    rows = []
+    # Build rows for current session (iloc[-1]) and previous session (iloc[-2])
+    # This naturally handles weekends, holidays, pre-market: the data itself defines
+    # what the two most-recent trading sessions are — no calendar logic needed.
+    rows_now  = []
+    rows_prev = []
     for t in tickers:
         s = get_close(t)
-        if len(s) < 60:
+        if len(s) < 61:  # need at least 2 bars
             continue
-        p_now = float(s.iloc[-1])
-        p_12m = float(s.iloc[-253]) if len(s) >= 253 else float(s.iloc[0])
-        p_3m  = float(s.iloc[-63])  if len(s) >= 63  else float(s.iloc[0])
-        rows.append({
+        p_now  = float(s.iloc[-1])
+        p_12m  = float(s.iloc[-253]) if len(s) >= 253 else float(s.iloc[0])
+        p_3m   = float(s.iloc[-63])  if len(s) >= 63  else float(s.iloc[0])
+        rows_now.append({
             "ticker":  t,
             "cluster": TECHMO_UNIVERSE[t],
             "price":   round(p_now, 2),
             "ret12m":  round((p_now / p_12m - 1) * 100, 1),
             "ret3m":   round((p_now / p_3m  - 1) * 100, 1),
         })
+        p_prev  = float(s.iloc[-2])
+        p_12m_p = float(s.iloc[-254]) if len(s) >= 254 else float(s.iloc[0])
+        p_3m_p  = float(s.iloc[-64])  if len(s) >= 64  else float(s.iloc[0])
+        rows_prev.append({
+            "ticker": t,
+            "ret12m": round((p_prev / p_12m_p - 1) * 100, 1),
+            "ret3m":  round((p_prev / p_3m_p  - 1) * 100, 1),
+        })
 
-    if not rows:
+    if not rows_now:
         return jsonify({"success": False, "error": "no price data"})
 
-    df = pd.DataFrame(rows)
-    df["z12"]  = (df["ret12m"] - df["ret12m"].mean()) / df["ret12m"].std()
-    df["z3"]   = (df["ret3m"]  - df["ret3m"].mean())  / df["ret3m"].std()
+    # Rank current session
+    df = pd.DataFrame(rows_now)
+    df["z12"]   = (df["ret12m"] - df["ret12m"].mean()) / df["ret12m"].std()
+    df["z3"]    = (df["ret3m"]  - df["ret3m"].mean())  / df["ret3m"].std()
     df["score"] = (0.5 * df["z12"] + 0.5 * df["z3"]).round(3)
     df = df.sort_values("score", ascending=False).reset_index(drop=True)
-    df["rank"] = (df.index + 1).astype(int)
+    df["rank"]  = (df.index + 1).astype(int)
 
-    # Daily rank-change baseline: snapshot old ranks when the date rolls over
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    if _TECHMO_PREV_RANKS["date"] != today_str:
-        if _TECHMO_SCAN_CACHE["data"]:
-            old_sigs = _TECHMO_SCAN_CACHE["data"].get("signals", [])
-            _TECHMO_PREV_RANKS["ranks"] = {s["ticker"]: s["rank"] for s in old_sigs}
-        _TECHMO_PREV_RANKS["date"] = today_str
+    # Rank previous session and build lookup
+    df_p = pd.DataFrame(rows_prev)
+    df_p["z12"]   = (df_p["ret12m"] - df_p["ret12m"].mean()) / df_p["ret12m"].std()
+    df_p["z3"]    = (df_p["ret3m"]  - df_p["ret3m"].mean())  / df_p["ret3m"].std()
+    df_p["score"] = 0.5 * df_p["z12"] + 0.5 * df_p["z3"]
+    df_p = df_p.sort_values("score", ascending=False).reset_index(drop=True)
+    prev_rank_map = dict(zip(df_p["ticker"], df_p.index + 1))
 
-    prev_ranks = _TECHMO_PREV_RANKS["ranks"]
     signals = df.to_dict(orient="records")
     for sig in signals:
-        t = sig["ticker"]
-        sig["rank_change"] = (prev_ranks[t] - sig["rank"]) if t in prev_ranks else None
+        pr = prev_rank_map.get(sig["ticker"])
+        sig["rank_change"] = (pr - sig["rank"]) if pr is not None else None
 
     result = {
         "success":    True,
