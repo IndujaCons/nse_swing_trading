@@ -8741,7 +8741,7 @@ async function techmoLoadHistory() {
         const countEl = document.getElementById('techmo-history-count');
         if (countEl) countEl.textContent = `${history.length} rebalance${history.length !== 1 ? 's' : ''}`;
         const seedBtn = document.getElementById('techmo-seed-btn');
-        if (seedBtn) seedBtn.style.display = history.some(h => !h.note?.includes('synthesised')) ? 'none' : 'inline';
+        if (seedBtn) seedBtn.style.display = 'inline';
         if (!history.length) {
             if (body) body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances yet. Use ➕ Add Position or 📌 Seed Initial Rebalance.</div>';
             return;
