@@ -6760,24 +6760,37 @@
                 document.getElementById('mom20-history-count').textContent = `${history.length} rebalance${history.length !== 1 ? 's' : ''}`;
                 if (!history.length) { body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances recorded yet. Upload a trade book after each rebalance to record history.</div>'; return; }
                 // API returns newest-first; compute holds oldest-first then map back to display indices.
-                // _port tracks {ticker → {entry_price, qty, entry_date}} so each hold carries its own
-                // buy data — avoids "—" for stocks no longer in the live portfolio.
+                // _portMap tracks {ticker → {entry_price, qty, entry_date}} through the chain.
+                // After all holds are built, we back-fill exit_price from later rebalances so that
+                // stocks sold after a given rebalance still show P&L (instead of all —).
                 const _histOld = history.slice().reverse();  // oldest first
-                let _portMap = new Map();  // ticker → {entry_price, qty, entry_date}
+                let _portMap = new Map();
                 const _holdsOld = _histOld.map(rb => {
                     const _sells = new Set((rb.sells || rb.exits || []).map(s => s.ticker));
                     const _buySet = new Set((rb.buys || rb.entries || []).map(b => b.ticker));
-                    // holds = previous portfolio minus sells and re-entries
                     const _holds = {};
-                    _portMap.forEach((data, t) => { if (!_sells.has(t) && !_buySet.has(t)) _holds[t] = data; });
-                    // update port: remove sells, add buys
+                    _portMap.forEach((data, t) => { if (!_sells.has(t) && !_buySet.has(t)) _holds[t] = { ...data }; });
                     const _newPort = new Map();
                     _portMap.forEach((data, t) => { if (!_sells.has(t)) _newPort.set(t, data); });
                     (rb.buys || rb.entries || []).forEach(b => {
                         _newPort.set(b.ticker, { entry_price: b.price || b.fill_price || b.entry_price, qty: b.qty, entry_date: rb.rebalance_date });
                     });
                     _portMap = _newPort;
-                    return _holds;  // {ticker: {entry_price, qty, entry_date}}
+                    return _holds;
+                });
+                // Back-fill exit_price: for each ticker sold in any rebalance, store the sell price.
+                // Then walk each hold-set and annotate tickers that were later sold.
+                const _exitData = {};  // ticker → {price, date}
+                _histOld.forEach(rb => {
+                    (rb.sells || rb.exits || []).forEach(s => {
+                        const px = s.price || s.fill_price || s.exit_price;
+                        if (px) _exitData[s.ticker] = { price: px, date: rb.rebalance_date };
+                    });
+                });
+                _holdsOld.forEach(holdsMap => {
+                    Object.entries(holdsMap).forEach(([t, data]) => {
+                        if (_exitData[t]) { data.exit_price = _exitData[t].price; data.exit_date = _exitData[t].date; }
+                    });
                 });
                 // history[i] (newest-first) is chronological position N-1-i → holds = _holdsOld[N-1-i]
                 const N = history.length;
@@ -6874,7 +6887,8 @@
                     const ep   = hist.entry_price ?? ctx.entry_price;
                     const qty  = hist.qty ?? ctx.qty;
                     const ed   = (hist.entry_date || ctx.entry_date || '').slice(0, 10);
-                    const np   = ctx.current_price;
+                    // "Now ₹": prefer live price from tracker; fall back to recorded exit price
+                    const np   = ctx.current_price ?? hist.exit_price;
                     const pp   = (ep != null && np != null) ? (np / ep - 1) * 100 : ctx.return_pct;
                     const sec  = mom20SectorLabel(t);
                     const unreal = (ep != null && np != null && qty != null) ? Math.round((np - ep) * qty) : null;
@@ -8800,7 +8814,8 @@ function techmoRenderRebalance(rb, num, holds) {
             const ep     = hist.entry_price ?? ctx.entry_price;
             const shares = hist.shares ?? ctx.shares;
             const ed     = (hist.entry_date || ctx.entry_date || '').slice(0, 10);
-            const np     = ctx.now_price;
+            // prefer live price; fall back to recorded exit price for exited stocks
+            const np     = ctx.now_price ?? hist.exit_price;
             const cl     = ctx.cluster || '—';
             const pp     = (ep != null && np != null) ? (np / ep - 1) * 100 : ctx.pnl_pct;
             const unreal = (ep != null && np != null && shares != null) ? (np - ep) * shares : null;
@@ -8862,7 +8877,7 @@ async function techmoLoadHistory() {
             const _sells = new Set((rb.sells || []).map(s => s.ticker));
             const _buySet = new Set((rb.buys  || []).map(b => b.ticker));
             const _holds  = {};
-            _tPortMap.forEach((data, t) => { if (!_sells.has(t) && !_buySet.has(t)) _holds[t] = data; });
+            _tPortMap.forEach((data, t) => { if (!_sells.has(t) && !_buySet.has(t)) _holds[t] = { ...data }; });
             const _newPort = new Map();
             _tPortMap.forEach((data, t) => { if (!_sells.has(t)) _newPort.set(t, data); });
             (rb.buys || []).forEach(b => {
@@ -8870,6 +8885,19 @@ async function techmoLoadHistory() {
             });
             _tPortMap = _newPort;
             return _holds;  // {ticker: {entry_price, shares, entry_date}}
+        });
+        // Back-fill exit_price from later recorded sells so history holds show P&L even for exited stocks
+        const _tExitData = {};
+        history.forEach(rb => {
+            (rb.sells || []).forEach(s => {
+                const px = s.price || s.fill_price || s.exit_price;
+                if (px) _tExitData[s.ticker] = { price: px, date: rb.rebalance_date };
+            });
+        });
+        _tHoldsArr.forEach(holdsMap => {
+            Object.entries(holdsMap).forEach(([t, data]) => {
+                if (_tExitData[t]) { data.exit_price = _tExitData[t].price; }
+            });
         });
         if (body) body.innerHTML = history.slice().reverse()
             .map((rb, i) => techmoRenderRebalance(rb, history.length - i, _tHoldsArr[history.length - 1 - i])).join('');
