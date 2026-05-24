@@ -6759,16 +6759,19 @@
                 const history = d.history || [];
                 document.getElementById('mom20-history-count').textContent = `${history.length} rebalance${history.length !== 1 ? 's' : ''}`;
                 if (!history.length) { body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No rebalances recorded yet. Upload a trade book after each rebalance to record history.</div>'; return; }
-                // Compute holds: reconstruct portfolio oldest-first, pass holds to each renderer
+                // API returns newest-first; compute holds oldest-first then map back to display indices
+                const _histOld = history.slice().reverse();  // oldest first
                 let _port = new Set();
-                const _holdsArr = history.map(rb => {
+                const _holdsOld = _histOld.map(rb => {
                     const _sells = (rb.sells || rb.exits || []).map(s => s.ticker);
                     const _buys  = (rb.buys  || rb.entries || []).map(b => b.ticker);
                     const _holds = Array.from(_port).filter(t => !_sells.includes(t) && !_buys.includes(t));
                     _port = new Set([..._holds, ..._buys]);
                     return _holds;
                 });
-                body.innerHTML = history.map((rb, i) => mom20RenderRebalance(rb, history.length - i, _holdsArr[i])).join('');
+                // history[i] (newest-first) is chronological position N-1-i → holds = _holdsOld[N-1-i]
+                const N = history.length;
+                body.innerHTML = history.map((rb, i) => mom20RenderRebalance(rb, N - i, _holdsOld[N - 1 - i])).join('');
             } catch(e) { body.innerHTML = `<div style="color:var(--red);">${e.message}</div>`; }
         }
 
