@@ -3898,9 +3898,9 @@ TECHMO_UNIVERSE = {
     "ASML":"Semicon Equip","LRCX":"Semicon Equip","KLAC":"Semicon Equip",
     "KEYS":"Semicon Equip","AMAT":"Semicon Equip","SNPS":"Semicon Equip",
     # Packaging (OSAT)
-    "TSM":"Foundry","ASX":"Packaging","AMKR":"Packaging","CAMT":"Packaging",
+    "TSM":"Foundry","TSEM":"Foundry","ASX":"Packaging","AMKR":"Packaging","CAMT":"Packaging",
     # Photonics / Optical components
-    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics","AAOI":"Photonics",
+    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics","AAOI":"Photonics","VIAV":"Photonics",
     # Networking & Connectivity
     "ANET":"Networking","CSCO":"Networking","CRDO":"Networking","APH":"Networking",
     "MRVL":"Networking","NOK":"Networking","CIEN":"Networking",
