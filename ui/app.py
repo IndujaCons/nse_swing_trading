@@ -2988,6 +2988,7 @@ def api_mom20_performance(user_id):
     # Overlay ranks from live signals cache so the tracker matches the Live Signals tab.
     # Use filtered (beta ≤ 1.2) ranks from mom20_signals — same scale as the scanner.
     # rank_delta also comes from mom20_signals (data-driven, prev session from price data).
+    # For β > 1.2 stocks (not in filtered signals), compute delta from unfiltered ranks.
     scanner_rank_deltas = {}
     try:
         from config.settings import LIVE_SIGNALS_CACHE_FILE
@@ -2997,8 +2998,20 @@ def api_mom20_performance(user_id):
         filtered_ranks = {s["ticker"]: s["rank"] for s in ls.get("mom20_signals", []) if "rank" in s}
         if filtered_ranks:
             rank_map.update(filtered_ranks)
-        # rank_delta pre-computed by scanner (data-driven, iloc[-1] vs iloc[-2])
+        # rank_delta pre-computed by scanner for filtered stocks
         scanner_rank_deltas = {s["ticker"]: s.get("rank_delta") for s in ls.get("mom20_signals", [])}
+        # For β > 1.2 stocks absent from filtered signals, derive delta from unfiltered ranks
+        unfiltered_curr = ls.get("mom20_unfiltered_ranks") or {}
+        unfiltered_prev = ls.get("prev_ranks") or {}
+        for t in basket:
+            ticker = t["ticker"] if isinstance(t, dict) else t
+            if ticker not in scanner_rank_deltas and ticker in unfiltered_curr and ticker in unfiltered_prev:
+                curr_r = unfiltered_curr[ticker]
+                prev_r = unfiltered_prev[ticker]
+                scanner_rank_deltas[ticker] = (prev_r - curr_r) if (curr_r and prev_r) else None
+                # Also overlay unfiltered rank into rank_map if not already set by filtered
+                if ticker not in rank_map and curr_r:
+                    rank_map[ticker] = curr_r
     except Exception:
         pass
 
