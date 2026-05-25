@@ -10700,12 +10700,56 @@ function _fmtPct(v) {
     return `<span style="${cls};font-weight:700;">${sign}${v.toFixed(2)}%</span>`;
 }
 
+// Merge rows that share the same first name (e.g. "Jayaraman" from two registry entries)
+function _mergeSummaryRows(rows) {
+    const order = [];   // preserve display order
+    const map   = {};   // key → merged row
+    rows.forEach(r => {
+        const key = r.name.toLowerCase();
+        if (!map[key]) {
+            map[key] = {
+                ...r,
+                // track which user_id owns the options hedge (the one with mom20_invested)
+                options_user_id: r.mom20_invested > 0 ? r.user_id : null,
+            };
+            order.push(key);
+        } else {
+            const g = map[key];
+            // Mom20: take whichever has data
+            if (g.mom20_pct === null && r.mom20_pct !== null) {
+                g.mom20_pct      = r.mom20_pct;
+                g.mom20_invested = r.mom20_invested;
+            }
+            // ETF / TechMo: take whichever has data
+            if (g.etf_pct    === null && r.etf_pct    !== null) g.etf_pct    = r.etf_pct;
+            if (g.techmo_pct === null && r.techmo_pct !== null) g.techmo_pct = r.techmo_pct;
+            // Options: carry over saved amount from whichever row has it
+            if (!g.options_user_id && r.mom20_invested > 0) {
+                g.options_user_id = r.user_id;
+                g.options_amount  = r.options_amount;
+                g.options_pct     = r.options_pct;
+            }
+        }
+    });
+    // Recompute total and set display user_id for options save
+    return order.map(k => {
+        const g = map[k];
+        g.options_user_id = g.options_user_id || g.user_id;
+        const parts = [g.mom20_pct, g.options_pct, g.etf_pct, g.techmo_pct]
+            .filter(x => x !== null && x !== undefined);
+        g.total_pct = parts.length ? Math.round(parts.reduce((a,b) => a+b, 0) * 100) / 100 : null;
+        return g;
+    });
+}
+
 function renderSummary() {
     const body = document.getElementById('summary-body');
     if (!_summaryRows.length) {
         body.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">No users configured.</div>';
         return;
     }
+
+    const rows = _mergeSummaryRows(_summaryRows);
 
     const thStyle = 'padding:8px 12px;font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;border-bottom:1px solid var(--border-color);white-space:nowrap;';
     const tdStyle = 'padding:9px 12px;font-size:13px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle;';
@@ -10715,17 +10759,18 @@ function renderSummary() {
     const headers = ['Name', 'Mom20 %', 'Options Hedge %', 'ETF %', 'TechMo (Intl) %', 'Total %'];
     const thead = `<tr>${headers.map(h => `<th style="${thStyle}">${h}</th>`).join('')}</tr>`;
 
-    const tbody = _summaryRows.map(r => {
-        const optId = `opt-inp-${r.user_id}`;
+    const tbody = rows.map(r => {
+        const optUid = r.options_user_id;
+        const optId  = `opt-inp-${optUid}`;
         const optCell = `
             <div style="${labelStyle}">₹ amount</div>
             <input id="${optId}" type="number" min="0" step="100"
                 style="${inputStyle}"
                 placeholder="0"
                 value="${r.options_amount != null ? r.options_amount : ''}"
-                onchange="saveSummaryOptions('${r.user_id}', this.value)"
-                oninput="updateOptionsDisplay('${r.user_id}', this.value)">
-            <div id="opt-pct-${r.user_id}" style="font-size:11px;margin-top:3px;">
+                onchange="saveSummaryOptions('${optUid}', this.value, ${r.mom20_invested})"
+                oninput="updateOptionsDisplay('${optUid}', this.value, ${r.mom20_invested})">
+            <div id="opt-pct-${optUid}" style="font-size:11px;margin-top:3px;">
                 ${_fmtPct(r.options_pct)}
             </div>`;
 
@@ -10750,22 +10795,19 @@ function renderSummary() {
 }
 
 // Update options % display immediately as user types (before save round-trip)
-function updateOptionsDisplay(userId, rawVal) {
-    const row = _summaryRows.find(r => r.user_id === userId);
-    const el  = document.getElementById(`opt-pct-${userId}`);
-    if (!row || !el) return;
-    const amt     = parseFloat(rawVal) || 0;
-    const invested = row.mom20_invested || 0;
+function updateOptionsDisplay(userId, rawVal, invested) {
+    const el = document.getElementById(`opt-pct-${userId}`);
+    if (!el) return;
+    const amt = parseFloat(rawVal) || 0;
     if (amt > 0 && invested > 0) {
         const pct = (amt / invested * 100).toFixed(2);
-        const col = amt >= 0 ? '#26a69a' : '#ef5350';
-        el.innerHTML = `<span style="color:${col};font-weight:700;">+${pct}%</span>`;
+        el.innerHTML = `<span style="color:#26a69a;font-weight:700;">+${pct}%</span>`;
     } else {
         el.innerHTML = _fmtPct(null);
     }
 }
 
-async function saveSummaryOptions(userId, rawVal) {
+async function saveSummaryOptions(userId, rawVal, invested) {
     const amt = parseFloat(rawVal) || 0;
     try {
         await fetch('/api/portfolio-summary/options-hedge', {
@@ -10773,7 +10815,6 @@ async function saveSummaryOptions(userId, rawVal) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({user_id: userId, amount: amt}),
         });
-        // Refresh to get updated %
         loadSummary();
     } catch(e) {
         console.error('Failed to save options hedge amount', e);
