@@ -4958,6 +4958,171 @@ def api_etf_position_exit(user_id, pos_id):
     return jsonify({"success": True, "record": record})
 
 
+# ============ Portfolio Summary ============
+
+_OPTIONS_HEDGE_FILE = os.path.join(DATA_STORE_PATH, "options_hedge.json")
+
+
+@app.route("/api/portfolio-summary")
+def api_portfolio_summary():
+    """Aggregate P&L% across Mom20, Options, ETF, TechMo per configured user."""
+    try:
+        with open(_OPTIONS_HEDGE_FILE) as _f:
+            options_data = json.load(_f)
+    except Exception:
+        options_data = {}
+
+    rows = []
+    for u in kite_users:
+        uid  = u["id"]
+        name = (u.get("name") or uid).split()[0]
+
+        # ── Mom20 ──────────────────────────────────────────────────────────────
+        mom20_pct = None
+        mom20_invested = 0.0
+        try:
+            with open(mom20_portfolio_path(uid)) as _f:
+                _pf = json.load(_f)
+            basket = _pf.get("basket", [])
+            _pm = {}
+            try:
+                with open(mom20_live_prices_path(uid)) as _f:
+                    _lp = json.load(_f)
+                _pm = {k: float(v) for k, v in (_lp.get("prices") or {}).items()}
+            except Exception:
+                pass
+            _realized, _init_cap = 0.0, 0.0
+            try:
+                with open(mom20_history_path(uid)) as _f:
+                    _hist = json.load(_f)
+                _realized = _retrospective_realized_pnl(_hist)
+                for _rb in _hist:
+                    _buy  = sum(t.get("qty", 0) * t.get("price", 0) for t in _rb.get("buys",  []))
+                    _sell = sum(t.get("qty", 0) * t.get("price", 0) for t in _rb.get("sells", []))
+                    if _buy - _sell > 0:
+                        _init_cap += _buy - _sell
+            except Exception:
+                pass
+            _te, _tc = 0.0, 0.0
+            for _h in basket:
+                _ep = _h.get("entry_price", 0)
+                _qty = _h.get("qty", 0)
+                _te += _ep * _qty
+                _tc += _pm.get(_h["ticker"], _ep) * _qty
+            _unreal = _tc - _te
+            _init_cap = _init_cap or _te
+            mom20_invested = _init_cap
+            if _init_cap > 0:
+                mom20_pct = round((_unreal + _realized) / _init_cap * 100, 2)
+        except Exception:
+            pass
+
+        # ── Options Hedge ──────────────────────────────────────────────────────
+        options_amt = options_data.get(uid)
+        options_pct = None
+        if options_amt is not None and mom20_invested > 0:
+            options_pct = round(float(options_amt) / mom20_invested * 100, 2)
+
+        # ── ETF ────────────────────────────────────────────────────────────────
+        etf_pct = None
+        try:
+            _open_pos, _etf_hist = [], []
+            try:
+                with open(etf_positions_path(uid)) as _f:
+                    _open_pos = json.load(_f)
+            except Exception:
+                pass
+            try:
+                with open(etf_history_path(uid)) as _f:
+                    _etf_hist = json.load(_f)
+            except Exception:
+                pass
+            _real_etf  = sum(r.get("pnl_abs", 0) for r in _etf_hist)
+            _open_cost = sum(p.get("qty", 0) * p.get("entry_price", 0) for p in _open_pos)
+            _closed_cost = sum(r.get("qty", 0) * r.get("entry_price", 0) for r in _etf_hist)
+            _total_etf_cost = _open_cost + _closed_cost
+            if _total_etf_cost > 0:
+                etf_pct = round(_real_etf / _total_etf_cost * 100, 2)
+        except Exception:
+            pass
+
+        # ── TechMo ─────────────────────────────────────────────────────────────
+        techmo_pct = None
+        try:
+            with open(techmo_portfolio_path(uid)) as _f:
+                _tpf = json.load(_f)
+            _tb = _tpf.get("basket", [])
+            _tprices = {}
+            try:
+                with open(techmo_live_prices_path(uid)) as _f:
+                    _tlp = json.load(_f)
+                _tprices = _tlp.get("prices", {})
+            except Exception:
+                pass
+            _t_realized, _t_cap = 0.0, float(_tpf.get("capital") or 0)
+            try:
+                with open(techmo_history_path(uid)) as _f:
+                    _th = json.load(_f)
+                for _rb in _th:
+                    for _s in _rb.get("sells", []):
+                        _t_realized += _s.get("pnl", 0)
+                if not _t_cap and _th:
+                    _t_cap = sum(b.get("qty", 0) * b.get("price", 0) for b in _th[0].get("buys", []))
+            except Exception:
+                pass
+            _t_cost, _t_curr = 0.0, 0.0
+            for _h in _tb:
+                _ep = _h.get("entry_price", 0)
+                _qty = _h.get("qty", 0) or _h.get("shares", 0)
+                _t_cost += _ep * _qty
+                _t_curr += _tprices.get(_h.get("ticker", ""), _ep) * _qty
+            _t_cap = _t_cap or _t_cost
+            if _t_cap > 0:
+                techmo_pct = round((_t_curr - _t_cost + _t_realized) / _t_cap * 100, 2)
+        except Exception:
+            pass
+
+        # ── Total (simple sum of non-null) ─────────────────────────────────────
+        _parts = [x for x in [mom20_pct, options_pct, etf_pct, techmo_pct] if x is not None]
+        total_pct = round(sum(_parts), 2) if _parts else None
+
+        rows.append({
+            "user_id":        uid,
+            "name":           name,
+            "mom20_pct":      mom20_pct,
+            "mom20_invested": round(mom20_invested, 2),
+            "options_pct":    options_pct,
+            "options_amount": options_amt,
+            "etf_pct":        etf_pct,
+            "techmo_pct":     techmo_pct,
+            "total_pct":      total_pct,
+        })
+
+    return jsonify({"success": True, "rows": rows})
+
+
+@app.route("/api/portfolio-summary/options-hedge", methods=["POST"])
+def api_portfolio_summary_options_hedge():
+    """Save per-user options hedge rupee amount to disk."""
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    amount  = data.get("amount")
+    if not user_id:
+        return jsonify({"success": False, "error": "user_id required"})
+    try:
+        with open(_OPTIONS_HEDGE_FILE) as _f:
+            existing = json.load(_f)
+    except Exception:
+        existing = {}
+    if amount is None or amount == "" or float(amount or 0) == 0:
+        existing.pop(user_id, None)
+    else:
+        existing[user_id] = round(float(amount), 2)
+    with open(_OPTIONS_HEDGE_FILE, "w") as _f:
+        json.dump(existing, _f, indent=2)
+    return jsonify({"success": True})
+
+
 # ============ Mom20 Portfolio Manager ============
 
 from data.mom20_portfolio import (
