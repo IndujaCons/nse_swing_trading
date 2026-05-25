@@ -4973,13 +4973,14 @@ def api_portfolio_summary():
         options_data = {}
 
     rows = []
-    for u in kite_users:
+    for u in load_users():          # registry users (users.json) — same source as Mom20/TechMo tracker
         uid  = u["id"]
         name = (u.get("name") or uid).split()[0]
 
         # ── Mom20 ──────────────────────────────────────────────────────────────
         mom20_pct = None
         mom20_invested = 0.0
+        mom20_err = None
         try:
             with open(mom20_portfolio_path(uid)) as _f:
                 _pf = json.load(_f)
@@ -5014,8 +5015,8 @@ def api_portfolio_summary():
             mom20_invested = _init_cap
             if _init_cap > 0:
                 mom20_pct = round((_unreal + _realized) / _init_cap * 100, 2)
-        except Exception:
-            pass
+        except Exception as _e:
+            mom20_err = str(_e)
 
         # ── Options Hedge ──────────────────────────────────────────────────────
         options_amt = options_data.get(uid)
@@ -5096,6 +5097,7 @@ def api_portfolio_summary():
             "etf_pct":        etf_pct,
             "techmo_pct":     techmo_pct,
             "total_pct":      total_pct,
+            "_err":           mom20_err,   # debug: non-null means mom20 read failed
         })
 
     return jsonify({"success": True, "rows": rows})
