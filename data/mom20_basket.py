@@ -126,30 +126,42 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
                 })
             continue
 
-        # Unfiltered N200 rank is the source of truth for exit decisions.
-        # Fall back to beta-capped rank only if the stock is somehow absent
-        # from unfiltered_ranks (shouldn't happen for current N200 constituents).
-        rank = fallback_ranks.get(ticker) or rank_map.get(ticker)
-        price = price_map.get(ticker, 0)
+        # Exit rank source:
+        #   β ≤ 1.2 stocks → filtered rank (rank_map): matches backtest methodology.
+        #   β > 1.2 stocks (intentional high-beta buys, e.g. MCX, BHEL) → unfiltered
+        #     rank (fallback_ranks): filtered universe excludes them, so rank_map would
+        #     return None and cause a false "removed from N200" exit.
+        #   Dropped from N200 → neither map has them → force exit.
+        if ticker in rank_map:
+            rank = rank_map[ticker]           # filtered — matches backtest
+            display_rank = rank
+        elif ticker in fallback_ranks:
+            rank = fallback_ranks[ticker]     # unfiltered — high-beta intentional buy
+            display_rank = rank
+        else:
+            rank = None
+            display_rank = None
+
+        price = price_map.get(ticker) or (all_prices or {}).get(ticker, 0)
         qty = current_qty_map.get(ticker, 0)
 
         if rank is None:
             exits.append({
-                "ticker":       ticker,
-                "rank":         None,
-                "display_rank": filtered_rank_map.get(ticker),
+                "ticker":        ticker,
+                "rank":          None,
+                "display_rank":  display_rank,
                 "current_price": price,
-                "qty":          qty,
-                "reason":       "removed from Nifty 200",
+                "qty":           qty,
+                "reason":        "removed from Nifty 200",
             })
         elif rank > BUFFER_OUT:
             exits.append({
-                "ticker":       ticker,
-                "rank":         rank,
-                "display_rank": filtered_rank_map.get(ticker, rank),
+                "ticker":        ticker,
+                "rank":          rank,
+                "display_rank":  display_rank,
                 "current_price": price,
-                "qty":          qty,
-                "reason":       f"rank {rank} > {BUFFER_OUT}",
+                "qty":           qty,
+                "reason":        f"rank {rank} > {BUFFER_OUT}",
             })
         else:
             holds.append({"ticker": ticker, "rank": rank, "price": price})
