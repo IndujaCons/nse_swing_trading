@@ -9578,7 +9578,7 @@ function _renderMom20Basket(d) {
             <td>${i+1}</td>
             <td>${tickerLink(e.ticker,'var(--red)')}</td>
             <td style="color:var(--text-muted);font-size:11px">${sectorOf(e)}</td>
-            <td style="color:var(--text-muted)">${e.rank ?? '—'}</td>
+            <td style="color:var(--text-muted)">${e.display_rank ?? e.rank ?? '—'}</td>
             <td>${e.qty}</td>
             <td>${fmtP(e.current_price)}</td>
             <td style="font-size:10px;color:var(--text-muted)">${e.reason}</td></tr>`).join('')

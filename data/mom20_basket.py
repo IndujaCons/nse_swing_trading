@@ -51,8 +51,9 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     total_capital  = (user.get("strategies") or {}).get("mom20", {}).get("capital") or 20_00_000
     capital_per_slot = total_capital / N_SLOTS
 
-    # Build rank map from signals
-    rank_map  = {s["ticker"]: s["rank"]  for s in signals}
+    # Build rank map from signals (beta-capped filtered ranks — used for display and entries)
+    rank_map        = {s["ticker"]: s["rank"]  for s in signals}
+    filtered_rank_map = rank_map  # alias — same source, explicit name for exit display
     price_map = {s["ticker"]: s.get("price", 0) for s in signals}
     score_map = {s["ticker"]: s.get("momentum_score", 0) for s in signals}
     # all_prices contains user's freshly-fetched live prices (highest priority)
@@ -134,19 +135,21 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
 
         if rank is None:
             exits.append({
-                "ticker": ticker,
-                "rank": None,
+                "ticker":       ticker,
+                "rank":         None,
+                "display_rank": filtered_rank_map.get(ticker),
                 "current_price": price,
-                "qty": qty,
-                "reason": "removed from Nifty 200",
+                "qty":          qty,
+                "reason":       "removed from Nifty 200",
             })
         elif rank > BUFFER_OUT:
             exits.append({
-                "ticker": ticker,
-                "rank": rank,
+                "ticker":       ticker,
+                "rank":         rank,
+                "display_rank": filtered_rank_map.get(ticker, rank),
                 "current_price": price,
-                "qty": qty,
-                "reason": f"rank {rank} > {BUFFER_OUT}",
+                "qty":          qty,
+                "reason":       f"rank {rank} > {BUFFER_OUT}",
             })
         else:
             holds.append({"ticker": ticker, "rank": rank, "price": price})
