@@ -29,6 +29,8 @@ BUFFER_IN    = 10             # new stock enters if rank ≤ 10
 BUFFER_OUT   = 30             # existing stays if rank ≤ 30
 BETA_CAP     = 1.0
 BETA_MIN     = None           # None = no minimum beta filter (set to 1.2 for overflow)
+ADDV_MIN     = None           # None = no ADDV filter; set to e.g. 10_000_000 (₹10 Cr/day)
+ADDV_WINDOW  = 90             # trading days for median ADDV
 W12, W3          = 0.50, 0.50    # 12m + 3m, 6m dropped
 PARABOLIC_FILTER = False          # skip new entries where Ret12m>300% AND Ret3m/Ret12m>0.5
 LONG_PD      = 252            # 12m in trading days
@@ -227,6 +229,14 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
         if p_now <= 0 or p_12m <= 0 or p_3m <= 0:
             continue
 
+        # ADDV filter: median daily dollar volume over trailing ADDV_WINDOW bars
+        if ADDV_MIN is not None and "Volume" in df.columns:
+            vols = df["Volume"].values.astype(float)
+            win_start = max(0, ci - ADDV_WINDOW)
+            addv = np.median(closes[win_start:ci+1] * vols[win_start:ci+1])
+            if addv < ADDV_MIN:
+                continue
+
         ret_12 = p_now / p_12m - 1
         ret_3  = p_now / p_3m  - 1
         log_r  = np.diff(np.log(np.maximum(closes[ci-LONG_PD:ci+1], 0.01)))
@@ -356,11 +366,12 @@ def print_table(headers, rows, col_widths):
 def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None,
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
         ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False,
-        sector_cap=None):
+        sector_cap=None, addv_min=None):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, W12, W3, START_DATE, PARABOLIC_FILTER
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER
     PARABOLIC_FILTER = parabolic_filter
-    BETA_MIN = None  # reset each run
+    BETA_MIN  = None  # reset each run
+    ADDV_MIN  = addv_min  # None = disabled
     if start_override:
         START_DATE = date.fromisoformat(start_override)
     W12, W3 = 0.50, 0.50  # reset each run
@@ -413,6 +424,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         extra.append("Mid-month rebal")
     if sector_cap is not None:
         extra.append(f"Sector≤{sector_cap}")
+    if ADDV_MIN is not None:
+        extra.append(f"ADDV≥₹{ADDV_MIN/1e7:.0f}Cr")
     extra_label = (" | " + " | ".join(extra)) if extra else ""
     print(f"=== {label} | {regime_label}{extra_label} ===")
     print(f"    top_n={MAX_SLOTS} buffer_in={BUFFER_IN} buffer_out={BUFFER_OUT} beta_cap={BETA_CAP}")
@@ -1031,9 +1044,12 @@ if __name__ == "__main__":
                         help="Skip new entries where Ret12m > 300%% AND Ret3m/Ret12m > 0.5 (blowoff top)")
     parser.add_argument("--sector-cap", type=int, default=None,
                         help="Max holdings per sector (e.g. --sector-cap 5 limits each sector to 5 stocks)")
+    parser.add_argument("--addv-min", type=float, default=None,
+                        help="Min 90-day median ADDV in ₹ Cr (e.g. --addv-min 10 for ₹10 Cr/day)")
     args = parser.parse_args()
     # `--no-regime` (legacy) takes precedence and forces 'none'.
     regime_filter = "none" if args.no_regime else args.regime
+    addv_min = args.addv_min * 1e7 if args.addv_min is not None else None  # Cr → INR
     run(refresh=args.refresh, mom20=args.mom20, overflow=args.overflow,
         use_regime=(regime_filter != "none"), beta_cap_override=args.beta_cap,
         regime_exit=args.regime_exit, n500=args.n500, qqq=args.qqq, sp500=args.sp500,
@@ -1042,4 +1058,4 @@ if __name__ == "__main__":
         buffer_out_override=args.buffer_out, ema200_exit=args.ema200_exit,
         rebal_day=args.rebal_day, regime_filter=regime_filter,
         parabolic_filter=args.parabolic_filter,
-        sector_cap=args.sector_cap)
+        sector_cap=args.sector_cap, addv_min=addv_min)
