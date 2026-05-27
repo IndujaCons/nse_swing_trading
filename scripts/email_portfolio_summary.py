@@ -221,16 +221,12 @@ def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0
                     <div style="font-size:13px;font-weight:700;color:#1f2937;">{currency}{total_invested:,.0f}</div>
                 </td>
                 <td width="25%" style="text-align:center;padding:10px 6px;border-right:1px solid #d1d5db;">
-                    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Current</div>
+                    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Current Value</div>
                     <div style="font-size:13px;font-weight:700;color:#1f2937;">{currency}{total_current:,.0f}</div>
                 </td>
-                <td width="25%" style="text-align:center;padding:10px 6px;border-right:1px solid #d1d5db;">
-                    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Unrealised P&amp;L</div>
-                    <div style="font-size:13px;font-weight:700;color:{tc};">{pnl_sign}{currency}{abs(total_pnl):,.0f} ({pnl_pct:+.1f}%)</div>
-                </td>
-                <td width="25%" style="text-align:center;padding:10px 6px;">
-                    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Realised P&amp;L</div>
-                    <div style="font-size:13px;font-weight:700;color:{_pnl_color(realised)};"> {'+' if realised >= 0 else '-'}{currency}{abs(realised):,.0f}</div>
+                <td width="50%" style="text-align:center;padding:10px 6px;">
+                    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Returns (Realised + Unrealised)</div>
+                    <div style="font-size:13px;font-weight:700;color:{_pnl_color(total_pnl + realised)};">{'+' if (total_pnl + realised) >= 0 else '-'}{currency}{abs(total_pnl + realised):,.0f}</div>
                 </td>
             </tr>
         </table>
