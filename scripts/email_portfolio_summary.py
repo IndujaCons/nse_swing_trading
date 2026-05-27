@@ -94,6 +94,34 @@ def fetch_live_prices(tickers: list[str]) -> dict:
     return prices
 
 
+# ── realised P&L helpers ───────────────────────────────────────────────────────
+
+def _realised_from_mom20_history(hist: list) -> float:
+    """Walk buy/sell history chronologically to compute total realised P&L."""
+    pos_book = {}
+    total = 0.0
+    for rb in hist:
+        for t in rb.get("buys", []):
+            tk, qty, price = t.get("ticker"), t.get("qty", 0), t.get("price", 0)
+            if not tk or not qty or not price:
+                continue
+            if tk in pos_book:
+                old = pos_book[tk]
+                new_qty = old["qty"] + qty
+                pos_book[tk] = {"entry_price": (old["qty"] * old["entry_price"] + qty * price) / new_qty, "qty": new_qty}
+            else:
+                pos_book[tk] = {"entry_price": price, "qty": qty}
+        for t in rb.get("sells", []):
+            tk  = t.get("ticker")
+            pnl = t.get("pnl")
+            if pnl is None and tk in pos_book:
+                ep  = pos_book[tk]["entry_price"]
+                pnl = (t.get("price", 0) - ep) * t.get("qty", 0)
+            total += pnl or 0
+            pos_book.pop(tk, None)
+    return round(total, 2)
+
+
 # ── portfolio builders ─────────────────────────────────────────────────────────
 
 def _build_rows(positions: list, prices: dict) -> list:
@@ -120,10 +148,8 @@ def build_mom20_summary(user_id: str, capital: float):
     prices = fetch_live_prices([p["ticker"] for p in basket])
     rows   = _build_rows(basket, prices)
 
-    hist   = load_json(mom20_history_path(user_id), [])
-    realised = sum(rb.get("realized_pnl") or
-                   sum(s.get("pnl", 0) for s in rb.get("sells", []))
-                   for rb in hist)
+    hist     = load_json(mom20_history_path(user_id), [])
+    realised = _realised_from_mom20_history(hist)
 
     return rows, sum(r[3] * r[1] for r in rows), realised
 
