@@ -265,51 +265,6 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
             })
     entries.extend(etf_entries)
 
-    # ── Overflow → ETF top-up (top-3 by stock count) ──────────────────────
-    # The mom20_overflow list contains high-momentum names with β > 1.2 that
-    # the β-cap blocked us from picking directly. If a sector shows up
-    # repeatedly in overflow, that's strong sector-momentum signal — add the
-    # corresponding ETF so the basket still gets exposure. Deduped against
-    # the top-5 ETF top-up above and any held ETFs.
-    if mom20_overflow and sector_map:
-        from data.sector_etf_map import SECTOR_TO_ETF
-        overflow_sec_count = {}
-        for o in (mom20_overflow or []):
-            sec = sector_map.get(o.get("ticker"))
-            if sec:
-                overflow_sec_count[sec] = overflow_sec_count.get(sec, 0) + 1
-        top_overflow_secs = [s for s, _ in
-                             sorted(overflow_sec_count.items(),
-                                    key=lambda x: -x[1])[:3]]
-        existing_etf_syms = ({e["ticker"] for e in entries if e.get("is_etf_topup")}
-                             | {h["ticker"] for h in holds if h.get("is_etf")})
-        for sec in top_overflow_secs:
-            mapping = SECTOR_TO_ETF.get(sec)
-            if not mapping:                    # no ETF in our map (MNC/MEDIA/…)
-                continue
-            etf_sym, etf_name = mapping
-            if etf_sym in existing_etf_syms:   # already covered by top-5 logic
-                continue
-            etf_price = (etf_prices or {}).get(etf_sym, 0)
-            if etf_price <= 0:
-                continue
-            qty = int(math.floor(capital_per_slot / etf_price))
-            if qty <= 0:
-                continue
-            entries.append({
-                "ticker":            etf_sym,
-                "rank":              _etf_rank_str(sec),
-                "price":             round(etf_price, 2),
-                "qty":               qty,
-                "capital_allocated": round(qty * etf_price, 2),
-                "score":             None,
-                "is_etf_topup":      True,
-                "is_overflow_etf":   True,     # marker: came from overflow path
-                "etf_for_sector":    sec,
-                "etf_name":          etf_name,
-            })
-            existing_etf_syms.add(etf_sym)
-
     # Min capital = need at least 1 share per slot for the most expensive entry
     max_entry_price = max((e["price"] for e in entries if e["price"] > 0), default=0)
     min_capital = round(N_SLOTS * max_entry_price, 2)

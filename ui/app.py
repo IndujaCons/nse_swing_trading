@@ -2498,18 +2498,7 @@ def api_mom20_basket_preview(user_id):
     # shows a real price even after the ETF's sector drops out of top-5.
     _held_etfs = [item["ticker"] for item in portfolio.get("basket", [])
                   if item.get("ticker") in KNOWN_ETF_SYMBOLS]
-    # Top-3 overflow sectors → also need their ETF prices for the new
-    # overflow→ETF top-up path inside generate_basket.
-    _overflow_sec_count = {}
-    for o in mom20_overflow:
-        _sec = _sec_map.get(o.get("ticker"))
-        if _sec:
-            _overflow_sec_count[_sec] = _overflow_sec_count.get(_sec, 0) + 1
-    _top_overflow_secs = [s for s, _ in
-                          sorted(_overflow_sec_count.items(), key=lambda x: -x[1])[:3]]
-    _overflow_etfs = [SECTOR_TO_ETF[s][0] for s in _top_overflow_secs
-                      if SECTOR_TO_ETF.get(s)]
-    _need_etfs = list(set(_need_etfs + _held_etfs + _overflow_etfs))
+    _need_etfs = list(set(_need_etfs + _held_etfs))
     _etf_prices = _fetch_etf_ltp(_need_etfs) if _need_etfs else {}
     basket_data = generate_basket(user, signals, portfolio,
                                   unfiltered_ranks=unfiltered_ranks,
@@ -2597,17 +2586,7 @@ def api_mom20_basket_download(user_id):
     # shows a real price even after the ETF's sector drops out of top-5.
     _held_etfs = [item["ticker"] for item in portfolio.get("basket", [])
                   if item.get("ticker") in KNOWN_ETF_SYMBOLS]
-    # Top-3 overflow sectors → also need their ETF prices.
-    _overflow_sec_count = {}
-    for o in mom20_overflow:
-        _sec = _sec_map.get(o.get("ticker"))
-        if _sec:
-            _overflow_sec_count[_sec] = _overflow_sec_count.get(_sec, 0) + 1
-    _top_overflow_secs = [s for s, _ in
-                          sorted(_overflow_sec_count.items(), key=lambda x: -x[1])[:3]]
-    _overflow_etfs = [SECTOR_TO_ETF[s][0] for s in _top_overflow_secs
-                      if SECTOR_TO_ETF.get(s)]
-    _need_etfs = list(set(_need_etfs + _held_etfs + _overflow_etfs))
+    _need_etfs = list(set(_need_etfs + _held_etfs))
     _etf_prices = _fetch_etf_ltp(_need_etfs) if _need_etfs else {}
     basket_data = generate_basket(user, signals, portfolio,
                                   unfiltered_ranks=unfiltered_ranks,
