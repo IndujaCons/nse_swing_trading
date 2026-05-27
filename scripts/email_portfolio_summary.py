@@ -81,13 +81,17 @@ def load_json(path, default):
         return default
 
 
-def fetch_live_prices(tickers: list[str]) -> dict:
-    """Return {ticker: last_price} using yfinance fast_info."""
+def fetch_live_prices(tickers: list[str], add_ns: bool = True) -> dict:
+    """Return {ticker: last_price} using yfinance fast_info.
+    add_ns=True for Indian NSE tickers; False for US/London tickers."""
     if not tickers:
         return {}
     prices = {}
     for tk in tickers:
-        yf_tk = tk + ".NS" if not tk.endswith(".NS") else tk
+        if add_ns and "." not in tk:
+            yf_tk = tk + ".NS"
+        else:
+            yf_tk = tk
         try:
             info = yf.Ticker(yf_tk).fast_info
             prices[tk] = float(info.last_price or 0)
@@ -176,7 +180,7 @@ def build_techmo_summary(user_id: str, capital: float):
     if not basket:
         return None, capital, 0.0
 
-    prices = fetch_live_prices([p["ticker"] for p in basket])
+    prices = fetch_live_prices([p["ticker"] for p in basket], add_ns=False)
     rows   = _build_rows(basket, prices)
 
     hist     = load_json(techmo_history_path(user_id), [])
