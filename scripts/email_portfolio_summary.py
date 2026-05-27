@@ -259,40 +259,95 @@ def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0
     </div>"""
 
 
+def _pct_cell(label: str, pct: float | None) -> str:
+    if pct is None:
+        return f"""<td style="text-align:center;padding:10px 6px;border-right:1px solid #d1d5db;">
+            <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">{label}</div>
+            <div style="font-size:14px;font-weight:700;color:#9ca3af;">—</div>
+        </td>"""
+    c = _pnl_color(pct)
+    return f"""<td style="text-align:center;padding:10px 6px;border-right:1px solid #d1d5db;">
+        <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">{label}</div>
+        <div style="font-size:14px;font-weight:700;color:{c};">{pct:+.2f}%</div>
+    </td>"""
+
+
 def build_html_email(user: dict, today: date) -> str:
-    name     = user.get("name", "Investor")
-    strats   = user.get("strategies", {})
+    name       = user.get("name", "Investor")
+    strats     = user.get("strategies", {})
     mom20_cfg  = strats.get("mom20",  {})
     etf_cfg    = strats.get("etf",    {})
     techmo_cfg = strats.get("techmo", {})
 
     sections = ""
-    grand_value = 0.0
+
+    # ── per-strategy metrics for summary bar ──────────────────────────────────
+    def _returns_pct(rows, realised, invested):
+        unrealised = sum(r[1] * r[3] for r in rows) - sum(r[1] * r[2] for r in rows)
+        total = unrealised + realised
+        return (total / invested * 100) if invested else 0.0
+
+    mom20_pct  = None
+    etf_pct    = None
+    techmo_pct = None
 
     if mom20_cfg.get("active"):
         rows, val, realised = build_mom20_summary(user["id"], mom20_cfg.get("capital", 0))
-        sections += _strategy_table("Mom20", "₹", rows or [], realised)
-        grand_value += val
+        if rows:
+            invested  = sum(r[1] * r[2] for r in rows)
+            mom20_pct = _returns_pct(rows, realised, invested)
+            sections += _strategy_table("Mom20", "₹", rows, realised)
+        else:
+            sections += _not_invested_block("Mom20", "#1d4ed8")
 
     if etf_cfg.get("active"):
         rows, val, realised = build_etf_summary(user["id"], etf_cfg.get("capital", 0))
-        sections += _strategy_table("ETF", "₹", rows or [], realised)
-        grand_value += val
+        if rows:
+            invested = sum(r[1] * r[2] for r in rows)
+            etf_pct  = _returns_pct(rows, realised, invested)
+            sections += _strategy_table("ETF", "₹", rows, realised)
+        else:
+            sections += _not_invested_block("ETF", "#0891b2")
 
     if techmo_cfg.get("active"):
         rows, val, realised = build_techmo_summary(user["id"], techmo_cfg.get("capital", 0))
-        sections += _strategy_table("TechMo", "$", rows or [], realised)
-        grand_value += val
+        if rows:
+            invested   = sum(r[1] * r[2] for r in rows)
+            techmo_pct = _returns_pct(rows, realised, invested)
+            sections  += _strategy_table("TechMo", "$", rows, realised)
+        else:
+            sections += _not_invested_block("TechMo", "#7c3aed")
 
     if not sections:
         sections = '<p style="color:#6b7280;font-size:13px;">No active positions found.</p>'
 
+    # ── total = sum of non-None pcts ──────────────────────────────────────────
+    active_pcts = [p for p in [mom20_pct, etf_pct, techmo_pct] if p is not None]
+    total_pct   = sum(active_pcts) if active_pcts else None
+    tc = _pnl_color(total_pct or 0)
+
     dt_str = today.strftime("%d %b %Y")
+
+    summary_bar = f"""
+    <table width="100%" cellpadding="0" cellspacing="0"
+           style="border:1px solid #e5e7eb;border-radius:8px;background:#f8fafc;margin-bottom:20px;">
+        <tr>
+            <td style="padding:12px 16px;font-size:18px;font-weight:700;color:#111827;
+                       border-right:1px solid #e5e7eb;white-space:nowrap;">{name.split()[0]}</td>
+            {_pct_cell("Mom20",  mom20_pct)}
+            {_pct_cell("ETF",    etf_pct)}
+            {_pct_cell("TechMo", techmo_pct)}
+            <td style="text-align:center;padding:10px 10px;">
+                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Total</div>
+                <div style="font-size:16px;font-weight:700;color:{tc};">{f"{total_pct:+.2f}%" if total_pct is not None else "—"}</div>
+            </td>
+        </tr>
+    </table>"""
 
     return f"""<!DOCTYPE html>
 <html>
 <body style="font-family:Arial,sans-serif;background:#f3f4f6;margin:0;padding:20px;">
-<div style="max-width:600px;margin:0 auto;">
+<div style="max-width:640px;margin:0 auto;">
 
   <div style="background:#111827;color:white;padding:16px 20px;border-radius:8px 8px 0 0;">
     <div style="font-size:18px;font-weight:700;">Mom Portfolio Dashboard</div>
@@ -300,10 +355,7 @@ def build_html_email(user: dict, today: date) -> str:
   </div>
 
   <div style="background:white;padding:20px;border:1px solid #e5e7eb;border-top:none;">
-    <div style="font-size:14px;color:#374151;margin-bottom:16px;">
-        Hi {name.split()[0]}, here's your portfolio snapshot.
-    </div>
-
+    {summary_bar}
     {sections}
   </div>
 
@@ -315,6 +367,18 @@ def build_html_email(user: dict, today: date) -> str:
 </div>
 </body>
 </html>"""
+
+
+def _not_invested_block(title: str, color: str) -> str:
+    return f"""
+    <div style="margin-bottom:24px;">
+        <div style="background:{color};color:white;padding:8px 12px;border-radius:6px 6px 0 0;
+                    font-weight:700;font-size:13px;letter-spacing:0.5px;">{title}</div>
+        <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 6px 6px;
+                    padding:16px;text-align:center;color:#9ca3af;font-size:13px;background:#fff;">
+            Not invested
+        </div>
+    </div>"""
 
 
 # ── send ───────────────────────────────────────────────────────────────────────
