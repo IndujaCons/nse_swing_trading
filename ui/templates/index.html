@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nifty 500 RS Screener</title>
+    <title>Mom Portfolio Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -1386,7 +1386,7 @@
 <body>
     <!-- Header -->
     <header class="header">
-        <h1>Nifty 500 Screener</h1>
+        <h1>Mom Portfolio Dashboard</h1>
         <div class="header-right">
             <div class="strategy-tabs">
                 <button class="strategy-tab" onclick="switchStrategy('watchlist')">Watchlist</button>
@@ -1798,7 +1798,7 @@
                         </div>
                         <div class="panel-body" id="wl-prices-body">
                             <div style="padding:20px; text-align:center; color:var(--text-muted);">
-                                Search and add Nifty 500 stocks above to get started.
+                                Search and add stocks above to get started.
                             </div>
                         </div>
                     </div>
@@ -10708,7 +10708,7 @@ function _fmtPct(v) {
     return `<span style="${cls};font-weight:700;">${sign}${v.toFixed(2)}%</span>`;
 }
 
-// Merge rows that share the same first name (e.g. "Jayaraman" from two registry entries)
+// Merge rows that share the same display name (multiple registry entries per user)
 function _mergeSummaryRows(rows) {
     const order = [];   // preserve display order
     const map   = {};   // key → merged row
@@ -10881,7 +10881,7 @@ async function saveSummaryOptions(userId, rawVal, invested) {
     <div class="modal-box">
         <div class="modal-title">➕ ADD NEW USER</div>
         <label>NAME *</label>
-        <input id="aum-name" type="text" placeholder="e.g. Rakesh Raman">
+        <input id="aum-name" type="text" placeholder="e.g. Arjun Kumar">
         <label>MOM20 CAPITAL (₹)</label>
         <input id="aum-mom20" type="number" step="100000" placeholder="e.g. 1000000">
         <label>ETF CAPITAL (₹)</label>
