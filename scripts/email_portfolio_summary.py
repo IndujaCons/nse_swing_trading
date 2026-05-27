@@ -225,21 +225,22 @@ def _strategy_table(title: str, currency: str, rows: list) -> str:
             </thead>
             <tbody>{rows_html}</tbody>
         </table>
-        <div style="background:#f0f4ff;border:1px solid #e5e7eb;border-top:2px solid {header_color};
-                    padding:10px 14px;border-radius:0 0 6px 6px;display:flex;gap:0;">
-            <div style="flex:1;text-align:center;border-right:1px solid #d1d5db;padding:4px 0;">
-                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Invested</div>
-                <div style="font-size:14px;font-weight:700;color:#1f2937;">{currency}{total_invested:,.0f}</div>
-            </div>
-            <div style="flex:1;text-align:center;border-right:1px solid #d1d5db;padding:4px 0;">
-                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Current</div>
-                <div style="font-size:14px;font-weight:700;color:#1f2937;">{currency}{total_current:,.0f}</div>
-            </div>
-            <div style="flex:1;text-align:center;padding:4px 0;">
-                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Unrealised P&amp;L</div>
-                <div style="font-size:14px;font-weight:700;color:{tc};">{pnl_sign}{currency}{abs(total_pnl):,.0f} ({pnl_pct:+.1f}%)</div>
-            </div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-top:2px solid {header_color};border-radius:0 0 6px 6px;background:#f0f4ff;">
+            <tr>
+                <td width="33%" style="text-align:center;padding:10px 8px;border-right:1px solid #d1d5db;">
+                    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Invested</div>
+                    <div style="font-size:14px;font-weight:700;color:#1f2937;">{currency}{total_invested:,.0f}</div>
+                </td>
+                <td width="33%" style="text-align:center;padding:10px 8px;border-right:1px solid #d1d5db;">
+                    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Current</div>
+                    <div style="font-size:14px;font-weight:700;color:#1f2937;">{currency}{total_current:,.0f}</div>
+                </td>
+                <td width="34%" style="text-align:center;padding:10px 8px;">
+                    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Unrealised P&amp;L</div>
+                    <div style="font-size:14px;font-weight:700;color:{tc};">{pnl_sign}{currency}{abs(total_pnl):,.0f} ({pnl_pct:+.1f}%)</div>
+                </td>
+            </tr>
+        </table>
     </div>"""
 
 
