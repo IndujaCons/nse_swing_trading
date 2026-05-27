@@ -128,6 +128,18 @@ def _realised_from_mom20_history(hist: list) -> float:
     return round(total, 2)
 
 
+def _initial_capital_from_history(hist: list) -> float:
+    """Sum of net cash additions across all rebalances (matches dashboard logic)."""
+    total = 0.0
+    for rb in hist:
+        buy_tot  = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("buys",  []))
+        sell_tot = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("sells", []))
+        net = buy_tot - sell_tot
+        if net > 0:
+            total += net
+    return round(total, 2)
+
+
 # ── portfolio builders ─────────────────────────────────────────────────────────
 
 def _build_rows(positions: list, prices: dict) -> list:
@@ -154,10 +166,11 @@ def build_mom20_summary(user_id: str, capital: float):
     prices = fetch_live_prices([p["ticker"] for p in basket])
     rows   = _build_rows(basket, prices)
 
-    hist     = load_json(mom20_history_path(user_id), [])
-    realised = _realised_from_mom20_history(hist)
+    hist            = load_json(mom20_history_path(user_id), [])
+    realised        = _realised_from_mom20_history(hist)
+    initial_capital = _initial_capital_from_history(hist) or sum(r[1] * r[2] for r in rows)
 
-    return rows, sum(r[3] * r[1] for r in rows), realised
+    return rows, sum(r[3] * r[1] for r in rows), realised, initial_capital
 
 
 def build_etf_summary(user_id: str, capital: float):
@@ -195,7 +208,7 @@ def _pnl_color(pnl):
     return "#16a34a" if pnl >= 0 else "#dc2626"
 
 
-def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0) -> str:
+def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0, invested_override: float = None) -> str:
     if not rows:
         return ""
 
@@ -220,7 +233,7 @@ def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0
             <td style="padding:6px 10px;text-align:right;">{pnl_fmt}</td>
         </tr>"""
 
-    total_invested = sum(r[1] * r[2] for r in rows)   # qty * avg
+    total_invested = invested_override if invested_override else sum(r[1] * r[2] for r in rows)
     total_current  = sum(r[1] * r[3] for r in rows)   # qty * ltp
     total_pnl      = total_current - total_invested
     pnl_pct        = (total_pnl / total_invested * 100) if total_invested else 0
@@ -296,10 +309,10 @@ def build_html_email(user: dict, today: date) -> str:
     techmo_pct = None
 
     if mom20_cfg.get("active"):
-        rows, val, realised = build_mom20_summary(user["id"], mom20_cfg.get("capital", 0))
+        rows, val, realised, initial_cap = build_mom20_summary(user["id"], mom20_cfg.get("capital", 0))
         if rows:
-            mom20_pct = _returns_pct(rows, realised, sum(r[1] * r[2] for r in rows))
-            sections += _strategy_table("Mom20", "₹", rows, realised)
+            mom20_pct = _returns_pct(rows, realised, initial_cap)
+            sections += _strategy_table("Mom20", "₹", rows, realised, invested_override=initial_cap)
         else:
             sections += _not_invested_block("Mom20", "#1d4ed8")
 
