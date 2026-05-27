@@ -17,6 +17,7 @@ USERS_FILE = os.path.join(DATA_STORE, "users.json")
 _USER_DEFAULT = {
     "id": "",
     "name": "",
+    "email": "",
     "strategies": {
         "mom20":  {"active": False, "capital": 0},
         "etf":    {"active": False, "capital": 0},
@@ -49,7 +50,7 @@ def get_user(user_id: str) -> dict | None:
     return next((u for u in load_users() if u["id"] == user_id), None)
 
 
-def add_user(name: str, mom20_capital: int = 0, etf_capital: int = 0, techmo_capital: float = 0) -> dict:
+def add_user(name: str, mom20_capital: int = 0, etf_capital: int = 0, techmo_capital: float = 0, email: str = "") -> dict:
     users = load_users()
 
     # Generate unique slug id
@@ -62,6 +63,7 @@ def add_user(name: str, mom20_capital: int = 0, etf_capital: int = 0, techmo_cap
     user = {
         "id": uid,
         "name": name,
+        "email": email.strip().lower(),
         "created": date.today().isoformat(),
         "strategies": {
             "mom20":  {"active": mom20_capital  > 0, "capital": mom20_capital},
@@ -75,7 +77,7 @@ def add_user(name: str, mom20_capital: int = 0, etf_capital: int = 0, techmo_cap
     return user
 
 
-def update_user(user_id: str, mom20_capital: int = None, etf_capital: int = None, techmo_capital: float = None) -> dict | None:
+def update_user(user_id: str, mom20_capital: int = None, etf_capital: int = None, techmo_capital: float = None, email: str = None) -> dict | None:
     users = load_users()
     for u in users:
         if u["id"] == user_id:
@@ -89,6 +91,8 @@ def update_user(user_id: str, mom20_capital: int = None, etf_capital: int = None
                 u["strategies"].setdefault("techmo", {})
                 u["strategies"]["techmo"]["capital"] = techmo_capital
                 u["strategies"]["techmo"]["active"]  = techmo_capital > 0
+            if email is not None:
+                u["email"] = email.strip().lower()
             save_users(users)
             return u
     return None

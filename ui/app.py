@@ -2389,7 +2389,8 @@ def api_add_user():
         return jsonify({"success": False, "error": "name required"})
     mom20_cap = int(data.get("mom20_capital") or 0)
     etf_cap   = int(data.get("etf_capital")   or 0)
-    user = add_user(name, mom20_capital=mom20_cap, etf_capital=etf_cap)
+    email     = (data.get("email") or "").strip()
+    user = add_user(name, mom20_capital=mom20_cap, etf_capital=etf_cap, email=email)
     return jsonify({"success": True, "user": user})
 
 
@@ -2398,9 +2399,11 @@ def api_update_user(user_id):
     data = request.get_json() or {}
     mom20_cap = data.get("mom20_capital")
     etf_cap   = data.get("etf_capital")
+    email     = data.get("email")
     user = update_user(user_id,
                        mom20_capital=int(mom20_cap) if mom20_cap is not None else None,
-                       etf_capital=int(etf_cap)     if etf_cap   is not None else None)
+                       etf_capital=int(etf_cap)     if etf_cap   is not None else None,
+                       email=email)
     if not user:
         return jsonify({"success": False, "error": "user not found"})
     return jsonify({"success": True, "user": user})

@@ -8159,6 +8159,7 @@ function _populateUserDropdown(selectId, selectedId, strategyFilter) {
 function openAddUserModal() {
     document.getElementById('add-user-modal').classList.add('open');
     document.getElementById('aum-name').value   = '';
+    document.getElementById('aum-email').value  = '';
     document.getElementById('aum-mom20').value  = '';
     document.getElementById('aum-etf').value    = '';
     document.getElementById('aum-techmo').value = '';
@@ -8169,6 +8170,7 @@ function closeAddUserModal() {
 }
 async function submitAddUser() {
     const name   = document.getElementById('aum-name').value.trim();
+    const email  = document.getElementById('aum-email').value.trim();
     const mom20  = parseInt(document.getElementById('aum-mom20').value)  || 0;
     const etf    = parseInt(document.getElementById('aum-etf').value)    || 0;
     const techmo = parseFloat(document.getElementById('aum-techmo').value) || 0;
@@ -8178,7 +8180,7 @@ async function submitAddUser() {
     try {
         const r = await fetch('/api/portfolio-users', {
             method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({name, mom20_capital: mom20, etf_capital: etf, techmo_capital: techmo})
+            body: JSON.stringify({name, email, mom20_capital: mom20, etf_capital: etf, techmo_capital: techmo})
         });
         const d = await r.json();
         if (!d.success) { alert(d.error || 'Failed'); return; }
@@ -10867,6 +10869,8 @@ async function saveSummaryOptions(userId, rawVal, invested) {
         <div class="modal-title">➕ ADD NEW USER</div>
         <label>NAME *</label>
         <input id="aum-name" type="text" placeholder="e.g. Arjun Kumar">
+        <label>EMAIL</label>
+        <input id="aum-email" type="email" placeholder="e.g. arjun@gmail.com">
         <label>MOM20 CAPITAL (₹)</label>
         <input id="aum-mom20" type="number" step="100000" placeholder="e.g. 1000000">
         <label>ETF CAPITAL (₹)</label>
