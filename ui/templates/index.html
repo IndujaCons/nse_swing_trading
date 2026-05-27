@@ -1406,9 +1406,8 @@
                 </svg>
                 Refresh
             </button>
-            <div class="status-indicator" id="header-status">
-                <span class="status-dot" id="connection-dot"></span>
-                <span id="connection-status">Disconnected</span>
+            <div id="header-status" style="font-size:10px;color:var(--text-muted);white-space:nowrap;opacity:0.6;">
+                Zerodha live connection not supported
             </div>
         </div>
     </header>
@@ -4135,21 +4134,7 @@
         }
 
         function updateConnectionUI() {
-            // Header dots
-            const headerStatus = document.getElementById('header-status');
-            if (kiteUsers.length === 0) {
-                headerStatus.innerHTML = '<span class="status-dot"></span><span>No users</span>';
-            } else {
-                const dots = kiteUsers.map(u => {
-                    const cls = u.connected ? 'status-dot connected' : 'status-dot';
-                    return `<span class="${cls}" title="${u.config_name}"></span>`;
-                }).join('');
-                const anyConnected = kiteUsers.some(u => u.connected);
-                const label = anyConnected
-                    ? kiteUsers.filter(u => u.connected).map(u => u.config_name).join(', ')
-                    : 'Disconnected';
-                headerStatus.innerHTML = dots + `<span>${label}</span>`;
-            }
+            // Header status is now a static label — do not overwrite it.
 
             // Sidebar user cards
             const container = document.getElementById('user-cards-container');
