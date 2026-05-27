@@ -35,6 +35,8 @@ from data.user_registry import (
     techmo_portfolio_path, techmo_history_path,
 )
 
+_OPTIONS_HEDGE_FILE = os.path.join(_ROOT, "data_store", "options_hedge.json")
+
 # ── NSE holidays 2026 ──────────────────────────────────────────────────────────
 NSE_HOLIDAYS_2026 = {
     date(2026, 1, 26),   # Republic Day
@@ -281,11 +283,9 @@ def build_html_email(user: dict, today: date) -> str:
 
     sections = ""
 
-    # ── per-strategy metrics for summary bar ──────────────────────────────────
     def _returns_pct(rows, realised, invested):
         unrealised = sum(r[1] * r[3] for r in rows) - sum(r[1] * r[2] for r in rows)
-        total = unrealised + realised
-        return (total / invested * 100) if invested else 0.0
+        return ((unrealised + realised) / invested * 100) if invested else 0.0
 
     mom20_pct  = None
     etf_pct    = None
@@ -294,8 +294,7 @@ def build_html_email(user: dict, today: date) -> str:
     if mom20_cfg.get("active"):
         rows, val, realised = build_mom20_summary(user["id"], mom20_cfg.get("capital", 0))
         if rows:
-            invested  = sum(r[1] * r[2] for r in rows)
-            mom20_pct = _returns_pct(rows, realised, invested)
+            mom20_pct = _returns_pct(rows, realised, sum(r[1] * r[2] for r in rows))
             sections += _strategy_table("Mom20", "₹", rows, realised)
         else:
             sections += _not_invested_block("Mom20", "#1d4ed8")
@@ -303,30 +302,55 @@ def build_html_email(user: dict, today: date) -> str:
     if etf_cfg.get("active"):
         rows, val, realised = build_etf_summary(user["id"], etf_cfg.get("capital", 0))
         if rows:
-            invested = sum(r[1] * r[2] for r in rows)
-            etf_pct  = _returns_pct(rows, realised, invested)
+            etf_pct  = _returns_pct(rows, realised, sum(r[1] * r[2] for r in rows))
             sections += _strategy_table("ETF", "₹", rows, realised)
-        else:
-            sections += _not_invested_block("ETF", "#0891b2")
+        # ETF: skip entirely if no positions (no "Not invested" block)
 
-    if techmo_cfg.get("active"):
-        rows, val, realised = build_techmo_summary(user["id"], techmo_cfg.get("capital", 0))
-        if rows:
-            invested   = sum(r[1] * r[2] for r in rows)
-            techmo_pct = _returns_pct(rows, realised, invested)
-            sections  += _strategy_table("TechMo", "$", rows, realised)
-        else:
-            sections += _not_invested_block("TechMo", "#7c3aed")
+    # TechMo: always show (positions or "Not invested")
+    rows, val, realised = build_techmo_summary(user["id"], techmo_cfg.get("capital", 0))
+    if rows:
+        techmo_pct = _returns_pct(rows, realised, sum(r[1] * r[2] for r in rows))
+        sections  += _strategy_table("TechMo", "$", rows, realised)
+    else:
+        sections += _not_invested_block("TechMo", "#7c3aed")
 
     if not sections:
         sections = '<p style="color:#6b7280;font-size:13px;">No active positions found.</p>'
 
-    # ── total = sum of non-None pcts ──────────────────────────────────────────
-    active_pcts = [p for p in [mom20_pct, etf_pct, techmo_pct] if p is not None]
+    # ── options hedge P&L ─────────────────────────────────────────────────────
+    options_amt = None
+    options_pct = None
+    try:
+        options_data = load_json(_OPTIONS_HEDGE_FILE, {})
+        amt = options_data.get(user["id"])
+        if amt is not None and mom20_pct is not None:
+            mom20_invested = sum(r[1] * r[2] for r in (rows or []))  # fallback
+            # re-fetch Mom20 invested for options % calculation
+            _pf = load_json(mom20_portfolio_path(user["id"]), {})
+            _basket = _pf.get("basket", [])
+            _inv = sum(p.get("qty", 0) * p.get("entry_price", 0) for p in _basket)
+            if _inv > 0:
+                options_amt = float(amt)
+                options_pct = options_amt / _inv * 100
+    except Exception:
+        pass
+
+    # ── total = sum of non-None pcts ─────────────────────────────────────────
+    active_pcts = [p for p in [mom20_pct, options_pct, etf_pct, techmo_pct] if p is not None]
     total_pct   = sum(active_pcts) if active_pcts else None
     tc = _pnl_color(total_pct or 0)
 
     dt_str = today.strftime("%d %b %Y")
+
+    def _options_cell(amt, pct):
+        if amt is None:
+            return ""
+        c = _pnl_color(amt)
+        return f"""<td style="text-align:center;padding:10px 6px;border-right:1px solid #d1d5db;">
+            <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Options Hedge</div>
+            <div style="font-size:13px;font-weight:700;color:{c};">₹{amt:+,.0f}</div>
+            <div style="font-size:11px;color:{c};">{pct:+.2f}%</div>
+        </td>"""
 
     summary_bar = f"""
     <table width="100%" cellpadding="0" cellspacing="0"
@@ -335,6 +359,7 @@ def build_html_email(user: dict, today: date) -> str:
             <td style="padding:12px 16px;font-size:18px;font-weight:700;color:#111827;
                        border-right:1px solid #e5e7eb;white-space:nowrap;">{name.split()[0]}</td>
             {_pct_cell("Mom20",  mom20_pct)}
+            {_options_cell(options_amt, options_pct or 0)}
             {_pct_cell("ETF",    etf_pct)}
             {_pct_cell("TechMo", techmo_pct)}
             <td style="text-align:center;padding:10px 10px;">
