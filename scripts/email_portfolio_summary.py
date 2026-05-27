@@ -29,7 +29,10 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(_ROOT, ".env"))
 
 from data.user_registry import (
-    load_users, mom20_portfolio_path, etf_positions_path, techmo_portfolio_path
+    load_users,
+    mom20_portfolio_path, mom20_history_path,
+    etf_positions_path, etf_history_path,
+    techmo_portfolio_path, techmo_history_path,
 )
 
 # ── NSE holidays 2026 ──────────────────────────────────────────────────────────
@@ -93,39 +96,7 @@ def fetch_live_prices(tickers: list[str]) -> dict:
 
 # ── portfolio builders ─────────────────────────────────────────────────────────
 
-def build_mom20_summary(user_id: str, capital: float):
-    port = load_json(mom20_portfolio_path(user_id), {})
-    basket = port.get("basket", [])
-    if not basket:
-        return None, capital
-
-    tickers = [p["ticker"] for p in basket]
-    prices  = fetch_live_prices(tickers)
-
-    rows = []
-    for p in basket:
-        tk     = p["ticker"]
-        qty    = p.get("qty", 0)
-        avg    = p.get("entry_price", 0)
-        ltp    = prices.get(tk, avg)
-        cost   = qty * avg
-        mval   = qty * ltp
-        pnl    = mval - cost
-        pnl_pc = (pnl / cost * 100) if cost else 0
-        rows.append((tk, qty, avg, ltp, pnl, pnl_pc))
-
-    total_value = sum(r[3] * r[1] for r in rows)
-    return rows, total_value
-
-
-def build_etf_summary(user_id: str, capital: float):
-    positions = load_json(etf_positions_path(user_id), [])
-    if not positions:
-        return None, capital
-
-    tickers = [p["ticker"] for p in positions]
-    prices  = fetch_live_prices(tickers)
-
+def _build_rows(positions: list, prices: dict) -> list:
     rows = []
     for p in positions:
         tk     = p["ticker"]
@@ -137,35 +108,53 @@ def build_etf_summary(user_id: str, capital: float):
         pnl    = mval - cost
         pnl_pc = (pnl / cost * 100) if cost else 0
         rows.append((tk, qty, avg, ltp, pnl, pnl_pc))
+    return rows
 
-    total_value = sum(r[3] * r[1] for r in rows)
-    return rows, total_value
+
+def build_mom20_summary(user_id: str, capital: float):
+    port   = load_json(mom20_portfolio_path(user_id), {})
+    basket = port.get("basket", [])
+    if not basket:
+        return None, capital, 0.0
+
+    prices = fetch_live_prices([p["ticker"] for p in basket])
+    rows   = _build_rows(basket, prices)
+
+    hist   = load_json(mom20_history_path(user_id), [])
+    realised = sum(rb.get("realized_pnl") or
+                   sum(s.get("pnl", 0) for s in rb.get("sells", []))
+                   for rb in hist)
+
+    return rows, sum(r[3] * r[1] for r in rows), realised
+
+
+def build_etf_summary(user_id: str, capital: float):
+    positions = load_json(etf_positions_path(user_id), [])
+    if not positions:
+        return None, capital, 0.0
+
+    prices = fetch_live_prices([p["ticker"] for p in positions])
+    rows   = _build_rows(positions, prices)
+
+    hist     = load_json(etf_history_path(user_id), [])
+    realised = sum(entry.get("pnl_abs", 0) for entry in hist)
+
+    return rows, sum(r[3] * r[1] for r in rows), realised
 
 
 def build_techmo_summary(user_id: str, capital: float):
-    port = load_json(techmo_portfolio_path(user_id), {})
+    port   = load_json(techmo_portfolio_path(user_id), {})
     basket = port.get("basket", [])
     if not basket:
-        return None, capital
+        return None, capital, 0.0
 
-    tickers = [p["ticker"] for p in basket]
-    prices  = fetch_live_prices(tickers)
+    prices = fetch_live_prices([p["ticker"] for p in basket])
+    rows   = _build_rows(basket, prices)
 
-    rows = []
-    for p in basket:
-        tk     = p["ticker"]
-        qty    = p.get("qty", 0)
-        avg    = p.get("entry_price", 0)
-        ltp    = prices.get(tk, avg)
-        cost   = qty * avg
-        mval   = qty * ltp
-        pnl    = mval - cost
-        pnl_pc = (pnl / cost * 100) if cost else 0
-        rows.append((tk, qty, avg, ltp, pnl, pnl_pc))
+    hist     = load_json(techmo_history_path(user_id), [])
+    realised = sum(s.get("pnl", 0) for rb in hist for s in rb.get("sells", []))
 
-    total_value = sum(r[3] * r[1] for r in rows)
-
-    return rows, total_value
+    return rows, sum(r[3] * r[1] for r in rows), realised
 
 
 # ── HTML builder ───────────────────────────────────────────────────────────────
@@ -174,7 +163,7 @@ def _pnl_color(pnl):
     return "#16a34a" if pnl >= 0 else "#dc2626"
 
 
-def _strategy_table(title: str, currency: str, rows: list) -> str:
+def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0) -> str:
     if not rows:
         return ""
 
@@ -227,17 +216,21 @@ def _strategy_table(title: str, currency: str, rows: list) -> str:
         </table>
         <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-top:2px solid {header_color};border-radius:0 0 6px 6px;background:#f0f4ff;">
             <tr>
-                <td width="33%" style="text-align:center;padding:10px 8px;border-right:1px solid #d1d5db;">
+                <td width="25%" style="text-align:center;padding:10px 6px;border-right:1px solid #d1d5db;">
                     <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Invested</div>
-                    <div style="font-size:14px;font-weight:700;color:#1f2937;">{currency}{total_invested:,.0f}</div>
+                    <div style="font-size:13px;font-weight:700;color:#1f2937;">{currency}{total_invested:,.0f}</div>
                 </td>
-                <td width="33%" style="text-align:center;padding:10px 8px;border-right:1px solid #d1d5db;">
+                <td width="25%" style="text-align:center;padding:10px 6px;border-right:1px solid #d1d5db;">
                     <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Current</div>
-                    <div style="font-size:14px;font-weight:700;color:#1f2937;">{currency}{total_current:,.0f}</div>
+                    <div style="font-size:13px;font-weight:700;color:#1f2937;">{currency}{total_current:,.0f}</div>
                 </td>
-                <td width="34%" style="text-align:center;padding:10px 8px;">
+                <td width="25%" style="text-align:center;padding:10px 6px;border-right:1px solid #d1d5db;">
                     <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Unrealised P&amp;L</div>
-                    <div style="font-size:14px;font-weight:700;color:{tc};">{pnl_sign}{currency}{abs(total_pnl):,.0f} ({pnl_pct:+.1f}%)</div>
+                    <div style="font-size:13px;font-weight:700;color:{tc};">{pnl_sign}{currency}{abs(total_pnl):,.0f} ({pnl_pct:+.1f}%)</div>
+                </td>
+                <td width="25%" style="text-align:center;padding:10px 6px;">
+                    <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Realised P&amp;L</div>
+                    <div style="font-size:13px;font-weight:700;color:{_pnl_color(realised)};"> {'+' if realised >= 0 else '-'}{currency}{abs(realised):,.0f}</div>
                 </td>
             </tr>
         </table>
@@ -255,18 +248,18 @@ def build_html_email(user: dict, today: date) -> str:
     grand_value = 0.0
 
     if mom20_cfg.get("active"):
-        rows, val = build_mom20_summary(user["id"], mom20_cfg.get("capital", 0))
-        sections += _strategy_table("Mom20", "₹", rows or [])
+        rows, val, realised = build_mom20_summary(user["id"], mom20_cfg.get("capital", 0))
+        sections += _strategy_table("Mom20", "₹", rows or [], realised)
         grand_value += val
 
     if etf_cfg.get("active"):
-        rows, val = build_etf_summary(user["id"], etf_cfg.get("capital", 0))
-        sections += _strategy_table("ETF", "₹", rows or [])
+        rows, val, realised = build_etf_summary(user["id"], etf_cfg.get("capital", 0))
+        sections += _strategy_table("ETF", "₹", rows or [], realised)
         grand_value += val
 
     if techmo_cfg.get("active"):
-        rows, val = build_techmo_summary(user["id"], techmo_cfg.get("capital", 0))
-        sections += _strategy_table("TechMo", "$", rows or [])
+        rows, val, realised = build_techmo_summary(user["id"], techmo_cfg.get("capital", 0))
+        sections += _strategy_table("TechMo", "$", rows or [], realised)
         grand_value += val
 
     if not sections:
