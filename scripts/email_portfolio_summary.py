@@ -103,19 +103,18 @@ def build_mom20_summary(user_id: str, capital: float):
     prices  = fetch_live_prices(tickers)
 
     rows = []
-    total_value = 0.0
     for p in basket:
         tk     = p["ticker"]
         qty    = p.get("qty", 0)
-        avg    = p.get("avg_price", 0)
+        avg    = p.get("entry_price", 0)
         ltp    = prices.get(tk, avg)
         cost   = qty * avg
         mval   = qty * ltp
         pnl    = mval - cost
         pnl_pc = (pnl / cost * 100) if cost else 0
-        total_value += mval
         rows.append((tk, qty, avg, ltp, pnl, pnl_pc))
 
+    total_value = sum(r[3] * r[1] for r in rows)
     return rows, total_value
 
 
@@ -128,19 +127,18 @@ def build_etf_summary(user_id: str, capital: float):
     prices  = fetch_live_prices(tickers)
 
     rows = []
-    total_value = 0.0
     for p in positions:
         tk     = p["ticker"]
         qty    = p.get("qty", 0)
-        avg    = p.get("avg_price", 0)
+        avg    = p.get("entry_price", 0)
         ltp    = prices.get(tk, avg)
         cost   = qty * avg
         mval   = qty * ltp
         pnl    = mval - cost
         pnl_pc = (pnl / cost * 100) if cost else 0
-        total_value += mval
         rows.append((tk, qty, avg, ltp, pnl, pnl_pc))
 
+    total_value = sum(r[3] * r[1] for r in rows)
     return rows, total_value
 
 
@@ -154,18 +152,18 @@ def build_techmo_summary(user_id: str, capital: float):
     prices  = fetch_live_prices(tickers)
 
     rows = []
-    total_value = 0.0
     for p in basket:
         tk     = p["ticker"]
         qty    = p.get("qty", 0)
-        avg    = p.get("avg_price", 0)
+        avg    = p.get("entry_price", 0)
         ltp    = prices.get(tk, avg)
         cost   = qty * avg
         mval   = qty * ltp
         pnl    = mval - cost
         pnl_pc = (pnl / cost * 100) if cost else 0
-        total_value += mval
         rows.append((tk, qty, avg, ltp, pnl, pnl_pc))
+
+    total_value = sum(r[3] * r[1] for r in rows)
 
     return rows, total_value
 
@@ -201,37 +199,47 @@ def _strategy_table(title: str, currency: str, rows: list) -> str:
             <td style="padding:6px 10px;text-align:right;">{pnl_fmt}</td>
         </tr>"""
 
-    total_pnl = sum(r[4] for r in rows)
-    total_val = sum(r[3] * r[1] for r in rows)
+    total_invested = sum(r[1] * r[2] for r in rows)   # qty * avg
+    total_current  = sum(r[1] * r[3] for r in rows)   # qty * ltp
+    total_pnl      = total_current - total_invested
+    pnl_pct        = (total_pnl / total_invested * 100) if total_invested else 0
     tc = _pnl_color(total_pnl)
+    pnl_sign = "+" if total_pnl >= 0 else "-"
 
     rows_html = "".join(row_html(*r) for r in rows)
 
     return f"""
-    <div style="margin-bottom:20px;">
+    <div style="margin-bottom:24px;">
         <div style="background:{header_color};color:white;padding:8px 12px;border-radius:6px 6px 0 0;
-                    font-weight:700;font-size:13px;letter-spacing:0.5px;">{title}</div>
+                    font-weight:700;font-size:13px;letter-spacing:0.5px;">{title} &nbsp;·&nbsp; {len(rows)} positions</div>
         <table style="width:100%;border-collapse:collapse;font-size:12px;background:#fff;
-                      border:1px solid #e5e7eb;border-top:none;border-radius:0 0 6px 6px;">
+                      border:1px solid #e5e7eb;border-top:none;">
             <thead>
-                <tr style="background:#f9fafb;color:#6b7280;font-size:11px;">
-                    <th style="padding:6px 10px;text-align:left;">TICKER</th>
-                    <th style="padding:6px 10px;text-align:right;">QTY</th>
-                    <th style="padding:6px 10px;text-align:right;">AVG</th>
+                <tr style="background:#f9fafb;color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;">
+                    <th style="padding:6px 10px;text-align:left;">Ticker</th>
+                    <th style="padding:6px 10px;text-align:right;">Qty</th>
+                    <th style="padding:6px 10px;text-align:right;">Avg Cost</th>
                     <th style="padding:6px 10px;text-align:right;">LTP</th>
-                    <th style="padding:6px 10px;text-align:right;">P&L</th>
+                    <th style="padding:6px 10px;text-align:right;">Unrealised P&amp;L</th>
                 </tr>
             </thead>
             <tbody>{rows_html}</tbody>
-            <tfoot>
-                <tr style="background:#f9fafb;font-weight:700;">
-                    <td colspan="4" style="padding:7px 10px;">Total ({len(rows)} positions)</td>
-                    <td style="padding:7px 10px;text-align:right;color:{tc};">
-                        {currency}{abs(total_pnl):,.0f} &nbsp;|&nbsp; Val {currency}{total_val:,.0f}
-                    </td>
-                </tr>
-            </tfoot>
         </table>
+        <div style="background:#f0f4ff;border:1px solid #e5e7eb;border-top:2px solid {header_color};
+                    padding:10px 14px;border-radius:0 0 6px 6px;display:flex;gap:0;">
+            <div style="flex:1;text-align:center;border-right:1px solid #d1d5db;padding:4px 0;">
+                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Invested</div>
+                <div style="font-size:14px;font-weight:700;color:#1f2937;">{currency}{total_invested:,.0f}</div>
+            </div>
+            <div style="flex:1;text-align:center;border-right:1px solid #d1d5db;padding:4px 0;">
+                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Current</div>
+                <div style="font-size:14px;font-weight:700;color:#1f2937;">{currency}{total_current:,.0f}</div>
+            </div>
+            <div style="flex:1;text-align:center;padding:4px 0;">
+                <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Unrealised P&amp;L</div>
+                <div style="font-size:14px;font-weight:700;color:{tc};">{pnl_sign}{currency}{abs(total_pnl):,.0f} ({pnl_pct:+.1f}%)</div>
+            </div>
+        </div>
     </div>"""
 
 
