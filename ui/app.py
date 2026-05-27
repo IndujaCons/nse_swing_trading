@@ -2532,6 +2532,8 @@ def api_mom20_basket_preview(user_id):
             "beta":             ov.get("beta", 0),
             "ret_12m":          ov.get("ret_12m", 0),
             "ret_3m":           ov.get("ret_3m", 0),
+            "volatility":       ov.get("volatility", 0),
+            "vol_3m":           ov.get("vol_3m", 0),
             "is_overflow":      True,
         })
     basket_data["overflow_entries"] = overflow_entries
@@ -3990,6 +3992,7 @@ def api_techmo_scan():
         sigma  = float(_np.std(log_r)) * _np.sqrt(252) if len(log_r) > 1 else 0.3
         if sigma < 0.01:
             sigma = 0.01
+        sigma_3m = float(_np.std(log_r[-63:])) * _np.sqrt(252) if len(log_r) >= 63 else sigma
         # Anomaly flags
         anomaly_reasons = []
         if n < 260:
@@ -4000,7 +4003,8 @@ def api_techmo_scan():
             "price":          round(p_now, 2),
             "ret12m":         round(ret_12 * 100, 1),
             "ret3m":          round(ret_3  * 100, 1),
-            "sigma":          round(sigma  * 100, 1),
+            "sigma":          round(sigma    * 100, 1),
+            "sigma_3m":       round(sigma_3m * 100, 1),
             "mr_12":          ret_12 / sigma,
             "mr_3":           ret_3  / sigma,
             "data_days":      n,
@@ -4549,6 +4553,7 @@ def api_techmo_basket(user_id):
                 "capital":        round(shares * px, 2),
                 "score":          sig["score"],
                 "sigma":          sig.get("sigma"),
+                "sigma_3m":       sig.get("sigma_3m"),
                 "anomaly":        sig.get("anomaly", False),
                 "anomaly_reason": sig.get("anomaly_reason"),
             })

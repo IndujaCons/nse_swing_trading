@@ -21,6 +21,7 @@ def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
         sigma = float(log_rets.std()) * np.sqrt(252)
         if sigma <= 0.001:
             return None
+        sigma_3m = float(log_rets.iloc[-63:].std()) * np.sqrt(252) if len(log_rets) >= 63 else sigma
 
         # Beta vs Nifty 50 (date-aligned).
         mom_beta = None
@@ -42,7 +43,8 @@ def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
             "ret_12m": ret_12m,
             "ret_6m":  ret_6m,
             "ret_3m":  ret_3m,
-            "sigma":   sigma,
+            "sigma":    sigma,
+            "sigma_3m": sigma_3m,
             "mr_12":   ret_12m / sigma,
             "mr_6":    ret_6m / sigma,
             "mr_3":    (ret_3m / sigma) if ret_3m is not None else None,

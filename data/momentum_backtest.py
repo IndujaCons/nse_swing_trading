@@ -3613,6 +3613,7 @@ class MomentumBacktester:
                     np.maximum(closes.iloc[ci - vol_bars:ci + 1].values.astype(float), 0.01)
                 ))
                 sigma = float(np.std(log_rets)) * np.sqrt(252)
+                sigma_3m = float(np.std(log_rets[-63:])) * np.sqrt(252) if len(log_rets) >= 63 else sigma
 
                 if sigma < 0.01:
                     continue
@@ -3644,14 +3645,15 @@ class MomentumBacktester:
                                 beta = cov_val[0, 1] / cov_val[1, 1]
 
                 scores[ticker] = {
-                    "mr_12": mr_12,
-                    "mr_6": mr_6,
-                    "mr_3": mr_3,
-                    "price": p_now,
-                    "ret_12m": ret_long,
-                    "ret_6m": ret_short,
-                    "sigma": sigma,
-                    "beta": beta,
+                    "mr_12":    mr_12,
+                    "mr_6":     mr_6,
+                    "mr_3":     mr_3,
+                    "price":    p_now,
+                    "ret_12m":  ret_long,
+                    "ret_6m":   ret_short,
+                    "sigma":    sigma,
+                    "sigma_3m": sigma_3m,
+                    "beta":     beta,
                 }
 
             # Beta filters are applied in the rebalance loop (entry-only)

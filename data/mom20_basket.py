@@ -54,8 +54,10 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     # Build rank map from signals (beta-capped filtered ranks — used for display and entries)
     rank_map        = {s["ticker"]: s["rank"]  for s in signals}
     filtered_rank_map = rank_map  # alias — same source, explicit name for exit display
-    price_map = {s["ticker"]: s.get("price", 0) for s in signals}
-    score_map = {s["ticker"]: s.get("momentum_score", 0) for s in signals}
+    price_map    = {s["ticker"]: s.get("price", 0)      for s in signals}
+    score_map    = {s["ticker"]: s.get("momentum_score", 0) for s in signals}
+    vol_map      = {s["ticker"]: s.get("volatility", 0) for s in signals}
+    vol_3m_map   = {s["ticker"]: s.get("vol_3m", 0)     for s in signals}
     # all_prices contains user's freshly-fetched live prices (highest priority)
     # plus scanner prices for the rest of N200. Override signals prices so
     # exits and entries always reflect the most recent ₹ the user fetched.
@@ -204,12 +206,14 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
         price = price_map.get(ticker, 0)
         qty = int(math.floor(capital_per_slot / price)) if price > 0 else 0
         entries.append({
-            "ticker": ticker,
-            "rank":   rank_map[ticker],
-            "price":  price,
-            "qty":    qty,
+            "ticker":     ticker,
+            "rank":       rank_map[ticker],
+            "price":      price,
+            "qty":        qty,
             "capital_allocated": round(qty * price, 2),
-            "score":  round(score_map.get(ticker, 0), 3),
+            "score":      round(score_map.get(ticker, 0), 3),
+            "volatility": vol_map.get(ticker, 0),
+            "vol_3m":     vol_3m_map.get(ticker, 0),
         })
         if sec:
             sector_count[sec] = sector_count.get(sec, 0) + 1

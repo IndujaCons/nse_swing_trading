@@ -2354,7 +2354,7 @@
                         </label>
                     </div>
                     <table class="basket-table" style="margin-bottom:14px;font-family:monospace;">
-                        <thead><tr><th style="width:28px;"></th><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Price₹</th><th>Qty</th><th>Capital</th><th>Score</th></tr></thead>
+                        <thead><tr><th style="width:28px;"></th><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Price₹</th><th>Qty</th><th>Capital</th><th>Score</th><th>Vol12m</th><th>Vol3m</th></tr></thead>
                         <tbody id="mom20-basket-entries-body"></tbody>
                     </table>
 
@@ -4570,6 +4570,8 @@
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;">₹${s.price ? Math.round(s.price) : '—'}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${s.ret_12m>=0?'#26a69a':'#ef5350'};">${s.ret_12m>=0?'+':''}${s.ret_12m}%</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${ret3m>=0?'#26a69a':'#ef5350'};">${ret3m>=0?'+':''}${ret3m}%</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.volatility != null ? s.volatility.toFixed(0)+'%' : '—'}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.vol_3m != null ? s.vol_3m.toFixed(0)+'%' : '—'}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${s.momentum_score.toFixed(3)}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${betaCol};font-weight:700;">${s.beta.toFixed(2)}</td>
                 </tr>`;
@@ -4583,6 +4585,8 @@
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Price ₹</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">12M</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">3M</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);">Vol12m</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);">Vol3m</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Beta</th>
                 </tr></thead><tbody>${rows}</tbody>
@@ -4651,6 +4655,7 @@
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${col(s.ret12m)};">${fmt(s.ret12m)}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${col(s.ret3m)};">${fmt(s.ret3m)}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.sigma ? s.sigma.toFixed(0)+'%' : '—'}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.sigma_3m != null ? s.sigma_3m.toFixed(0)+'%' : '—'}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${s.score.toFixed(2)}</td>
                 </tr>`;
             }).join('');
@@ -4663,7 +4668,8 @@
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Price $</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">12M</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">3M</th>
-                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility">σ</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility 12m">σ12</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility 3m">σ3m</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
                 </tr></thead><tbody>${rows}</tbody>
             </table>
@@ -5077,6 +5083,8 @@
                         <td style="padding:4px 8px;font-family:monospace;text-align:right;">₹${s.price ? Math.round(s.price) : '—'}</td>
                         <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${s.ret_12m>=0?'#26a69a':'#ef5350'};">${s.ret_12m>=0?'+':''}${s.ret_12m}%</td>
                         <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${ret3m>=0?'#26a69a':'#ef5350'};">${ret3m>=0?'+':''}${ret3m}%</td>
+                        <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.volatility != null ? s.volatility.toFixed(0)+'%' : '—'}</td>
+                        <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.vol_3m != null ? s.vol_3m.toFixed(0)+'%' : '—'}</td>
                         <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${s.momentum_score.toFixed(3)}</td>
                         <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${betaCol};">${betaStr}</td>
                     </tr>`;
@@ -5090,6 +5098,8 @@
                         <th style="text-align:right;padding:4px 8px;font-family:monospace;">Price ₹</th>
                         <th style="text-align:right;padding:4px 8px;font-family:monospace;">12M</th>
                         <th style="text-align:right;padding:4px 8px;font-family:monospace;">3M</th>
+                        <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);">Vol12m</th>
+                        <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);">Vol3m</th>
                         <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
                         <th style="text-align:right;padding:4px 8px;font-family:monospace;">Beta</th>
                     </tr></thead><tbody>${mom20Rows}</tbody>
@@ -9255,6 +9265,7 @@ function techmoRenderBasket(d) {
                     <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">#${e.rank}</td>
                     <td style="padding:4px 8px;text-align:right;font-family:monospace;">$${e.price.toFixed(2)}</td>
                     <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-size:10px;font-family:monospace;">${sigmaStr}</td>
+                    <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-size:10px;font-family:monospace;">${e.sigma_3m != null ? e.sigma_3m.toFixed(0)+'%' : '—'}</td>
                     <td style="padding:4px 8px;text-align:right;color:#60a5fa;font-weight:700;font-family:monospace;">${e.shares}</td>
                     <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">${capStr}</td>
                     <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">${e.score.toFixed(3)}</td>
@@ -9267,7 +9278,8 @@ function techmoRenderBasket(d) {
                     <th style="text-align:left;padding:4px 8px;font-family:monospace;">Cluster</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Rank</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Price $</th>
-                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility">σ</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility 12m">σ12</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility 3m">σ3m</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Shares</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Capital</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
@@ -9610,7 +9622,9 @@ function _renderMom20Basket(d) {
             <td>${fmtP(e.price)}</td>
             <td style="font-weight:700">${e.qty}</td>
             <td>${fmt(e.capital_allocated)}</td>
-            <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td></tr>`);
+            <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td>
+            <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.volatility != null && e.volatility > 0 ? e.volatility.toFixed(0)+'%' : '—'}</td>
+            <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.vol_3m != null && e.vol_3m > 0 ? e.vol_3m.toFixed(0)+'%' : '—'}</td></tr>`);
 
     // Overflow entries (β > 1.2, rank ≤ 15) — unchecked, red
     const overflow = d.overflow_entries || [];
@@ -9625,12 +9639,14 @@ function _renderMom20Basket(d) {
             <td>${fmtP(e.price)}</td>
             <td style="font-weight:700;color:#ef5350;">${e.qty}</td>
             <td>${fmt(e.capital_allocated)}</td>
-            <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td></tr>`);
+            <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td>
+            <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.volatility != null && e.volatility > 0 ? e.volatility.toFixed(0)+'%' : '—'}</td>
+            <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.vol_3m != null && e.vol_3m > 0 ? e.vol_3m.toFixed(0)+'%' : '—'}</td></tr>`);
 
     document.getElementById('mom20-basket-entries-body').innerHTML =
         (entryRows.length || ovRows.length)
             ? [...entryRows, ...ovRows].join('')
-            : '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
+            : '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
 
     // Sync "all" checkboxes
     mom20SyncSelectAll();
