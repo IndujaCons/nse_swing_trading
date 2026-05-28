@@ -9057,7 +9057,7 @@ function techmoRender(d) {
 
     const tbody = document.getElementById('techmo-tracker-tbody');
     if (!tbody) return;
-    const rows = (d.holdings || []).map(h => {
+    const rows = (d.holdings || []).slice().sort((a,b) => b.pnl_pct - a.pnl_pct).map(h => {
         const pnlC = h.pnl >= 0 ? 'var(--green)' : '#ef5350';
         const pnlS = (h.pnl >= 0 ? '+' : '') + '$' + Math.abs(h.pnl).toFixed(2);
         const pctS = (h.pnl_pct >= 0 ? '+' : '') + h.pnl_pct.toFixed(2) + '%';
