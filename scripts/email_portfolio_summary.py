@@ -239,7 +239,7 @@ def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0
     tc = _pnl_color(total_pnl)
     pnl_sign = "+" if total_pnl >= 0 else "-"
 
-    rows_html = "".join(row_html(*r) for r in rows)
+    rows_html = "".join(row_html(*r) for r in sorted(rows, key=lambda r: r[5], reverse=True))
 
     return f"""
     <div style="margin-bottom:24px;">
