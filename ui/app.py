@@ -5064,9 +5064,8 @@ def api_portfolio_summary():
                 _qty = _h.get("qty", 0) or _h.get("shares", 0)
                 _t_cost += _ep * _qty
                 _t_curr += _tprices.get(_h.get("ticker", ""), _ep) * _qty
-            _t_cap = _t_cap or _t_cost
-            if _t_cap > 0:
-                techmo_pct = round((_t_curr - _t_cost + _t_realized) / _t_cap * 100, 2)
+            if _t_cost > 0:
+                techmo_pct = round((_t_curr - _t_cost + _t_realized) / _t_cost * 100, 2)
         except Exception:
             pass
 
