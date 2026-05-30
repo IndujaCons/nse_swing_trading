@@ -5137,10 +5137,10 @@ def _mom20_live_prices():
         return [], "OFF", {}
 
 
-@app.route("/api/mom20-portfolio", methods=["GET"])
-def mom20_portfolio_state():
+@app.route("/api/mom20-portfolio/<user_id>", methods=["GET"])
+def mom20_portfolio_state(user_id):
     """Return portfolio state + live performance."""
-    portfolio = load_portfolio()
+    portfolio = load_portfolio(user_id=user_id)
     _, regime, prices = _mom20_live_prices()
     perf = calc_performance(portfolio, prices)
     return jsonify({
@@ -5154,8 +5154,8 @@ def mom20_portfolio_state():
     })
 
 
-@app.route("/api/mom20-portfolio/save", methods=["POST"])
-def mom20_portfolio_save():
+@app.route("/api/mom20-portfolio/<user_id>/save", methods=["POST"])
+def mom20_portfolio_save(user_id):
     """Snapshot basket + current prices → paper tracking begins."""
     data = request.get_json() or {}
     capital = int(data.get("capital", 2000000))
@@ -5163,12 +5163,12 @@ def mom20_portfolio_save():
     if not basket_in:
         return jsonify({"success": False, "error": "Basket is empty"}), 400
 
-    portfolio = load_portfolio()
+    portfolio = load_portfolio(user_id=user_id)
     old_basket = {s["ticker"]: s for s in portfolio.get("basket", [])}
     new_tickers = {s["ticker"] for s in basket_in}
 
     today_str = _dt.date.today().isoformat()
-    history = load_history()
+    history = load_history(user_id=user_id)
     rebal_num = len(history) + 1
 
     # Exits: in old basket but not in new
@@ -5233,12 +5233,12 @@ def mom20_portfolio_save():
     ]
     portfolio["pending_orders"] = []
     portfolio["pending_rebalance"] = pending_rebalance
-    save_portfolio(portfolio)
+    save_portfolio(portfolio, user_id=user_id)
     return jsonify({"success": True, "status": "paper", "tracking_since": portfolio["tracking_since"]})
 
 
-@app.route("/api/mom20-portfolio/search", methods=["GET"])
-def mom20_portfolio_search():
+@app.route("/api/mom20-portfolio/<user_id>/search", methods=["GET"])
+def mom20_portfolio_search(user_id):
     """Search tickers. q=__IMPORT__ returns current Mom20 top-20."""
     q = request.args.get("q", "").upper().strip()
     if q == "__IMPORT__":
@@ -5276,11 +5276,10 @@ def mom20_portfolio_search():
     return jsonify({"success": True, "results": []})
 
 
-@app.route("/api/mom20-portfolio/place-orders", methods=["POST"])
-def mom20_portfolio_place_orders():
+@app.route("/api/mom20-portfolio/<user_id>/place-orders", methods=["POST"])
+def mom20_portfolio_place_orders(user_id):
     """Place CNC market orders via Kite."""
     data = request.get_json() or {}
-    user_id = data.get("user_id")
     orders_to_place = data.get("orders", [])
 
     if not user_id or user_id not in brokers:
@@ -5300,20 +5299,19 @@ def mom20_portfolio_place_orders():
             results.append({"ticker": ticker, "side": side, "shares": shares,
                             "order_id": None, "status": "ERROR", "error": str(e)})
 
-    portfolio = load_portfolio()
+    portfolio = load_portfolio(user_id=user_id)
     portfolio["pending_orders"] = results
-    save_portfolio(portfolio)
+    save_portfolio(portfolio, user_id=user_id)
     return jsonify({"success": True, "orders": results})
 
 
-@app.route("/api/mom20-portfolio/order-status", methods=["GET"])
-def mom20_portfolio_order_status():
+@app.route("/api/mom20-portfolio/<user_id>/order-status", methods=["GET"])
+def mom20_portfolio_order_status(user_id):
     """Poll Kite for pending order statuses."""
-    user_id = request.args.get("user_id")
     if not user_id or user_id not in brokers:
         return jsonify({"success": False, "error": "Kite login required"}), 400
 
-    portfolio = load_portfolio()
+    portfolio = load_portfolio(user_id=user_id)
     pending = portfolio.get("pending_orders", [])
     if not pending:
         return jsonify({"success": True, "orders": [], "all_complete": True})
@@ -5332,30 +5330,30 @@ def mom20_portfolio_order_status():
             o["avg_price"] = ko.get("average_price")
 
     portfolio["pending_orders"] = pending
-    save_portfolio(portfolio)
+    save_portfolio(portfolio, user_id=user_id)
     all_complete = all(o.get("status", "").upper() in ("COMPLETE", "ERROR", "REJECTED") for o in pending)
     return jsonify({"success": True, "orders": pending, "all_complete": all_complete})
 
 
-@app.route("/api/mom20-portfolio/history", methods=["GET"])
-def mom20_portfolio_history():
-    return jsonify({"success": True, "history": load_history()})
+@app.route("/api/mom20-portfolio/<user_id>/history", methods=["GET"])
+def mom20_portfolio_history(user_id):
+    return jsonify({"success": True, "history": load_history(user_id=user_id)})
 
 
-@app.route("/api/mom20-portfolio/reset", methods=["POST"])
-def mom20_portfolio_reset():
+@app.route("/api/mom20-portfolio/<user_id>/reset", methods=["POST"])
+def mom20_portfolio_reset(user_id):
     """Reset portfolio status back to paper (clears pending orders + invested prices)."""
-    portfolio = load_portfolio()
+    portfolio = load_portfolio(user_id=user_id)
     for s in portfolio.get("basket", []):
         s["invested_price"] = None
     portfolio["status"] = "paper" if portfolio.get("basket") else "empty"
     portfolio["pending_orders"] = []
-    save_portfolio(portfolio)
+    save_portfolio(portfolio, user_id=user_id)
     return jsonify({"success": True, "status": portfolio["status"]})
 
 
-@app.route("/api/mom20-portfolio/confirm-investment", methods=["POST"])
-def mom20_portfolio_confirm_investment():
+@app.route("/api/mom20-portfolio/<user_id>/confirm-investment", methods=["POST"])
+def mom20_portfolio_confirm_investment(user_id):
     """
     After all orders complete: set invested_price = avg_price from Kite.
     Switches tracking mode from 'paper' → 'invested'.
@@ -5364,7 +5362,7 @@ def mom20_portfolio_confirm_investment():
     data = request.get_json() or {}
     filled = {o["ticker"]: float(o["avg_price"]) for o in data.get("orders", []) if o.get("avg_price")}
 
-    portfolio = load_portfolio()
+    portfolio = load_portfolio(user_id=user_id)
     basket = portfolio.get("basket", [])
     for s in basket:
         if s["ticker"] in filled:
@@ -5398,12 +5396,12 @@ def mom20_portfolio_confirm_investment():
         }
         pending["finalized"] = True
         pending["confirmed_date"] = today_str
-        history = load_history()
+        history = load_history(user_id=user_id)
         history.append(pending)
-        save_history(history)
+        save_history(history, user_id=user_id)
         portfolio["pending_rebalance"] = None
 
-    save_portfolio(portfolio)
+    save_portfolio(portfolio, user_id=user_id)
     return jsonify({"success": True, "status": "invested",
                     "tracking_since": portfolio["tracking_since"]})
 

@@ -6531,7 +6531,8 @@
             if (q.length < 2) { dd.style.display = 'none'; return; }
             _mom20SearchTimer = setTimeout(async () => {
                 try {
-                    const r = await fetch(`/api/mom20-portfolio/search?q=${encodeURIComponent(q.toUpperCase())}`);
+                    const _suid = _mom20SelectedUser?.id || selectedTradeUser || (kiteUsers[0] || {}).config_user_id || 'default';
+                    const r = await fetch(`/api/mom20-portfolio/${_suid}/search?q=${encodeURIComponent(q.toUpperCase())}`);
                     const d = await r.json();
                     if (!d.results || !d.results.length) { dd.style.display = 'none'; return; }
                     dd.innerHTML = d.results.map(res =>
@@ -6565,7 +6566,8 @@
             if (mom20Basket.find(s => s.ticker === q)) { showToast(`${q} already in basket`, 'error'); return; }
             inp.disabled = true;
             try {
-                const r = await fetch(`/api/mom20-portfolio/search?q=${encodeURIComponent(q)}`);
+                const _suid2 = _mom20SelectedUser?.id || selectedTradeUser || (kiteUsers[0] || {}).config_user_id || 'default';
+                const r = await fetch(`/api/mom20-portfolio/${_suid2}/search?q=${encodeURIComponent(q)}`);
                 const d = await r.json();
                 if (d.results && d.results.length) {
                     const res = d.results.find(x => x.ticker === q) || d.results[0];
@@ -6590,8 +6592,9 @@
         }
 
         async function mom20ImportSignals() {
+            const _iuid = _mom20SelectedUser?.id || selectedTradeUser || (kiteUsers[0] || {}).config_user_id || 'default';
             try {
-                const r = await fetch('/api/mom20-portfolio/search?q=__import__');
+                const r = await fetch(`/api/mom20-portfolio/${_iuid}/search?q=__import__`);
                 const d = await r.json();
                 if (d.signals && d.signals.length) {
                     mom20Basket = [];
@@ -6611,8 +6614,10 @@
         }
 
         async function mom20LoadPortfolio() {
+            const uid = _mom20SelectedUser?.id || selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            if (!uid) { showToast('Select a user first', 'error'); return; }
             try {
-                const r = await fetch('/api/mom20-portfolio');
+                const r = await fetch(`/api/mom20-portfolio/${uid}`);
                 const d = await r.json();
                 // Update both panels
                 _mom20Sfxs.forEach(s => {
@@ -6670,9 +6675,11 @@
 
         async function mom20SavePortfolio(sfx) {
             if (!mom20Basket.length) { showToast('Basket is empty', 'error'); return; }
+            const uid = _mom20SelectedUser?.id || selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            if (!uid) { showToast('Select a user first', 'error'); return; }
             const capital = mom20GetCapital(sfx);
             try {
-                const r = await fetch('/api/mom20-portfolio/save', {
+                const r = await fetch(`/api/mom20-portfolio/${uid}/save`, {
                     method: 'POST', headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({capital, basket: mom20Basket})
                 });
@@ -6690,7 +6697,7 @@
             if (Math.abs(totalW - 100) > 2) {
                 showToast(`Total weight is ${totalW}% — adjust to ~100% before placing orders`, 'error'); return;
             }
-            const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            const userId = _mom20SelectedUser?.id || selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
             if (!userId) { showToast('Kite login required', 'error'); return; }
             const cap = mom20GetCapital(sfx);
             const orders = mom20Basket.map(s => ({
@@ -6701,9 +6708,9 @@
             if (!orders.length) { showToast('No valid orders (check capital/prices)', 'error'); return; }
             if (!confirm(`Place ${orders.length} BUY orders via Kite?\nTotal ≈ ₹${orders.reduce((s,o)=>s+o.shares*o.price,0).toLocaleString('en-IN',{maximumFractionDigits:0})}`)) return;
             try {
-                const r = await fetch('/api/mom20-portfolio/place-orders', {
+                const r = await fetch(`/api/mom20-portfolio/${userId}/place-orders`, {
                     method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({user_id: userId, orders})
+                    body: JSON.stringify({orders})
                 });
                 const d = await r.json();
                 if (d.success) {
@@ -6714,16 +6721,16 @@
         }
 
         async function mom20ConfirmInvestment(sfx) {
-            const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            const userId = _mom20SelectedUser?.id || selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
             if (!userId) { showToast('Kite login required', 'error'); return; }
             try {
-                const sr = await fetch(`/api/mom20-portfolio/order-status?user_id=${userId}`);
+                const sr = await fetch(`/api/mom20-portfolio/${userId}/order-status`);
                 const sd = await sr.json();
                 if (!sd.success) { showToast(sd.error, 'error'); return; }
                 if (!sd.all_complete) { showToast('Some orders are still pending — wait for all to complete', 'error'); return; }
                 const filledOrders = sd.orders.filter(o => o.status && o.status.toUpperCase() === 'COMPLETE' && o.avg_price);
                 if (!filledOrders.length) { showToast('No orders were filled in Zerodha — re-login Kite and place orders again', 'error'); return; }
-                const r = await fetch('/api/mom20-portfolio/confirm-investment', {
+                const r = await fetch(`/api/mom20-portfolio/${userId}/confirm-investment`, {
                     method: 'POST', headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({orders: filledOrders})
                 });
@@ -6741,8 +6748,10 @@
 
         async function mom20ResetPortfolio() {
             if (!confirm('Reset Mom20 portfolio to Paper tracking? This clears pending orders and invested prices.')) return;
+            const userId = _mom20SelectedUser?.id || selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            if (!userId) { showToast('Select a user first', 'error'); return; }
             try {
-                const r = await fetch('/api/mom20-portfolio/reset', {method: 'POST'});
+                const r = await fetch(`/api/mom20-portfolio/${userId}/reset`, {method: 'POST'});
                 const d = await r.json();
                 if (d.success) {
                     _mom20Sfxs.forEach(s => {
@@ -6944,10 +6953,10 @@
         }
 
         async function mom20PollOrders(sfx) {
-            const userId = selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
+            const userId = _mom20SelectedUser?.id || selectedTradeUser || (kiteUsers[0] || {}).config_user_id;
             if (!userId) return;
             try {
-                const r = await fetch(`/api/mom20-portfolio/order-status?user_id=${userId}`);
+                const r = await fetch(`/api/mom20-portfolio/${userId}/order-status`);
                 const d = await r.json();
                 if (d.success) _renderOrderStatus(d.orders);
             } catch(e) {}
@@ -9850,15 +9859,19 @@ async function mom20DownloadBasket() {
 function mom20DownloadSIPBasket() {
     const d = _mom20BasketData;
     if (!d) { alert('Load basket first'); return; }
-    const holds = d.holds || [];
-    if (holds.length === 0) { alert('No holds to SIP into'); return; }
+    // SIP tops up ALL current holdings: holds (staying) + exits (still held now, exit at next rebalance)
+    const allHeld = [
+        ...(d.holds || []).map(h => ({ticker: h.ticker, price: h.price})),
+        ...(d.exits || []).map(e => ({ticker: e.ticker, price: e.current_price}))
+    ].filter(h => h.price > 0);
+    if (allHeld.length === 0) { alert('No holds to SIP into'); return; }
 
     const capital = _mom20ParseCapitalInput() || d.total_capital;
     const perSlot = capital / 20;
 
     const items = [];
     let weight  = 0;
-    for (const h of holds) {
+    for (const h of allHeld) {
         if (!h.price || h.price <= 0) continue;
         const qty = Math.floor(perSlot / h.price);
         if (qty <= 0) continue;

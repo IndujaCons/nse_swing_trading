@@ -40,8 +40,30 @@ _DEFAULT = {
 OVERFLOW_PORTFOLIO_FILE = os.path.join(_BASE_DIR, "data_store", "overflow_portfolio.json")
 
 
-def load_portfolio(portfolio_file: str = None) -> dict:
-    path = portfolio_file or PORTFOLIO_FILE
+def _resolve_portfolio_file(user_id=None, portfolio_file=None):
+    if portfolio_file:
+        return portfolio_file
+    if user_id:
+        from data.user_registry import user_dir
+        d = user_dir(user_id)
+        os.makedirs(d, exist_ok=True)
+        return os.path.join(d, "mom20_portfolio.json")
+    return PORTFOLIO_FILE
+
+
+def _resolve_history_file(user_id=None, history_file=None):
+    if history_file:
+        return history_file
+    if user_id:
+        from data.user_registry import user_dir
+        d = user_dir(user_id)
+        os.makedirs(d, exist_ok=True)
+        return os.path.join(d, "mom20_history.json")
+    return MOM20_HISTORY_FILE
+
+
+def load_portfolio(user_id=None, portfolio_file: str = None) -> dict:
+    path = _resolve_portfolio_file(user_id, portfolio_file)
     if not os.path.exists(path):
         return dict(_DEFAULT)
     try:
@@ -52,8 +74,8 @@ def load_portfolio(portfolio_file: str = None) -> dict:
         return dict(_DEFAULT)
 
 
-def load_history(history_file: str = None) -> list:
-    path = history_file or MOM20_HISTORY_FILE
+def load_history(user_id=None, history_file: str = None) -> list:
+    path = _resolve_history_file(user_id, history_file)
     if not os.path.exists(path):
         return []
     try:
@@ -63,16 +85,16 @@ def load_history(history_file: str = None) -> list:
         return []
 
 
-def save_history(records: list, history_file: str = None):
-    path = history_file or MOM20_HISTORY_FILE
+def save_history(records: list, user_id=None, history_file: str = None):
+    path = _resolve_history_file(user_id, history_file)
     tmp = path + ".tmp"
     with open(tmp, "w") as f:
         json.dump(records, f, indent=2, default=str)
     os.replace(tmp, path)
 
 
-def save_portfolio(state: dict, portfolio_file: str = None):
-    path = portfolio_file or PORTFOLIO_FILE
+def save_portfolio(state: dict, user_id=None, portfolio_file: str = None):
+    path = _resolve_portfolio_file(user_id, portfolio_file)
     tmp = path + ".tmp"
     with open(tmp, "w") as f:
         json.dump(state, f, indent=2, default=str)
