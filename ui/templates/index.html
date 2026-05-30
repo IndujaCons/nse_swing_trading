@@ -9856,24 +9856,31 @@ async function mom20DownloadBasket() {
     URL.revokeObjectURL(url);
 }
 
-function mom20DownloadSIPBasket() {
-    const d = _mom20BasketData;
-    if (!d) { alert('Load basket first'); return; }
-    // SIP tops up ALL current holdings: holds (staying) + exits (still held now, exit at next rebalance)
-    const allHeld = [
-        ...(d.holds || []).map(h => ({ticker: h.ticker, price: h.price})),
-        ...(d.exits || []).map(e => ({ticker: e.ticker, price: e.current_price}))
-    ].filter(h => h.price > 0);
-    if (allHeld.length === 0) { alert('No holds to SIP into'); return; }
+async function mom20DownloadSIPBasket() {
+    const uid = _mom20SelectedUser?.id;
+    if (!uid) { alert('Select a user first'); return; }
 
-    const capital = _mom20ParseCapitalInput() || d.total_capital;
+    // Read directly from the live tracker — all current holdings with prices,
+    // same source as the portfolio tracker table. No dependency on basket signals.
+    let holdings;
+    try {
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-performance`);
+        const d = await r.json();
+        if (!d.success) { alert('Failed to load holdings: ' + (d.error || '')); return; }
+        holdings = d.holdings || [];
+    } catch(e) { alert('Error loading holdings: ' + e.message); return; }
+
+    if (holdings.length === 0) { alert('No holdings to SIP into'); return; }
+
+    const capital = _mom20ParseCapitalInput() || 2000000;
     const perSlot = capital / 20;
 
     const items = [];
-    let weight  = 0;
-    for (const h of allHeld) {
-        if (!h.price || h.price <= 0) continue;
-        const qty = Math.floor(perSlot / h.price);
+    let weight = 0;
+    for (const h of holdings) {
+        const price = h.current_price || h.entry_price || 0;
+        if (!price || price <= 0) continue;
+        const qty = Math.floor(perSlot / price);
         if (qty <= 0) continue;
         const ticker = h.ticker;
         items.push({
