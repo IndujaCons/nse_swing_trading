@@ -2871,7 +2871,7 @@
                 <div id="techmo-tracker-card" style="display:none;margin-bottom:20px;">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
-                        <button onclick="techmoLoad(true)" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
+                        <button id="techmo-live-prices-btn" onclick="techmoLivePrices()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
                         <button onclick="techmoAddModal()" style="padding:2px 9px;font-size:10px;background:rgba(38,166,154,0.15);color:#26a69a;border:1px solid rgba(38,166,154,0.4);border-radius:4px;cursor:pointer;font-weight:700;">➕ Add Position</button>
                         <label style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">
                             ⬆ Upload Trade Book
@@ -8995,6 +8995,20 @@ async function techmoUploadTradeBook(event) {
         if (status) { status.textContent = '✗ Error: ' + e; status.style.color = '#ef5350'; }
     }
     event.target.value = '';
+}
+
+let _techmoLiveBusy = false;
+async function techmoLivePrices() {
+    if (_techmoLiveBusy) return;
+    _techmoLiveBusy = true;
+    const btn = document.getElementById('techmo-live-prices-btn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'wait'; }
+    try {
+        await techmoLoad(true);
+    } finally {
+        _techmoLiveBusy = false;
+        if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = 'pointer'; }
+    }
 }
 
 async function techmoLoad(live=false) {
