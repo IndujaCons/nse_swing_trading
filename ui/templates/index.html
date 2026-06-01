@@ -4552,27 +4552,32 @@
             mom20EnsureSectorMap();
             const panel = document.getElementById('ls-mom20-overflow-panel');
             const sigs = data.mom20_overflow || [];
-            document.getElementById('ls-mom20-overflow-count').textContent = sigs.length || '0';
+            const eligibleCount = sigs.filter(s => s.uc_rank == null || s.uc_rank <= 20).length;
+            document.getElementById('ls-mom20-overflow-count').textContent = sigs.length ? `${eligibleCount}/${sigs.length}` : '0';
             if (sigs.length === 0) {
                 panel.innerHTML = '<div class="empty-state">No overflow signals — all top-20 uncapped stocks are within β≤1.2</div>';
                 return;
             }
             const rows = sigs.map(s => {
-                const sector   = mom20SectorLabel(s.ticker);
-                const sCol     = NSE_SECTOR_COLORS[sector] || 'var(--text-muted)';
-                const betaCol  = s.beta > 1.5 ? '#ef5350' : '#f59e0b';
-                const ret3m    = s.ret_3m !== undefined ? s.ret_3m : s.ret_6m;
-                return `<tr style="border-bottom:1px solid var(--border-color);">
-                    <td style="padding:4px 8px;font-family:monospace;color:var(--text-muted);">${s.rank}</td>
-                    <td style="padding:4px 8px;font-family:monospace;text-align:center;font-size:10px;">${fmtMomDelta(s.rank_delta)}</td>
-                    <td class="ticker" style="padding:4px 8px;font-family:monospace;font-weight:700;color:var(--green);cursor:pointer;" onclick="loadLsChart('${s.ticker}')">${s.ticker}</td>
-                    <td style="padding:4px 8px;font-family:monospace;font-size:10px;color:${sCol};">${sector}</td>
-                    <td style="padding:4px 8px;font-family:monospace;text-align:right;">₹${s.price ? Math.round(s.price) : '—'}</td>
-                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${s.ret_12m>=0?'#26a69a':'#ef5350'};">${s.ret_12m>=0?'+':''}${s.ret_12m}%</td>
-                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${ret3m>=0?'#26a69a':'#ef5350'};">${ret3m>=0?'+':''}${ret3m}%</td>
-                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.volatility != null ? s.volatility.toFixed(0)+'%' : '—'}</td>
-                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.vol_3m != null ? s.vol_3m.toFixed(0)+'%' : '—'}</td>
-                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${s.momentum_score.toFixed(3)}</td>
+                const sector     = mom20SectorLabel(s.ticker);
+                const sCol       = NSE_SECTOR_COLORS[sector] || 'var(--text-muted)';
+                const betaCol    = s.beta > 1.5 ? '#ef5350' : '#f59e0b';
+                const ret3m      = s.ret_3m !== undefined ? s.ret_3m : s.ret_6m;
+                const isEligible = s.uc_rank != null ? s.uc_rank <= 20 : true;
+                const bg         = isEligible ? 'background:rgba(74,158,255,0.07);' : '';
+                const rankStyle  = isEligible ? 'color:#60a5fa;font-weight:700;' : 'color:var(--text-muted);';
+                const textMuted  = isEligible ? '' : 'opacity:0.5;';
+                return `<tr style="${bg}border-bottom:1px solid var(--border-color);">
+                    <td style="padding:4px 8px;font-family:monospace;${rankStyle}">${s.rank}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:center;font-size:10px;${textMuted}">${fmtMomDelta(s.rank_delta)}</td>
+                    <td class="ticker" style="padding:4px 8px;font-family:monospace;font-weight:700;color:var(--green);cursor:pointer;${textMuted}" onclick="loadLsChart('${s.ticker}')">${s.ticker}</td>
+                    <td style="padding:4px 8px;font-family:monospace;font-size:10px;color:${sCol};${textMuted}">${sector}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;${textMuted}">₹${s.price ? Math.round(s.price) : '—'}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${s.ret_12m>=0?'#26a69a':'#ef5350'};${textMuted}">${s.ret_12m>=0?'+':''}${s.ret_12m}%</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${ret3m>=0?'#26a69a':'#ef5350'};${textMuted}">${ret3m>=0?'+':''}${ret3m}%</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;${textMuted}">${s.volatility != null ? s.volatility.toFixed(0)+'%' : '—'}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;${textMuted}">${s.vol_3m != null ? s.vol_3m.toFixed(0)+'%' : '—'}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);${textMuted}">${s.momentum_score.toFixed(3)}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${betaCol};font-weight:700;">${s.beta.toFixed(2)}</td>
                 </tr>`;
             }).join('');
@@ -4592,7 +4597,7 @@
                 </tr></thead><tbody>${rows}</tbody>
             </table>
             <div style="padding:6px 8px;font-size:10px;color:var(--text-muted);">
-                HIGH-β stocks (β&gt;1.2) in top-20 uncapped universe &nbsp;|&nbsp; Δ = uncapped rank change vs previous session
+                ■ <span style="color:#60a5fa;">Blue</span> = eligible (uncapped rank ≤20) &nbsp;|&nbsp; grey = outside top-20 &nbsp;|&nbsp; Δ = uncapped rank change vs previous session
             </div>`;
         }
 

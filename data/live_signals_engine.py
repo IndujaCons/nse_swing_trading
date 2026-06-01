@@ -924,7 +924,7 @@ class LiveSignalsEngine:
 
             # rank_delta injected later (overflow block) using uncapped universe ranks
 
-        # Mom20 overflow: top-40 uncapped minus capped — high-beta RS63 candidates
+        # Mom20 overflow: all N200 β>1.2 stocks not in capped basket, ranked by uncapped score
         mom20_overflow = []
         mom20_unfiltered_ranks = {}
         mom20_all_prices = {}
@@ -938,8 +938,11 @@ class LiveSignalsEngine:
             for idx_u, d in enumerate(mom20_raw):
                 z = wz_uc[idx_u]
                 d["norm_score_uc"] = (1 + z) if z >= 0 else 1 / (1 - z)
+            all_sorted_uc = sorted(mom20_raw, key=lambda d: -d["norm_score_uc"])
+            # Unfiltered rank map (no beta cap) — used for exit decisions on held stocks
+            mom20_unfiltered_ranks = {d["ticker"]: (ri + 1) for ri, d in enumerate(all_sorted_uc)}
             ov_rank = 0
-            for d in sorted(mom20_raw, key=lambda d: -d["norm_score_uc"])[:20]:
+            for d in all_sorted_uc:
                 if d["ticker"] not in capped_tickers and d.get("beta") is not None and abs(d["beta"]) > 1.2:
                     ov_rank += 1
                     mom20_overflow.append({
@@ -952,12 +955,8 @@ class LiveSignalsEngine:
                         "momentum_score": round(d["norm_score_uc"], 3),
                         "beta": round(abs(d["beta"]), 2),
                         "rank": ov_rank,
+                        "uc_rank": mom20_unfiltered_ranks[d["ticker"]],
                     })
-            # Unfiltered rank map (no beta cap) — used for exit decisions on held stocks
-            mom20_unfiltered_ranks = {
-                d["ticker"]: rank + 1
-                for rank, d in enumerate(sorted(mom20_raw, key=lambda d: -d.get("norm_score_uc", 0)))
-            }
             # All N200 prices (no beta filter) — used for SIP min capital on held stocks
             mom20_all_prices = {d["ticker"]: d["price"] for d in mom20_raw}
 

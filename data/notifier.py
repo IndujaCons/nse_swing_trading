@@ -256,7 +256,7 @@ def format_mom20_overflow_alert(scan_result: dict) -> str | None:
              "<i>High-momentum, β&gt;1.2 — not in Mom20 (β≤1.2)</i>", "<code>"]
     lines.append(f"{'#':<3} {'Ticker':<10} {'Close':>7} {'12m':>6} {'3m':>6} {'Score':>5} {'β':>4}")
     lines.append("─" * 46)
-    for s in overflow:
+    for s in [s for s in overflow if s.get("uc_rank", 1) <= 20]:
         rank  = s.get("rank", "?")
         tick  = s["ticker"][:10]
         px    = f"{s['price']:,.0f}"
