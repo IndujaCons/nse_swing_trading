@@ -4335,6 +4335,13 @@ def api_techmo_performance_user(user_id):
     except Exception:
         pass
 
+    # Build live rank map from scan cache if available
+    live_rank_map = {}
+    scan_data = _TECHMO_SCAN_CACHE.get("data")
+    if scan_data:
+        for s in scan_data.get("signals", []):
+            live_rank_map[s["ticker"]] = s["rank"]
+
     holdings, total_cost, total_current = [], 0.0, 0.0
     for h in basket:
         t   = h.get("ticker", "")
@@ -4350,7 +4357,7 @@ def api_techmo_performance_user(user_id):
         holdings.append({
             "ticker":      t,
             "cluster":     h.get("cluster", TECHMO_UNIVERSE.get(t, "")),
-            "rank":        h.get("rank"),
+            "rank":        live_rank_map.get(t, h.get("rank")),
             "shares":      qty,
             "entry_price": ep,
             "entry_date":  h.get("entry_date", ""),
