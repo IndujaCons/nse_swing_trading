@@ -3920,6 +3920,7 @@ TECHMO_UNIVERSE = {
     # Energy / AI Power
     "CEG":"AI Energy","VST":"AI Energy","NEE":"AI Energy",
     "OKLO":"AI Energy","EQT":"AI Energy","GEV":"AI Energy","BE":"AI Energy","TE":"AI Energy",
+    "CCJ":"AI Energy","BWXT":"AI Energy",
     # Power Electronics
     "STM":"Power Elec","ADI":"Power Elec","MPWR":"Power Elec",
     "ON":"Power Elec","TXN":"Power Elec",
@@ -3938,7 +3939,7 @@ TECHMO_UNIVERSE = {
     "IONQ":"Quantum","RGTI":"Quantum","QBTS":"Quantum",
     # AI Software (application layer)
     "PLTR":"AI Software","NOW":"AI Software","SNOW":"AI Software",
-    "DDOG":"AI Software","IGV":"AI Software",
+    "DDOG":"AI Software","IGV":"AI Software","NET":"AI Software",
     # QQQ-only additions
     "AAPL":"Consumer Tech","NFLX":"Consumer Tech","QCOM":"Wireless",
     "COST":"Retail","ORLY":"Retail","ADP":"Enterprise SW",
