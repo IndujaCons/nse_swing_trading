@@ -6883,27 +6883,38 @@
                 ${sellsHtml}`;
 
             // Buys / Entries
-            let totalDeployed = 0;
-            const buysHtml = buys.length === 0
-                ? `<div style="color:${color.m};padding-left:4px;">—</div>`
-                : `<div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
-                       <span>Stock</span><span>Qty</span><span>Fill ₹</span><span>Value ₹</span></div>` +
-                  buys.map(e => {
+            const top_ups = rb.top_ups || [];
+            const renderBuyRows = (list, colorOverride) => {
+                let total = 0;
+                const rows = list.map(e => {
                     const ticker = e.ticker || '';
                     const qty    = e.qty || 0;
                     const price  = e.price || e.fill_price || e.entry_price || 0;
                     const val    = qty && price ? Math.round(qty * price) : null;
-                    if (val) totalDeployed += val;
+                    if (val) total += val;
                     return `<div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;">
-                        <span style="color:${color.g};">${ticker}</span>
+                        <span style="color:${colorOverride || color.g};">${ticker}</span>
                         <span style="color:${color.m};">${qty}</span>
                         <span style="color:${color.m};">${price ? price.toFixed(2) : '—'}</span>
                         <span style="color:${color.m};">${val != null ? fmt(val) : '—'}</span>
                     </div>`;
-                  }).join('');
+                }).join('');
+                return { rows, total };
+            };
+            const { rows: buysRows, total: totalDeployed } = renderBuyRows(buys);
+            const buysHtml = buys.length === 0
+                ? `<div style="color:${color.m};padding-left:4px;">—</div>`
+                : `<div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+                       <span>Stock</span><span>Qty</span><span>Fill ₹</span><span>Value ₹</span></div>${buysRows}`;
+            const { rows: topUpRows, total: totalTopUp } = renderBuyRows(top_ups, '#60a5fa');
+            const topUpsHtml = top_ups.length === 0 ? '' :
+                `<div style="margin-top:10px;color:${color.t};font-weight:700;">SIP TOP-UPS (${top_ups.length})${totalTopUp > 0 ? `  <span style="color:${color.m};font-weight:400;font-size:11px;">₹${fmt(totalTopUp)} added</span>` : ''}</div>
+                <div style="display:grid;grid-template-columns:120px 50px 80px 80px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+                    <span>Stock</span><span>Qty</span><span>Fill ₹</span><span>Value ₹</span></div>${topUpRows}`;
             const buysSection = `
                 <div style="margin-top:10px;color:${color.t};font-weight:700;">ENTRIES / BUYS (${buys.length})${totalDeployed > 0 ? `  <span style="color:${color.m};font-weight:400;font-size:11px;">₹${fmt(totalDeployed)} deployed</span>` : ''}</div>
-                ${buysHtml}`;
+                ${buysHtml}
+                ${topUpsHtml}`;
 
             // holds is {ticker: {entry_price, qty, entry_date}} from history chain
             const holdsMap  = holds || {};

@@ -2657,6 +2657,11 @@ def api_mom20_tradebook_upload(user_id):
                 t["pnl"]     = round((t["price"] - entry_p) * t["qty"], 2)
                 t["pnl_pct"] = round((t["price"] / entry_p - 1) * 100, 2)
 
+    # Classify buys as new entries vs top-ups on existing holdings
+    held_tickers = set(basket_lookup.keys())
+    new_buys  = [t for t in trades if t["action"] == "BUY" and t["ticker"] not in held_tickers]
+    top_ups   = [t for t in trades if t["action"] == "BUY" and t["ticker"] in held_tickers]
+
     updated = sync_portfolio_from_trades(portfolio, trades, basket_data)
 
     # Compute realized P&L summary for this rebalance
@@ -2689,7 +2694,8 @@ def api_mom20_tradebook_upload(user_id):
         "rebalance_date":      datetime.date.today().isoformat(),
         "trade_book_uploaded": datetime.datetime.now().isoformat(),
         "trades_parsed":       len(trades),
-        "buys":                [t for t in trades if t["action"] == "BUY"],
+        "buys":                new_buys,
+        "top_ups":             top_ups,
         "sells":               [t for t in trades if t["action"] == "SELL"],
         "realized_pnl":        realized_pnl,
         "status":              "synced",
