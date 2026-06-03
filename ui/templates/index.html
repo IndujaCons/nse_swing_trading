@@ -6785,6 +6785,23 @@
             if (!uid) { body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">Select a user first.</div>'; return; }
             body.innerHTML = '<div style="color:var(--text-muted);padding:16px;">Loading…</div>';
             try {
+                // Ensure holdings context is loaded so HOLDS rows show live prices/rank
+                if (!Object.keys(_mom20HoldingsCtx).length) {
+                    try {
+                        const pr = await fetch(`/api/portfolio-users/${uid}/mom20-performance`);
+                        const pd = await pr.json();
+                        if (pd.success && pd.holdings) {
+                            _mom20HoldingsCtx = {};
+                            pd.holdings.forEach(h => {
+                                _mom20HoldingsCtx[h.ticker] = {
+                                    rank: h.rank, entry_price: h.entry_price,
+                                    current_price: h.current_price, return_pct: h.return_pct,
+                                    qty: h.qty, entry_date: h.entry_date,
+                                };
+                            });
+                        }
+                    } catch(_) {}
+                }
                 const r = await fetch(`/api/portfolio-users/${uid}/mom20-history`);
                 const d = await r.json();
                 if (!d.success) { body.innerHTML = '<div style="color:var(--red);">Failed to load history</div>'; return; }
