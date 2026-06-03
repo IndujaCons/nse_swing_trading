@@ -9928,7 +9928,8 @@ async function mom20DownloadSIPBasket() {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `mom20_sip_${new Date().toISOString().slice(0,10)}.json`;
+    const _sipUser = _mom20SelectedUser?.id || selectedTradeUser || '';
+    a.download = `mom20_sip_${_sipUser ? _sipUser + '_' : ''}${new Date().toISOString().slice(0,10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
 }
