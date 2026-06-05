@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
-Mom15 PIT Backtest — 2-Monthly Rebalance Report
-================================================
-Capital : ₹20L starting, ₹2L per slot (compounding)
-Slots   : 10 initially → unlocks 1 slot per ₹2L profit, max 15
-Rebalance: First trading day of Feb, Apr, Jun, Aug, Oct, Dec each year
-Scoring : MR_12 (50%) + MR_3 (50%), Z-scored, Normalised Score
-Filters : Beta ≤ 1.0 vs Nifty 50, TTM EPS growth > 0%
-Buffer  : Existing stays if rank ≤ 30, new enters if rank ≤ 10
+Mom20 PIT Backtest — Monthly Rebalance Report  [--mom20, PRODUCTION]
+=====================================================================
+Capital   : ₹20L starting, equal weight across 20 slots (compounding)
+Slots     : Top 20, Nifty200 PIT universe
+Rebalance : First trading day of each month
+Scoring   : MR_12 (50%) + MR_3 (50%), Z-scored, Normalised Score
+Filters   : Beta ≤ 1.2 vs Nifty 50 | Sector cap ≤ 4
+Buffer    : Existing stays if rank ≤ 40, new enters if rank ≤ 15
+Regime    : Nifty200 < SMA200 → hold all, no entries/exits
 
 Usage:
-    python3 mom15_pit_report.py           # first run downloads data (~5-10 min)
-    python3 mom15_pit_report.py --refresh # force re-download
+    python3 mom15_pit_report.py           # Mom15 (2-monthly, β≤1.0, EPS filter)
+    python3 mom15_pit_report.py --mom20   # Mom20 (monthly, β≤1.2, sector cap 4) ← PRODUCTION
+    python3 mom15_pit_report.py --refresh # force re-download data
 """
 
 import os, sys, json, pickle, warnings, argparse
