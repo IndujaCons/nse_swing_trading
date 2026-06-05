@@ -3953,6 +3953,23 @@ TECHMO_UNIVERSE = {
 }
 
 _TECHMO_SCAN_CACHE = {"data": None, "ts": 0}
+_USDINR_CACHE = {"rate": None, "ts": 0}
+
+def _get_usdinr() -> float:
+    """USDINR spot rate via yfinance. 15-min cache. Falls back to 84.0."""
+    import time
+    now = time.time()
+    if _USDINR_CACHE["rate"] and now - _USDINR_CACHE["ts"] < 900:
+        return _USDINR_CACHE["rate"]
+    try:
+        import yfinance as yf
+        rate = float(yf.Ticker("USDINR=X").fast_info["last_price"])
+        _USDINR_CACHE["rate"] = rate
+        _USDINR_CACHE["ts"]   = now
+        return rate
+    except Exception:
+        return _USDINR_CACHE["rate"] or 84.0
+
 
 @app.route("/api/techmo/scan", methods=["GET"])
 def api_techmo_scan():
@@ -5031,6 +5048,7 @@ def api_portfolio_summary():
 
         # ── ETF ────────────────────────────────────────────────────────────────
         etf_pct = None
+        _etf_gain_inr, _etf_cost_inr = 0.0, 0.0
         try:
             _open_pos, _etf_hist = [], []
             try:
@@ -5049,11 +5067,14 @@ def api_portfolio_summary():
             _total_etf_cost = _open_cost + _closed_cost
             if _total_etf_cost > 0:
                 etf_pct = round(_real_etf / _total_etf_cost * 100, 2)
+                _etf_gain_inr = _real_etf
+                _etf_cost_inr = _total_etf_cost
         except Exception:
             pass
 
         # ── TechMo ─────────────────────────────────────────────────────────────
         techmo_pct = None
+        _t_gain_usd, _t_cost_usd = 0.0, 0.0
         try:
             with open(techmo_portfolio_path(uid)) as _f:
                 _tpf = json.load(_f)
@@ -5084,12 +5105,32 @@ def api_portfolio_summary():
                 _t_curr += _tprices.get(_h.get("ticker", ""), _ep) * _qty
             if _t_cost > 0:
                 techmo_pct = round((_t_curr - _t_cost + _t_realized) / _t_cost * 100, 2)
+                _t_gain_usd = _t_curr - _t_cost + _t_realized
+                _t_cost_usd = _t_cost
         except Exception:
             pass
 
-        # ── Total (simple sum of non-null) ─────────────────────────────────────
-        _parts = [x for x in [mom20_pct, options_pct, etf_pct, techmo_pct] if x is not None]
-        total_pct = round(sum(_parts), 2) if _parts else None
+        # ── Total (FX-weighted across INR + USD strategies) ────────────────────
+        total_pct = None
+        try:
+            _fx = _get_usdinr()
+            _total_gain_inr  = 0.0
+            _total_cap_inr   = 0.0
+            if mom20_pct is not None and mom20_invested > 0:
+                _total_gain_inr += mom20_pct / 100 * mom20_invested
+                _total_cap_inr  += mom20_invested
+            if options_amt is not None:
+                _total_gain_inr += float(options_amt)   # already absolute INR P&L
+            if etf_pct is not None and _etf_cost_inr > 0:
+                _total_gain_inr += _etf_gain_inr
+                _total_cap_inr  += _etf_cost_inr
+            if techmo_pct is not None and _t_cost_usd > 0:
+                _total_gain_inr += _t_gain_usd * _fx
+                _total_cap_inr  += _t_cost_usd * _fx
+            if _total_cap_inr > 0:
+                total_pct = round(_total_gain_inr / _total_cap_inr * 100, 2)
+        except Exception:
+            pass
 
         rows.append({
             "user_id":        uid,
