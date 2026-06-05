@@ -2387,10 +2387,11 @@ def api_add_user():
     name = (data.get("name") or "").strip()
     if not name:
         return jsonify({"success": False, "error": "name required"})
-    mom20_cap = int(data.get("mom20_capital") or 0)
-    etf_cap   = int(data.get("etf_capital")   or 0)
-    email     = (data.get("email") or "").strip()
-    user = add_user(name, mom20_capital=mom20_cap, etf_capital=etf_cap, email=email)
+    mom20_cap  = int(data.get("mom20_capital")   or 0)
+    etf_cap    = int(data.get("etf_capital")     or 0)
+    techmo_cap = float(data.get("techmo_capital") or 0)
+    email      = (data.get("email") or "").strip()
+    user = add_user(name, mom20_capital=mom20_cap, etf_capital=etf_cap, techmo_capital=techmo_cap, email=email)
     return jsonify({"success": True, "user": user})
 
 
