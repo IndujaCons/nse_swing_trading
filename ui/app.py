@@ -4115,19 +4115,18 @@ def api_techmo_performance():
     tickers   = [p["ticker"] for p in positions]
     yf_syms   = tickers  # US stocks, no suffix
 
+    from concurrent.futures import ThreadPoolExecutor
     prices = {}
-    try:
-        raw = yf.download(yf_syms, period="2d", progress=False,
-                          auto_adjust=True, group_by="ticker", threads=True)
-        for t in tickers:
-            try:
-                s = (raw[t]["Close"] if len(yf_syms) > 1 else raw["Close"]).dropna()
-                if not s.empty:
-                    prices[t] = round(float(s.iloc[-1]), 2)
-            except Exception:
-                pass
-    except Exception:
-        pass
+    def _fetch_us(ticker):
+        try:
+            price = float(yf.Ticker(ticker).fast_info["last_price"])
+            return ticker, price if price > 0 else None
+        except Exception:
+            return ticker, None
+    with ThreadPoolExecutor(max_workers=10) as _pool:
+        for ticker, price in _pool.map(_fetch_us, tickers):
+            if price:
+                prices[ticker] = round(price, 2)
 
     holdings = []
     total_cost    = 0.0
@@ -4320,15 +4319,17 @@ def api_techmo_performance_user(user_id):
     prices, prices_updated_at = {}, ""
     if live:
         try:
-            raw = yf.download(tickers, period="2d", progress=False,
-                              auto_adjust=True, group_by="ticker", threads=True)
-            for t in tickers:
+            from concurrent.futures import ThreadPoolExecutor
+            def _fetch_us2(ticker):
                 try:
-                    s = (raw[t]["Close"] if len(tickers) > 1 else raw["Close"]).dropna()
-                    if not s.empty:
-                        prices[t] = round(float(s.iloc[-1]), 2)
+                    price = float(yf.Ticker(ticker).fast_info["last_price"])
+                    return ticker, price if price > 0 else None
                 except Exception:
-                    pass
+                    return ticker, None
+            with ThreadPoolExecutor(max_workers=10) as _pool:
+                for ticker, price in _pool.map(_fetch_us2, tickers):
+                    if price:
+                        prices[ticker] = round(price, 2)
             prices_updated_at = datetime.now().strftime("%d %b %H:%M")
             os.makedirs(os.path.dirname(lp_path), exist_ok=True)
             with open(lp_path, "w") as f:
