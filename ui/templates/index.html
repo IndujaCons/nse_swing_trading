@@ -8306,10 +8306,8 @@ function mom20OnUserChange() {
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
     // Clear stale previous-user data immediately before new user's data arrives
     _mom20ResetTrackerDisplay();
-    // Load basket only if its panel is visible; otherwise defer until user opens it
     mom20EnsureSectorMap();
-    const basketSection = document.getElementById('mom20-basket-section');
-    if (basketSection && basketSection.style.display !== 'none') mom20LoadBasket();
+    mom20LoadBasket();
     mom20LoadPerformance();
     mom20LoadSectorRanking();
 }
