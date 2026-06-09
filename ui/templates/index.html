@@ -8418,8 +8418,7 @@ async function mom20LivePricesAndBasket() {
         btn.style.cursor = 'wait';
     }
     try {
-        await mom20LoadBasket();
-        await mom20LoadPerformance(true);
+        await Promise.all([mom20LoadBasket(), mom20LoadPerformance(true)]);
     } finally {
         _mom20LiveBusy = false;
         if (btn) {
