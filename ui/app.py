@@ -3026,21 +3026,22 @@ def api_mom20_performance(user_id):
     if want_live and fetch_tickers:
         import yfinance as yf
         from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         yf_syms = [f"{t}.NS" for t in fetch_tickers]
-        try:
-            df = yf.download(yf_syms, period="1d", interval="5m", progress=False,
-                             group_by="ticker", threads=True, auto_adjust=True)
-            for t, sym in zip(fetch_tickers, yf_syms):
-                try:
-                    val = float(df["Close"].dropna().iloc[-1]) if len(fetch_tickers) == 1 \
-                          else float(df[sym]["Close"].dropna().iloc[-1])
-                    if val > 0:
-                        price_map[t] = val
-                        fresh_prices[t] = round(val, 2)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+
+        def _fetch_price(args):
+            ticker, sym = args
+            try:
+                price = float(yf.Ticker(sym).fast_info["last_price"])
+                return ticker, price if price > 0 else None
+            except Exception:
+                return ticker, None
+
+        with ThreadPoolExecutor(max_workers=10) as _pool:
+            for ticker, price in _pool.map(_fetch_price, zip(fetch_tickers, yf_syms)):
+                if price:
+                    price_map[ticker] = price
+                    fresh_prices[ticker] = round(price, 2)
 
         # Live Prices touches only prices — ranks require a full Nifty 200 scan
         # which lives behind the Live Signals refresh path, not this endpoint.
