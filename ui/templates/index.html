@@ -8299,12 +8299,17 @@ function mom20OnUserChange() {
     if (delBtn) delBtn.style.display = 'inline';
     if (histBtn) histBtn.style.display = 'inline';
     _mom20HistoryLoaded = false;
+    // Reset live-prices busy flag so the button isn't stuck disabled after a user switch
+    _mom20LiveBusy = false;
+    const liveBtn = document.getElementById('mom20-live-prices-btn');
+    if (liveBtn) { liveBtn.disabled = false; liveBtn.style.opacity = ''; liveBtn.style.cursor = 'pointer'; }
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
     // Clear stale previous-user data immediately before new user's data arrives
     _mom20ResetTrackerDisplay();
-    // Fire the four loaders in parallel
+    // Load basket only if its panel is visible; otherwise defer until user opens it
     mom20EnsureSectorMap();
-    mom20LoadBasket();
+    const basketSection = document.getElementById('mom20-basket-section');
+    if (basketSection && basketSection.style.display !== 'none') mom20LoadBasket();
     mom20LoadPerformance();
     mom20LoadSectorRanking();
 }
