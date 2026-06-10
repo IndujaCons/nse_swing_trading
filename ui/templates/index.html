@@ -4615,7 +4615,7 @@
                 techmoScanRender(d);
                 if (status) status.textContent = d.scanned_at + ' | ' + d.universe + ' stocks';
             } catch(e) {
-                if (body)   body.innerHTML = `<div class="empty-state" style="color:#ef5350;">Error: ${e.message}</div>`;
+                if (body)   body.innerHTML = `<div class="empty-state" style="color:#ef5350;">Something went wrong — try Refresh</div>`;
                 if (status) status.textContent = '';
             }
         }
@@ -4741,7 +4741,7 @@
                     : 'Refresh started — current data shown, fresh data coming…',
                     'info');
             } catch (e) {
-                showToast('Refresh failed: ' + e.message, 'error');
+                showToast('Refresh failed — try again', 'error');
                 btn.classList.remove('loading');
                 btn.disabled = false;
                 loadLiveSignalsData();
@@ -6136,7 +6136,7 @@
                 _goldmLastScan = data;
                 goldmRender(data);
             } catch (e) {
-                showToast('Scan error: ' + e.message, 'error');
+                showToast('Scan failed — try again', 'error');
                 document.getElementById('gm-status-text').textContent = 'Error';
             }
         }
@@ -6401,7 +6401,7 @@
                     showToast(data.error || 'Buy failed', 'error');
                 }
             } catch (e) {
-                showToast('Error: ' + e.message, 'error');
+                showToast('Something went wrong — try again', 'error');
             }
         }
 
@@ -6427,7 +6427,7 @@
                     showToast(data.error || 'Exit failed', 'error');
                 }
             } catch (e) {
-                showToast('Error: ' + e.message, 'error');
+                showToast('Something went wrong — try again', 'error');
             }
         }
 
@@ -6579,7 +6579,7 @@
                 } else {
                     showToast(`${q} not found — check ticker`, 'error');
                 }
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
             inp.disabled = false;
             inp.value = '';
             inp.focus();
@@ -6614,7 +6614,7 @@
                     mom20RenderBasket();
                     showToast(`Imported ${mom20Basket.length} stocks from Mom20 top-20`, 'success');
                 } else showToast('No Mom20 signals — refresh live signals first', 'error');
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         async function mom20LoadPortfolio() {
@@ -6646,7 +6646,7 @@
                     showToast(`Loaded ${d.basket.length} stocks`, 'success');
                 } else showToast('No saved portfolio', 'error');
                 if (d.pending_orders && d.pending_orders.length) _renderOrderStatus(d.pending_orders);
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         function _mom20RenderPerfCard(d) {
@@ -6692,7 +6692,7 @@
                     showToast(`Portfolio saved — paper tracking from ${d.tracking_since}`, 'success');
                     mom20LoadPortfolio();
                 } else showToast(d.error, 'error');
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         async function mom20PlaceAllOrders(sfx) {
@@ -6721,7 +6721,7 @@
                     _renderOrderStatus(d.orders);
                     showToast(`${d.orders.length} orders placed — poll status then Confirm Investment`, 'success');
                 } else showToast(d.error, 'error');
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         async function mom20ConfirmInvestment(sfx) {
@@ -6747,7 +6747,7 @@
                     });
                     mom20LoadPortfolio();
                 } else showToast(d.error, 'error');
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         async function mom20ResetPortfolio() {
@@ -6765,7 +6765,7 @@
                     showToast('Mom20 portfolio reset to paper tracking', 'success');
                     mom20LoadPortfolio();
                 }
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         let _mom20HistoryLoaded = false;
@@ -6844,7 +6844,7 @@
                 // history[i] (newest-first) is chronological position N-1-i → holds = _holdsOld[N-1-i]
                 const N = history.length;
                 body.innerHTML = history.map((rb, i) => mom20RenderRebalance(rb, N - i, _holdsOld[N - 1 - i])).join('');
-            } catch(e) { body.innerHTML = `<div style="color:var(--red);">${e.message}</div>`; }
+            } catch(e) { body.innerHTML = `<div style="color:var(--red);">Something went wrong — try Refresh</div>`; }
         }
 
         function mom20RenderRebalance(rb, num, holds) {
@@ -7137,7 +7137,7 @@
                 } else {
                     showToast(`${q} not found — check ticker`, 'error');
                 }
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
             inp.disabled = false;
             inp.value = '';
             inp.focus();
@@ -7165,7 +7165,7 @@
                     ovRenderBasket();
                     showToast(`Imported ${ovBasket.length} overflow stocks`, 'success');
                 } else showToast('No overflow signals — refresh live signals first', 'error');
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         async function ovLoadPortfolio() {
@@ -7192,7 +7192,7 @@
                     showToast(`Loaded ${d.basket.length} overflow stocks`, 'success');
                 } else showToast('No saved overflow portfolio', 'error');
                 if (d.pending_orders && d.pending_orders.length) _ovRenderOrderStatus(d.pending_orders);
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         function _ovRenderPerfCard(d) {
@@ -7235,7 +7235,7 @@
                     showToast(`Overflow portfolio saved — paper tracking from ${d.tracking_since}`, 'success');
                     ovLoadPortfolio();
                 } else showToast(d.error, 'error');
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         async function ovPlaceAllOrders() {
@@ -7268,7 +7268,7 @@
                     else if (ok > 0) showToast(`${ok} sent, ${fail} failed — check order status below`, 'error');
                     // errors shown by _ovRenderOrderStatus
                 } else showToast(d.error, 'error');
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         async function ovConfirmInvestment() {
@@ -7291,7 +7291,7 @@
                     document.getElementById('ov-order-status-wrap').style.display = 'none';
                     ovLoadPortfolio();
                 } else showToast(d.error, 'error');
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         async function ovResetPortfolio() {
@@ -7304,7 +7304,7 @@
                     showToast('Portfolio reset to paper tracking — re-login Kite and place orders again', 'success');
                     ovLoadPortfolio();
                 }
-            } catch(e) { showToast(e.message, 'error'); }
+            } catch(e) { showToast('Something went wrong — try again', 'error'); }
         }
 
         async function ovPollOrders() {
@@ -7459,7 +7459,7 @@
                     : '';
             }
         } catch (e) {
-            showToast('Scan error: ' + e.message, 'error');
+            showToast('Scan failed — try again', 'error');
         } finally {
             btn.classList.remove('loading');
             btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -7712,7 +7712,7 @@
                 data.volumes, data.rsi
             );
         } catch (e) {
-            body.innerHTML = `<div class="etf-chart-placeholder" style="color:var(--red);">Failed: ${e.message}</div>`;
+            body.innerHTML = `<div class="etf-chart-placeholder" style="color:var(--red);">Chart unavailable — try Refresh</div>`;
         }
     }
 
@@ -7809,7 +7809,7 @@
                 showToast(data.error || 'Entry failed', 'error');
             }
         } catch (e) {
-            showToast('Error: ' + e.message, 'error');
+            showToast('Something went wrong — try again', 'error');
         }
     }
 
@@ -7842,7 +7842,7 @@
                 showToast(data.error || 'Update failed', 'error');
             }
         } catch (e) {
-            showToast('Error: ' + e.message, 'error');
+            showToast('Something went wrong — try again', 'error');
         }
     }
 
@@ -7874,7 +7874,7 @@
                 showToast(data.error || 'Exit failed', 'error');
             }
         } catch (e) {
-            showToast('Error: ' + e.message, 'error');
+            showToast('Something went wrong — try again', 'error');
         }
     }
 
@@ -8048,7 +8048,7 @@
                 }
             }
         } catch (e) {
-            showToast('Error: ' + e.message, 'error');
+            showToast('Something went wrong — try again', 'error');
         }
     }
 
@@ -8357,7 +8357,7 @@ async function mom20LoadSectorRanking(force=false) {
         const d = await r.json();
         mom20RenderSectorRanking(d);
     } catch (e) {
-        body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:#ef5350;font-size:11px;">Error: ${e.message}</div>`;
+        body.innerHTML = `<div style="padding:24px 16px;text-align:center;color:#ef5350;font-size:11px;">Something went wrong — try Refresh</div>`;
         if (status) status.textContent = '';
     }
 }
@@ -8446,7 +8446,7 @@ async function mom20DeleteRebalance(storageIdx, dateLabel) {
         } else {
             showToast(d.error || 'Delete failed', 'error');
         }
-    } catch(e) { showToast(e.message, 'error'); }
+    } catch(e) { showToast('Something went wrong — try again', 'error'); }
 }
 
 async function mom20RebuildPortfolio() {
@@ -8464,7 +8464,7 @@ async function mom20RebuildPortfolio() {
         } else {
             showToast(d.error || 'Rebuild failed', 'error');
         }
-    } catch(e) { showToast(e.message, 'error'); }
+    } catch(e) { showToast('Something went wrong — try again', 'error'); }
     finally {
         if (btn) { btn.disabled = false; btn.textContent = '↺ Rebuild from History'; }
     }
@@ -8695,7 +8695,7 @@ async function mom20LoadPerfChart(uid) {
     } catch(e) {
         /* swallow */
         const wrap = document.getElementById('mom20-perf-chart-wrap');
-        if (wrap) wrap.innerHTML += `<div style="color:#dc3545;font-size:11px;padding:8px;">Chart error: ${e.message}</div>`;
+        if (wrap) wrap.innerHTML += `<div style="color:#dc3545;font-size:11px;padding:8px;">Chart unavailable — try Refresh</div>`;
     }
 }
 
@@ -8965,7 +8965,7 @@ async function techmoLoadHistory() {
         });
         if (body) body.innerHTML = history.slice().reverse()
             .map((rb, i) => techmoRenderRebalance(rb, history.length - i, _tHoldsArr[history.length - 1 - i])).join('');
-    } catch(e) { if (body) body.innerHTML = `<div style="color:var(--red);">${e.message}</div>`; }
+    } catch(e) { if (body) body.innerHTML = `<div style="color:var(--red);">Something went wrong — try Refresh</div>`; }
 }
 
 async function techmoSeedHistory() {
@@ -9003,7 +9003,7 @@ async function techmoSeedHistory() {
         if (status) { status.textContent = `✓ Seeded ${d.seeded} positions on ${d.date}`; status.style.color = 'var(--green)'; }
         techmoLoadHistory();
     } catch(e) {
-        if (status) { status.textContent = e.message; status.style.color = '#ef5350'; }
+        if (status) { status.textContent = 'Something went wrong — try again'; status.style.color = '#ef5350'; }
     }
 }
 
@@ -9060,9 +9060,9 @@ async function techmoLoad(live=false) {
         techmoLoadChart();
         techmoLoadBasket();
     } catch(e) {
-        if (status) status.textContent = 'Error: ' + e.message;
+        if (status) status.textContent = 'Something went wrong — try again';
         const tbody = document.getElementById('techmo-tracker-tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="padding:24px;text-align:center;color:#ef5350;font-size:11px;">Error: ${e.message}</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="padding:24px;text-align:center;color:#ef5350;font-size:11px;">Something went wrong — try Refresh</td></tr>`;
     }
 }
 
@@ -9235,7 +9235,7 @@ async function techmoLoadBasket() {
         techmoRenderBasket(d);
         if (status) status.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',hour12:false});
     } catch(e) {
-        if (status) status.textContent = 'Basket error: ' + e.message;
+        if (status) status.textContent = 'Basket unavailable — try Refresh';
     }
 }
 
@@ -9398,7 +9398,7 @@ async function techmoAddSubmit() {
         techmoAddModalClose();
         techmoLoad();
         if (_techmoHistoryLoaded) techmoLoadHistory();
-    } catch(e) { status.textContent = e.message; status.style.color = '#ef5350'; }
+    } catch(e) { status.textContent = 'Something went wrong — try again'; status.style.color = '#ef5350'; }
 }
 
 let _techmoExitTicker = null;
@@ -9442,7 +9442,7 @@ async function techmoExitSubmit() {
         techmoExitModalClose();
         techmoLoad();
         if (_techmoHistoryLoaded) techmoLoadHistory();
-    } catch(e) { status.textContent = e.message; status.style.color = '#ef5350'; }
+    } catch(e) { status.textContent = 'Something went wrong — try again'; status.style.color = '#ef5350'; }
 }
 
 async function techmoCapitalChanged() {
@@ -9912,9 +9912,9 @@ async function mom20DownloadSIPBasket() {
     try {
         const r = await fetch(`/api/portfolio-users/${uid}/mom20-performance`);
         const d = await r.json();
-        if (!d.success) { alert('Failed to load holdings: ' + (d.error || '')); return; }
+        if (!d.success) { alert('Failed to load holdings — try again'); return; }
         holdings = d.holdings || [];
-    } catch(e) { alert('Error loading holdings: ' + e.message); return; }
+    } catch(e) { alert('Failed to load holdings — try again'); return; }
 
     if (holdings.length === 0) { alert('No holdings to SIP into'); return; }
 
@@ -10422,8 +10422,8 @@ async function newsFeedLoad(force) {
         nfBuildTagRow();
         nfRender();
     } catch(e) {
-        if (feed) feed.innerHTML = `<div style="padding:18px;color:#dc3545;">${e.message}</div>`;
-        if (status) status.textContent = 'error';
+        if (feed) feed.innerHTML = `<div style="padding:18px;color:#dc3545;">Feed unavailable — try Refresh</div>`;
+        if (status) status.textContent = 'unavailable';
     }
 }
 
