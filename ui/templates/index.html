@@ -1903,9 +1903,10 @@
                 <div class="panel ls-mom20-signals">
                     <div class="panel-header">
                         <span class="panel-title" style="color:#ff6b35;">Mom20 — Nifty200 Momentum (Monthly Rebalance)</span>
-                        <span id="ls-mom20-regime-badge" onclick="refreshLiveSignalsData()" title="Click to force-refresh signals" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);margin-left:8px;cursor:pointer;">Regime: —</span>
+                        <span id="ls-mom20-regime-badge" onclick="refreshLiveSignalsData()" title="Click to refresh signals" style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--bg-tertiary);color:var(--text-muted);margin-left:8px;cursor:pointer;border:1px dashed var(--border-color);" title="↺ Click to refresh">Regime: —</span>
                         <span class="panel-count" id="ls-mom20-count">0</span>
                     </div>
+                    <div id="ls-mom20-scan-status" style="display:none;padding:6px 12px;font-size:11px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border-color);"></div>
                     <div class="panel-body" id="ls-mom20-panel">
                         <div class="empty-state">Click Refresh to scan</div>
                     </div>
@@ -3161,7 +3162,7 @@
                 const data = await res.json();
                 const dl = document.getElementById('wl-tickers');
                 dl.innerHTML = data.tickers.map(t => `<option value="${t}">`).join('');
-            } catch (e) { console.error('Failed to load tickers:', e); }
+            } catch (e) { /* swallow */ }
         }
 
         let wlNewsCache = {};
@@ -3182,7 +3183,7 @@
                     }
                 });
                 watchlistLoaded = true;
-            } catch (e) { console.error('Failed to load watchlist:', e); }
+            } catch (e) { /* swallow */ }
         }
 
         function renderWatchlistGroupTabs(groups, activeGroup) {
@@ -4053,7 +4054,7 @@
                     document.getElementById('ls-universe').value = data.settings.live_signals_universe || 50;
                 }
             } catch (e) {
-                console.error('Failed to load settings:', e);
+                /* swallow */
             }
         }
 
@@ -4109,7 +4110,7 @@
                     loadUserMargins();
                 }
             } catch (e) {
-                console.error('Connection check failed:', e);
+                /* swallow */
             }
         }
 
@@ -4129,7 +4130,7 @@
                     }
                 }
             } catch (e) {
-                console.error('Margins load error:', e);
+                /* swallow */
             }
         }
 
@@ -4278,7 +4279,7 @@
                     showError(data.error || 'Unknown error');
                 }
             } catch (e) {
-                console.error('Load error:', e);
+                /* swallow */
                 showError('Failed to load data');
             }
         }
@@ -4698,7 +4699,7 @@
                     showLiveSignalsError(data.error || 'Unknown error');
                 }
             } catch (e) {
-                console.error('Live Signals load error:', e);
+                /* swallow */
                 showLiveSignalsError('Click Refresh to scan for signals.');
             }
         }
@@ -4725,9 +4726,7 @@
                         renderEntrySignals(d.data);
                         updateLastUpdated(d.data.last_updated, d.cache_age_minutes ?? 0);
                         liveSignalsDataLoaded = true;
-                    } catch (renderErr) {
-                        console.error('Render (cached) error:', renderErr);
-                    }
+                    } catch (renderErr) { /* swallow render error */ }
                 }
                 if (!d.in_progress) {
                     // Server didn't actually start a scan (e.g. cached returned alone).
@@ -4742,7 +4741,6 @@
                     : 'Refresh started — current data shown, fresh data coming…',
                     'info');
             } catch (e) {
-                console.error('Live signals refresh error:', e);
                 showToast('Refresh failed: ' + e.message, 'error');
                 btn.classList.remove('loading');
                 btn.disabled = false;
@@ -4753,6 +4751,8 @@
             // Phase 2: poll progress in the background. When the scan finishes,
             // GET the fresh data and re-render.
             const lastUpd = document.getElementById('last-updated');
+            const inlineStatus = document.getElementById('ls-mom20-scan-status');
+            if (inlineStatus) { inlineStatus.style.display = 'block'; inlineStatus.textContent = 'Scanning…'; }
             const startTs = Date.now();
             const progressInterval = setInterval(async () => {
                 try {
@@ -4761,14 +4761,15 @@
                     if (progress.in_progress && progress.total > 0) {
                         const pct = Math.round((progress.current / progress.total) * 100);
                         const tk = progress.ticker || '';
-                        if (lastUpd) {
-                            lastUpd.textContent = tk
-                                ? `🔄 ${tk} ${progress.current}/${progress.total} (${pct}%)`
-                                : `🔄 ${progress.current}/${progress.total} (${pct}%)`;
-                        }
+                        const txt = tk
+                            ? `🔄 ${tk} ${progress.current}/${progress.total} (${pct}%)`
+                            : `🔄 ${progress.current}/${progress.total} (${pct}%)`;
+                        if (lastUpd) lastUpd.textContent = txt;
+                        if (inlineStatus) inlineStatus.textContent = txt;
                     }
                     if (!progress.in_progress) {
                         clearInterval(progressInterval);
+                        if (inlineStatus) inlineStatus.style.display = 'none';
                         // Scan finished — fetch fresh data and re-render
                         try {
                             const fr = await fetch('/api/live-signals/data');
@@ -4778,9 +4779,7 @@
                                 updateLastUpdated(fresh.data.last_updated, 0);
                                 showToast('Fresh data loaded', 'success');
                             }
-                        } catch (e) {
-                            console.error('Fresh data fetch failed:', e);
-                        }
+                        } catch (e) { /* swallow */ }
                         btn.classList.remove('loading');
                         btn.disabled = false;
                     }
@@ -8480,7 +8479,7 @@ async function mom20EnsureSectorMap() {
         const r = await fetch('/api/sector-map');
         const d = await r.json();
         if (d.success && d.map) _mom20SectorMap = d.map;
-    } catch (e) { console.warn('sector map load failed', e); }
+    } catch (e) { /* swallow */ }
 }
 function mom20SectorLabel(ticker) {
     const full = _mom20SectorMap[ticker];
@@ -8694,7 +8693,7 @@ async function mom20LoadPerfChart(uid) {
             }
         });
     } catch(e) {
-        console.error('mom20PerfChart error:', e);
+        /* swallow */
         const wrap = document.getElementById('mom20-perf-chart-wrap');
         if (wrap) wrap.innerHTML += `<div style="color:#dc3545;font-size:11px;padding:8px;">Chart error: ${e.message}</div>`;
     }
@@ -9175,7 +9174,7 @@ async function techmoLoadChart() {
                 }
             }
         });
-    } catch(e) { console.warn('techmoLoadChart error:', e); }
+    } catch(e) { /* swallow */ }
 }
 
 function techmoOpenChart(ticker, period) {
@@ -9465,7 +9464,7 @@ async function techmoCapitalChanged() {
         });
         // Re-run basket with updated per-slot
         techmoLoadBasket();
-    } catch(e) { console.warn('techmoCapitalChanged error:', e); }
+    } catch(e) { /* swallow */ }
 }
 
 let _mom20TrackerSortDir = {return: 'desc', rank: 'asc'};
@@ -9565,12 +9564,10 @@ async function mom20LoadBasket() {
         const text = await r.text();
         let d;
         try { d = JSON.parse(text); } catch(e) {
-            console.error('Basket parse error:', text.slice(0, 200));
             document.getElementById('basket-per-slot').textContent = 'Error';
             return;
         }
         if (!d.success) {
-            console.error('Basket error:', d.error);
             document.getElementById('basket-per-slot').textContent = 'Error';
             return;
         }
@@ -9590,7 +9587,7 @@ async function mom20LoadBasket() {
         _mom20BasketData = d;
         _renderMom20Basket(d);
         mom20SeedLoad();
-    } catch(e) { console.error('Failed to load basket:', e); }
+    } catch(e) { /* swallow */ }
 }
 
 function _renderMom20Basket(d) {
@@ -10770,7 +10767,7 @@ async function loadSummary() {
         renderSummary();
         status.textContent = 'Updated ' + new Date().toLocaleTimeString();
     } catch(e) {
-        status.textContent = 'Error: ' + e.message;
+        status.textContent = 'Refresh failed — try again';
     }
 }
 
@@ -10942,7 +10939,7 @@ async function saveSummaryOptions(userId, rawVal, invested) {
         });
         loadSummary();
     } catch(e) {
-        console.error('Failed to save options hedge amount', e);
+        /* swallow */
     }
 }
 
