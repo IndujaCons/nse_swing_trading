@@ -3954,6 +3954,7 @@ TECHMO_UNIVERSE = {
 }
 
 _TECHMO_SCAN_CACHE = {"data": None, "ts": 0}
+_TECHMO_VAL_CACHE  = {"data": None, "ts": 0}   # PE/FwdPE/PEG, 1-hr TTL
 _USDINR_CACHE = {"rate": None, "ts": 0}
 
 def _get_usdinr() -> float:
@@ -4090,6 +4091,39 @@ def api_techmo_scan():
     for sig in signals:
         pr = prev_rank_map.get(sig["ticker"])
         sig["rank_change"] = (pr - sig["rank"]) if pr is not None else None
+
+    # ── Valuation data (PE / FwdPE / PEG) — 1-hr cache ─────────────────────
+    now_t = _t.time()
+    if (not _TECHMO_VAL_CACHE["data"]
+            or (now_t - _TECHMO_VAL_CACHE["ts"]) >= 3600):
+        from concurrent.futures import ThreadPoolExecutor as _TPE
+        def _fetch_val(ticker):
+            try:
+                info = yf.Ticker(ticker).info
+                return ticker, {
+                    "pe":  info.get("trailingPE"),
+                    "fpe": info.get("forwardPE"),
+                    "peg": info.get("pegRatio"),
+                }
+            except Exception:
+                return ticker, {"pe": None, "fpe": None, "peg": None}
+        val_map = {}
+        with _TPE(max_workers=12) as _pool:
+            for tkr, v in _pool.map(_fetch_val, tickers):
+                val_map[tkr] = v
+        _TECHMO_VAL_CACHE["data"] = val_map
+        _TECHMO_VAL_CACHE["ts"]   = now_t
+    else:
+        val_map = _TECHMO_VAL_CACHE["data"]
+
+    for sig in signals:
+        v = val_map.get(sig["ticker"], {})
+        pe  = v.get("pe")
+        fpe = v.get("fpe")
+        peg = v.get("peg")
+        sig["pe"]  = round(pe,  1) if pe  is not None and pe  == pe  else None
+        sig["fpe"] = round(fpe, 1) if fpe is not None and fpe == fpe else None
+        sig["peg"] = round(peg, 2) if peg is not None and peg == peg else None
 
     result = {
         "success":    True,

@@ -4663,6 +4663,9 @@
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.sigma ? s.sigma.toFixed(0)+'%' : '—'}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.sigma_3m != null ? s.sigma_3m.toFixed(0)+'%' : '—'}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${s.score.toFixed(2)}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.pe  != null ? s.pe.toFixed(1)  : '—'}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.fpe != null ? s.fpe.toFixed(1) : '—'}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.peg != null ? s.peg.toFixed(2) : '—'}</td>
                 </tr>`;
             }).join('');
             body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -4677,6 +4680,9 @@
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility 12m">σ12</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Annualized volatility 3m">σ3m</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Trailing P/E">PE</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="Forward P/E">FwdPE</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);" title="PEG ratio">PEG</th>
                 </tr></thead><tbody>${rows}</tbody>
             </table>
             <div style="padding:6px 8px;font-size:10px;color:var(--text-muted);">
