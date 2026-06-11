@@ -4562,18 +4562,28 @@
                 const isHeld  = s.ticker in _techmoHoldingsCtx;
                 // Valuation veto: block NEW entries only when PEG > 3
                 const isVeto  = isEntry && !isHeld && s.peg != null && s.peg > 3;
+                // Go-for-it: entry zone, not held, FwdPE < 15 OR PEG < 1
+                const isGo    = isEntry && !isHeld && !isVeto &&
+                                ((s.fpe != null && s.fpe < 15) || (s.peg != null && s.peg < 1));
                 const bg = isVeto  ? 'background:rgba(239,83,80,0.06);'
+                         : isGo    ? 'background:rgba(38,166,154,0.07);'
                          : isEntry ? 'background:rgba(74,158,255,0.07);' : '';
                 const rankStyle = isEntry ? 'color:#60a5fa;font-weight:700;' : isHold ? 'color:#f59e0b;' : 'color:var(--text-muted);';
                 const cCol = CLUSTER_COLORS[s.cluster] || 'var(--text-muted)';
                 const vetoTag = isVeto
                     ? `<span title="Valuation veto — PEG ${s.peg.toFixed(2)} > 3.0 · do not enter (hold if already owned)" style="margin-left:5px;font-size:9px;color:#ef5350;cursor:help;">❌</span>`
                     : '';
+                const goReasons = [];
+                if (isGo && s.fpe != null && s.fpe < 15) goReasons.push(`FwdPE ${s.fpe.toFixed(1)} < 15`);
+                if (isGo && s.peg != null && s.peg < 1)  goReasons.push(`PEG ${s.peg.toFixed(2)} < 1`);
+                const goTag = isGo
+                    ? `<span title="Go for it — ${goReasons.join(' · ')}" style="margin-left:5px;font-size:9px;color:#26a69a;cursor:help;">✅</span>`
+                    : '';
                 return `<tr class="ticker" data-ticker="${s.ticker}" style="${bg}border-bottom:1px solid var(--border-color);${isVeto ? 'opacity:0.75;' : ''}">
                     <td style="padding:4px 8px;font-family:monospace;${rankStyle}">${s.rank}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:center;font-size:10px;">${fmtDelta(s.rank_change)}</td>
                     <td class="ticker" style="padding:4px 8px;font-family:monospace;font-weight:700;color:var(--green);">
-                        ${s.ticker}${vetoTag}${s.anomaly ? `<span title="${s.anomaly_reason}" style="margin-left:4px;color:#f5a623;font-size:9px;cursor:help;">⚠</span>` : ''}
+                        ${s.ticker}${vetoTag}${goTag}${s.anomaly ? `<span title="${s.anomaly_reason}" style="margin-left:4px;color:#f5a623;font-size:9px;cursor:help;">⚠</span>` : ''}
                     </td>
                     <td style="padding:4px 8px;font-family:monospace;font-size:10px;color:${cCol};">${s.cluster}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;">$${s.price.toFixed(2)}</td>
@@ -4608,7 +4618,8 @@
                 ■ <span style="color:#60a5fa;">Blue rank</span> = entry zone (rank ≤10) &nbsp;|&nbsp;
                 <span style="color:#f59e0b;">Amber</span> = hold zone (11–24) &nbsp;|&nbsp; grey = exit zone (&gt;24) &nbsp;|&nbsp;
                 Δ = rank change vs previous trading session (▲ = rose, ▼ = fell) &nbsp;|&nbsp;
-                <span style="color:#ef5350;">❌</span> = valuation veto (PEG &gt; 3) — skip new entry, hold if already owned
+                <span style="color:#ef5350;">❌</span> = valuation veto (PEG &gt; 3) — skip new entry, hold if already owned &nbsp;|&nbsp;
+                <span style="color:#26a69a;">✅</span> = go for it (FwdPE &lt; 15 or PEG &lt; 1)
             </div>`;
         }
 
