@@ -1394,7 +1394,6 @@
                 <button class="strategy-tab" onclick="switchStrategy('etf_core')">ETF Core</button>
                 <button class="strategy-tab" onclick="switchStrategy('mom20_portfolio')">Mom20</button>
                 <button class="strategy-tab" onclick="switchStrategy('backtest')">Backtest</button>
-                <button class="strategy-tab" onclick="switchStrategy('journal')">AI Briefing</button>
                 <button class="strategy-tab" onclick="switchStrategy('techmo')">TechMo</button>
                 <button class="strategy-tab" onclick="switchStrategy('summary')">Summary</button>
             </div>
@@ -2713,82 +2712,6 @@
 
             </div><!-- end #backtest-panels -->
 
-            <!-- News Feed panel -->
-            <div id="journal-panels" class="hidden" style="padding:16px;">
-
-                <!-- Header -->
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-                    <span style="font-size:14px;font-weight:700;color:#a78bfa;letter-spacing:0.5px;">🤖 AI PORTFOLIO BRIEFING</span>
-                    <span style="font-size:11px;color:var(--text-muted);">Click a section tile to generate it</span>
-                </div>
-
-                <!-- Section tiles (3-column grid) -->
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
-
-                    <div id="btile-risk" onclick="aiBriefingSection('risk')"
-                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
-                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-risk').dataset.bg||'#e8eaef'">
-                        <div style="font-size:18px;margin-bottom:6px;">⚠️</div>
-                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">RISK FLAGS</div>
-                        <div id="btile-status-risk" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
-                    </div>
-
-                    <div id="btile-entries" onclick="aiBriefingSection('entries')"
-                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
-                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-entries').dataset.bg||'#e8eaef'">
-                        <div style="font-size:18px;margin-bottom:6px;">🆕</div>
-                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">ENTRY CANDIDATES</div>
-                        <div id="btile-status-entries" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
-                    </div>
-
-                    <div id="btile-overflow" onclick="aiBriefingSection('overflow')"
-                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
-                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-overflow').dataset.bg||'#e8eaef'">
-                        <div style="font-size:18px;margin-bottom:6px;">🔀</div>
-                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">OVERFLOW</div>
-                        <div id="btile-status-overflow" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
-                    </div>
-
-                    <div id="btile-sectors" onclick="aiBriefingSection('sectors')"
-                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
-                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-sectors').dataset.bg||'#e8eaef'">
-                        <div style="font-size:18px;margin-bottom:6px;">📈</div>
-                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">SECTOR DEEP DIVE</div>
-                        <div id="btile-status-sectors" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
-                    </div>
-
-                    <div id="btile-watchlist" onclick="aiBriefingSection('watchlist')"
-                         style="background:#e8eaef;border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:background 0.15s;user-select:none;"
-                         onmouseover="this.style.background='#d4d8e4'" onmouseout="this.style.background=document.getElementById('btile-watchlist').dataset.bg||'#e8eaef'">
-                        <div style="font-size:18px;margin-bottom:6px;">💡</div>
-                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">STRATEGIC WATCHLIST</div>
-                        <div id="btile-status-watchlist" style="font-size:10px;color:#6b7280;margin-top:5px;">click to generate</div>
-                    </div>
-
-                    <!-- Placeholder tile for symmetry / future section -->
-                    <div style="background:#f3f4f6;border-radius:8px;padding:18px 12px;text-align:center;opacity:0.4;">
-                        <div style="font-size:18px;margin-bottom:6px;">🗓️</div>
-                        <div style="font-size:11px;font-weight:700;color:#374151;letter-spacing:0.8px;">CATALYST WATCH</div>
-                        <div style="font-size:10px;color:#6b7280;margin-top:5px;">coming soon</div>
-                    </div>
-
-                </div>
-
-                <!-- Output panel — shows the selected section's content -->
-                <div id="ai-briefing-panel" style="background:var(--bg-card);border:1px solid #a78bfa44;border-left:3px solid #a78bfa;border-radius:6px;padding:14px 16px;">
-                    <!-- Output header with section title + regenerate -->
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                        <span id="ai-briefing-section-title" style="font-size:12px;font-weight:700;color:#a78bfa;">—</span>
-                        <span id="ai-briefing-status" style="font-size:11px;color:var(--text-muted);">—</span>
-                        <button id="ai-briefing-btn" onclick="aiBriefingRegenerate()"
-                                style="margin-left:auto;padding:2px 9px;font-size:11px;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;display:none;">↺ Regenerate</button>
-                    </div>
-                    <div id="ai-briefing-body" style="font-size:12px;line-height:1.7;color:var(--text-primary);max-height:75vh;overflow-y:auto;padding-right:6px;overflow-x:auto;">
-                        <div style="color:var(--text-muted);padding:20px 0;text-align:center;">Select a section above to generate it.</div>
-                    </div>
-                </div>
-
-            </div><!-- end #journal-panels -->
 
             <!-- TechMo Portfolio Tracker -->
             <div id="techmo-panels" class="hidden" style="padding:16px;">
@@ -3986,9 +3909,8 @@
             else if (strategy === 'etf_core') tabs[2].classList.add('active');
             else if (strategy === 'mom20_portfolio') tabs[3].classList.add('active');
             else if (strategy === 'backtest') tabs[4].classList.add('active');
-            else if (strategy === 'journal') tabs[5].classList.add('active');
-            else if (strategy === 'techmo')  tabs[6].classList.add('active');
-            else if (strategy === 'summary') tabs[7].classList.add('active');
+            else if (strategy === 'techmo')  tabs[5].classList.add('active');
+            else if (strategy === 'summary') tabs[6].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -4000,18 +3922,8 @@
             document.getElementById('mom20-portfolio-panels').classList.toggle('hidden', strategy !== 'mom20_portfolio');
             document.getElementById('overflow-portfolio-panels').classList.toggle('hidden', strategy !== 'overflow_portfolio');
             document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
-            document.getElementById('journal-panels').classList.toggle('hidden', strategy !== 'journal');
             document.getElementById('techmo-panels').classList.toggle('hidden', strategy !== 'techmo');
             document.getElementById('summary-panels').classList.toggle('hidden', strategy !== 'summary');
-            if (strategy === 'journal') {
-                // Restore tile statuses from JS cache (no server call on tab switch)
-                if (typeof _aiBriefingCache !== 'undefined') {
-                    Object.keys(_BRIEF_TILE_LABELS || {}).forEach(k => {
-                        _tileSetStatus(k, _aiBriefingCache[k] ? 'cached' : 'click to generate', false);
-                    });
-                }
-            }
-
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
             document.getElementById('rs-settings').classList.toggle('hidden', strategy !== 'rs');
@@ -10521,182 +10433,6 @@ function nfPopulateUsers() {
     sel.innerHTML = '<option value="">All (no portfolio filter)</option>' +
         kiteUsers.map(u => `<option value="${u.config_user_id}">${u.name || u.config_user_id}</option>`).join('');
     if (cur) sel.value = cur;
-}
-
-// ── AI Portfolio Briefing ─────────────────────────────────────────────────────
-
-let _aiBriefingESS       = null;          // active EventSource
-let _aiBriefingSection   = null;          // currently active section key
-let _aiBriefingCache     = {};            // section → {html, statusText}
-
-const _BRIEF_TILE_LABELS = {
-    risk:      '⚠️ Risk Flags',
-    entries:   '🆕 Entry Candidates',
-    overflow:  '🔀 Overflow',
-    sectors:   '📈 Sector Deep Dive',
-    watchlist: '💡 Strategic Watchlist',
-};
-
-function _tileSetStatus(key, text, isActive) {
-    const el = document.getElementById('btile-status-' + key);
-    const tile = document.getElementById('btile-' + key);
-    if (el) el.textContent = text;
-    if (tile) {
-        const cached = _aiBriefingCache[key];
-        const bg = isActive ? '#c7d2fe' : (cached ? '#ddf3e4' : '#e8eaef');
-        tile.style.background = bg;
-        tile.dataset.bg = bg;
-    }
-}
-
-function aiBriefingSection(key, force) {
-    // If cached and not forcing: restore from JS cache instantly
-    if (!force && _aiBriefingCache[key]) {
-        _aiBriefingSection = key;
-        const body   = document.getElementById('ai-briefing-body');
-        const status = document.getElementById('ai-briefing-status');
-        const title  = document.getElementById('ai-briefing-section-title');
-        const regen  = document.getElementById('ai-briefing-btn');
-        if (body)   body.innerHTML = _aiBriefingCache[key].html;
-        if (status) status.textContent = _aiBriefingCache[key].statusText;
-        if (title)  title.textContent  = _BRIEF_TILE_LABELS[key] || key;
-        if (regen)  regen.style.display = 'inline-block';
-        // Highlight active tile
-        Object.keys(_BRIEF_TILE_LABELS).forEach(k => _tileSetStatus(k, _aiBriefingCache[k] ? 'cached' : 'click to generate', k === key));
-        return;
-    }
-
-    // Stream from server
-    if (_aiBriefingESS) { _aiBriefingESS.close(); _aiBriefingESS = null; }
-    _aiBriefingSection = key;
-
-    const body   = document.getElementById('ai-briefing-body');
-    const status = document.getElementById('ai-briefing-status');
-    const title  = document.getElementById('ai-briefing-section-title');
-    const regen  = document.getElementById('ai-briefing-btn');
-
-    if (body)   { body.textContent = ''; }
-    if (status) status.textContent = 'generating…';
-    if (title)  title.textContent  = _BRIEF_TILE_LABELS[key] || key;
-    if (regen)  regen.style.display = 'none';
-
-    _tileSetStatus(key, '⏳ generating…', true);
-
-    const params = new URLSearchParams({ section: key });
-    if (force) params.set('refresh', '1');
-
-    const es = new EventSource('/api/ai-briefing/stream?' + params.toString());
-    _aiBriefingESS = es;
-
-    es.onmessage = function(e) {
-        if (e.data.startsWith('[CACHED:')) {
-            const genTime = e.data.slice(8, -1);
-            if (status) status.textContent = 'cached · ' + genTime;
-            return;
-        }
-        if (e.data === '[DONE]') {
-            es.close(); _aiBriefingESS = null;
-            const timeStr = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
-            if (status && !status.textContent.startsWith('cached'))
-                status.textContent = 'done · ' + timeStr;
-            if (regen) regen.style.display = 'inline-block';
-            _aiBriefingRender();
-            // Store in per-section cache
-            _aiBriefingCache[key] = {
-                html:       body ? body.innerHTML : '',
-                statusText: status ? status.textContent : '',
-            };
-            _tileSetStatus(key, _aiBriefingCache[key].statusText, false);
-            return;
-        }
-        try {
-            const chunk = JSON.parse(e.data);
-            if (body) body.textContent += chunk;
-        } catch(ex) {}
-    };
-    es.onerror = function() {
-        es.close(); _aiBriefingESS = null;
-        if (status) status.textContent = 'error';
-        _tileSetStatus(key, 'error', false);
-    };
-}
-
-function aiBriefingRegenerate() {
-    if (_aiBriefingSection) {
-        delete _aiBriefingCache[_aiBriefingSection];
-        aiBriefingSection(_aiBriefingSection, true);
-    }
-}
-
-function _aiBriefingInline(text) {
-    return text
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/`(.+?)`/g, '<code style="background:var(--bg-primary);padding:1px 4px;border-radius:2px;font-size:11px;">$1</code>');
-}
-
-function _aiBriefingRender() {
-    const body = document.getElementById('ai-briefing-body');
-    if (!body) return;
-    const lines = body.textContent.split('\n');
-    let html = '';
-    let i = 0;
-
-    while (i < lines.length) {
-        const line = lines[i];
-        const trimmed = line.trimStart();
-
-        // ── Markdown table ────────────────────────────────────────────────────
-        if (trimmed.startsWith('|') && i + 1 < lines.length && /^\s*\|[\s\-:|]+\|/.test(lines[i + 1])) {
-            // Collect all consecutive | lines
-            const tblLines = [];
-            while (i < lines.length && lines[i].trimStart().startsWith('|')) {
-                tblLines.push(lines[i]);
-                i++;
-            }
-            const headerCells = tblLines[0].split('|').slice(1, -1).map(c => c.trim());
-            const dataRows    = tblLines.slice(2); // skip header + separator
-
-            html += '<div style="overflow-x:auto;margin:10px 0;">'
-                  + '<table style="border-collapse:collapse;font-size:11px;width:100%;">'
-                  + '<thead><tr>';
-            headerCells.forEach(c => {
-                html += `<th style="padding:5px 10px;background:var(--bg-secondary);border:1px solid var(--border-color);font-weight:700;text-align:left;white-space:nowrap;">${_aiBriefingInline(c)}</th>`;
-            });
-            html += '</tr></thead><tbody>';
-
-            dataRows.forEach((row, ri) => {
-                const cells = row.split('|').slice(1, -1).map(c => c.trim());
-                const rowBg = ri % 2 === 0 ? '' : 'background:var(--bg-card);';
-                html += `<tr style="${rowBg}">`;
-                cells.forEach(c => {
-                    html += `<td style="padding:4px 10px;border:1px solid var(--border-color);white-space:nowrap;">${_aiBriefingInline(c)}</td>`;
-                });
-                html += '</tr>';
-            });
-            html += '</tbody></table></div>';
-            continue;
-        }
-
-        // ── Block-level markdown ──────────────────────────────────────────────
-        if (/^---+$/.test(trimmed)) {
-            html += '<hr style="border:none;border-top:1px solid var(--border-color);margin:10px 0;">';
-        } else if (trimmed.startsWith('#### ')) {
-            html += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;margin-top:10px;margin-bottom:3px;text-transform:uppercase;">${_aiBriefingInline(trimmed.slice(5))}</div>`;
-        } else if (trimmed.startsWith('### ')) {
-            html += `<div style="font-size:13px;font-weight:700;color:#a78bfa;margin-top:14px;margin-bottom:5px;border-left:3px solid #a78bfa;padding-left:8px;">${_aiBriefingInline(trimmed.slice(4))}</div>`;
-        } else if (trimmed.startsWith('## ')) {
-            html += `<div style="font-size:14px;font-weight:700;color:#f5a623;margin-top:16px;margin-bottom:6px;">${_aiBriefingInline(trimmed.slice(3))}</div>`;
-        } else if (/^[•\-\*] /.test(trimmed)) {
-            html += `<div style="padding:2px 0 2px 14px;border-left:2px solid var(--border-color);margin:2px 0;">• ${_aiBriefingInline(trimmed.slice(2))}</div>`;
-        } else if (trimmed === '') {
-            html += '<div style="height:5px;"></div>';
-        } else {
-            html += `<div>${_aiBriefingInline(line)}</div>`;
-        }
-        i++;
-    }
-
-    body.innerHTML = html;
 }
 
 // ── Position note modal ───────────────────────────────────────────────────────
