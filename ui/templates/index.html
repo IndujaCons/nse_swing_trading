@@ -4439,7 +4439,7 @@
         document.addEventListener('click', function(e) {
             const tickerEl = e.target.closest('#live-signals-panels .ticker');
             if (tickerEl) {
-                const ticker = tickerEl.textContent.trim().split(' ')[0];
+                const ticker = tickerEl.textContent.trim().split(/\s/)[0].replace(/[^\w]/g, '');
                 if (ticker && ticker.length >= 2) loadLsChart(ticker);
             }
         });
