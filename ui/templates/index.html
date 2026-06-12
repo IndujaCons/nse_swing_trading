@@ -8357,9 +8357,10 @@ async function mom20LivePricesAndBasket() {
         btn.style.cursor = 'wait';
     }
     try {
-        // Sequential: basket must load first so extra_tickers uses current user's data
-        await mom20LoadBasket();
-        await mom20LoadPerformance(true);
+        // Clear stale basket data before parallel fetch so extra_tickers
+        // doesn't accidentally use a previous user's entry/exit tickers.
+        _mom20BasketData = null;
+        await Promise.all([mom20LoadBasket(), mom20LoadPerformance(true)]);
     } finally {
         _mom20LiveBusy = false;
         if (btn) {
