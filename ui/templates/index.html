@@ -8446,12 +8446,18 @@ async function mom20LoadPerformance(live=false) {
     let d;
     try {
         const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 30000);
+        const t = setTimeout(() => ctrl.abort(), live ? 60000 : 30000);
         const url = `/api/portfolio-users/${uid}/mom20-performance${live ? '?live=1' + extraQuery : ''}`;
         d = await fetch(url, {signal: ctrl.signal})
             .then(r => r.json()).finally(() => clearTimeout(t));
     } catch(e) {
         if (status) status.textContent = 'Load failed — try Refresh';
+        console.error('[mom20-performance] fetch error:', e);
+        return;
+    }
+    if (!d?.success && d?.error) {
+        if (status) status.textContent = `Error: ${d.error}`;
+        console.error('[mom20-performance] server error:', d.error);
         return;
     }
     mom20RenderPerformance(d, live);

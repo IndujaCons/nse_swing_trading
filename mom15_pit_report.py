@@ -68,6 +68,31 @@ def calc_charges(buy_val, sell_val):
     gst    = 0.18      * (exch + sebi)
     return stt + exch + sebi + stamp + gst
 
+def xirr(cashflows):
+    """cashflows: list of (date, amount) — negative=outflow, positive=inflow. Returns annualised IRR."""
+    if not cashflows:
+        return float('nan')
+    t0 = cashflows[0][0]
+    days = [(d - t0).days for d, _ in cashflows]
+    amts = [a for _, a in cashflows]
+    def npv(r):
+        return sum(a / (1 + r) ** (d / 365.0) for a, d in zip(amts, days))
+    try:
+        lo, hi = -0.9999, 50.0
+        if npv(lo) * npv(hi) > 0:
+            return float('nan')
+        for _ in range(200):
+            mid = (lo + hi) / 2
+            if npv(mid) > 0:
+                lo = mid
+            else:
+                hi = mid
+            if hi - lo < 1e-9:
+                break
+        return (lo + hi) / 2
+    except Exception:
+        return float('nan')
+
 # STCG tax (20%) on net profit after deductible charges
 def calc_tax(gross_pnl, charges):
     # STT not deductible; exchange+sebi+stamp+gst are
@@ -368,7 +393,7 @@ def print_table(headers, rows, col_widths):
 def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None,
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
         ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False,
-        sector_cap=None, addv_min=None):
+        sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER
     PARABOLIC_FILTER = parabolic_filter
@@ -428,6 +453,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         extra.append(f"Sector≤{sector_cap}")
     if ADDV_MIN is not None:
         extra.append(f"ADDV≥₹{ADDV_MIN/1e7:.0f}Cr")
+    if sip > 0:
+        extra.append(f"SIP ₹{sip/1e5:.0f}L/mo")
     extra_label = (" | " + " | ".join(extra)) if extra else ""
     print(f"=== {label} | {regime_label}{extra_label} ===")
     print(f"    top_n={MAX_SLOTS} buffer_in={BUFFER_IN} buffer_out={BUFFER_OUT} beta_cap={BETA_CAP}")
@@ -539,6 +566,40 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         print(f"  {len(n200_raw)} bars")
     n200_iloc = {n200_raw.index[i].date(): i for i in range(len(n200_raw))}
 
+    # Build passive ETF list from flags (each gets 5% allocation, rebalanced monthly)
+    _passive_cfg = []
+    if niftybees:
+        _passive_cfg.append(("NIFTYBEES.NS", 0.05, "NIFTYBEES"))
+    if goldbees:
+        _passive_cfg.append(("GOLDBEES.NS", 0.05, "GOLDBEES"))
+
+    passive_list = []  # [{ns, alloc, label, raw, iloc, pos, charges, curr_price}]
+    for _ns, _alloc, _label in _passive_cfg:
+        print(f"Fetching {_ns} ({_alloc*100:.0f}% passive allocation)...")
+        _raw = pd.DataFrame()
+        for _attempt in range(3):
+            try:
+                _raw = yf.Ticker(_ns).history(start=fetch_start, end=fetch_end)
+                if not _raw.empty:
+                    break
+            except Exception as e:
+                print(f"  Attempt {_attempt+1} failed: {e}")
+            _time.sleep(2)
+        if _raw.empty:
+            print(f"  WARNING: Could not fetch {_ns} — skipping")
+            continue
+        _raw.index = _raw.index.tz_localize(None) if _raw.index.tzinfo else _raw.index
+        print(f"  {len(_raw)} bars")
+        passive_list.append({
+            "ns": _ns, "alloc": _alloc, "label": _label,
+            "raw": _raw,
+            "iloc": {_raw.index[i].date(): i for i in range(len(_raw))},
+            "pos": {"shares": 0, "avg_cost": 0.0},
+            "charges": 0.0,
+            "curr_price": 0.0,
+        })
+    total_passive_alloc = sum(p["alloc"] for p in passive_list)
+
     # Build date → iloc maps
     date_to_iloc = {}
     for ticker, df in stock_data.items():
@@ -563,6 +624,10 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     portfolio = {}            # ticker → {entry_date, entry_price, shares, entry_cost}
     all_trades = []           # closed trades
     total_charges = 0.0
+    _sip_total = 0.0          # cumulative SIP injected
+    _xirr_flows = []          # (date, amount) — negative=outflow for XIRR
+    _twr_start_nav = cash     # tracks post-SIP NAV for TWR sub-period denominator
+    _twr_data = []            # (date, sub_period_return) for year-by-year TWR
     rebal_nav = []            # rebalance-date NAV snapshots for portfolio correlation analysis
 
     if overflow:
@@ -574,7 +639,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     elif n500:
         banner = f"  MOM500 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Nifty500 Universe  |  Beta≤1.2  |  {regime_label}"
     elif mom20:
-        banner = f"  MOM20 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Beta≤1.2  |  {regime_label}"
+        _pb_tag = ("  |  +" + "+".join(f"{p['label']} {p['alloc']*100:.0f}%" for p in passive_list)) if passive_list else ""
+        banner = f"  MOM20 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Beta≤1.2  |  {regime_label}{_pb_tag}"
     else:
         banner = f"  MOM15 PIT BACKTEST  |  NAV/15 slot  |  2-Month Rebalance  |  Beta≤1.0  |  {regime_label}"
     print()
@@ -582,8 +648,12 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     print(banner)
     print("=" * len(banner))
 
+    # Record initial capital as first XIRR outflow
+    if sip > 0 and rebal_dates:
+        _xirr_flows.append((rebal_dates[0], -_starting_cash))
+
     for rebal_idx, rebal_day in enumerate(rebal_dates):
-        # Portfolio value on rebal day (MTM)
+        # Portfolio value on rebal day (MTM) — BEFORE SIP injection
         port_value = cash
         for t, pos in portfolio.items():
             idx_map = date_to_iloc.get(t, {})
@@ -600,17 +670,79 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 pos["curr_price"] = pos["entry_price"]
             port_value += pos["shares"] * pos["curr_price"]
 
+        # Include passive ETF current values in NAV
+        for p in passive_list:
+            p_ci = p["iloc"].get(rebal_day)
+            if p_ci is None:
+                for off in range(1, 6):
+                    prev = rebal_day - timedelta(days=off)
+                    if prev in p["iloc"]:
+                        p_ci = p["iloc"][prev]
+                        break
+            if p_ci is not None:
+                p["curr_price"] = float(p["raw"]["Close"].iloc[p_ci])
+            elif p["pos"]["shares"] > 0:
+                p["curr_price"] = p["pos"]["avg_cost"]
+            else:
+                p["curr_price"] = 0.0
+            port_value += p["pos"]["shares"] * p["curr_price"]
+
+        # TWR sub-period return (based on pre-SIP NAV vs prior post-SIP NAV)
+        if sip > 0:
+            _twr_data.append((rebal_day, port_value / _twr_start_nav - 1))
+            cash += sip
+            _sip_total += sip
+            _xirr_flows.append((rebal_day, -sip))
+            port_value += sip           # include fresh capital in working NAV
+            _twr_start_nav = port_value  # next sub-period starts after injection
+
         rebal_nav.append({"date": rebal_day, "nav": port_value})
 
-        # Slot size = NAV / 15, recomputed each rebalance (Option A)
+        # Slot size: momentum portion = (1 - total passive alloc) of NAV
         slots_available = MAX_SLOTS
-        per_slot = port_value / MAX_SLOTS
+        per_slot = (port_value * (1 - total_passive_alloc)) / MAX_SLOTS if passive_list else port_value / MAX_SLOTS
 
         print()
         print("=" * 72)
         print(f"  REBALANCE #{rebal_idx+1:02d}  —  {rebal_day.strftime('%d %b %Y')}")
         print(f"  NAV: {inr(port_value)}  |  Slot: {inr(per_slot)}  |  Cash: {inr(cash)}")
         print("=" * 72)
+
+        # ── PASSIVE ETF REBALANCE (always held at target %, independent of regime) ─
+        for p in passive_list:
+            cp = p["curr_price"]
+            if cp <= 0:
+                continue
+            p_target  = port_value * p["alloc"]
+            p_current = p["pos"]["shares"] * cp
+            diff      = p_target - p_current
+            if diff > cp:  # buy at least 1 share
+                shares_to_buy = int(diff // cp)
+                buy_val = shares_to_buy * cp
+                chg = calc_charges(buy_val, 0)
+                if buy_val + chg <= cash:
+                    cash -= buy_val + chg
+                    total_charges    += chg
+                    p["charges"]     += chg
+                    old_val = p["pos"]["shares"] * p["pos"]["avg_cost"]
+                    p["pos"]["shares"]   += shares_to_buy
+                    p["pos"]["avg_cost"]  = (old_val + buy_val) / p["pos"]["shares"]
+                    print(f"  [{p['label']}] BUY  {shares_to_buy:>5} @ {cp:,.1f}"
+                          f" = {inr(buy_val)} | total {p['pos']['shares']} shares"
+                          f" | {p['alloc']*100:.0f}% target {inr(p_target)}")
+            elif diff < -cp and p["pos"]["shares"] > 0:  # sell at least 1 share
+                shares_to_sell = min(int(abs(diff) // cp), p["pos"]["shares"])
+                sell_val = shares_to_sell * cp
+                chg = calc_charges(0, sell_val)
+                cash += sell_val - chg
+                total_charges    += chg
+                p["charges"]     += chg
+                p["pos"]["shares"] -= shares_to_sell
+                if p["pos"]["shares"] == 0:
+                    p["pos"]["avg_cost"] = 0.0
+                print(f"  [{p['label']}] SELL {shares_to_sell:>5} @ {cp:,.1f}"
+                      f" = {inr(sell_val)} | total {p['pos']['shares']} shares"
+                      f" | {p['alloc']*100:.0f}% target {inr(p_target)}")
 
         # Compute scores
         scores = compute_scores(rebal_day, stock_data, date_to_iloc, pit_data,
@@ -925,9 +1057,14 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         # ── PORTFOLIO SUMMARY ─────────────────────────────────────────────────
         invested = sum(pos["shares"] * pos.get("curr_price", pos["entry_price"])
                        for pos in portfolio.values())
-        total_now = cash + invested
+        passive_now = sum(p["pos"]["shares"] * p["curr_price"] for p in passive_list)
+        total_now = cash + invested + passive_now
+        p_str = " | " + " | ".join(
+            f"{p['label']} {inr(p['pos']['shares'] * p['curr_price'])} ({p['pos']['shares']}sh)"
+            for p in passive_list
+        ) if passive_list else ""
         print(f"\n  AFTER: Invested {inr(invested)} | Cash {inr(cash)} | "
-              f"Total {inr(total_now)} | Positions {len(portfolio)}/{MAX_SLOTS} | Slot {inr(per_slot)}")
+              f"Total {inr(total_now)} | Positions {len(portfolio)}/{MAX_SLOTS} | Slot {inr(per_slot)}{p_str}")
 
     # ── FINAL SUMMARY ─────────────────────────────────────────────────────────
     # Mark open positions at last available price
@@ -944,16 +1081,43 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     losers       = [tr for tr in all_trades if tr["gross_pnl"] <= 0]
     avg_hold     = sum(tr["hold_days"] for tr in all_trades) / len(all_trades) if all_trades else 0
 
-    final_value  = cash + sum(
+    # Passive ETF final values
+    passive_final_total = 0.0
+    for p in passive_list:
+        if p["pos"]["shares"] > 0 and p["iloc"]:
+            last_ci = max(p["iloc"].values())
+            p_last_price = float('nan')
+            for _off in range(0, 10):
+                v = float(p["raw"]["Close"].iloc[last_ci - _off])
+                if v == v:
+                    p_last_price = v
+                    break
+            if p_last_price == p_last_price:
+                p_final_val = p["pos"]["shares"] * p_last_price
+                p_final_pnl = p_final_val - p["pos"]["shares"] * p["pos"]["avg_cost"]
+                passive_final_total += p_final_val
+                print(f"  {p['label']:<12}: {p['pos']['shares']} sh @ avg {p['pos']['avg_cost']:,.1f}"
+                      f" | last ₹{p_last_price:,.1f} | value {inr(p_final_val)}"
+                      f" | unreal P&L {inr(p_final_pnl)} | charges {inr(p['charges'])}")
+
+    final_value  = cash + passive_final_total + sum(
         pos["shares"] * (float(stock_data[t]["Close"].iloc[max(date_to_iloc[t].values())])
                          if t in date_to_iloc else pos["entry_price"])
         for t, pos in portfolio.items()
     )
-    total_return = (final_value - _starting_cash) / _starting_cash * 100
+    _total_invested = _starting_cash + _sip_total
+    total_return = (final_value - _total_invested) / _total_invested * 100
 
-    # Annualised return (CAGR)
+    # Annualised return: XIRR when SIP is active, simple CAGR otherwise
     years = (trading_days[-1] - trading_days[0]).days / 365.25
-    cagr  = ((final_value / _starting_cash) ** (1/years) - 1) * 100 if years > 0 else 0
+    if sip > 0 and _xirr_flows:
+        _xirr_flows.append((trading_days[-1], final_value))
+        _xirr_rate = xirr(_xirr_flows)
+        cagr = _xirr_rate * 100
+        cagr_label = "XIRR"
+    else:
+        cagr = ((final_value / _starting_cash) ** (1/years) - 1) * 100 if years > 0 else 0
+        cagr_label = "CAGR"
 
     print()
     print("=" * 72)
@@ -961,9 +1125,12 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     print("=" * 72)
     print(f"  Period        : {trading_days[0]} → {trading_days[-1]}  ({years:.1f} years)")
     print(f"  Starting Cap  : {inr(_starting_cash)}")
+    if sip > 0:
+        print(f"  SIP           : {inr(sip)}/mo × {len(rebal_dates)} rebals = {inr(_sip_total)} total")
+        print(f"  Total Invested: {inr(_total_invested)}")
     print(f"  Final Value   : {inr(final_value)}")
-    print(f"  Total Return  : {pct(total_return)}")
-    print(f"  CAGR          : {pct(cagr)}")
+    print(f"  Total Return  : {pct(total_return)}  (on total invested)")
+    print(f"  {cagr_label:<14}: {pct(cagr)}")
     print()
     gross_win  = sum(tr["gross_pnl"] for tr in winners)
     gross_loss = abs(sum(tr["gross_pnl"] for tr in losers))
@@ -978,26 +1145,38 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     print(f"  Closed net P&L: {inr(closed_pnl)}")
     print(f"  Open unreal   : {inr(open_pnl)}")
 
-    # Per-year returns — NAV-based (last rebal NAV of year / last rebal NAV of prior year)
+    # Per-year returns
     print()
-    print("  YEAR-BY-YEAR:")
-    year_last_nav = {}
-    for row in rebal_nav:
-        yr = row["date"].year
-        year_last_nav[yr] = row["nav"]
-    initial_nav = 10_00_000.0 if overflow else 20_00_000.0
-    prev_nav_yr = initial_nav
+    if sip > 0:
+        print("  YEAR-BY-YEAR (Time-Weighted Return — strips SIP distortion):")
+        # Chain sub-period TWR returns within each calendar year
+        year_twr = {}
+        for d, r in _twr_data:
+            yr = d.year
+            year_twr[yr] = year_twr.get(yr, 1.0) * (1 + r)
+        year_annual = {yr: (v - 1) * 100 for yr, v in year_twr.items()}
+    else:
+        print("  YEAR-BY-YEAR:")
+        year_last_nav = {}
+        for row in rebal_nav:
+            yr = row["date"].year
+            year_last_nav[yr] = row["nav"]
+        initial_nav = 10_00_000.0 if overflow else 20_00_000.0
+        prev_nav_yr = initial_nav
+        year_annual = {}
+        for yr in sorted(year_last_nav):
+            end_nav = year_last_nav[yr]
+            year_annual[yr] = (end_nav / prev_nav_yr - 1) * 100
+            prev_nav_yr = end_nav
     neg_years = 0
-    for yr in sorted(year_last_nav):
-        end_nav = year_last_nav[yr]
-        ret_y = (end_nav / prev_nav_yr - 1) * 100
+    for yr in sorted(year_annual):
+        ret_y = year_annual[yr]
         if ret_y < 0:
             neg_years += 1
         bar_len = int(abs(ret_y) / 1)
         bar = ("█" * min(bar_len, 40)) if ret_y > 0 else ("░" * min(bar_len, 40))
         sign = "+" if ret_y >= 0 else "-"
         print(f"  {yr}  {sign}{abs(ret_y):5.1f}%  {bar}")
-        prev_nav_yr = end_nav
 
     print()
 
@@ -1048,6 +1227,12 @@ if __name__ == "__main__":
                         help="Max holdings per sector (e.g. --sector-cap 5 limits each sector to 5 stocks)")
     parser.add_argument("--addv-min", type=float, default=None,
                         help="Min 90-day median ADDV in ₹ Cr (e.g. --addv-min 10 for ₹10 Cr/day)")
+    parser.add_argument("--niftybees", action="store_true",
+                        help="Always hold 5%% of portfolio in NIFTYBEES (passive ETF)")
+    parser.add_argument("--goldbees", action="store_true",
+                        help="Always hold 5%% of portfolio in GOLDBEES (gold ETF)")
+    parser.add_argument("--sip", type=float, default=0,
+                        help="Inject this amount (₹) of fresh capital at every rebalance (e.g. --sip 100000 for ₹1L/mo)")
     args = parser.parse_args()
     # `--no-regime` (legacy) takes precedence and forces 'none'.
     regime_filter = "none" if args.no_regime else args.regime
@@ -1060,4 +1245,5 @@ if __name__ == "__main__":
         buffer_out_override=args.buffer_out, ema200_exit=args.ema200_exit,
         rebal_day=args.rebal_day, regime_filter=regime_filter,
         parabolic_filter=args.parabolic_filter,
-        sector_cap=args.sector_cap, addv_min=addv_min)
+        sector_cap=args.sector_cap, addv_min=addv_min,
+        niftybees=args.niftybees, goldbees=args.goldbees, sip=args.sip)

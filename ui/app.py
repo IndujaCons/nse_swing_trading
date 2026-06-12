@@ -2954,6 +2954,14 @@ def api_mom20_performance(user_id):
     if not get_user(user_id):
         return jsonify({"success": False, "error": "user not found"})
     try:
+        return _api_mom20_performance_inner(user_id)
+    except Exception as _e:
+        import traceback as _tb
+        print(f"[mom20-performance] unhandled error for {user_id}: {_e}\n{_tb.format_exc()}")
+        return jsonify({"success": False, "error": str(_e)})
+
+def _api_mom20_performance_inner(user_id):
+    try:
         with open(mom20_portfolio_path(user_id)) as f:
             pf = json.load(f)
     except Exception:
