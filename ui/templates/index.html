@@ -8351,16 +8351,20 @@ async function mom20LivePricesAndBasket() {
     if (_mom20LiveBusy) return;
     _mom20LiveBusy = true;
     const btn = document.getElementById('mom20-live-prices-btn');
+    const statusEl = document.getElementById('mom20-tracker-status');
     if (btn) {
         btn.disabled = true;
         btn.style.opacity = '0.5';
         btn.style.cursor = 'wait';
     }
+    // Show status immediately — basket scan is slow; user needs feedback before it finishes
+    if (statusEl) statusEl.textContent = 'Fetching live prices…';
     try {
-        // Clear stale basket data before parallel fetch so extra_tickers
-        // doesn't accidentally use a previous user's entry/exit tickers.
+        // Basket must load first so _mom20BasketData is populated when
+        // mom20LoadPerformance reads it to build extra_tickers.
         _mom20BasketData = null;
-        await Promise.all([mom20LoadBasket(), mom20LoadPerformance(true)]);
+        await mom20LoadBasket();
+        await mom20LoadPerformance(true);
     } finally {
         _mom20LiveBusy = false;
         if (btn) {

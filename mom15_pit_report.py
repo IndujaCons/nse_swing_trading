@@ -692,7 +692,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             _twr_data.append((rebal_day, port_value / _twr_start_nav - 1))
             cash += sip
             _sip_total += sip
-            _xirr_flows.append((rebal_day, -sip))
+            # rebal_idx==0: initial capital already recorded pre-loop; skip to avoid double-count
+            if rebal_idx > 0:
+                _xirr_flows.append((rebal_day, -sip))
             port_value += sip           # include fresh capital in working NAV
             _twr_start_nav = port_value  # next sub-period starts after injection
 
