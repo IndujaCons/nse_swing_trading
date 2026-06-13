@@ -4894,7 +4894,6 @@ def api_techmo_chart_user(user_id):
     closes = {h["ticker"]: get_close(h["ticker"]) for h in basket}
     all_dates = qqq_s.index if not qqq_s.empty else pd.DatetimeIndex([])
     base_qqq  = float(qqq_s.iloc[0]) if not qqq_s.empty else None
-    base_val  = None  # portfolio value on first chart date — both series start at 0
 
     port_pct, qqq_pct = [], []
     for dt in all_dates:
@@ -4904,9 +4903,7 @@ def api_techmo_chart_user(user_id):
              else h.get("entry_price", 0))
             for h in basket
         )
-        if base_val is None:
-            base_val = val
-        port_pct.append(round((val / base_val - 1) * 100, 3) if base_val else 0)
+        port_pct.append(round((val - total_cost) / total_cost * 100, 3) if total_cost else 0)
         qqq_pct.append(round((float(qqq_s.loc[dt]) / base_qqq - 1) * 100, 3)
                        if base_qqq and dt in qqq_s.index else (qqq_pct[-1] if qqq_pct else 0))
 
