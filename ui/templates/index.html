@@ -8357,13 +8357,11 @@ async function mom20LivePricesAndBasket() {
         btn.style.opacity = '0.5';
         btn.style.cursor = 'wait';
     }
-    // Show status immediately — basket scan is slow; user needs feedback before it finishes
     if (statusEl) statusEl.textContent = 'Fetching live prices…';
     try {
-        // Basket must load first so _mom20BasketData is populated when
-        // mom20LoadPerformance reads it to build extra_tickers.
-        _mom20BasketData = null;
-        await mom20LoadBasket();
+        // Don't null _mom20BasketData — existing data is valid for extra_tickers.
+        // Basket refresh runs in background; only await live prices (fast, ~5-10s).
+        mom20LoadBasket();
         await mom20LoadPerformance(true);
     } finally {
         _mom20LiveBusy = false;
