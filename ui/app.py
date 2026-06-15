@@ -2136,9 +2136,10 @@ _CACHE_DIR_A = DATA_STORE_PATH
 _SECTOR_RANK_CACHE_FILE = os.path.join(_CACHE_DIR_A, "sector_ranking_cache.json")
 _ETF_LTP_CACHE_FILE     = os.path.join(_CACHE_DIR_A, "etf_ltp_cache.json")
 
-# Sector ranking — 15-min TTL.
+# Sector ranking — 15-min TTL (stale-while-revalidate: serve stale immediately).
 _SECTOR_RANK_CACHE = {"ranking": None, "timestamp": 0,
                       "prev_sector_ranks": {}, "prev_sector_rank_date": ""}
+_sector_rank_refresh_lock = threading.Lock()  # one background refresh at a time
 
 # ETF LTP — per-symbol 5-min TTL (LTPs change intraday but a few minutes of
 # staleness is fine for our use cases).
@@ -2269,24 +2270,54 @@ def _fetch_etf_ltp(symbols):
 
 def _get_sector_ranking(force_refresh=False):
     """Return today's full Phase 1 sector Z-score ranking (list of 19 dicts).
-    15-min TTL; backed by disk cache so a restart doesn't cold-start the
-    first user click."""
+    15-min TTL with stale-while-revalidate: if stale data exists, return it
+    immediately and refresh in the background so callers never block on a
+    yfinance download (which can take 30-60s and trigger the JS 30s timeout)."""
     import time as _t
-    if (not force_refresh and _SECTOR_RANK_CACHE["ranking"]
-            and (_t.time() - _SECTOR_RANK_CACHE["timestamp"]) < 900):
+    fresh = (_SECTOR_RANK_CACHE["ranking"]
+             and (_t.time() - _SECTOR_RANK_CACHE["timestamp"]) < 900)
+    if not force_refresh and fresh:
         return _SECTOR_RANK_CACHE["ranking"]
-    try:
-        from data.score_live_sectors import score_live_sectors
-        ranking = score_live_sectors()
-        if ranking:
-            _SECTOR_RANK_CACHE["ranking"]   = ranking
-            _SECTOR_RANK_CACHE["timestamp"] = _t.time()
-            _save_sector_rank_disk()
-        return ranking
-    except Exception as e:
-        print(f"[mom20] sector ranking failed: {e}")
-        # If compute failed but we have stale disk data, serve it.
-        return _SECTOR_RANK_CACHE["ranking"] or []
+
+    def _do_refresh():
+        try:
+            from data.score_live_sectors import score_live_sectors
+            ranking = score_live_sectors()
+            if ranking:
+                _SECTOR_RANK_CACHE["ranking"]   = ranking
+                _SECTOR_RANK_CACHE["timestamp"] = _t.time()
+                _save_sector_rank_disk()
+        except Exception as e:
+            print(f"[mom20] sector ranking refresh failed: {e}")
+        finally:
+            _sector_rank_refresh_lock.release()
+
+    if _SECTOR_RANK_CACHE["ranking"] and not force_refresh:
+        # Stale data exists — serve it immediately, kick off background refresh.
+        if _sector_rank_refresh_lock.acquire(blocking=False):
+            threading.Thread(target=_do_refresh, daemon=True).start()
+        return _SECTOR_RANK_CACHE["ranking"]
+
+    # No cached data at all (cold start, no disk cache) — must block once.
+    # Use lock so concurrent requests don't all pile into score_live_sectors().
+    if _sector_rank_refresh_lock.acquire(blocking=True, timeout=90):
+        try:
+            # Re-check after acquiring — another thread may have populated it.
+            if _SECTOR_RANK_CACHE["ranking"] and not force_refresh:
+                return _SECTOR_RANK_CACHE["ranking"]
+            from data.score_live_sectors import score_live_sectors
+            ranking = score_live_sectors()
+            if ranking:
+                _SECTOR_RANK_CACHE["ranking"]   = ranking
+                _SECTOR_RANK_CACHE["timestamp"] = _t.time()
+                _save_sector_rank_disk()
+            return ranking or []
+        except Exception as e:
+            print(f"[mom20] sector ranking failed: {e}")
+            return _SECTOR_RANK_CACHE["ranking"] or []
+        finally:
+            _sector_rank_refresh_lock.release()
+    return _SECTOR_RANK_CACHE["ranking"] or []
 
 
 def _get_top5_sectors(force_refresh=False):
