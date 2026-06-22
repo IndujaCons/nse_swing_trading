@@ -753,7 +753,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             print(f"  ⚠ Insufficient scored stocks — skipping rebalance")
             continue
 
-        # Rank all stocks (β>1.2 filtered universe for entries)
+        # Rank all stocks (β-filtered universe — for entry and exit buffer logic)
         ranked = sorted(scores.items(), key=lambda x: -x[1]["norm_score"])
         ticker_rank = {t: r+1 for r, (t, _) in enumerate(ranked)}
 
@@ -769,6 +769,20 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 ranked_unfiltered = sorted(scores_unfiltered.items(),
                                            key=lambda x: -x[1]["norm_score"])
                 ticker_rank_unfiltered = {t: r+1 for r, (t, _) in enumerate(ranked_unfiltered)}
+
+        # Full-universe rank (no beta filter) — display only.
+        # Stocks whose β drifted above the cap are absent from ticker_rank (show "—");
+        # ticker_rank_display restores their true rank for the exit table.
+        old_beta_min, old_beta_cap = BETA_MIN, BETA_CAP
+        BETA_MIN, BETA_CAP = None, 99.0
+        scores_display = compute_scores(rebal_day, stock_data, date_to_iloc,
+                                        pit_data, n50_raw, n50_iloc, eps_db)
+        BETA_MIN, BETA_CAP = old_beta_min, old_beta_cap
+        if scores_display:
+            ranked_display = sorted(scores_display.items(), key=lambda x: -x[1]["norm_score"])
+            ticker_rank_display = {t: r+1 for r, (t, _) in enumerate(ranked_display)}
+        else:
+            ticker_rank_display = ticker_rank
 
         # Buffer rule — determine new target portfolio
         current_set = set(portfolio.keys())
@@ -921,7 +935,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             })
             exit_rows.append((
                 t,
-                ticker_rank.get(t, "—"),
+                ticker_rank_display.get(t, "—"),
                 get_sector(t, rebal_day.isoformat()),
                 pos["entry_date"].strftime("%d-%b-%y"),
                 f"{pos['entry_price']:,.1f}",
@@ -1034,7 +1048,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 warn_syms.append(t)
             hold_rows.append((
                 t,
-                ticker_rank.get(t, "—"),
+                ticker_rank_display.get(t, "—"),
                 get_sector(t, rebal_day.isoformat()),
                 pos["entry_date"].strftime("%d-%b-%y"),
                 f"{pos['entry_price']:,.1f}",
