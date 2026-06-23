@@ -8241,6 +8241,7 @@ function mom20OnUserChange() {
     if (liveBtn) { liveBtn.disabled = false; liveBtn.style.opacity = ''; liveBtn.style.cursor = 'pointer'; }
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
     // Clear stale previous-user data immediately before new user's data arrives
+    _mom20BasketData = null;
     _mom20ResetTrackerDisplay();
     mom20EnsureSectorMap();
     mom20LoadBasket();
@@ -8383,7 +8384,7 @@ async function mom20DeleteRebalance(storageIdx, dateLabel) {
         if (d.success) {
             showToast(`Deleted rebalance ${dateLabel} — ${d.positions} positions remaining`, 'success');
             _mom20HistoryLoaded = false;
-            await loadMom20RebalanceHistory();
+            await mom20LoadHistory();
             await mom20LoadPerformance(true);
         } else {
             showToast(d.error || 'Delete failed', 'error');
@@ -8739,6 +8740,16 @@ function techmoOnUserChange() {
     if (trackerCard) trackerCard.style.display = 'block';
     if (capitalStrip) capitalStrip.style.display = 'block';
     _techmoHistoryLoaded = false;
+    // Reset live-prices busy flag so the button isn't stuck after a user switch
+    _techmoLiveBusy = false;
+    const liveBtn = document.getElementById('techmo-live-prices-btn');
+    if (liveBtn) { liveBtn.disabled = false; liveBtn.style.opacity = ''; liveBtn.style.cursor = 'pointer'; }
+    // Reset capital input so it picks up the new user's value from the API
+    const capInput = document.getElementById('techmo-cap-input');
+    if (capInput) { capInput.value = ''; capInput.dataset.userEdited = 'false'; }
+    // Clear stale previous-user rows immediately before new data arrives
+    const tbody = document.getElementById('techmo-tracker-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">Loading…</td></tr>';
     if (historyPanel && historyPanel.style.display !== 'none') techmoLoadHistory();
     techmoLoad();
 }
