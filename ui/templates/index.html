@@ -2824,8 +2824,9 @@
                             <div id="techmo-tracker-current" style="font-size:15px;font-weight:700;color:var(--text-primary);">—</div>
                         </div>
                         <div>
-                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Unreal P&amp;L</div>
+                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Realized P&amp;L</div>
                             <div id="techmo-tracker-pnl" style="font-size:15px;font-weight:700;">—</div>
+                            <div id="techmo-tracker-unreal" style="font-size:10px;color:var(--text-muted);margin-top:2px;"></div>
                         </div>
                     </div>
 
@@ -8750,6 +8751,10 @@ function techmoOnUserChange() {
     // Clear stale previous-user rows immediately before new data arrives
     const tbody = document.getElementById('techmo-tracker-tbody');
     if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">Loading…</td></tr>';
+    const pnlEl = document.getElementById('techmo-tracker-pnl');
+    if (pnlEl) { pnlEl.textContent = '—'; pnlEl.style.color = ''; }
+    const unrEl2 = document.getElementById('techmo-tracker-unreal');
+    if (unrEl2) unrEl2.textContent = '';
     if (historyPanel && historyPanel.style.display !== 'none') techmoLoadHistory();
     techmoLoad();
 }
@@ -9050,8 +9055,13 @@ function techmoRender(d) {
     document.getElementById('techmo-tracker-since').textContent    = d.tracking_since || d.entry_date || '—';
     document.getElementById('techmo-tracker-invested').textContent = fmtUSD(d.total_cost);
     document.getElementById('techmo-tracker-current').textContent  = fmtUSD(d.total_current);
-    document.getElementById('techmo-tracker-pnl').textContent      = (d.total_pnl >= 0 ? '+' : '-') + fmtUSD(d.total_pnl);
-    document.getElementById('techmo-tracker-pnl').style.color      = pnlColor;
+    const realizedPnl = d.realized_pnl || 0;
+    const unrealPnl   = d.total_pnl   || 0;
+    const realColor   = realizedPnl >= 0 ? 'var(--green)' : '#ef5350';
+    document.getElementById('techmo-tracker-pnl').textContent  = (realizedPnl >= 0 ? '+' : '-') + fmtUSD(realizedPnl);
+    document.getElementById('techmo-tracker-pnl').style.color  = realColor;
+    const unrEl = document.getElementById('techmo-tracker-unreal');
+    if (unrEl) unrEl.textContent = 'Unreal: ' + (unrealPnl >= 0 ? '+' : '') + '$' + Math.abs(unrealPnl).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     const CLUSTER_COLORS = {
         'Compute':'#60a5fa','Memory':'#34d399','Semicon':'#a78bfa',
