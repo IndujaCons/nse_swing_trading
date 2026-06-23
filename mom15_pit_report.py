@@ -381,6 +381,22 @@ def pct(v):
     sign = '+' if v >= 0 else ''
     return f"{sign}{v:.1f}%"
 
+def ema20_ext(stock_data, date_to_iloc, ticker, day):
+    """Return (price - EMA20) / EMA20 * 100, or None if insufficient data."""
+    idx_map = date_to_iloc.get(ticker, {})
+    ci = idx_map.get(day)
+    if ci is None:
+        for off in range(1, 6):
+            ci = idx_map.get(day - timedelta(days=off))
+            if ci is not None:
+                break
+    if ci is None or ci < 19:
+        return None
+    closes = stock_data[ticker]["Close"].iloc[:ci + 1]
+    ema20 = float(closes.ewm(span=20, adjust=False).mean().iloc[-1])
+    price = float(closes.iloc[-1])
+    return (price / ema20 - 1) * 100
+
 def print_table(headers, rows, col_widths):
     sep = "  ".join("─" * w for w in col_widths)
     hdr = "  ".join(h.ljust(w) for h, w in zip(headers, col_widths))
@@ -1001,6 +1017,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             }
             r12, r3 = s['ret_12m'], s['ret_3m']
             para_warn = r12 > 3.0 and r3 > 0 and (r3 / r12) > 0.5
+            ext = ema20_ext(stock_data, date_to_iloc, t, rebal_day)
+            ext_str = pct(ext) if ext is not None else "—"
             entry_rows.append((
                 t,
                 ticker_rank[t],
@@ -1012,6 +1030,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 f"{ep:,.1f}",
                 shares,
                 inr(cost),
+                ext_str,
             ))
 
         print(f"\n  ENTRIES ({len(entry_rows)})")
@@ -1025,9 +1044,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                   f"{', '.join(parts)}")
         if entry_rows:
             print_table(
-                ["Ticker","Rank","Sector","Score","Beta","Ret12m","Ret3m","Entry₹","Qty","Capital"],
+                ["Ticker","Rank","Sector","Score","Beta","Ret12m","Ret3m","Entry₹","Qty","Capital","Ext%EMA20"],
                 entry_rows,
-                [10, 5, 9, 7, 5, 8, 8, 10, 5, 12]
+                [10, 5, 9, 7, 5, 8, 8, 10, 5, 12, 10]
             )
         else:
             print("    —")
@@ -1046,6 +1065,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             warn  = " ⚠" if sc < 1.0 else ""
             if sc < 1.0:
                 warn_syms.append(t)
+            ext = ema20_ext(stock_data, date_to_iloc, t, rebal_day)
+            ext_str = pct(ext) if ext is not None else "—"
             hold_rows.append((
                 t,
                 ticker_rank_display.get(t, "—"),
@@ -1056,14 +1077,15 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 pos["shares"],
                 inr(unreal),
                 f"{pct(pp)}{warn}",
+                ext_str,
             ))
 
         print(f"\n  HOLDS ({len(hold_rows)})")
         if hold_rows:
             print_table(
-                ["Ticker","Rank","Sector","Since","Entry₹","Now₹","Qty","Unreal P&L","P&L%"],
+                ["Ticker","Rank","Sector","Since","Entry₹","Now₹","Qty","Unreal P&L","P&L%","Ext%EMA20"],
                 sorted(hold_rows, key=lambda r: float(r[8].replace('+','').replace('%','').replace(' ⚠','')), reverse=True),
-                [10, 5, 9, 10, 10, 10, 5, 12, 10]
+                [10, 5, 9, 10, 10, 10, 5, 12, 10, 10]
             )
             if warn_syms:
                 print(f"  ⚠  WAZ < 0 (momentum below universe mean): {', '.join(warn_syms)}")
