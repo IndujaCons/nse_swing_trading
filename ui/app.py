@@ -4472,7 +4472,9 @@ def api_techmo_performance_user(user_id):
     holdings.sort(key=lambda h: h["rank"] or 99)
     total_pnl     = round(total_current - total_cost, 2)
     initial_capital = initial_capital or total_cost
-    total_pnl_pct = round((total_pnl + realized_pnl) / initial_capital * 100, 2) if initial_capital else 0
+    # Denominator is total_cost (current cost basis), not initial_capital which
+    # may be stale or set to a per-slot value rather than total deployed capital.
+    total_pnl_pct = round((total_pnl + realized_pnl) / total_cost * 100, 2) if total_cost else 0
 
     return jsonify({
         "success":          True,
