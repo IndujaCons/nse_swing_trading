@@ -95,7 +95,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Strategy state lives in memory, not code
 
-Frozen strategy configs, backtest results, and rejected variants are tracked in `~/.claude/projects/-Users-jay-Desktop-relative-strength/memory/` (MEMORY.md is the index). When asked about a strategy's current parameters or performance, read memory first — the code may contain prior or experimental params. Files like `memory/rejected_*.md` document tested-and-dropped variants; check them before re-suggesting an idea.
+Frozen strategy configs, backtest results, and rejected variants are tracked in `~/.claude/projects/-Users-jay-dev-relative-strength/memory/` (MEMORY.md is the index). When asked about a strategy's current parameters or performance, read memory first — the code may contain prior or experimental params. Files like `memory/rejected_*.md` document tested-and-dropped variants; check them before re-suggesting an idea.
 
 ## Common commands
 
