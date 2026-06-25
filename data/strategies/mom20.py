@@ -23,6 +23,9 @@ def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
             return None
         sigma_3m = float(log_rets.iloc[-63:].std()) * np.sqrt(252) if len(log_rets) >= 63 else sigma
 
+        ema20     = float(closes.ewm(span=20, adjust=False).mean().iloc[i])
+        ema20_ext = round((price / ema20 - 1) * 100, 1) if ema20 > 0 else 0.0
+
         # Beta vs Nifty 50 (date-aligned).
         mom_beta = None
         if n50_ret_series is not None and n50_var > 1e-10:
@@ -38,17 +41,18 @@ def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
                         mom_beta = cov_val[0, 1] / cov_val[1, 1]
 
         return {
-            "ticker":  ticker,
-            "price":   round(price, 2),
-            "ret_12m": ret_12m,
-            "ret_6m":  ret_6m,
-            "ret_3m":  ret_3m,
+            "ticker":   ticker,
+            "price":    round(price, 2),
+            "ret_12m":  ret_12m,
+            "ret_6m":   ret_6m,
+            "ret_3m":   ret_3m,
             "sigma":    sigma,
             "sigma_3m": sigma_3m,
-            "mr_12":   ret_12m / sigma,
-            "mr_6":    ret_6m / sigma,
-            "mr_3":    (ret_3m / sigma) if ret_3m is not None else None,
-            "beta":    round(mom_beta, 2) if mom_beta is not None else None,
+            "ema20_ext": ema20_ext,
+            "mr_12":    ret_12m / sigma,
+            "mr_6":     ret_6m / sigma,
+            "mr_3":     (ret_3m / sigma) if ret_3m is not None else None,
+            "beta":     round(mom_beta, 2) if mom_beta is not None else None,
         }
     except Exception:
         return None

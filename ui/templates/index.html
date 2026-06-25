@@ -2354,7 +2354,7 @@
                         </label>
                     </div>
                     <table class="basket-table" style="margin-bottom:14px;font-family:monospace;">
-                        <thead><tr><th style="width:28px;"></th><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Price₹</th><th>Qty</th><th>Capital</th><th>Score</th><th>σ12</th><th>σ3m</th></tr></thead>
+                        <thead><tr><th style="width:28px;"></th><th>#</th><th>Ticker</th><th>Sector</th><th>Rank</th><th>Price₹</th><th>Qty</th><th>Capital</th><th>Score</th><th>σ12</th><th>σ3m</th><th style="font-size:10px;">Ext%</th></tr></thead>
                         <tbody id="mom20-basket-entries-body"></tbody>
                     </table>
 
@@ -9648,7 +9648,8 @@ function _renderMom20Basket(d) {
             <td>${fmt(e.capital_allocated)}</td>
             <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td>
             <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.volatility != null && e.volatility > 0 ? e.volatility.toFixed(0)+'%' : '—'}</td>
-            <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.vol_3m != null && e.vol_3m > 0 ? e.vol_3m.toFixed(0)+'%' : '—'}</td></tr>`);
+            <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.vol_3m != null && e.vol_3m > 0 ? e.vol_3m.toFixed(0)+'%' : '—'}</td>
+            <td style="font-size:10px;font-family:monospace;${e.ema20_ext != null && e.ema20_ext > 12 ? 'color:#ff9800;font-weight:700;' : 'color:var(--text-muted);'}">${e.ema20_ext != null ? (e.ema20_ext > 0 ? '+' : '') + e.ema20_ext.toFixed(1) + '%' : '—'}</td></tr>`);
 
     // Overflow entries (β > 1.2, rank ≤ 15) — unchecked, red
     const overflow = d.overflow_entries || [];
@@ -9665,12 +9666,13 @@ function _renderMom20Basket(d) {
             <td>${fmt(e.capital_allocated)}</td>
             <td style="color:var(--text-muted);font-size:11px">${(e.score||0).toFixed(2)}</td>
             <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.volatility != null && e.volatility > 0 ? e.volatility.toFixed(0)+'%' : '—'}</td>
-            <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.vol_3m != null && e.vol_3m > 0 ? e.vol_3m.toFixed(0)+'%' : '—'}</td></tr>`);
+            <td style="color:var(--text-muted);font-size:10px;font-family:monospace;">${e.vol_3m != null && e.vol_3m > 0 ? e.vol_3m.toFixed(0)+'%' : '—'}</td>
+            <td style="font-size:10px;font-family:monospace;${e.ema20_ext != null && e.ema20_ext > 12 ? 'color:#ff9800;font-weight:700;' : 'color:var(--text-muted);'}">${e.ema20_ext != null ? (e.ema20_ext > 0 ? '+' : '') + e.ema20_ext.toFixed(1) + '%' : '—'}</td></tr>`);
 
     document.getElementById('mom20-basket-entries-body').innerHTML =
         (entryRows.length || ovRows.length)
             ? [...entryRows, ...ovRows].join('')
-            : '<tr><td colspan="11" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
+            : '<tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:10px;">No new entries</td></tr>';
 
     // Sync "all" checkboxes
     mom20SyncSelectAll();

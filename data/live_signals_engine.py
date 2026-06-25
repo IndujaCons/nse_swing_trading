@@ -920,6 +920,7 @@ class LiveSignalsEngine:
                     "rank": rank_i + 1,
                     "stop_pct": 0,
                     "atr_pct": 0,
+                    "ema20_ext": d.get("ema20_ext"),
                 })
 
             # rank_delta injected later (overflow block) using uncapped universe ranks
@@ -956,6 +957,7 @@ class LiveSignalsEngine:
                         "beta": round(abs(d["beta"]), 2),
                         "rank": ov_rank,
                         "uc_rank": mom20_unfiltered_ranks[d["ticker"]],
+                        "ema20_ext": d.get("ema20_ext"),
                     })
             # All N200 prices (no beta filter) — used for SIP min capital on held stocks
             mom20_all_prices = {d["ticker"]: d["price"] for d in mom20_raw}
