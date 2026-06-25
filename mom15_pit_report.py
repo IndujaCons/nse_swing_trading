@@ -409,8 +409,7 @@ def print_table(headers, rows, col_widths):
 def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None,
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
         ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False,
-        sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0,
-        skip_extended=None):
+        sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER
     PARABOLIC_FILTER = parabolic_filter
@@ -1002,12 +1001,6 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                                         f"{high_52w:,.1f}", f"{dist_from_high:.1f}%"))
                     continue
 
-            if skip_extended is not None and ci is not None:
-                ext = ema20_ext(stock_data, date_to_iloc, t, rebal_day)
-                if ext is not None and ext > skip_extended:
-                    skipped_52w.append((t, ticker_rank[t], f"{ep:,.1f}", "EMA20", f"+{ext:.1f}%"))
-                    continue
-
             shares = int(per_slot // ep)
             if shares == 0:
                 continue
@@ -1268,8 +1261,6 @@ if __name__ == "__main__":
                         help="Regime filter on the benchmark: 'none' (no filter), 'sma200' (default — Nifty200 < SMA200 → off), 'ema200' (uses EMA(200) instead)")
     parser.add_argument("--parabolic-filter", action="store_true",
                         help="Skip new entries where Ret12m > 300%% AND Ret3m/Ret12m > 0.5 (blowoff top)")
-    parser.add_argument("--skip-extended", type=float, default=None, metavar="PCT",
-                        help="Skip new entries where Ext%%EMA20 > PCT at rebalance date (e.g. --skip-extended 12)")
     parser.add_argument("--sector-cap", type=int, default=None,
                         help="Max holdings per sector (e.g. --sector-cap 5 limits each sector to 5 stocks)")
     parser.add_argument("--addv-min", type=float, default=None,
@@ -1293,5 +1284,4 @@ if __name__ == "__main__":
         rebal_day=args.rebal_day, regime_filter=regime_filter,
         parabolic_filter=args.parabolic_filter,
         sector_cap=args.sector_cap, addv_min=addv_min,
-        niftybees=args.niftybees, goldbees=args.goldbees, sip=args.sip,
-        skip_extended=args.skip_extended)
+        niftybees=args.niftybees, goldbees=args.goldbees, sip=args.sip)
