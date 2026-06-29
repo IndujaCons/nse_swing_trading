@@ -3939,59 +3939,26 @@ def api_mom20_chart(user_id):
 
 TECHMO_FILE = os.path.join(DATA_STORE_PATH, "techmo_portfolio.json")
 
-# Combined Nasdaq-100 + AI Universe, cluster-mapped
-TECHMO_UNIVERSE = {
-    # Compute Silicon
-    "NVDA":"Compute","AMD":"Compute","AVGO":"Compute","INTC":"Compute",
-    "ARM":"Compute",
-    # Memory & Storage
-    "MU":"Memory","WDC":"Memory","SNDK":"Memory","STX":"Memory","NTAP":"Memory",
-    # Semicon Equipment (incl. EDA)
-    "ASML":"Semicon Equip","LRCX":"Semicon Equip","KLAC":"Semicon Equip",
-    "KEYS":"Semicon Equip","AMAT":"Semicon Equip","SNPS":"Semicon Equip",
-    # Packaging (OSAT)
-    "TSM":"Foundry","TSEM":"Foundry","ASX":"Packaging","AMKR":"Packaging","CAMT":"Packaging",
-    # Photonics / Optical components
-    "COHR":"Photonics","LITE":"Photonics","GLW":"Photonics","FN":"Photonics","AAOI":"Photonics","VIAV":"Photonics",
-    # Networking & Connectivity
-    "ANET":"Networking","CSCO":"Networking","CRDO":"Networking","APH":"Networking",
-    "MRVL":"Networking","NOK":"Networking","CIEN":"Networking",
-    # Server OEMs
-    "SMCI":"Server OEM","DELL":"Server OEM","HPE":"Server OEM",
-    "JBL":"Server OEM","FLEX":"Server OEM",
-    # AI Neoclouds
-    "CRWV":"Neocloud","NBIS":"Neocloud","IREN":"Neocloud","APLD":"Neocloud",
-    "WULF":"Neocloud","CORZ":"Neocloud","CIFR":"Neocloud","ORCL":"Neocloud",
-    # Power & Cooling
-    "VRT":"Power/Cool","ETN":"Power/Cool",
-    "PWR":"Power/Cool","HUBB":"Power/Cool","MOD":"Power/Cool",
-    # Energy / AI Power
-    "CEG":"AI Energy","VST":"AI Energy","NEE":"AI Energy",
-    "OKLO":"AI Energy","EQT":"AI Energy","GEV":"AI Energy","BE":"AI Energy","TE":"AI Energy",
-    "CCJ":"AI Energy","BWXT":"AI Energy",
-    # Power Electronics
-    "STM":"Power Elec","ADI":"Power Elec","MPWR":"Power Elec",
-    "ON":"Power Elec","TXN":"Power Elec",
-    # Robotics & Autonomy
-    "TSLA":"Robotics","PATH":"Robotics","SYM":"Robotics",
-    "TER":"Robotics","ISRG":"Robotics",
-    # Defense & Drones
-    "KTOS":"Defense","AVAV":"Defense","LMT":"Defense","NOC":"Defense",
-    # Space & Satellites
-    "ASTS":"Space","RKLB":"Space","LUNR":"Space","PL":"Space","IRDM":"Space",
-    # Materials
-    "MP":"Materials","FCX":"Materials","AA":"Materials","TECK":"Materials","AXTI":"Materials",
-    # Frontier AI Models
-    "MSFT":"Frontier AI","GOOGL":"Frontier AI","META":"Frontier AI","AMZN":"Frontier AI",
-    # Quantum Computing (IONQ ~$4.5B kept; micro caps removed)
-    "IONQ":"Quantum","RGTI":"Quantum","QBTS":"Quantum",
-    # AI Software (application layer)
-    "PLTR":"AI Software","NOW":"AI Software","SNOW":"AI Software","CRM":"AI Software",
-    "DDOG":"AI Software","IGV":"AI Software","NET":"AI Software",
-    # QQQ-only additions
-    "AAPL":"Consumer Tech","NFLX":"Consumer Tech","QCOM":"Wireless",
-    "COST":"Retail","ORLY":"Retail","ADP":"Enterprise SW",
-}
+# AI universe imported from canonical source; QQQ-only / borderline extras appended below
+from data.ai_universe import AI_UNIVERSE as _AI_BASE, SECTOR_ABBREV as _SA
+TECHMO_UNIVERSE = {t: _SA[s] for t, s in _AI_BASE.items()}
+TECHMO_UNIVERSE.update({
+    # Borderline (sub-$5B or weak AI fit) — app screener only, not in backtest
+    "TSEM": "Foundry",       # Tower Semiconductor
+    "VIAV": "Photonics",     # Viavi Solutions
+    "BE":   "AI Energy",     # Bloom Energy
+    "TE":   "AI Energy",     # Talen Energy
+    "AXTI": "Materials",     # AXT Inc
+    "RGTI": "Quantum",       # Rigetti Computing
+    "QBTS": "Quantum",       # D-Wave Quantum
+    # QQQ-only additions (not AI-specific)
+    "AAPL": "Consumer Tech", "NFLX": "Consumer Tech",
+    "QCOM": "Wireless",
+    "COST": "Retail",        "ORLY": "Retail",
+    "ADP":  "Enterprise SW",
+    # Other app-only
+    "IGV":  "AI Software",   # iShares Software ETF
+})
 
 _TECHMO_SCAN_CACHE = {"data": None, "ts": 0}
 _TECHMO_VAL_CACHE  = {"data": None, "ts": 0}   # PE/FwdPE/PEG, 1-hr TTL

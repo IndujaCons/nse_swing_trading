@@ -2,7 +2,7 @@
 """
 AI Universe Backtest — Monthly Rebalance
 =========================================
-Universe : 97 AI-ecosystem stocks across 17 sectors (max 2 per sector in portfolio)
+Universe : 92 AI-ecosystem stocks across 18 sectors (max 2 per sector in portfolio)
 Selection: Top 10 by momentum score, monthly rebalance
 Buffer   : entry rank ≤ 7, exit rank > 20
 Scoring  : MR_12 (50%) + MR_3 (50%), Z-scored, Normalised Score
@@ -12,10 +12,10 @@ Benchmark: QQQ (Nasdaq-100)
 Sectors:
  1  Compute Silicon / AI Accelerators   7  Server OEMs & Contract Mfg     13 Defense & Drones
  2  Memory & Storage                    8  AI Data Centers / Neoclouds     14 Space & Satellites
- 3  Semiconductor Equipment             9  Power & Cooling                 15 Materials & Rare Earths
+ 3  Semiconductor Equipment             9  Power & Cooling                 15 Materials
  4  Packaging & Foundry                10  Energy / AI Power               16 Frontier AI Models
- 5  Photonics / Optical                11  Power Electronics
- 6  Networking & Connectivity          12  Robotics & Autonomy
+ 5  Photonics / Optical                11  Power Electronics               17 Enterprise AI Software
+ 6  Networking & Connectivity          12  Robotics & Autonomy             18 Quantum Computing
 
 Usage:
     python3 ai_universe_backtest.py
@@ -29,6 +29,7 @@ from datetime import date, timedelta
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from data.ai_universe import AI_UNIVERSE, SECTOR_ORDER
 
 warnings.filterwarnings('ignore')
 
@@ -51,146 +52,6 @@ CAPITAL        = 100_000.0
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 CACHE_FILE = os.path.join(BASE_DIR, 'data', 'cache', 'ai_universe_daily.pkl')
-
-# ── FULL AI UNIVERSE — 16 SECTORS ─────────────────────────────────────────────
-AI_UNIVERSE = {
-
-    # ── 1. Compute Silicon / AI Accelerators ──────────────────────────────────
-    "NVDA":  "Compute Silicon",    # Nvidia — GPUs, AI accelerators
-    "AMD":   "Compute Silicon",    # Advanced Micro Devices — GPUs, CPUs
-    "AVGO":  "Compute Silicon",    # Broadcom — AI ASICs, networking chips
-    "INTC":  "Compute Silicon",    # Intel — CPUs, Gaudi AI accelerator
-    "ARM":   "Compute Silicon",    # Arm Holdings — IP architecture licensor
-    "MRVL":  "Compute Silicon",    # Marvell Technology — custom AI silicon, DPUs
-    "SNPS":  "Compute Silicon",    # Synopsys — EDA tools (chip design software)
-
-    # ── 2. Memory & Storage ───────────────────────────────────────────────────
-    "MU":    "Memory & Storage",   # Micron — HBM3E, DRAM, NAND
-    "WDC":   "Memory & Storage",   # Western Digital
-    "SNDK":  "Memory & Storage",   # SanDisk (WDC flash spinoff, Feb 2025)
-    "STX":   "Memory & Storage",   # Seagate — enterprise HDDs
-    "NTAP":  "Memory & Storage",   # NetApp — storage software
-
-    # ── 3. Semiconductor Equipment ────────────────────────────────────────────
-    "ASML":  "Semicon Equipment",  # ASML — EUV/DUV lithography
-    "LRCX":  "Semicon Equipment",  # Lam Research — etch & deposition
-    "KLAC":  "Semicon Equipment",  # KLA Corporation — process control & inspection
-    "KEYS":  "Semicon Equipment",  # Keysight — test & measurement
-    "CAMT":  "Semicon Equipment",  # Camtek — advanced packaging inspection
-
-    # ── 4. Packaging & Foundry ────────────────────────────────────────────────
-    "TSM":   "Packaging & Foundry", # TSMC — leading-edge foundry, CoWoS packaging
-    "ASX":   "Packaging & Foundry", # ASE Technology — OSAT
-    "AMKR":  "Packaging & Foundry", # Amkor Technology — OSAT
-
-    # ── 5. Photonics / Optical ────────────────────────────────────────────────
-    "COHR":  "Photonics / Optical", # Coherent Corp — optical transceivers, lasers
-    "LITE":  "Photonics / Optical", # Lumentum — optical components
-    "GLW":   "Photonics / Optical", # Corning — fiber optic cable
-    "FN":    "Photonics / Optical", # Fabrinet — optical module contract mfg
-    "NOK":   "Photonics / Optical", # Nokia — optical networking
-    "CIEN":  "Photonics / Optical", # Ciena — optical networking
-    "AAOI":  "Photonics / Optical", # Applied Optoelectronics — transceivers
-
-    # ── 6. Networking & Connectivity ─────────────────────────────────────────
-    "ANET":  "Networking",         # Arista Networks — data center switching
-    "CSCO":  "Networking",         # Cisco Systems
-    "CRDO":  "Networking",         # Credo Technology — high-speed SerDes
-    "APH":   "Networking",         # Amphenol — connectors & interconnects
-
-    # ── 7. Server OEMs & Contract Manufacturing ───────────────────────────────
-    "SMCI":  "Server OEMs",        # Super Micro Computer — GPU servers
-    "DELL":  "Server OEMs",        # Dell Technologies
-    "HPE":   "Server OEMs",        # Hewlett Packard Enterprise
-    "JBL":   "Server OEMs",        # Jabil — EMS / contract manufacturing
-    "FLEX":  "Server OEMs",        # Flex Ltd — contract electronics
-
-    # ── 8. AI Data Centers / Neoclouds ───────────────────────────────────────
-    "CRWV":  "AI Neoclouds",       # CoreWeave — dedicated AI cloud
-    "NBIS":  "AI Neoclouds",       # Nebius — AI cloud, ex-Yandex
-    "IREN":  "AI Neoclouds",       # Iris Energy — AI compute data centers
-    "APLD":  "AI Neoclouds",       # Applied Digital — AI data center hosting
-    "WULF":  "AI Neoclouds",       # TeraWulf — AI compute
-    "CORZ":  "AI Neoclouds",       # Core Scientific — AI HPC data centers
-    "CIFR":  "AI Neoclouds",       # Cipher Mining — AI compute
-
-    # ── 9. Power & Cooling Infrastructure ────────────────────────────────────
-    "VRT":   "Power & Cooling",    # Vertiv — power/thermal mgmt for data centers
-    "ETN":   "Power & Cooling",    # Eaton — power management, UPS
-    "GEV":   "Power & Cooling",    # GE Vernova — power generation, grid equipment
-    "PWR":   "Power & Cooling",    # Quanta Services — electrical infrastructure
-    "HUBB":  "Power & Cooling",    # Hubbell — electrical products
-    "MOD":   "Power & Cooling",    # Modine Manufacturing — thermal management
-
-    # ── 10. Energy / AI Power Supply ─────────────────────────────────────────
-    "CEG":   "Energy / AI Power",  # Constellation Energy — nuclear
-    "VST":   "Energy / AI Power",  # Vistra — gas + nuclear
-    "NEE":   "Energy / AI Power",  # NextEra Energy — wind + solar
-    "SMR":   "Energy / AI Power",  # NuScale Power — small modular reactors
-    "OKLO":  "Energy / AI Power",  # Oklo — microreactors
-    "EOSE":  "Energy / AI Power",  # Eos Energy — grid-scale battery storage
-    "EQT":   "Energy / AI Power",  # EQT Corporation — natural gas
-
-    # ── 11. Power Electronics ─────────────────────────────────────────────────
-    "STM":   "Power Electronics",  # STMicroelectronics
-    "ADI":   "Power Electronics",  # Analog Devices
-    "MPWR":  "Power Electronics",  # Monolithic Power Systems
-    "NVTS":  "Power Electronics",  # Navitas Semiconductor — GaN/SiC
-    "ON":    "Power Electronics",  # ON Semiconductor
-
-    # ── 12. Robotics & Autonomy ───────────────────────────────────────────────
-    "TSLA":  "Robotics & Autonomy", # Tesla — autonomous vehicles, Optimus
-    "PATH":  "Robotics & Autonomy", # UiPath — RPA, enterprise automation
-    "SYM":   "Robotics & Autonomy", # Symbotic — warehouse robotics
-    "SERV":  "Robotics & Autonomy", # Serve Robotics — autonomous delivery
-    "TER":   "Robotics & Autonomy", # Teradyne — industrial robotics + test
-    "ISRG":  "Robotics & Autonomy", # Intuitive Surgical — surgical robotics
-
-    # ── 13. Defense & Drones ──────────────────────────────────────────────────
-    "KTOS":  "Defense & Drones",   # Kratos Defense — drones, defense AI
-    "AVAV":  "Defense & Drones",   # AeroVironment — tactical drones
-    "ONDS":  "Defense & Drones",   # Ondas Holdings — industrial/defense drones
-    "RCAT":  "Defense & Drones",   # Red Cat Holdings — defense drones
-    "OSIS":  "Defense & Drones",   # OSI Systems — security/defense
-    "LMT":   "Defense & Drones",   # Lockheed Martin
-    "NOC":   "Defense & Drones",   # Northrop Grumman
-
-    # ── 14. Space & Satellites ────────────────────────────────────────────────
-    "ASTS":  "Space & Satellites", # AST SpaceMobile — space-based cellular
-    "RKLB":  "Space & Satellites", # Rocket Lab — launch vehicles
-    "LUNR":  "Space & Satellites", # Intuitive Machines — lunar landers
-    "PL":    "Space & Satellites", # Planet Labs — earth observation
-    "BKSY":  "Space & Satellites", # BlackSky — satellite imagery/analytics
-    "IRDM":  "Space & Satellites", # Iridium Communications — satellite IoT
-
-    # ── 15. Materials & Rare Earths ───────────────────────────────────────────
-    "MP":    "Materials",          # MP Materials — rare earth mining
-    "UUUU":  "Materials",          # Energy Fuels — uranium + rare earths
-    "FCX":   "Materials",          # Freeport-McMoRan — copper
-    "AA":    "Materials",          # Alcoa — aluminum
-    "TECK":  "Materials",          # Teck Resources — base metals
-
-    # ── 16. Frontier AI Models ────────────────────────────────────────────────
-    "MSFT":  "Frontier AI Models", # Microsoft — Azure + OpenAI partnership
-    "GOOGL": "Frontier AI Models", # Alphabet — Gemini / DeepMind
-    "META":  "Frontier AI Models", # Meta — LLaMA, AI research
-    "AMZN":  "Frontier AI Models", # Amazon — AWS Bedrock + AGI lab
-
-    # ── 17. Enterprise AI Software ────────────────────────────────────────────
-    "SNOW":  "Enterprise AI Software", # Snowflake — AI data cloud, Cortex AI
-    "NOW":   "Enterprise AI Software", # ServiceNow — AI workflow automation
-    "CRM":   "Enterprise AI Software", # Salesforce — Einstein AI, Agentforce
-}
-
-SECTOR_ORDER = [
-    "Compute Silicon", "Memory & Storage", "Semicon Equipment",
-    "Packaging & Foundry", "Photonics / Optical", "Networking",
-    "Server OEMs", "AI Neoclouds", "Power & Cooling",
-    "Energy / AI Power", "Power Electronics", "Robotics & Autonomy",
-    "Defense & Drones", "Space & Satellites", "Materials",
-    "Frontier AI Models",
-    "Enterprise AI Software",
-]
 
 # ── CHARGES ───────────────────────────────────────────────────────────────────
 def calc_charges(buy_val, sell_val):
@@ -795,7 +656,7 @@ def run(refresh=False, use_regime=True, start_override=None,
         print(f"\n  Rebalance NAV → ai_universe_rebal.csv ({len(rebal_nav)} rows)")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AI Universe Momentum Backtest (97 stocks, 17 sectors)")
+    parser = argparse.ArgumentParser(description="AI Universe Momentum Backtest (92 stocks, 18 sectors)")
     parser.add_argument("--refresh",        action="store_true", help="Re-download price data")
     parser.add_argument("--no-regime",      action="store_true", help="Disable QQQ regime filter")
     parser.add_argument("--start",          default=None,        help="Override start date YYYY-MM-DD")
