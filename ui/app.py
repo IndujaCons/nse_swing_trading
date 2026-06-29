@@ -3986,7 +3986,7 @@ TECHMO_UNIVERSE = {
     # Quantum Computing (IONQ ~$4.5B kept; micro caps removed)
     "IONQ":"Quantum","RGTI":"Quantum","QBTS":"Quantum",
     # AI Software (application layer)
-    "PLTR":"AI Software","NOW":"AI Software","SNOW":"AI Software",
+    "PLTR":"AI Software","NOW":"AI Software","SNOW":"AI Software","CRM":"AI Software",
     "DDOG":"AI Software","IGV":"AI Software","NET":"AI Software",
     # QQQ-only additions
     "AAPL":"Consumer Tech","NFLX":"Consumer Tech","QCOM":"Wireless",
