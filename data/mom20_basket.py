@@ -214,6 +214,7 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
             "score":      round(score_map.get(ticker, 0), 3),
             "volatility": vol_map.get(ticker, 0),
             "vol_3m":     vol_3m_map.get(ticker, 0),
+            "ema20_ext":  s.get("ema20_ext"),
         })
         if sec:
             sector_count[sec] = sector_count.get(sec, 0) + 1

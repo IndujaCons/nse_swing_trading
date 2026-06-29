@@ -2566,6 +2566,7 @@ def api_mom20_basket_preview(user_id):
             "ret_3m":           ov.get("ret_3m", 0),
             "volatility":       ov.get("volatility", 0),
             "vol_3m":           ov.get("vol_3m", 0),
+            "ema20_ext":        ov.get("ema20_ext"),
             "is_overflow":      True,
         })
     basket_data["overflow_entries"] = overflow_entries
