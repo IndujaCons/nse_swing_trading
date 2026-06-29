@@ -2,7 +2,7 @@
 """
 AI Universe Backtest — Monthly Rebalance
 =========================================
-Universe : 94 AI-ecosystem stocks across 16 sectors (max 2 per sector in portfolio)
+Universe : 97 AI-ecosystem stocks across 17 sectors (max 2 per sector in portfolio)
 Selection: Top 10 by momentum score, monthly rebalance
 Buffer   : entry rank ≤ 7, exit rank > 20
 Scoring  : MR_12 (50%) + MR_3 (50%), Z-scored, Normalised Score
@@ -175,6 +175,11 @@ AI_UNIVERSE = {
     "GOOGL": "Frontier AI Models", # Alphabet — Gemini / DeepMind
     "META":  "Frontier AI Models", # Meta — LLaMA, AI research
     "AMZN":  "Frontier AI Models", # Amazon — AWS Bedrock + AGI lab
+
+    # ── 17. Enterprise AI Software ────────────────────────────────────────────
+    "SNOW":  "Enterprise AI Software", # Snowflake — AI data cloud, Cortex AI
+    "NOW":   "Enterprise AI Software", # ServiceNow — AI workflow automation
+    "CRM":   "Enterprise AI Software", # Salesforce — Einstein AI, Agentforce
 }
 
 SECTOR_ORDER = [
@@ -184,6 +189,7 @@ SECTOR_ORDER = [
     "Energy / AI Power", "Power Electronics", "Robotics & Autonomy",
     "Defense & Drones", "Space & Satellites", "Materials",
     "Frontier AI Models",
+    "Enterprise AI Software",
 ]
 
 # ── CHARGES ───────────────────────────────────────────────────────────────────
@@ -789,7 +795,7 @@ def run(refresh=False, use_regime=True, start_override=None,
         print(f"\n  Rebalance NAV → ai_universe_rebal.csv ({len(rebal_nav)} rows)")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AI Universe Momentum Backtest (89 stocks, 16 sectors)")
+    parser = argparse.ArgumentParser(description="AI Universe Momentum Backtest (97 stocks, 17 sectors)")
     parser.add_argument("--refresh",        action="store_true", help="Re-download price data")
     parser.add_argument("--no-regime",      action="store_true", help="Disable QQQ regime filter")
     parser.add_argument("--start",          default=None,        help="Override start date YYYY-MM-DD")
