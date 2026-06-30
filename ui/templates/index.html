@@ -7313,13 +7313,14 @@
         }
 
         async function alertAdd() {
-            const ticker    = document.getElementById('al-ticker').value.trim().toUpperCase();
+            const ticker    = document.getElementById('al-ticker').value.trim().toUpperCase().replace(/\s+/g, '');
             const exchange  = document.getElementById('al-exchange').value;
             const condition = document.getElementById('al-condition').value;
             const operator  = document.getElementById('al-operator').value;
             const value     = parseFloat(document.getElementById('al-value').value);
             if (!ticker)       { showToast('Enter a ticker', 'error'); return; }
             if (isNaN(value))  { showToast('Enter a numeric value', 'error'); return; }
+            showToast(`Validating ${ticker}…`, 'info', 10000);
             const resp = await fetch('/api/alerts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

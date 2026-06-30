@@ -29,9 +29,28 @@ IST = timezone(timedelta(hours=5, minutes=30))
 
 # ── Ticker helpers ─────────────────────────────────────────────────────────────
 
+def normalize_ticker(ticker):
+    """Strip spaces and uppercase — NSE/US tickers never contain spaces."""
+    return ticker.upper().replace(" ", "").strip()
+
+
 def _yf_symbol(ticker, exchange):
     """Return yfinance symbol: append .NS for NSE, bare for US."""
-    return ticker.upper() + ".NS" if exchange == "NSE" else ticker.upper()
+    return normalize_ticker(ticker) + ".NS" if exchange == "NSE" else normalize_ticker(ticker)
+
+
+def validate_ticker(ticker, exchange):
+    """Return (valid: bool, error_msg: str|None).
+    Does a lightweight yfinance lookup — fails fast if symbol unknown.
+    """
+    sym = _yf_symbol(ticker, exchange)
+    try:
+        df = yf.Ticker(sym).history(period="5d", interval="1d")
+        if df.empty:
+            return False, f"Ticker '{sym}' not found on yfinance — check the symbol"
+        return True, None
+    except Exception as e:
+        return False, f"Could not validate '{sym}': {e}"
 
 
 # ── Data fetchers ──────────────────────────────────────────────────────────────
@@ -146,7 +165,7 @@ def create_alert(alerts_path, ticker, exchange, condition, operator, value):
     data = load_alerts(alerts_path)
     alert = {
         "id":           uuid.uuid4().hex[:12],
-        "ticker":       ticker.upper().strip(),
+        "ticker":       normalize_ticker(ticker),
         "exchange":     exchange,
         "condition":    condition,
         "operator":     operator,

@@ -27,6 +27,7 @@ from config.settings import (
 from data.alert_engine import (
     load_alerts, save_alerts, create_alert,
     delete_alert, rearm_alert, check_all_alerts,
+    normalize_ticker, validate_ticker,
 )
 from data.screener_engine import ScreenerEngine
 from data.live_signals_engine import LiveSignalsEngine
@@ -1415,7 +1416,7 @@ def api_alerts_list():
 @app.route("/api/alerts", methods=["POST"])
 def api_alerts_create():
     body = request.get_json(force=True) or {}
-    ticker    = (body.get("ticker") or "").strip().upper()
+    ticker    = normalize_ticker(body.get("ticker") or "")
     exchange  = body.get("exchange", "NSE")
     condition = body.get("condition", "price")
     operator  = body.get("operator", "gt")
@@ -1432,6 +1433,9 @@ def api_alerts_create():
         value = float(value)
     except (TypeError, ValueError):
         return jsonify({"success": False, "error": "value must be a number"}), 400
+    valid, err = validate_ticker(ticker, exchange)
+    if not valid:
+        return jsonify({"success": False, "error": err}), 400
     alert = create_alert(ALERTS_FILE, ticker, exchange, condition, operator, value)
     return jsonify({"success": True, "alert": alert})
 
