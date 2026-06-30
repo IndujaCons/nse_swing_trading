@@ -1461,6 +1461,40 @@ def api_alerts_triggered():
     return jsonify({"success": True, "triggered": items})
 
 
+@app.route("/api/alerts/snapshot", methods=["GET"])
+def api_alerts_snapshot():
+    """Return alerts list + live Price / 1hrRSI / 50DEMA for each unique ticker.
+
+    Values are fetched concurrently across tickers and all three conditions
+    are fetched in parallel per ticker via fetch_all_values().
+    """
+    from data.alert_engine import fetch_all_values
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    data = load_alerts(ALERTS_FILE)
+    alerts = data.get("alerts", [])
+
+    # Deduplicate by ticker+exchange
+    seen = {}
+    for a in alerts:
+        key = f"{a['ticker']}|{a['exchange']}"
+        if key not in seen:
+            seen[key] = (a["ticker"], a["exchange"])
+
+    # Fetch all tickers in parallel (one thread per unique ticker)
+    values = {}
+    with ThreadPoolExecutor(max_workers=min(len(seen), 10)) as ex:
+        futures = {ex.submit(fetch_all_values, t, e): k for k, (t, e) in seen.items()}
+        for fut in as_completed(futures):
+            key = futures[fut]
+            try:
+                values[key] = fut.result()
+            except Exception:
+                values[key] = {"price": None, "rsi_1h": None, "ema50": None}
+
+    return jsonify({"success": True, "alerts": alerts, "values": values})
+
+
 # ============ Zerodha Login Routes ============
 
 @app.route("/api/users", methods=["GET"])

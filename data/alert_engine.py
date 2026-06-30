@@ -99,6 +99,23 @@ def fetch_50dema(ticker, exchange):
         return None
 
 
+def fetch_all_values(ticker, exchange):
+    """Fetch price, 1hrRSI, and 50DEMA concurrently. Returns dict with all three."""
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=3) as ex:
+        f_price = ex.submit(fetch_current_price, ticker, exchange)
+        f_rsi   = ex.submit(fetch_1h_rsi,        ticker, exchange)
+        f_ema   = ex.submit(fetch_50dema,         ticker, exchange)
+        price = f_price.result()
+        rsi   = f_rsi.result()
+        ema   = f_ema.result()
+    return {
+        "price":  round(price, 2) if price is not None else None,
+        "rsi_1h": round(rsi,   2) if rsi   is not None else None,
+        "ema50":  round(ema,   2) if ema   is not None else None,
+    }
+
+
 # ── Evaluation ─────────────────────────────────────────────────────────────────
 
 def evaluate_alert(alert):
