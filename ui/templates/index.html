@@ -4493,6 +4493,7 @@
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;${textMuted}">${s.vol_3m != null ? s.vol_3m.toFixed(0)+'%' : '—'}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);${textMuted}">${s.momentum_score.toFixed(3)}</td>
                     <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${betaCol};font-weight:700;">${s.beta.toFixed(2)}</td>
+                    <td style="padding:4px 8px;font-family:monospace;text-align:right;font-size:10px;${s.ema20_ext != null && s.ema20_ext > 12 ? 'color:#ff9800;font-weight:700;' : 'color:var(--text-muted);'}">${s.ema20_ext != null ? (s.ema20_ext > 0 ? '+' : '') + s.ema20_ext.toFixed(1) + '%' : '—'}</td>
                 </tr>`;
             }).join('');
             panel.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -4508,6 +4509,7 @@
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);">σ3m</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Beta</th>
+                    <th style="text-align:right;padding:4px 8px;font-family:monospace;font-size:10px;">Ext%</th>
                 </tr></thead><tbody>${rows}</tbody>
             </table>
             <div style="padding:6px 8px;font-size:10px;color:var(--text-muted);">
@@ -5029,6 +5031,7 @@
                         <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-muted);font-size:10px;">${s.vol_3m != null ? s.vol_3m.toFixed(0)+'%' : '—'}</td>
                         <td style="padding:4px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${s.momentum_score.toFixed(3)}</td>
                         <td style="padding:4px 8px;font-family:monospace;text-align:right;color:${betaCol};">${betaStr}</td>
+                        <td style="padding:4px 8px;font-family:monospace;text-align:right;font-size:10px;${s.ema20_ext != null && s.ema20_ext > 12 ? 'color:#ff9800;font-weight:700;' : 'color:var(--text-muted);'}">${s.ema20_ext != null ? (s.ema20_ext > 0 ? '+' : '') + s.ema20_ext.toFixed(1) + '%' : '—'}</td>
                     </tr>`;
                 }).join('');
                 mom20Panel.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -5044,6 +5047,7 @@
                         <th style="text-align:right;padding:4px 8px;font-family:monospace;color:var(--text-muted);">σ3m</th>
                         <th style="text-align:right;padding:4px 8px;font-family:monospace;">Score</th>
                         <th style="text-align:right;padding:4px 8px;font-family:monospace;">Beta</th>
+                        <th style="text-align:right;padding:4px 8px;font-family:monospace;font-size:10px;">Ext%</th>
                     </tr></thead><tbody>${mom20Rows}</tbody>
                 </table>
                 <div style="padding:6px 8px;font-size:10px;color:var(--text-muted);">
