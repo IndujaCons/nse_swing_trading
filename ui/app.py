@@ -22,7 +22,11 @@ from config.settings import (
     FLASK_HOST, FLASK_PORT, DEBUG_MODE,
     PAPER_TRADING_ONLY, load_config, save_config, get_cache_ttl,
     get_kite_users, DATA_STORE_PATH,
-    WATCHLIST_FILE,
+    WATCHLIST_FILE, ALERTS_FILE,
+)
+from data.alert_engine import (
+    load_alerts, save_alerts, create_alert,
+    delete_alert, rearm_alert, check_all_alerts,
 )
 from data.screener_engine import ScreenerEngine
 from data.live_signals_engine import LiveSignalsEngine
@@ -1300,6 +1304,157 @@ def watchlist_chart():
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ============ Alerts ============
+
+# In-memory buffer: alert checker thread appends here; frontend drains on poll.
+_alert_triggered_buf = []
+_alert_buf_lock = threading.Lock()
+
+
+def _send_alert_email(alert, current_value):
+    """Send a triggered-alert notification email via Gmail SMTP."""
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    gmail_user = os.environ.get("GMAIL_USER", "")
+    gmail_pass = os.environ.get("GMAIL_APP_PASSWORD", "")
+    if not gmail_user or not gmail_pass:
+        return
+    to_addr = os.environ.get("ALERT_EMAIL", gmail_user)
+    cond_label = {"price": "Price", "1hrRSI": "1hr RSI(14)", "50DEMA": "50D EMA"}
+    op_label   = {"gt": ">", "lt": "<", "eq": "≈"}
+    currency   = "₹" if alert["exchange"] == "NSE" else "$"
+    subject = f"🔔 Alert: {alert['ticker']} {cond_label.get(alert['condition'], alert['condition'])} {op_label.get(alert['operator'], alert['operator'])} {currency}{alert['value']}"
+    html = f"""
+<html><body style="font-family:monospace;background:#111;color:#eee;padding:24px;">
+<h2 style="color:#4ade80;">🔔 Alert Triggered</h2>
+<table style="border-collapse:collapse;font-size:14px;">
+  <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Ticker</td><td><b>{alert['ticker']}</b> ({alert['exchange']})</td></tr>
+  <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Condition</td><td>{cond_label.get(alert['condition'], alert['condition'])} {op_label.get(alert['operator'], '')} {currency}{alert['value']}</td></tr>
+  <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Current value</td><td style="color:#4ade80;font-weight:bold;">{currency}{current_value}</td></tr>
+  <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Triggered at</td><td>{alert.get('triggered_at','')}</td></tr>
+</table>
+<p style="color:#94a3b8;font-size:12px;margin-top:24px;">Alert is now inactive. Re-arm it in the Alerts tab.</p>
+</body></html>"""
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"]    = gmail_user
+        msg["To"]      = to_addr
+        msg.attach(MIMEText(html, "html"))
+        with smtplib.SMTP("smtp.gmail.com", 587) as s:
+            s.ehlo(); s.starttls()
+            s.login(gmail_user, gmail_pass)
+            s.sendmail(gmail_user, to_addr, msg.as_string())
+    except Exception as e:
+        print(f"[alerts] email error: {e}")
+
+
+def _alert_checker():
+    """Background thread: evaluate all active alerts every 5 minutes during market hours.
+
+    Indian window: Mon–Fri 09:00–16:00 IST
+    US window    : Mon–Fri 19:00–02:00 IST (next day)
+    """
+    import time
+    from datetime import timezone, timedelta
+
+    IST = timezone(timedelta(hours=5, minutes=30))
+
+    def _in_market_hours(dt):
+        wd = dt.weekday()
+        if wd >= 5:
+            return False
+        h = dt.hour
+        if 9 <= h < 16:    # Indian session
+            return True
+        if h >= 19:        # US session start (IST evening)
+            return True
+        if h < 2:          # US session end (IST early morning, next calendar day)
+            return True
+        return False
+
+    def _sleep_to_next_5min():
+        """Sleep until the next :00 or :05 or :10 ... boundary."""
+        now = time.time()
+        remainder = now % 300  # 300s = 5 min
+        sleep_for = 300 - remainder
+        time.sleep(max(sleep_for, 10))
+
+    print("[alerts] alert checker thread started")
+    while True:
+        try:
+            now_ist = __import__('datetime').datetime.now(IST)
+            if _in_market_hours(now_ist):
+                def _on_triggered(alert, val):
+                    with _alert_buf_lock:
+                        _alert_triggered_buf.append({
+                            "id":      alert["id"],
+                            "ticker":  alert["ticker"],
+                            "exchange": alert["exchange"],
+                            "condition": alert["condition"],
+                            "operator":  alert["operator"],
+                            "value":     alert["value"],
+                            "current":   val,
+                        })
+                    _send_alert_email(alert, val)
+                check_all_alerts(ALERTS_FILE, _on_triggered)
+        except Exception as e:
+            print(f"[alerts] checker error: {e}")
+        _sleep_to_next_5min()
+
+
+@app.route("/api/alerts", methods=["GET"])
+def api_alerts_list():
+    data = load_alerts(ALERTS_FILE)
+    return jsonify({"success": True, "alerts": data["alerts"]})
+
+
+@app.route("/api/alerts", methods=["POST"])
+def api_alerts_create():
+    body = request.get_json(force=True) or {}
+    ticker    = (body.get("ticker") or "").strip().upper()
+    exchange  = body.get("exchange", "NSE")
+    condition = body.get("condition", "price")
+    operator  = body.get("operator", "gt")
+    value     = body.get("value")
+    if not ticker:
+        return jsonify({"success": False, "error": "ticker required"}), 400
+    if exchange not in ("NSE", "US"):
+        return jsonify({"success": False, "error": "exchange must be NSE or US"}), 400
+    if condition not in ("price", "1hrRSI", "50DEMA"):
+        return jsonify({"success": False, "error": "invalid condition"}), 400
+    if operator not in ("gt", "lt", "eq"):
+        return jsonify({"success": False, "error": "invalid operator"}), 400
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "value must be a number"}), 400
+    alert = create_alert(ALERTS_FILE, ticker, exchange, condition, operator, value)
+    return jsonify({"success": True, "alert": alert})
+
+
+@app.route("/api/alerts/<alert_id>", methods=["DELETE"])
+def api_alerts_delete(alert_id):
+    found = delete_alert(ALERTS_FILE, alert_id)
+    return jsonify({"success": found})
+
+
+@app.route("/api/alerts/<alert_id>/rearm", methods=["POST"])
+def api_alerts_rearm(alert_id):
+    found = rearm_alert(ALERTS_FILE, alert_id)
+    return jsonify({"success": found})
+
+
+@app.route("/api/alerts/triggered", methods=["GET"])
+def api_alerts_triggered():
+    """Return and clear the triggered-alert buffer (frontend polls this)."""
+    with _alert_buf_lock:
+        items = list(_alert_triggered_buf)
+        _alert_triggered_buf.clear()
+    return jsonify({"success": True, "triggered": items})
 
 
 # ============ Zerodha Login Routes ============
@@ -6011,6 +6166,10 @@ def run_server():
     # Start ETF signal scheduler (daemon so it exits with the main process)
     scheduler_thread = threading.Thread(target=_etf_signal_scheduler, daemon=True, name="etf-scheduler")
     scheduler_thread.start()
+
+    # Start alert checker — polls every 5 min during market hours
+    alert_thread = threading.Thread(target=_alert_checker, daemon=True, name="alert-checker")
+    alert_thread.start()
 
     # Pre-warm disk-backed caches so the first user click is fast (plan A).
     prewarm_thread = threading.Thread(target=_prewarm_caches, daemon=True, name="cache-prewarm")
