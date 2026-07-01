@@ -7306,6 +7306,7 @@
                     ? '<span style="color:#4ade80;font-weight:700;font-size:10px;">ACTIVE</span>'
                     : '<span style="color:#f59e0b;font-weight:700;font-size:10px;">TRIGGERED</span>';
                 const currency = a.exchange === 'NSE' ? '₹' : '$';
+                const unit = a.condition === '1hrRSI' ? '' : currency;  // RSI is dimensionless
                 const rearmBtn = !active
                     ? `<button onclick="alertRearm('${a.id}')" title="Re-arm" style="background:none;border:1px solid var(--border-color);border-radius:4px;cursor:pointer;padding:1px 6px;font-size:11px;color:var(--text-secondary);">⟳</button>`
                     : '';
@@ -7314,7 +7315,7 @@
                 return `<tr>
                     <td style="padding:6px 8px;font-family:monospace;font-weight:700;">${a.ticker}</td>
                     <td style="padding:6px 8px;color:var(--text-muted);font-size:11px;">${a.exchange}</td>
-                    <td style="padding:6px 8px;font-size:11px;">${condLabel[a.condition] || a.condition} ${opLabel[a.operator] || a.operator} ${currency}${a.value}</td>
+                    <td style="padding:6px 8px;font-size:11px;">${condLabel[a.condition] || a.condition} ${opLabel[a.operator] || a.operator} ${unit}${a.value}</td>
                     <td style="padding:6px 8px;text-align:right;">${fmtPrice(v.price, currency)}</td>
                     <td style="padding:6px 8px;text-align:right;">${fmtRsi(v.rsi_1h)}</td>
                     <td style="padding:6px 8px;text-align:right;">${fmtEma(v.ema50, currency)}</td>
@@ -7381,9 +7382,10 @@
                 if (data.triggered && data.triggered.length) {
                     data.triggered.forEach(a => {
                         const currency = a.exchange === 'NSE' ? '₹' : '$';
+                        const unit = a.condition === '1hrRSI' ? '' : currency;
                         const condLabel = { price: 'Price', '1hrRSI': '1hr RSI(14)', '50DEMA': '50D EMA' };
                         const opLabel   = { gt: '>', lt: '<', eq: '≈' };
-                        const msg = `🔔 ${a.ticker}: ${condLabel[a.condition] || a.condition} ${opLabel[a.operator] || a.operator} ${currency}${a.value} — now ${currency}${a.current}`;
+                        const msg = `🔔 ${a.ticker}: ${condLabel[a.condition] || a.condition} ${opLabel[a.operator] || a.operator} ${unit}${a.value} — now ${unit}${a.current}`;
                         showToast(msg, 'success', 8000);
                     });
                     alertLoad();

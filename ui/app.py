@@ -1327,14 +1327,15 @@ def _send_alert_email(alert, current_value):
     cond_label = {"price": "Price", "1hrRSI": "1hr RSI(14)", "50DEMA": "50D EMA"}
     op_label   = {"gt": ">", "lt": "<", "eq": "≈"}
     currency   = "₹" if alert["exchange"] == "NSE" else "$"
-    subject = f"🔔 Alert: {alert['ticker']} {cond_label.get(alert['condition'], alert['condition'])} {op_label.get(alert['operator'], alert['operator'])} {currency}{alert['value']}"
+    unit       = "" if alert["condition"] == "1hrRSI" else currency  # RSI is dimensionless
+    subject = f"🔔 Alert: {alert['ticker']} {cond_label.get(alert['condition'], alert['condition'])} {op_label.get(alert['operator'], alert['operator'])} {unit}{alert['value']}"
     html = f"""
 <html><body style="font-family:monospace;background:#111;color:#eee;padding:24px;">
 <h2 style="color:#4ade80;">🔔 Alert Triggered</h2>
 <table style="border-collapse:collapse;font-size:14px;">
   <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Ticker</td><td><b>{alert['ticker']}</b> ({alert['exchange']})</td></tr>
-  <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Condition</td><td>{cond_label.get(alert['condition'], alert['condition'])} {op_label.get(alert['operator'], '')} {currency}{alert['value']}</td></tr>
-  <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Current value</td><td style="color:#4ade80;font-weight:bold;">{currency}{current_value}</td></tr>
+  <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Condition</td><td>{cond_label.get(alert['condition'], alert['condition'])} {op_label.get(alert['operator'], '')} {unit}{alert['value']}</td></tr>
+  <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Current value</td><td style="color:#4ade80;font-weight:bold;">{unit}{current_value}</td></tr>
   <tr><td style="padding:6px 16px 6px 0;color:#94a3b8;">Triggered at</td><td>{alert.get('triggered_at','')}</td></tr>
 </table>
 <p style="color:#94a3b8;font-size:12px;margin-top:24px;">Alert is now inactive. Re-arm it in the Alerts tab.</p>
