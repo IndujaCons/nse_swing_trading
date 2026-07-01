@@ -35,8 +35,13 @@ def normalize_ticker(ticker):
 
 
 def _yf_symbol(ticker, exchange):
-    """Return yfinance symbol: append .NS for NSE, bare for US."""
-    return normalize_ticker(ticker) + ".NS" if exchange == "NSE" else normalize_ticker(ticker)
+    """Return yfinance symbol: append .NS for NSE, bare for US.
+    Index symbols (^NSEI, ^NSEBANK, etc.) are exchange-agnostic — no suffix.
+    """
+    t = normalize_ticker(ticker)
+    if t.startswith("^"):
+        return t
+    return t + ".NS" if exchange == "NSE" else t
 
 
 def validate_ticker(ticker, exchange):
