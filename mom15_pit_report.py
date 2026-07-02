@@ -37,6 +37,7 @@ W12, W3          = 0.50, 0.50    # 12m + 3m, 6m dropped
 PARABOLIC_FILTER  = False          # skip new entries where Ret12m>300% AND Ret3m/Ret12m>0.5
 NO_EPS_FILTER     = False          # skip EPS gate entirely (test flag)
 BETA_DRIFT_HOLD   = False          # held stocks with β>cap are NOT forced out (test flag)
+NO_52W_FILTER     = False          # skip 52-week high proximity filter (test flag)
 LONG_PD      = 252            # 12m in trading days
 SHORT_PD     = 63             # 3m in trading days
 WARMUP_DAYS  = 450            # extra history before START_DATE for warmup
@@ -412,12 +413,13 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
         ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False,
         sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0,
-        no_eps=False, beta_drift_hold=False):
+        no_eps=False, beta_drift_hold=False, no_52w=False):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD, NO_52W_FILTER
     PARABOLIC_FILTER = parabolic_filter
     NO_EPS_FILTER    = no_eps
     BETA_DRIFT_HOLD  = beta_drift_hold
+    NO_52W_FILTER    = no_52w
     BETA_MIN  = None  # reset each run
     ADDV_MIN  = addv_min  # None = disabled
     if start_override:
@@ -1005,7 +1007,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                     if prev in idx_map:
                         ci = idx_map[prev]
                         break
-            if not qqq and not sp500 and not overflow and ci is not None and ci >= 252:
+            if not NO_52W_FILTER and not qqq and not sp500 and not overflow and ci is not None and ci >= 252:
                 high_52w = float(stock_data[t]["High"].iloc[ci-252:ci+1].max())
                 dist_from_high = (ep / high_52w - 1) * 100
                 if ep < high_52w * 0.80:
@@ -1281,6 +1283,8 @@ if __name__ == "__main__":
                         help="Disable EPS filter entirely (test: measure its impact)")
     parser.add_argument("--beta-drift-hold", action="store_true",
                         help="Held stocks with β>cap are NOT forced out (matches live basket)")
+    parser.add_argument("--no-52w", action="store_true",
+                        help="Disable 52-week high proximity filter (test: measure its impact)")
     parser.add_argument("--niftybees", action="store_true",
                         help="Always hold 5%% of portfolio in NIFTYBEES (passive ETF)")
     parser.add_argument("--goldbees", action="store_true",
@@ -1301,4 +1305,4 @@ if __name__ == "__main__":
         parabolic_filter=args.parabolic_filter,
         sector_cap=args.sector_cap, addv_min=addv_min,
         niftybees=args.niftybees, goldbees=args.goldbees, sip=args.sip,
-        no_eps=args.no_eps, beta_drift_hold=args.beta_drift_hold)
+        no_eps=args.no_eps, beta_drift_hold=args.beta_drift_hold, no_52w=args.no_52w)

@@ -25,6 +25,7 @@ def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
 
         ema20     = float(closes.ewm(span=20, adjust=False).mean().iloc[i])
         ema20_ext = round((price / ema20 - 1) * 100, 1) if ema20 > 0 else 0.0
+        high_52w  = float(closes.iloc[i - 252:i + 1].max())
 
         # Beta vs Nifty 50 (date-aligned).
         mom_beta = None
@@ -53,6 +54,7 @@ def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
             "mr_6":     ret_6m / sigma,
             "mr_3":     (ret_3m / sigma) if ret_3m is not None else None,
             "beta":     round(mom_beta, 2) if mom_beta is not None else None,
+            "high_52w": high_52w,
         }
     except Exception:
         return None

@@ -949,6 +949,7 @@ class LiveSignalsEngine:
                     "stop_pct": 0,
                     "atr_pct": 0,
                     "ema20_ext": d.get("ema20_ext"),
+                    "high_52w": d.get("high_52w"),
                 })
 
             # rank_delta injected later (overflow block) using uncapped universe ranks

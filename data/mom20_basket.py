@@ -200,6 +200,10 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
         ticker = s["ticker"]
         if ticker in current_tickers:
             continue
+        # 52-week high filter: skip new entries more than 20% below 52w high
+        high_52w = s.get("high_52w")
+        if high_52w and price_map.get(ticker, 0) < high_52w * 0.80:
+            continue
         sec = (sector_map or {}).get(ticker)
         if sec and sector_count.get(sec, 0) >= SECTOR_CAP:
             continue   # sector saturated — try next ranked stock
