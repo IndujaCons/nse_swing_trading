@@ -18,10 +18,10 @@ def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
         ret_6m  = price / float(closes.iloc[i - 126]) - 1
         ret_3m  = price / float(closes.iloc[i - 63])  - 1 if i >= 63 else None
         log_rets = np.log(closes.iloc[i - 251:i + 1] / closes.iloc[i - 252:i].values)
-        sigma = float(log_rets.std()) * np.sqrt(252)
+        sigma = float(np.std(log_rets)) * np.sqrt(252)
         if sigma <= 0.001:
             return None
-        sigma_3m = float(log_rets.iloc[-63:].std()) * np.sqrt(252) if len(log_rets) >= 63 else sigma
+        sigma_3m = float(np.std(log_rets.iloc[-63:])) * np.sqrt(252) if len(log_rets) >= 63 else sigma
 
         ema20     = float(closes.ewm(span=20, adjust=False).mean().iloc[i])
         ema20_ext = round((price / ema20 - 1) * 100, 1) if ema20 > 0 else 0.0
