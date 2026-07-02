@@ -73,16 +73,16 @@ def fetch_current_price(ticker, exchange):
 
 
 def fetch_1h_rsi(ticker, exchange, period=14):
-    """RSI(14) on 1-hour bars over past 5 days. Returns float or None."""
+    """RSI(14) on 1-hour bars using Wilder's smoothing (matches TradingView). Returns float or None."""
     try:
         sym = _yf_symbol(ticker, exchange)
-        df = yf.Ticker(sym).history(period="5d", interval="1h")
+        df = yf.Ticker(sym).history(period="1mo", interval="1h")
         closes = df["Close"].dropna()
         if len(closes) < period + 1:
             return None
         delta = closes.diff()
-        gain = delta.clip(lower=0).rolling(period).mean()
-        loss = (-delta.clip(upper=0)).rolling(period).mean()
+        gain = delta.clip(lower=0).ewm(com=period - 1, adjust=False).mean()
+        loss = (-delta.clip(upper=0)).ewm(com=period - 1, adjust=False).mean()
         rs = gain / loss
         rsi = 100 - 100 / (1 + rs)
         return float(rsi.iloc[-1])

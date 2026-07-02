@@ -506,6 +506,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     all_tickers = get_all_pit_tickers(pit_data)
     print(f"  {len(all_tickers)} unique PIT tickers across all periods")
 
+
     print("Loading EPS data...")
     eps_db = None
     if os.path.exists(EPS_FILE):
