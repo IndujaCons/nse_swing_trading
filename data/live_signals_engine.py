@@ -888,13 +888,41 @@ class LiveSignalsEngine:
                     "rs_rank": rank_i + 1,  # 1-based rank (pick #3)
                 })
 
+        # EPS filter — load data and define pass function (mirrors backtest eps_passes)
+        _eps_db = {}
+        _eps_path = os.path.join(os.path.dirname(__file__), "quarterly_eps.json")
+        if os.path.exists(_eps_path):
+            try:
+                with open(_eps_path) as _ef:
+                    _eps_db = json.load(_ef)
+            except Exception:
+                pass
+
+        def _mom20_eps_passes(ticker):
+            """True if no EPS data, or TTM annual EPS growth > 0%."""
+            if ticker not in _eps_db:
+                return True
+            annual = _eps_db[ticker].get("annual", {}) if isinstance(_eps_db[ticker], dict) else {}
+            if len(annual) < 2:
+                return True
+            sorted_ps = sorted(annual.keys(),
+                               key=lambda p: (p.split()[-1], p.split()[0]))
+            latest = annual[sorted_ps[-1]]
+            prev   = annual[sorted_ps[-2]]
+            if abs(prev) < 0.01:
+                return True
+            return (latest / prev - 1) > 0.0
+
         # Mom20: Z-score momentum ratios and pick top 20
         mom20_signals = []
         if len(mom20_raw) >= 5:
-            # Filter beta ≤ 1.2 (frozen Mom20 spec)
+            # Filter beta ≤ 1.2, then EPS gate (frozen Mom20 spec)
             mom20_eligible = [d for d in mom20_raw if d.get("beta") is None or abs(d["beta"]) <= 1.2]
             if len(mom20_eligible) < 5:
                 mom20_eligible = mom20_raw  # fallback if too few pass
+            mom20_eligible = [d for d in mom20_eligible if _mom20_eps_passes(d["ticker"])]
+            if len(mom20_eligible) < 5:
+                mom20_eligible = [d for d in mom20_raw if d.get("beta") is None or abs(d["beta"]) <= 1.2]
             # Scoring: 50% Z_12 + 50% Z_3 (frozen spec — NOT z_6)
             mr_12_arr = np.array([d["mr_12"] for d in mom20_eligible])
             mr_3_arr  = np.array([d["mr_3"]  if d.get("mr_3") is not None else d["mr_6"] for d in mom20_eligible])

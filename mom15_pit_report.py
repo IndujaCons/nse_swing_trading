@@ -34,7 +34,9 @@ BETA_MIN     = None           # None = no minimum beta filter (set to 1.2 for ov
 ADDV_MIN     = None           # None = no ADDV filter; set to e.g. 10_000_000 (₹10 Cr/day)
 ADDV_WINDOW  = 90             # trading days for median ADDV
 W12, W3          = 0.50, 0.50    # 12m + 3m, 6m dropped
-PARABOLIC_FILTER = False          # skip new entries where Ret12m>300% AND Ret3m/Ret12m>0.5
+PARABOLIC_FILTER  = False          # skip new entries where Ret12m>300% AND Ret3m/Ret12m>0.5
+NO_EPS_FILTER     = False          # skip EPS gate entirely (test flag)
+BETA_DRIFT_HOLD   = False          # held stocks with β>cap are NOT forced out (test flag)
 LONG_PD      = 252            # 12m in trading days
 SHORT_PD     = 63             # 3m in trading days
 WARMUP_DAYS  = 450            # extra history before START_DATE for warmup
@@ -409,10 +411,13 @@ def print_table(headers, rows, col_widths):
 def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None,
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
         ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False,
-        sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0):
+        sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0,
+        no_eps=False, beta_drift_hold=False):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD
     PARABOLIC_FILTER = parabolic_filter
+    NO_EPS_FILTER    = no_eps
+    BETA_DRIFT_HOLD  = beta_drift_hold
     BETA_MIN  = None  # reset each run
     ADDV_MIN  = addv_min  # None = disabled
     if start_override:
@@ -509,10 +514,12 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
 
     print("Loading EPS data...")
     eps_db = None
-    if os.path.exists(EPS_FILE):
+    if os.path.exists(EPS_FILE) and not NO_EPS_FILTER:
         with open(EPS_FILE) as f:
             eps_db = json.load(f)
         print(f"  {len(eps_db)} stocks with EPS data")
+    elif NO_EPS_FILTER:
+        print("  EPS filter disabled (--no-eps)")
 
     # Load sector map for sector cap / display
     sector_map_pit = {}
@@ -800,6 +807,10 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             ticker_rank_display = {t: r+1 for r, (t, _) in enumerate(ranked_display)}
         else:
             ticker_rank_display = ticker_rank
+
+        # Beta-drift hold: use full-universe rank (no cap) for exit decisions
+        if BETA_DRIFT_HOLD and ticker_rank_display:
+            ticker_rank_unfiltered = ticker_rank_display
 
         # Buffer rule — determine new target portfolio
         current_set = set(portfolio.keys())
@@ -1266,6 +1277,10 @@ if __name__ == "__main__":
                         help="Max holdings per sector (e.g. --sector-cap 5 limits each sector to 5 stocks)")
     parser.add_argument("--addv-min", type=float, default=None,
                         help="Min 90-day median ADDV in ₹ Cr (e.g. --addv-min 10 for ₹10 Cr/day)")
+    parser.add_argument("--no-eps", action="store_true",
+                        help="Disable EPS filter entirely (test: measure its impact)")
+    parser.add_argument("--beta-drift-hold", action="store_true",
+                        help="Held stocks with β>cap are NOT forced out (matches live basket)")
     parser.add_argument("--niftybees", action="store_true",
                         help="Always hold 5%% of portfolio in NIFTYBEES (passive ETF)")
     parser.add_argument("--goldbees", action="store_true",
@@ -1285,4 +1300,5 @@ if __name__ == "__main__":
         rebal_day=args.rebal_day, regime_filter=regime_filter,
         parabolic_filter=args.parabolic_filter,
         sector_cap=args.sector_cap, addv_min=addv_min,
-        niftybees=args.niftybees, goldbees=args.goldbees, sip=args.sip)
+        niftybees=args.niftybees, goldbees=args.goldbees, sip=args.sip,
+        no_eps=args.no_eps, beta_drift_hold=args.beta_drift_hold)
