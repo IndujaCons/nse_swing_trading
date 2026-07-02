@@ -32,11 +32,11 @@ def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
         if n50_ret_series is not None and n50_var > 1e-10:
             stock_ret_series = closes.astype(float).pct_change().iloc[i - 251:i + 1]
             common_dates = stock_ret_series.index.intersection(n50_ret_series.index)
-            if len(common_dates) >= 100:
+            if len(common_dates) > 50:
                 sr = stock_ret_series.loc[common_dates].values
                 nr = n50_ret_series.loc[common_dates].values
                 mask = ~(np.isnan(sr) | np.isnan(nr))
-                if mask.sum() >= 100:
+                if mask.sum() > 50:
                     cov_val = np.cov(sr[mask], nr[mask])
                     if cov_val.shape == (2, 2) and cov_val[1, 1] > 1e-10:
                         mom_beta = cov_val[0, 1] / cov_val[1, 1]

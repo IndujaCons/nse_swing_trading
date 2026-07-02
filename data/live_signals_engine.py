@@ -917,15 +917,16 @@ class LiveSignalsEngine:
         mom20_signals = []
         if len(mom20_raw) >= 5:
             # Filter beta ≤ 1.2, then EPS gate (frozen Mom20 spec)
-            mom20_eligible = [d for d in mom20_raw if d.get("beta") is None or abs(d["beta"]) <= 1.2]
+            # beta=None excluded — matches backtest (stocks without beta data are dropped)
+            mom20_eligible = [d for d in mom20_raw if d.get("beta") is not None and abs(d["beta"]) <= 1.2]
             if len(mom20_eligible) < 5:
                 mom20_eligible = mom20_raw  # fallback if too few pass
             mom20_eligible = [d for d in mom20_eligible if _mom20_eps_passes(d["ticker"])]
             if len(mom20_eligible) < 5:
-                mom20_eligible = [d for d in mom20_raw if d.get("beta") is None or abs(d["beta"]) <= 1.2]
+                mom20_eligible = [d for d in mom20_raw if d.get("beta") is not None and abs(d["beta"]) <= 1.2]
             # Scoring: 50% Z_12 + 50% Z_3 (frozen spec — NOT z_6)
             mr_12_arr = np.array([d["mr_12"] for d in mom20_eligible])
-            mr_3_arr  = np.array([d["mr_3"]  if d.get("mr_3") is not None else d["mr_6"] for d in mom20_eligible])
+            mr_3_arr  = np.array([d["mr_3"] for d in mom20_eligible])
             z_12 = (mr_12_arr - mr_12_arr.mean()) / mr_12_arr.std() if mr_12_arr.std() > 0 else np.zeros_like(mr_12_arr)
             z_3  = (mr_3_arr  - mr_3_arr.mean())  / mr_3_arr.std()  if mr_3_arr.std()  > 0 else np.zeros_like(mr_3_arr)
             weighted_z = 0.5 * z_12 + 0.5 * z_3
@@ -961,7 +962,7 @@ class LiveSignalsEngine:
         if len(mom20_raw) >= 5:
             capped_tickers = {s["ticker"] for s in mom20_signals}
             mr_12_uc = np.array([d["mr_12"] for d in mom20_raw])
-            mr_3_uc  = np.array([d["mr_3"] if d.get("mr_3") is not None else d["mr_6"] for d in mom20_raw])
+            mr_3_uc  = np.array([d["mr_3"] for d in mom20_raw])
             z12_uc = (mr_12_uc - mr_12_uc.mean()) / mr_12_uc.std() if mr_12_uc.std() > 0 else np.zeros_like(mr_12_uc)
             z3_uc  = (mr_3_uc  - mr_3_uc.mean())  / mr_3_uc.std()  if mr_3_uc.std()  > 0 else np.zeros_like(mr_3_uc)
             wz_uc  = 0.5 * z12_uc + 0.5 * z3_uc
@@ -994,7 +995,7 @@ class LiveSignalsEngine:
             # rank_delta for overflow: compare uncapped rank vs prev session
             if len(mom20_raw_prev) >= 5:
                 mr12_ov_p = np.array([d["mr_12"] for d in mom20_raw_prev])
-                mr3_ov_p  = np.array([d["mr_3"] if d.get("mr_3") is not None else d["mr_6"] for d in mom20_raw_prev])
+                mr3_ov_p  = np.array([d["mr_3"] for d in mom20_raw_prev])
                 z12_ov_p  = (mr12_ov_p - mr12_ov_p.mean()) / mr12_ov_p.std() if mr12_ov_p.std() > 0 else np.zeros_like(mr12_ov_p)
                 z3_ov_p   = (mr3_ov_p  - mr3_ov_p.mean())  / mr3_ov_p.std()  if mr3_ov_p.std()  > 0 else np.zeros_like(mr3_ov_p)
                 wz_ov_p   = 0.5 * z12_ov_p + 0.5 * z3_ov_p
