@@ -70,11 +70,6 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     current_qty_map = {item["ticker"]: item.get("qty", 0)
                        for item in current_portfolio.get("basket", [])}
 
-    # Entry universe: top-N_SLOTS if fresh (no positions), else buffer_in=15 for new adds
-    BUFFER_IN = N_SLOTS if not current_tickers else 15
-    entry_universe = {s["ticker"] for s in signals if s["rank"] <= BUFFER_IN}
-    hold_set = {s["ticker"] for s in signals if s["rank"] <= BUFFER_OUT}
-
     exits  = []
     holds  = []
     entries = []
@@ -168,61 +163,99 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
         else:
             holds.append({"ticker": ticker, "rank": rank, "price": price})
 
-    # Entries: rank-ordered fill with sector cap of 4.
-    #
-    # Two flavours:
-    #   • Fresh portfolio (no holds): scan signals top-down, fill up to
-    #     N_SLOTS picks. May reach past rank-15 if sector caps force
-    #     replacements (signals contains top-40 β-capped, plenty of headroom).
-    #   • Existing portfolio: only consider stocks ranked ≤ BUFFER_IN (=15)
-    #     for new entries. Stocks ranked 16-40 that are already held stay
-    #     as holds (per BUFFER_OUT=40 logic above) but are NOT eligible to
-    #     be added fresh — that would churn the portfolio against the
-    #     hysteresis spec (entry ≤ 15, hold ≤ 40, exit > 40).
+    # ── Sector cap (backtest-style) ──────────────────────────────────────────
+    # Holds sorted first by rank, then new entries by rank. The cap applies to
+    # everyone — a held stock in an over-concentrated sector is displaced and
+    # becomes an exit, its slot filled by the next uncapped ranked stock.
     SECTOR_CAP = 4
     is_fresh = not current_tickers
-    sector_count = {}
-    # Seed sector_count from holds — both stocks (via sector_map) and held
-    # ETFs (via etf_for_sector) — so existing portfolio respects the cap.
-    for h in holds:
-        sec = (h.get("etf_for_sector") if h.get("is_etf")
-               else (sector_map or {}).get(h["ticker"]))
-        if sec:
-            sector_count[sec] = sector_count.get(sec, 0) + 1
+    BUFFER_IN_ENTRY = N_SLOTS if is_fresh else 15
 
-    for s in sorted(signals, key=lambda x: x["rank"]):
-        # Existing-portfolio gate: stop at BUFFER_IN. Fresh portfolio: stop
-        # once we've collected N_SLOTS picks (may scan past rank-15).
-        if not is_fresh and s["rank"] > BUFFER_IN:
+    # ETF holds bypass stock sector cap (tracked separately via etf_for_sector)
+    etf_holds = [h for h in holds if h.get("is_etf")]
+    stock_holds = sorted([h for h in holds if not h.get("is_etf")],
+                         key=lambda h: h["rank"] if isinstance(h["rank"], int) else 9999)
+    # Combined: stock holds (by rank) then new entry candidates (by rank)
+    entry_candidates = [s for s in sorted(signals, key=lambda x: x["rank"])
+                        if s["ticker"] not in current_tickers
+                        and s["rank"] <= BUFFER_IN_ENTRY]
+    combined = [(h["ticker"], True, h) for h in stock_holds] + \
+               [(s["ticker"], False, s) for s in entry_candidates]
+
+    sec_counts = {}
+    approved_holds_set = set()
+    approved_entries_set = set()
+    displaced_hold_set = set()
+
+    for ticker, is_hold, item in combined:
+        if is_fresh and not is_hold and len(approved_entries_set) >= N_SLOTS:
             break
-        if is_fresh and len(entries) >= N_SLOTS:
-            break
-        ticker = s["ticker"]
-        if ticker in current_tickers:
-            continue
-        # 52-week high filter: skip new entries more than 20% below 52w high
-        high_52w = s.get("high_52w")
-        if high_52w and price_map.get(ticker, 0) < high_52w * 0.80:
-            continue
         sec = (sector_map or {}).get(ticker)
-        if sec and sector_count.get(sec, 0) >= SECTOR_CAP:
-            continue   # sector saturated — try next ranked stock
-        price = price_map.get(ticker, 0)
-        qty = int(math.floor(capital_per_slot / price)) if price > 0 else 0
-        entries.append({
-            "ticker":     ticker,
-            "rank":       rank_map[ticker],
-            "price":      price,
-            "qty":        qty,
-            "capital_allocated": round(qty * price, 2),
-            "score":      round(score_map.get(ticker, 0), 3),
-            "volatility": vol_map.get(ticker, 0),
-            "vol_3m":     vol_3m_map.get(ticker, 0),
-            "ema20_ext":  s.get("ema20_ext"),
-        })
-        if sec:
-            sector_count[sec] = sector_count.get(sec, 0) + 1
+        if sec is None or sec_counts.get(sec, 0) < SECTOR_CAP:
+            (approved_holds_set if is_hold else approved_entries_set).add(ticker)
+            if sec:
+                sec_counts[sec] = sec_counts.get(sec, 0) + 1
+        elif is_hold:
+            displaced_hold_set.add(ticker)
+        # dropped entries are simply skipped
 
+    # Fill freed slots (from displaced holds or sector-blocked entries) from
+    # the full signals list — mirrors backtest "fill from ranked" logic
+    filled = len(approved_holds_set) + len(approved_entries_set)
+    if filled < N_SLOTS:
+        for s in sorted(signals, key=lambda x: x["rank"]):
+            if filled >= N_SLOTS:
+                break
+            ticker = s["ticker"]
+            if ticker in approved_holds_set or ticker in approved_entries_set:
+                continue
+            if ticker in current_tickers:
+                continue
+            high_52w = s.get("high_52w")
+            if high_52w and price_map.get(ticker, 0) < high_52w * 0.80:
+                continue
+            sec = (sector_map or {}).get(ticker)
+            if sec is None or sec_counts.get(sec, 0) < SECTOR_CAP:
+                approved_entries_set.add(ticker)
+                if sec:
+                    sec_counts[sec] = sec_counts.get(sec, 0) + 1
+                filled += 1
+
+    # Displaced holds → exits with sector cap reason
+    for ticker in displaced_hold_set:
+        price = price_map.get(ticker) or (all_prices or {}).get(ticker, 0)
+        qty   = current_qty_map.get(ticker, 0)
+        rank  = next((h["rank"] for h in stock_holds if h["ticker"] == ticker), None)
+        exits.append({
+            "ticker":        ticker,
+            "rank":          rank,
+            "display_rank":  rank,
+            "current_price": price,
+            "qty":           qty,
+            "reason":        f"sector cap ≤{SECTOR_CAP} exceeded",
+        })
+
+    holds   = etf_holds + [h for h in stock_holds if h["ticker"] in approved_holds_set]
+    entries = []
+    sig_map = {s["ticker"]: s for s in signals}
+    for ticker in sorted(approved_entries_set,
+                         key=lambda t: sig_map[t]["rank"] if t in sig_map else 9999):
+        s     = sig_map.get(ticker)
+        if not s:
+            continue
+        price = price_map.get(ticker, 0)
+        qty   = int(math.floor(capital_per_slot / price)) if price > 0 else 0
+        entries.append({
+            "ticker":            ticker,
+            "rank":              rank_map[ticker],
+            "price":             price,
+            "qty":               qty,
+            "capital_allocated": round(qty * price, 2),
+            "score":             round(score_map.get(ticker, 0), 3),
+            "volatility":        vol_map.get(ticker, 0),
+            "vol_3m":            vol_3m_map.get(ticker, 0),
+            "ema20_ext":         s.get("ema20_ext"),
+        })
     entries.sort(key=lambda x: x["rank"])
 
     # ── Sector-ETF top-up (Q2) ────────────────────────────────────────────

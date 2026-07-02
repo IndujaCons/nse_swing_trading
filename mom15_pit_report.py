@@ -38,6 +38,7 @@ PARABOLIC_FILTER  = False          # skip new entries where Ret12m>300% AND Ret3
 NO_EPS_FILTER     = False          # skip EPS gate entirely (test flag)
 BETA_DRIFT_HOLD   = False          # held stocks with β>cap are NOT forced out (test flag)
 NO_52W_FILTER     = False          # skip 52-week high proximity filter (test flag)
+LIVE_SECTOR_CAP   = False          # sector cap: holds pre-approved, only entries gated (matches live basket)
 LONG_PD      = 252            # 12m in trading days
 SHORT_PD     = 63             # 3m in trading days
 WARMUP_DAYS  = 450            # extra history before START_DATE for warmup
@@ -413,13 +414,14 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
         ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False,
         sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0,
-        no_eps=False, beta_drift_hold=False, no_52w=False):
+        no_eps=False, beta_drift_hold=False, no_52w=False, live_sector_cap=False):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD, NO_52W_FILTER
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD, NO_52W_FILTER, LIVE_SECTOR_CAP
     PARABOLIC_FILTER = parabolic_filter
     NO_EPS_FILTER    = no_eps
     BETA_DRIFT_HOLD  = beta_drift_hold
     NO_52W_FILTER    = no_52w
+    LIVE_SECTOR_CAP  = live_sector_cap
     BETA_MIN  = None  # reset each run
     ADDV_MIN  = addv_min  # None = disabled
     if start_override:
@@ -860,37 +862,58 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             if pit_date:
                 day_sectors = sector_map_pit[pit_date]
                 def _get_sec(t):
-                    sec = day_sectors.get(t, {}).get("primary_sector", "OTHER")
-                    return sec
-                # Sort: held stocks first (by unfiltered rank), then new entries (by filtered rank)
-                def _sort_key(t):
-                    if t in current_set:
-                        return (0, ticker_rank_unfiltered.get(t, 9999))
-                    return (1, ticker_rank.get(t, 9999))
-                new_set_ranked = sorted(new_set, key=_sort_key)
-                sec_counts = {}
-                capped_set = set()
-                dropped_by_cap = []
-                for t in new_set_ranked:
-                    sec = _get_sec(t)
-                    if sec_counts.get(sec, 0) < sector_cap:
-                        capped_set.add(t)
-                        sec_counts[sec] = sec_counts.get(sec, 0) + 1
-                    else:
-                        dropped_by_cap.append(t)
-                if dropped_by_cap:
-                    print(f"  [SECTOR CAP≤{sector_cap}] dropped: {', '.join(dropped_by_cap)}")
-                    # Fill freed slots from next-best in ranking
+                    return day_sectors.get(t, {}).get("primary_sector", "OTHER")
+
+                if LIVE_SECTOR_CAP:
+                    # Live-style: pre-approve all holds, only gate new entries
+                    sec_counts = {}
+                    capped_set = set()
+                    for t in new_set:
+                        if t in current_set:
+                            capped_set.add(t)
+                            sec = _get_sec(t)
+                            sec_counts[sec] = sec_counts.get(sec, 0) + 1
                     for _, (t, _) in enumerate(ranked):
                         if len(capped_set) >= slots_available:
                             break
-                        if t in capped_set:
+                        if t in capped_set or t not in new_set or t in current_set:
                             continue
                         sec = _get_sec(t)
                         if sec_counts.get(sec, 0) < sector_cap:
                             capped_set.add(t)
                             sec_counts[sec] = sec_counts.get(sec, 0) + 1
-                new_set = capped_set
+                    new_set = capped_set
+                else:
+                    # Backtest-style: holds sorted first but subject to cap — weakest hold
+                    # in an over-concentrated sector can be displaced
+                    def _sort_key(t):
+                        if t in current_set:
+                            return (0, ticker_rank_unfiltered.get(t, 9999))
+                        return (1, ticker_rank.get(t, 9999))
+                    new_set_ranked = sorted(new_set, key=_sort_key)
+                    sec_counts = {}
+                    capped_set = set()
+                    dropped_by_cap = []
+                    for t in new_set_ranked:
+                        sec = _get_sec(t)
+                        if sec_counts.get(sec, 0) < sector_cap:
+                            capped_set.add(t)
+                            sec_counts[sec] = sec_counts.get(sec, 0) + 1
+                        else:
+                            dropped_by_cap.append(t)
+                    if dropped_by_cap:
+                        print(f"  [SECTOR CAP≤{sector_cap}] dropped: {', '.join(dropped_by_cap)}")
+                        # Fill freed slots from next-best in ranking
+                        for _, (t, _) in enumerate(ranked):
+                            if len(capped_set) >= slots_available:
+                                break
+                            if t in capped_set:
+                                continue
+                            sec = _get_sec(t)
+                            if sec_counts.get(sec, 0) < sector_cap:
+                                capped_set.add(t)
+                                sec_counts[sec] = sec_counts.get(sec, 0) + 1
+                    new_set = capped_set
 
         # ── REGIME CHECK (before exits and entries) ──────────────────────────
         regime_off = False
@@ -1285,6 +1308,8 @@ if __name__ == "__main__":
                         help="Held stocks with β>cap are NOT forced out (matches live basket)")
     parser.add_argument("--no-52w", action="store_true",
                         help="Disable 52-week high proximity filter (test: measure its impact)")
+    parser.add_argument("--live-sector-cap", action="store_true",
+                        help="Sector cap: pre-approve holds, only gate new entries (matches live basket)")
     parser.add_argument("--niftybees", action="store_true",
                         help="Always hold 5%% of portfolio in NIFTYBEES (passive ETF)")
     parser.add_argument("--goldbees", action="store_true",
@@ -1305,4 +1330,5 @@ if __name__ == "__main__":
         parabolic_filter=args.parabolic_filter,
         sector_cap=args.sector_cap, addv_min=addv_min,
         niftybees=args.niftybees, goldbees=args.goldbees, sip=args.sip,
-        no_eps=args.no_eps, beta_drift_hold=args.beta_drift_hold, no_52w=args.no_52w)
+        no_eps=args.no_eps, beta_drift_hold=args.beta_drift_hold, no_52w=args.no_52w,
+        live_sector_cap=args.live_sector_cap)
