@@ -9752,7 +9752,7 @@ function _renderMom20Basket(d) {
             <td style="color:var(--text-muted)">${e.display_rank ?? e.rank ?? '—'}</td>
             <td>${e.qty}</td>
             <td>${fmtP(e.current_price)}</td>
-            <td style="font-size:10px;color:var(--text-muted)">${e.reason}</td></tr>`).join('')
+            <td style="font-size:10px;color:var(--text-muted)">${e.reason}${e.rank_gt40_days > 1 ? ` <span style="color:var(--red)">(>40 for ${e.rank_gt40_days}d)</span>` : ''}</td></tr>`).join('')
         : '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:10px;">No exits</td></tr>';
 
     // Entries

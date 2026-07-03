@@ -1203,12 +1203,22 @@ class LiveSignalsEngine:
             if _existing_date and _existing_date < today:
                 data["prev_ranks"]     = _existing.get("mom20_unfiltered_ranks") or {}
                 data["prev_rank_date"] = _existing_date
+                # Update streak: +1 for each ticker still > 40, reset to 0 otherwise
+                _existing_streak = _existing.get("rank_gt40_streak") or {}
+                _today_ranks = data.get("mom20_unfiltered_ranks") or {}
+                data["rank_gt40_streak"] = {
+                    t: (_existing_streak.get(t, 0) + 1) if _today_ranks.get(t, 0) > 40 else 0
+                    for t in _today_ranks
+                }
             else:
                 data["prev_ranks"]     = _existing.get("prev_ranks") or {}
                 data["prev_rank_date"] = _existing.get("prev_rank_date") or ""
+                # Intraday re-scan: carry streak forward unchanged
+                data["rank_gt40_streak"] = _existing.get("rank_gt40_streak") or {}
         except Exception:
             data["prev_ranks"]     = {}
             data["prev_rank_date"] = ""
+            data["rank_gt40_streak"] = {}
 
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)

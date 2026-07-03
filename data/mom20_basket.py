@@ -28,7 +28,8 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
                     sector_map: dict = None,
                     top5_sectors: list = None,
                     etf_prices: dict = None,
-                    mom20_overflow: list = None) -> dict:
+                    mom20_overflow: list = None,
+                    rank_gt40_streak: dict = None) -> dict:
     """
     Compute exits + entries for a Mom20 rebalance and return basket data.
 
@@ -159,6 +160,7 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
                 "current_price": price,
                 "qty":           qty,
                 "reason":        f"rank {rank} > {BUFFER_OUT}",
+                "rank_gt40_days": (rank_gt40_streak or {}).get(ticker, 0),
             })
         else:
             holds.append({"ticker": ticker, "rank": rank, "price": price})
