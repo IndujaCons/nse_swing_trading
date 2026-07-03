@@ -9185,7 +9185,7 @@ function techmoRender(d) {
     document.getElementById('techmo-tracker-pnl').textContent  = (realizedPnl >= 0 ? '+' : '-') + fmtUSD(realizedPnl);
     document.getElementById('techmo-tracker-pnl').style.color  = realColor;
     const unrEl = document.getElementById('techmo-tracker-unreal');
-    if (unrEl) unrEl.textContent = 'Unreal: ' + (unrealPnl >= 0 ? '+' : '') + '$' + Math.abs(unrealPnl).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (unrEl) unrEl.textContent = 'Unreal: ' + (unrealPnl >= 0 ? '+' : '-') + '$' + Math.abs(unrealPnl).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     const CLUSTER_COLORS = {
         'Compute':'#60a5fa','Memory':'#34d399','Semicon':'#a78bfa',
