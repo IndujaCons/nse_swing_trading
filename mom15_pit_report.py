@@ -166,26 +166,45 @@ MON_MAP = {"Jan":1,"Feb":2,"Mar":3,"Apr":4,"May":5,"Jun":6,
            "Jul":7,"Aug":8,"Sep":9,"Oct":10,"Nov":11,"Dec":12}
 
 def eps_passes(eps_db, ticker, day):
-    """Return True if stock passes TTM EPS growth > 0%, or no data available."""
+    """True if TTM EPS (last 4Q) > prior TTM EPS (prev 4Q) as of rebalance date.
+    Falls back to annual comparison if fewer than 8 quarters available.
+    Returns True (pass-through) when data is absent or insufficient."""
     if ticker not in eps_db:
         return True
-    annual = eps_db[ticker].get("annual", {})
-    valid = {}
-    for ps, val in annual.items():
-        try:
-            parts = ps.split()
-            m, y = MON_MAP.get(parts[0], 0), int(parts[1])
-            if m == 0:
-                continue
-            avail = date(y, min(m+2,12), 28) if m <= 10 else date(y+1, m-10, 28)
-            if avail <= day:
-                valid[ps] = val
-        except Exception:
-            continue
-    if len(valid) < 2:
-        return True  # insufficient data → pass through
-    sorted_ps = sorted(valid.keys(), key=lambda p: (int(p.split()[1]), MON_MAP.get(p.split()[0],0)))
-    latest, prev = valid[sorted_ps[-1]], valid[sorted_ps[-2]]
+    d = eps_db[ticker]
+    if not isinstance(d, dict):
+        return True
+
+    def _sort_key(p):
+        parts = p.split()
+        return (int(parts[1]), MON_MAP.get(parts[0], 0))
+
+    def _avail(p):
+        parts = p.split()
+        m, y = MON_MAP.get(parts[0], 0), int(parts[1])
+        return date(y, min(m+2, 12), 28) if m <= 10 else date(y+1, m-10, 28)
+
+    # TTM path: use quarterly data
+    quarterly = d.get("quarterly", {})
+    valid_q = {ps: v for ps, v in quarterly.items()
+               if ps.split() and MON_MAP.get(ps.split()[0], 0) and _avail(ps) <= day}
+    sorted_q = sorted(valid_q.keys(), key=_sort_key)
+
+    if len(sorted_q) >= 8:
+        ttm_now  = sum(valid_q[p] for p in sorted_q[-4:])
+        ttm_prev = sum(valid_q[p] for p in sorted_q[-8:-4])
+        if abs(ttm_prev) < 0.01:
+            return True
+        return (ttm_now / ttm_prev - 1) > 0.0
+
+    # Fallback: annual comparison
+    annual = d.get("annual", {})
+    valid_a = {ps: v for ps, v in annual.items()
+               if ps.split() and MON_MAP.get(ps.split()[0], 0) and _avail(ps) <= day}
+    if len(valid_a) < 2:
+        return True
+    sorted_a = sorted(valid_a.keys(), key=_sort_key)
+    latest, prev = valid_a[sorted_a[-1]], valid_a[sorted_a[-2]]
     if abs(prev) < 0.01:
         return True
     return (latest / prev - 1) > 0.0

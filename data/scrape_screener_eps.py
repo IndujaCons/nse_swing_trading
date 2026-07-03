@@ -150,13 +150,37 @@ def main():
         return
 
     # Build scrape list: all tickers + alias lookups
+    # Skip only if quarterly data is fresh — latest quarter within 6 months of today.
+    # Old skip condition (>= 8 annual records) caused permanent staleness for mature stocks.
+    import datetime
+    cutoff = datetime.date.today() - datetime.timedelta(days=180)
+    MON_MAP_S = {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,
+                 'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12}
+
+    def _latest_quarter_date(ex):
+        quarterly = ex.get("quarterly", {}) if isinstance(ex, dict) else {}
+        if not quarterly:
+            return None
+        def qkey(p):
+            try:
+                parts = p.split(); m, y = MON_MAP_S.get(parts[0], 0), int(parts[1])
+                return datetime.date(y, m, 1) if m else datetime.date(2000, 1, 1)
+            except Exception:
+                return datetime.date(2000, 1, 1)
+        return max(quarterly.keys(), key=qkey)
+
     scrape_list = []
     for ticker in all_tickers:
-        # Skip if already have annual data with sufficient depth
         if ticker in existing:
-            ex = existing[ticker]
-            if isinstance(ex, dict) and "annual" in ex and len(ex.get("annual", {})) >= 8:
-                continue
+            lq = _latest_quarter_date(existing[ticker])
+            if lq is not None:
+                try:
+                    parts = lq.split(); m, y = MON_MAP_S.get(parts[0], 0), int(parts[1])
+                    lq_date = datetime.date(y, m, 1) if m else datetime.date(2000, 1, 1)
+                    if lq_date >= cutoff:
+                        continue  # quarterly data is fresh — skip
+                except Exception:
+                    pass
 
         # Determine Screener name
         screener_name = SCREENER_ALIASES.get(ticker, ticker)

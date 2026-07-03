@@ -899,16 +899,32 @@ class LiveSignalsEngine:
                 pass
 
         def _mom20_eps_passes(ticker):
-            """True if no EPS data, or TTM annual EPS growth > 0%."""
+            """True if TTM EPS (last 4Q) > prior TTM EPS (prev 4Q).
+            Falls back to annual if < 8 quarters. Pass-through if no data."""
             if ticker not in _eps_db:
                 return True
-            annual = _eps_db[ticker].get("annual", {}) if isinstance(_eps_db[ticker], dict) else {}
-            if len(annual) < 2:
+            d = _eps_db[ticker]
+            if not isinstance(d, dict):
                 return True
-            sorted_ps = sorted(annual.keys(),
-                               key=lambda p: (p.split()[-1], p.split()[0]))
-            latest = annual[sorted_ps[-1]]
-            prev   = annual[sorted_ps[-2]]
+            _MON = {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,
+                    'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12}
+            def _qkey(p):
+                parts = p.split()
+                return (int(parts[1]), _MON.get(parts[0], 0))
+            quarterly = d.get("quarterly", {})
+            sorted_q = sorted([p for p in quarterly if _MON.get(p.split()[0], 0)], key=_qkey)
+            if len(sorted_q) >= 8:
+                ttm_now  = sum(quarterly[p] for p in sorted_q[-4:])
+                ttm_prev = sum(quarterly[p] for p in sorted_q[-8:-4])
+                if abs(ttm_prev) < 0.01:
+                    return True
+                return (ttm_now / ttm_prev - 1) > 0.0
+            # Fallback: annual
+            annual = d.get("annual", {})
+            sorted_a = sorted([p for p in annual if _MON.get(p.split()[0], 0)], key=_qkey)
+            if len(sorted_a) < 2:
+                return True
+            latest, prev = annual[sorted_a[-1]], annual[sorted_a[-2]]
             if abs(prev) < 0.01:
                 return True
             return (latest / prev - 1) > 0.0
