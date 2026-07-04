@@ -106,16 +106,40 @@ def fetch_eps(session, ticker):
     return None
 
 
+def load_pit_nifty500():
+    """Load point-in-time Nifty 500 constituent database.
+    Returns dict: effective_date_str -> set of symbols. Dates sorted ascending.
+    """
+    pit_path = os.path.join(os.path.dirname(__file__), '..', 'nse_const', 'nifty500_pit.json')
+    if not os.path.exists(pit_path):
+        return None
+    with open(pit_path) as f:
+        raw = json.load(f)
+    return [(k, set(v)) for k, v in sorted(raw.items())]
+
+
 def main():
+    import argparse
     from momentum_backtest import load_pit_nifty200, get_all_pit_tickers
 
-    pit_data = load_pit_nifty200()
-    if pit_data is None:
-        print("ERROR: PIT data not found!")
-        return
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--universe", choices=["n200", "n500"], default="n200",
+                     help="PIT universe to scrape (default: n200)")
+    args = ap.parse_args()
+
+    if args.universe == "n500":
+        pit_data = load_pit_nifty500()
+        if pit_data is None:
+            print("ERROR: Nifty500 PIT data not found!")
+            return
+    else:
+        pit_data = load_pit_nifty200()
+        if pit_data is None:
+            print("ERROR: PIT data not found!")
+            return
 
     all_tickers = sorted(get_all_pit_tickers(pit_data))
-    print(f"PIT universe: {len(all_tickers)} unique tickers\n")
+    print(f"PIT universe ({args.universe}): {len(all_tickers)} unique tickers\n")
 
     # Load existing data (resume support)
     existing = {}

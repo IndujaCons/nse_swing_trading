@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Mom20 PIT Backtest — Monthly Rebalance Report  [--mom20, PRODUCTION]
-=====================================================================
+Mom20 PIT Backtest — 2-Monthly Rebalance Report  [--mom20, PRODUCTION]
+=======================================================================
 Capital   : ₹20L starting, equal weight across 20 slots (compounding)
 Slots     : Top 20, Nifty200 PIT universe
-Rebalance : First trading day of each month
+Rebalance : First trading day of even months (Feb/Apr/Jun/Aug/Oct/Dec)
 Scoring   : MR_12 (50%) + MR_3 (50%), Z-scored, Normalised Score
 Filters   : Beta ≤ 1.2 vs Nifty 50 | Sector cap ≤ 4
 Buffer    : Existing stays if rank ≤ 40, new enters if rank ≤ 15
@@ -12,7 +12,7 @@ Regime    : Nifty200 < SMA200 → hold all, no entries/exits
 
 Usage:
     python3 mom15_pit_report.py           # Mom15 (2-monthly, β≤1.0, EPS filter)
-    python3 mom15_pit_report.py --mom20   # Mom20 (monthly, β≤1.2, sector cap 4) ← PRODUCTION
+    python3 mom15_pit_report.py --mom20   # Mom20 (2-monthly, β≤1.2, sector cap 4) ← PRODUCTION
     python3 mom15_pit_report.py --refresh # force re-download data
 """
 
@@ -165,6 +165,16 @@ def get_all_pit_tickers(pit_data):
 MON_MAP = {"Jan":1,"Feb":2,"Mar":3,"Apr":4,"May":5,"Jun":6,
            "Jul":7,"Aug":8,"Sep":9,"Oct":10,"Nov":11,"Dec":12}
 
+def _eps_sort_key(p):
+    parts = p.split()
+    return (int(parts[1]), MON_MAP.get(parts[0], 0))
+
+def _eps_avail(p):
+    """Date a reported period (e.g. 'Mar 2023') becomes PIT-available (~2mo reporting lag)."""
+    parts = p.split()
+    m, y = MON_MAP.get(parts[0], 0), int(parts[1])
+    return date(y, min(m+2, 12), 28) if m <= 10 else date(y+1, m-10, 28)
+
 def eps_passes(eps_db, ticker, day):
     """True if TTM EPS (last 4Q) > prior TTM EPS (prev 4Q) as of rebalance date.
     Falls back to annual comparison if fewer than 8 quarters available.
@@ -175,20 +185,11 @@ def eps_passes(eps_db, ticker, day):
     if not isinstance(d, dict):
         return True
 
-    def _sort_key(p):
-        parts = p.split()
-        return (int(parts[1]), MON_MAP.get(parts[0], 0))
-
-    def _avail(p):
-        parts = p.split()
-        m, y = MON_MAP.get(parts[0], 0), int(parts[1])
-        return date(y, min(m+2, 12), 28) if m <= 10 else date(y+1, m-10, 28)
-
     # TTM path: use quarterly data
     quarterly = d.get("quarterly", {})
     valid_q = {ps: v for ps, v in quarterly.items()
-               if ps.split() and MON_MAP.get(ps.split()[0], 0) and _avail(ps) <= day}
-    sorted_q = sorted(valid_q.keys(), key=_sort_key)
+               if ps.split() and MON_MAP.get(ps.split()[0], 0) and _eps_avail(ps) <= day}
+    sorted_q = sorted(valid_q.keys(), key=_eps_sort_key)
 
     if len(sorted_q) >= 8:
         ttm_now  = sum(valid_q[p] for p in sorted_q[-4:])
@@ -200,14 +201,70 @@ def eps_passes(eps_db, ticker, day):
     # Fallback: annual comparison
     annual = d.get("annual", {})
     valid_a = {ps: v for ps, v in annual.items()
-               if ps.split() and MON_MAP.get(ps.split()[0], 0) and _avail(ps) <= day}
+               if ps.split() and MON_MAP.get(ps.split()[0], 0) and _eps_avail(ps) <= day}
     if len(valid_a) < 2:
         return True
-    sorted_a = sorted(valid_a.keys(), key=_sort_key)
+    sorted_a = sorted(valid_a.keys(), key=_eps_sort_key)
     latest, prev = valid_a[sorted_a[-1]], valid_a[sorted_a[-2]]
     if abs(prev) < 0.01:
         return True
     return (latest / prev - 1) > 0.0
+
+def eps_growth_variability(eps_db, ticker, day, years=5):
+    """Std dev of YoY annual EPS growth over the trailing `years` (NSE Quality methodology).
+    g(n) = (EPS(n)-EPS(n-1))/EPS(n-1) if EPS(n-1)>0, else -(EPS(n)-EPS(n-1))/EPS(n-1) if EPS(n-1)<0.
+    Skipped if EPS(n-1)==0. Returns None if fewer than 3 usable growth points (too little PIT data
+    to score — caller should treat as ineligible, not pass-through)."""
+    if ticker not in eps_db:
+        return None
+    d = eps_db[ticker]
+    if not isinstance(d, dict):
+        return None
+    annual = d.get("annual", {})
+    valid_a = {ps: v for ps, v in annual.items()
+               if ps.split() and MON_MAP.get(ps.split()[0], 0) and _eps_avail(ps) <= day}
+    if len(valid_a) < 2:
+        return None
+    sorted_a = sorted(valid_a.keys(), key=_eps_sort_key)[-(years+1):]  # need n-1 for the oldest growth point
+    growths = []
+    for i in range(1, len(sorted_a)):
+        prev_eps, curr_eps = valid_a[sorted_a[i-1]], valid_a[sorted_a[i]]
+        if prev_eps > 0:
+            growths.append((curr_eps - prev_eps) / prev_eps)
+        elif prev_eps < 0:
+            growths.append(-(curr_eps - prev_eps) / prev_eps)
+        # prev_eps == 0: skip, growth undefined
+    if len(growths) < 3:
+        return None
+    return float(np.std(growths))
+
+def earnings_yield(eps_db, ticker, price, day):
+    """TTM EPS / price as of rebalance date (PIT-gated), falling back to latest annual
+    EPS if fewer than 4 PIT-available quarters exist. Returns None if no usable EPS
+    data or price <= 0 — caller should pass such tickers through untouched (missing
+    data isn't evidence of being expensive)."""
+    if ticker not in eps_db or price <= 0:
+        return None
+    d = eps_db[ticker]
+    if not isinstance(d, dict):
+        return None
+    quarterly = d.get("quarterly", {})
+    valid_q = {ps: v for ps, v in quarterly.items()
+               if ps.split() and MON_MAP.get(ps.split()[0], 0) and _eps_avail(ps) <= day}
+    sorted_q = sorted(valid_q.keys(), key=_eps_sort_key)
+    ttm_eps = None
+    if len(sorted_q) >= 4:
+        ttm_eps = sum(valid_q[p] for p in sorted_q[-4:])
+    else:
+        annual = d.get("annual", {})
+        valid_a = {ps: v for ps, v in annual.items()
+                   if ps.split() and MON_MAP.get(ps.split()[0], 0) and _eps_avail(ps) <= day}
+        if valid_a:
+            sorted_a = sorted(valid_a.keys(), key=_eps_sort_key)
+            ttm_eps = valid_a[sorted_a[-1]]
+    if ttm_eps is None:
+        return None
+    return ttm_eps / price
 
 # ── DATA LOADING ──────────────────────────────────────────────────────────────
 def fetch_ticker(ticker, start, end, us_mode=False):
@@ -254,7 +311,8 @@ def load_or_fetch_data(tickers, fetch_start, fetch_end, refresh=False, cache_fil
 
 # ── SCORING ───────────────────────────────────────────────────────────────────
 def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
-                   n50_iloc, eps_db):
+                   n50_iloc, eps_db, quality_eps_db=None, variability_cap_pct=None,
+                   value_yield_floor_pct=None):
     pit_set = get_pit_universe(pit_data, day)
     raw = {}
 
@@ -331,6 +389,35 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
     if eps_db:
         raw = {t: s for t, s in raw.items() if eps_passes(eps_db, t, day)}
 
+    # Quality eligibility (MQ variant only): require usable EPS-growth-variability data
+    if quality_eps_db:
+        raw = {t: s for t, s in raw.items()
+               if eps_growth_variability(quality_eps_db, t, day) is not None}
+
+    # Quality gate (Mom20 test #2): exclude only the most earnings-erratic tail of the
+    # eligible universe as a binary filter — does NOT touch scoring/ranking, unlike the
+    # MQ500 composite blend. Missing variability data passes through untouched (no
+    # IPO-exclusion confound).
+    if variability_cap_pct is not None and eps_db:
+        var_map = {t: eps_growth_variability(eps_db, t, day) for t in raw}
+        have_var = [v for v in var_map.values() if v is not None]
+        if have_var:
+            cutoff = np.percentile(have_var, variability_cap_pct * 100)
+            raw = {t: s for t, s in raw.items()
+                   if var_map.get(t) is None or var_map[t] <= cutoff}
+
+    # Value gate: exclude the most expensive tail (lowest EPS/Price) as a binary
+    # filter — does NOT touch scoring/ranking. Momentum + value are historically
+    # complementary factors (unlike momentum + earnings-smoothness, tested and
+    # rejected above). Missing yield data passes through untouched.
+    if value_yield_floor_pct is not None and eps_db:
+        yield_map = {t: earnings_yield(eps_db, t, s["price"], day) for t, s in raw.items()}
+        have_yield = [v for v in yield_map.values() if v is not None]
+        if have_yield:
+            floor = np.percentile(have_yield, value_yield_floor_pct * 100)
+            raw = {t: s for t, s in raw.items()
+                   if yield_map.get(t) is None or yield_map[t] >= floor}
+
     min_stocks = 3 if BETA_MIN is not None else 20
     if len(raw) < min_stocks:
         return {}
@@ -349,6 +436,23 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
         wz  = W12 * z12 + W3 * z3
         s["wt_z"]      = wz
         s["norm_score"] = (1 + wz) if wz >= 0 else 1.0 / (1 - wz)
+        s["composite"]  = s["norm_score"]  # default: composite == momentum (non-MQ variants)
+
+    # Quality factor (Phase 1: EPS-growth variability only) — blends into composite.
+    # Both norm_score and quality_score use the same (1+Z)/(1-Z)^-1 transform before
+    # averaging, so weak momentum can't be masked by strong quality (see memory: the
+    # earlier rejected experiment blended raw Z-scores pre-transform and let exactly that happen).
+    if quality_eps_db:
+        variability = {t: eps_growth_variability(quality_eps_db, t, day) for t in raw}
+        var_v = np.array(list(variability.values()))
+        mu_v, sd_v = np.mean(var_v), np.std(var_v)
+        if sd_v >= 0.001:
+            for t, s in raw.items():
+                z_var = (variability[t] - mu_v) / sd_v
+                avg_z = -z_var  # lower variability = higher quality
+                quality_score = (1 + avg_z) if avg_z >= 0 else 1.0 / (1 - avg_z)
+                s["quality_score"] = quality_score
+                s["composite"] = 0.5 * s["norm_score"] + 0.5 * quality_score
 
     return raw
 
@@ -433,7 +537,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
         ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False,
         sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0,
-        no_eps=False, beta_drift_hold=False, no_52w=False, live_sector_cap=False):
+        no_eps=False, beta_drift_hold=False, no_52w=False, live_sector_cap=False,
+        dip_entry=False, mq500=False, variability_cap_pct=None, value_yield_floor_pct=None):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD, NO_52W_FILTER, LIVE_SECTOR_CAP
     PARABOLIC_FILTER = parabolic_filter
@@ -460,9 +565,12 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     elif n500:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
         label = "Mom500 — Nifty500 Universe, Monthly Rebalance, β≤1.2"
+    elif mq500:
+        MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 30, 25, 60, 1.2
+        label = "MQ500 — Nifty500 Momentum+Quality, Top30, Monthly Rebalance, β≤1.2"
     elif mom20:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
-        label = "Mom20 — Monthly Rebalance, β≤1.2"
+        label = "Mom20 — 2-Monthly Rebalance, β≤1.2"
     else:
         label = "Mom15 — Bi-monthly Rebalance, β≤1.0"
     # Default sector cap for N200/N500 mom20 variants
@@ -516,7 +624,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         bench_ticker = "SPY"
         bench_label  = "S&P 500 (SPY)"
         beta_bench_ticker = "^GSPC"
-    elif n500:
+    elif n500 or mq500:
         pit_file     = os.path.join(BASE_DIR, 'nse_const', 'nifty500_pit.json')
         cache_file   = os.path.join(BASE_DIR, 'data', 'cache', 'mom500_daily.pkl')
         bench_ticker = "^CRSLDX"
@@ -537,7 +645,15 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
 
     print("Loading EPS data...")
     eps_db = None
-    if os.path.exists(EPS_FILE) and not NO_EPS_FILTER:
+    quality_eps_db = None
+    if mq500:
+        # MQ500 drops the binary TTM-EPS-growth>0 gate — the quality factor (EPS-growth
+        # variability) subsumes it. Same JSON, loaded separately for quality scoring.
+        if os.path.exists(EPS_FILE):
+            with open(EPS_FILE) as f:
+                quality_eps_db = json.load(f)
+            print(f"  {len(quality_eps_db)} stocks with EPS data (quality factor, no binary gate)")
+    elif os.path.exists(EPS_FILE) and not NO_EPS_FILTER:
         with open(EPS_FILE) as f:
             eps_db = json.load(f)
         print(f"  {len(eps_db)} stocks with EPS data")
@@ -548,7 +664,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     sector_map_pit = {}
     sector_map_dates = []
     if not qqq and not sp500:
-        sector_map_file = SECTOR_MAP_N500 if n500 else SECTOR_MAP_N200
+        sector_map_file = SECTOR_MAP_N500 if (n500 or mq500) else SECTOR_MAP_N200
         if os.path.exists(sector_map_file):
             with open(sector_map_file) as f:
                 sector_map_pit = json.load(f)
@@ -610,6 +726,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         n200_raw["sma200"] = n200_raw["Close"].rolling(200).mean()
         # EMA(200) populated whether or not we use it — cheap to compute.
         n200_raw["ema200"] = n200_raw["Close"].ewm(span=200, adjust=False).mean()
+        n200_raw["sma20"]  = n200_raw["Close"].rolling(20).mean()
         print(f"  {len(n200_raw)} bars")
     n200_iloc = {n200_raw.index[i].date(): i for i in range(len(n200_raw))}
 
@@ -661,7 +778,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     trading_days = sorted(d for d, c in day_counts.items() if c >= 50 and d >= START_DATE)
     print(f"  Trading days in backtest: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
 
-    rebal_dates = get_rebal_dates(trading_days, monthly=(mom20 or n500 or qqq or overflow),
+    rebal_dates = get_rebal_dates(trading_days, monthly=(n500 or qqq or overflow or mq500),
                                   weekly=False, rebal_day=rebal_day)
     print(f"  Rebalance dates: {len(rebal_dates)}")
 
@@ -795,13 +912,16 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
 
         # Compute scores
         scores = compute_scores(rebal_day, stock_data, date_to_iloc, pit_data,
-                                n50_raw, n50_iloc, eps_db)
+                                n50_raw, n50_iloc, eps_db, quality_eps_db=quality_eps_db,
+                                variability_cap_pct=variability_cap_pct,
+                                value_yield_floor_pct=value_yield_floor_pct)
         if not scores:
             print(f"  ⚠ Insufficient scored stocks — skipping rebalance")
             continue
 
         # Rank all stocks (β-filtered universe — for entry and exit buffer logic)
-        ranked = sorted(scores.items(), key=lambda x: -x[1]["norm_score"])
+        # "composite" == "norm_score" (pure momentum) unless quality_eps_db is set (--mq500).
+        ranked = sorted(scores.items(), key=lambda x: -x[1]["composite"])
         ticker_rank = {t: r+1 for r, (t, _) in enumerate(ranked)}
 
         # For overflow: compute unfiltered rank (full Nifty200, no beta_min) for exits
@@ -810,11 +930,14 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             old_beta_min, old_beta_cap = BETA_MIN, BETA_CAP
             BETA_MIN, BETA_CAP = None, 1.2
             scores_unfiltered = compute_scores(rebal_day, stock_data, date_to_iloc,
-                                               pit_data, n50_raw, n50_iloc, eps_db)
+                                               pit_data, n50_raw, n50_iloc, eps_db,
+                                               quality_eps_db=quality_eps_db,
+                                               variability_cap_pct=variability_cap_pct,
+                                               value_yield_floor_pct=value_yield_floor_pct)
             BETA_MIN, BETA_CAP = old_beta_min, old_beta_cap
             if scores_unfiltered:
                 ranked_unfiltered = sorted(scores_unfiltered.items(),
-                                           key=lambda x: -x[1]["norm_score"])
+                                           key=lambda x: -x[1]["composite"])
                 ticker_rank_unfiltered = {t: r+1 for r, (t, _) in enumerate(ranked_unfiltered)}
 
         # Full-universe rank (no beta filter) — display only.
@@ -823,10 +946,13 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         old_beta_min, old_beta_cap = BETA_MIN, BETA_CAP
         BETA_MIN, BETA_CAP = None, 99.0
         scores_display = compute_scores(rebal_day, stock_data, date_to_iloc,
-                                        pit_data, n50_raw, n50_iloc, eps_db)
+                                        pit_data, n50_raw, n50_iloc, eps_db,
+                                        quality_eps_db=quality_eps_db,
+                                        variability_cap_pct=variability_cap_pct,
+                                        value_yield_floor_pct=value_yield_floor_pct)
         BETA_MIN, BETA_CAP = old_beta_min, old_beta_cap
         if scores_display:
-            ranked_display = sorted(scores_display.items(), key=lambda x: -x[1]["norm_score"])
+            ranked_display = sorted(scores_display.items(), key=lambda x: -x[1]["composite"])
             ticker_rank_display = {t: r+1 for r, (t, _) in enumerate(ranked_display)}
         else:
             ticker_rank_display = ticker_rank
@@ -834,6 +960,26 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         # Beta-drift hold: use full-universe rank (no cap) for exit decisions
         if BETA_DRIFT_HOLD and ticker_rank_display:
             ticker_rank_unfiltered = ticker_rank_display
+
+        # Dip-entry check: entries only when Nifty200 daily close < SMA20
+        # Must run before new_set building so gate is available at entry loops.
+        dip_entry_ok = True
+        if dip_entry and not n200_raw.empty and "sma20" in n200_raw.columns:
+            _de_ci = n200_iloc.get(rebal_day)
+            if _de_ci is None:
+                for off in range(1, 6):
+                    _de_ci = n200_iloc.get(rebal_day - timedelta(days=off))
+                    if _de_ci is not None:
+                        break
+            if _de_ci is not None:
+                _sma20 = n200_raw["sma20"].iloc[_de_ci]
+                _n200c = float(n200_raw["Close"].iloc[_de_ci])
+                if not pd.isna(_sma20):
+                    dip_entry_ok = _n200c < float(_sma20)
+                    if dip_entry_ok:
+                        print(f"  [DIP-ENTRY ✓] {bench_label} {_n200c:,.1f} < SMA20 {float(_sma20):,.1f} — entries allowed")
+                    else:
+                        print(f"  [DIP-ENTRY ✗] {bench_label} {_n200c:,.1f} ≥ SMA20 {float(_sma20):,.1f} — exits only, no new entries")
 
         # Buffer rule — determine new target portfolio
         current_set = set(portfolio.keys())
@@ -845,30 +991,32 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 new_set.add(t)
 
         # New entries: add if rank ≤ BUFFER_IN and not already held
+        # Gated by dip_entry_ok when --dip-entry is active
         skipped_parabolic = []
-        for r, (t, _) in enumerate(ranked):
-            if r + 1 > BUFFER_IN:
-                break
-            if t not in current_set and t not in new_set:
-                if PARABOLIC_FILTER:
-                    ret12 = scores[t].get("ret_12m", 0)
-                    ret3  = scores[t].get("ret_3m", 0)
-                    if ret12 > 3.0 and ret3 > 0 and (ret3 / ret12) > 0.5:
-                        skipped_parabolic.append((t, ret12, ret3))
-                        continue
-                new_set.add(t)
+        if not dip_entry or dip_entry_ok:
+            for r, (t, _) in enumerate(ranked):
+                if r + 1 > BUFFER_IN:
+                    break
+                if t not in current_set and t not in new_set:
+                    if PARABOLIC_FILTER:
+                        ret12 = scores[t].get("ret_12m", 0)
+                        ret3  = scores[t].get("ret_3m", 0)
+                        if ret12 > 3.0 and ret3 > 0 and (ret3 / ret12) > 0.5:
+                            skipped_parabolic.append((t, ret12, ret3))
+                            continue
+                    new_set.add(t)
 
-        # Fill remaining slots to reach slots_available from top of ranking
-        for r, (t, _) in enumerate(ranked):
-            if len(new_set) >= slots_available:
-                break
-            if t not in new_set:
-                if PARABOLIC_FILTER:
-                    ret12 = scores[t].get("ret_12m", 0)
-                    ret3  = scores[t].get("ret_3m", 0)
-                    if ret12 > 3.0 and ret3 > 0 and (ret3 / ret12) > 0.5:
-                        continue
-                new_set.add(t)
+            # Fill remaining slots to reach slots_available from top of ranking
+            for r, (t, _) in enumerate(ranked):
+                if len(new_set) >= slots_available:
+                    break
+                if t not in new_set:
+                    if PARABOLIC_FILTER:
+                        ret12 = scores[t].get("ret_12m", 0)
+                        ret3  = scores[t].get("ret_3m", 0)
+                        if ret12 > 3.0 and ret3 > 0 and (ret3 / ret12) > 0.5:
+                            continue
+                    new_set.add(t)
 
         # Cap at slots_available (keep highest-ranked)
         if len(new_set) > slots_available:
@@ -936,6 +1084,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
 
         # ── REGIME CHECK (before exits and entries) ──────────────────────────
         regime_off = False
+        n200_ci = None
         if use_regime and not n200_raw.empty:
             n200_ci = n200_iloc.get(rebal_day)
             if n200_ci is None:
@@ -952,6 +1101,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 if not pd.isna(n200_ma) and n200_close < float(n200_ma):
                     regime_off = True
                     print(f"\n  [REGIME OFF] {bench_label} {n200_close:,.1f} < {ma_label} {float(n200_ma):,.1f} — holding all, skipping exits & entries")
+
 
         # ── EMA200 EXIT FILTER ───────────────────────────────────────────────
         # If --ema200-exit set, force-exit any holding whose close < EMA(200).
@@ -1277,7 +1427,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     # Export rebalance-date NAV series for portfolio correlation analysis
     if rebal_nav:
         import os as _os
-        csv_name = "overflow_rebal.csv" if overflow else ("qqq_rebal.csv" if qqq else ("sp500_rebal.csv" if sp500 else ("mom500_rebal.csv" if n500 else ("mom20_rebal.csv" if mom20 else "mom15_rebal.csv"))))
+        csv_name = "overflow_rebal.csv" if overflow else ("qqq_rebal.csv" if qqq else ("sp500_rebal.csv" if sp500 else ("mq500_rebal.csv" if mq500 else ("mom500_rebal.csv" if n500 else ("mom20_rebal.csv" if mom20 else "mom15_rebal.csv")))))
         nav_csv = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), csv_name)
         pd.DataFrame(rebal_nav).to_csv(nav_csv, index=False)
         print(f"  Rebalance NAV exported → {csv_name} ({len(rebal_nav)} rows)")
@@ -1286,7 +1436,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Mom15 / Mom20 PIT Backtest Report")
     parser.add_argument("--refresh", action="store_true", help="Re-download price data")
     parser.add_argument("--mom20", action="store_true",
-                        help="Run Mom20 variant (top 20, monthly rebalance, β≤1.2)")
+                        help="Run Mom20 variant (top 20, 2-monthly rebalance, β≤1.2) ← PRODUCTION")
     parser.add_argument("--overflow", action="store_true",
                         help="Run Overflow variant (5-slot, β>1.2, monthly rebalance)")
     parser.add_argument("--no-regime", action="store_true",
@@ -1297,6 +1447,14 @@ if __name__ == "__main__":
                         help="Regime OFF: block entries but still execute exits")
     parser.add_argument("--n500", action="store_true",
                         help="Run Mom500 variant (Nifty500 universe, top 20, monthly, β≤1.2, Nifty500 regime)")
+    parser.add_argument("--mq500", action="store_true",
+                        help="Run MQ500 variant (Nifty500 Momentum+Quality, top 30, monthly, β≤1.2, Nifty500 regime, research)")
+    parser.add_argument("--quality-variability-cap", type=float, default=None,
+                        help="Exclude the most earnings-erratic tail as a binary gate (does not affect ranking). "
+                             "E.g. 0.85 excludes the top 15%% by 5yr EPS-growth variability among eligible stocks.")
+    parser.add_argument("--value-yield-floor", type=float, default=None,
+                        help="Exclude the most expensive tail (lowest TTM EPS/Price) as a binary gate "
+                             "(does not affect ranking). E.g. 0.15 excludes the cheapest-yield (most expensive) 15%%.")
     parser.add_argument("--sp500", action="store_true",
                         help="Run on S&P 500 PIT universe (monthly, no beta filter)")
     parser.add_argument("--qqq", action="store_true",
@@ -1335,6 +1493,8 @@ if __name__ == "__main__":
                         help="Always hold 5%% of portfolio in GOLDBEES (gold ETF)")
     parser.add_argument("--sip", type=float, default=0,
                         help="Inject this amount (₹) of fresh capital at every rebalance (e.g. --sip 100000 for ₹1L/mo)")
+    parser.add_argument("--dip-entry", action="store_true",
+                        help="Entries only when Nifty200 daily close < SMA20 (exits always proceed)")
     args = parser.parse_args()
     # `--no-regime` (legacy) takes precedence and forces 'none'.
     regime_filter = "none" if args.no_regime else args.regime
@@ -1350,4 +1510,6 @@ if __name__ == "__main__":
         sector_cap=args.sector_cap, addv_min=addv_min,
         niftybees=args.niftybees, goldbees=args.goldbees, sip=args.sip,
         no_eps=args.no_eps, beta_drift_hold=args.beta_drift_hold, no_52w=args.no_52w,
-        live_sector_cap=args.live_sector_cap)
+        live_sector_cap=args.live_sector_cap, dip_entry=args.dip_entry, mq500=args.mq500,
+        variability_cap_pct=args.quality_variability_cap,
+        value_yield_floor_pct=args.value_yield_floor)
