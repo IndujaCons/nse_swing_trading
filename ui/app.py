@@ -5945,7 +5945,7 @@ def _bt_build_args(payload: dict) -> tuple:
         args.append("--ema200-exit")
     if (payload.get("rebal_day") or "").lower() == "mid":
         args += ["--rebal-day", "mid"]
-    # Regime filter: "none" | "sma200" (default) | "ema200"
+    # Regime filter: "none" | "sma200" | "ema200" (default, matches mom15_pit_report.py)
     regime = (payload.get("regime") or "").lower()
     if regime in ("none", "sma200", "ema200"):
         args += ["--regime", regime]

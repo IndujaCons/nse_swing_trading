@@ -617,12 +617,12 @@ class LiveSignalsEngine:
             if bi >= 123 + 28 and float(bc.iloc[bi - 28 - 123]) > 0:
                 bench_ret123_28ago = (float(bc.iloc[bi - 28]) / float(bc.iloc[bi - 28 - 123]) - 1) * 100
 
-        # Mom20 regime: Nifty200 >= SMA200 → ON (hold all, no rebalancing when OFF)
+        # Mom20 regime: Nifty200 >= EMA200 → ON (hold all, no rebalancing when OFF)
         mom20_regime_on = False
         if not bench_raw.empty and len(bench_raw) >= 200:
             n200_close = float(bench_raw["Close"].iloc[-1])
-            n200_sma200 = float(bench_raw["Close"].rolling(200).mean().iloc[-1])
-            if not pd.isna(n200_sma200) and n200_close >= n200_sma200:
+            n200_ema200 = float(bench_raw["Close"].ewm(span=200, adjust=False).mean().iloc[-1])
+            if not pd.isna(n200_ema200) and n200_close >= n200_ema200:
                 mom20_regime_on = True
 
         # Nifty regime: early_10w_2 mode (OFF below 20w, early ON: above 10w + 10w rising 2wk)

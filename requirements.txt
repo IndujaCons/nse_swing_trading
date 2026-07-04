@@ -9,3 +9,4 @@ peewee>=3.19
 kiteconnect>=5.0
 gunicorn>=22.0
 anthropic
+hmmlearn>=0.3

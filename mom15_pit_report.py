@@ -6,9 +6,9 @@ Capital   : ₹20L starting, equal weight across 20 slots (compounding)
 Slots     : Top 20, Nifty200 PIT universe
 Rebalance : First trading day of even months (Feb/Apr/Jun/Aug/Oct/Dec)
 Scoring   : MR_12 (50%) + MR_3 (50%), Z-scored, Normalised Score
-Filters   : Beta ≤ 1.2 vs Nifty 50 | Sector cap ≤ 4
+Filters   : Beta ≤ 1.2 vs regime benchmark (Nifty200) | Sector cap ≤ 4
 Buffer    : Existing stays if rank ≤ 40, new enters if rank ≤ 15
-Regime    : Nifty200 < SMA200 → hold all, no entries/exits
+Regime    : Nifty200 < EMA200 → hold all, no entries/exits
 
 Usage:
     python3 mom15_pit_report.py           # Mom15 (2-monthly, β≤1.0, EPS filter)
@@ -266,6 +266,38 @@ def earnings_yield(eps_db, ticker, price, day):
         return None
     return ttm_eps / price
 
+# ── REGIME (HMM) ──────────────────────────────────────────────────────────────
+def hmm_bear_probability(closes, min_obs=500, window=1500, n_restarts=3):
+    """Fit a 2-state Gaussian HMM on trailing daily log returns and return the
+    filtered probability that the most recent observation is in the 'bear' state
+    (the state with the lower fitted mean return). Returns None if there isn't
+    enough history to fit reliably — caller should treat as no signal (don't
+    restrict). PIT-safe: only uses `closes` up to and including the rebalance day,
+    trailing `window` bars."""
+    from hmmlearn.hmm import GaussianHMM
+    closes = np.asarray(closes[-window:], dtype=float)
+    if len(closes) < min_obs:
+        return None
+    log_ret = np.diff(np.log(np.maximum(closes, 0.01))).reshape(-1, 1)
+
+    best_model, best_score = None, -np.inf
+    for seed in range(n_restarts):
+        try:
+            model = GaussianHMM(n_components=2, covariance_type="diag",
+                                 n_iter=200, random_state=seed)
+            model.fit(log_ret)
+            score = model.score(log_ret)
+            if score > best_score:
+                best_score, best_model = score, model
+        except Exception:
+            continue
+    if best_model is None:
+        return None
+
+    bear_state = int(np.argmin(best_model.means_.flatten()))
+    posteriors = best_model.predict_proba(log_ret)
+    return float(posteriors[-1, bear_state])
+
 # ── DATA LOADING ──────────────────────────────────────────────────────────────
 def fetch_ticker(ticker, start, end, us_mode=False):
     if us_mode:
@@ -355,7 +387,7 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
         mr_12 = ret_12 / sigma
         mr_3  = ret_3  / sigma
 
-        # Beta vs Nifty 50
+        # Beta vs regime benchmark (nifty50_data/n50_iloc now holds the regime-benchmark series)
         beta = None
         n50_ci = n50_iloc.get(day)
         if n50_ci is None:
@@ -535,10 +567,11 @@ def print_table(headers, rows, col_widths):
 # ── MAIN BACKTEST ─────────────────────────────────────────────────────────────
 def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_override=None, regime_exit=False, n500=False, qqq=False, sp500=False, start_override=None,
         top_n_override=None, buffer_in_override=None, buffer_out_override=None,
-        ema200_exit=False, rebal_day="start", regime_filter="sma200", parabolic_filter=False,
+        ema200_exit=False, rebal_day="start", regime_filter="ema200", parabolic_filter=False,
         sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0,
         no_eps=False, beta_drift_hold=False, no_52w=False, live_sector_cap=False,
-        dip_entry=False, mq500=False, variability_cap_pct=None, value_yield_floor_pct=None):
+        dip_entry=False, mq500=False, variability_cap_pct=None, value_yield_floor_pct=None,
+        monthly_override=False):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
     global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD, NO_52W_FILTER, LIVE_SECTOR_CAP
     PARABOLIC_FILTER = parabolic_filter
@@ -554,20 +587,20 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     if overflow:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT = 5, 5, 40
         BETA_CAP, BETA_MIN = 99.0, 1.2   # β>1.2 entry only; exit uses full universe
-        label = "Overflow — 5-slot β>1.2, Monthly, Top-40 Exit"
+        label = "Overflow — 5-slot β>1.2, 2-Monthly, Top-40 Exit"
         use_regime = False  # no regime filter for overflow
     elif qqq:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 10, 7, 20, 99.0  # no beta cap for US
-        label = "MomQQQ — Nasdaq-100 Universe, Top10, Monthly Rebalance, No β filter"
+        label = "MomQQQ — Nasdaq-100 Universe, Top10, 2-Monthly Rebalance, No β filter"
     elif sp500:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 99.0  # no beta cap for US
         label = "MomSP500 — S&P 500 Universe, 2-Month Rebalance, No β filter"
     elif n500:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
-        label = "Mom500 — Nifty500 Universe, Monthly Rebalance, β≤1.2"
+        label = "Mom500 — Nifty500 Universe, 2-Monthly Rebalance, β≤1.2"
     elif mq500:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 30, 25, 60, 1.2
-        label = "MQ500 — Nifty500 Momentum+Quality, Top30, Monthly Rebalance, β≤1.2"
+        label = "MQ500 — Nifty500 Momentum+Quality, Top30, 2-Monthly Rebalance, β≤1.2"
     elif mom20:
         MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP = 20, 15, 40, 1.2
         label = "Mom20 — 2-Monthly Rebalance, β≤1.2"
@@ -587,11 +620,12 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     if buffer_out_override is not None:
         BUFFER_OUT = buffer_out_override
     # `regime_filter` resolves which moving-average the regime check uses:
-    #   'sma200' (default) — original behaviour, Nifty200 < SMA200 → off
-    #   'ema200'           — uses EMA(200) instead (slightly more responsive)
+    #   'sma200'           — Nifty200 < SMA200 → off (legacy; statistically tied with ema200)
+    #   'ema200' (default) — Nifty200 < EMA200 → off
+    #   'hmm'              — 2-state Gaussian HMM on trailing daily returns (research)
     #   'none'             — no regime filter at all (overrides use_regime)
-    if regime_filter not in ("sma200", "ema200", "none"):
-        regime_filter = "sma200"
+    if regime_filter not in ("sma200", "ema200", "hmm", "none"):
+        regime_filter = "ema200"
     if regime_filter == "none":
         use_regime = False
     regime_label = ("Regime ON [" + regime_filter.upper() + "]"
@@ -617,25 +651,24 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         cache_file   = os.path.join(BASE_DIR, 'data', 'cache', 'qqq_daily.pkl')
         bench_ticker = "QQQ"
         bench_label  = "QQQ (Nasdaq-100)"
-        beta_bench_ticker = "^NDX"
     elif sp500:
         pit_file     = os.path.join(BASE_DIR, 'nse_const', 'sp500_pit.json')
         cache_file   = os.path.join(BASE_DIR, 'data', 'cache', 'sp500_daily.pkl')
         bench_ticker = "SPY"
         bench_label  = "S&P 500 (SPY)"
-        beta_bench_ticker = "^GSPC"
     elif n500 or mq500:
         pit_file     = os.path.join(BASE_DIR, 'nse_const', 'nifty500_pit.json')
         cache_file   = os.path.join(BASE_DIR, 'data', 'cache', 'mom500_daily.pkl')
         bench_ticker = "^CRSLDX"
         bench_label  = "Nifty 500"
-        beta_bench_ticker = "^NSEI"
     else:
         pit_file     = PIT_FILE
         cache_file   = CACHE_FILE
         bench_ticker = "^CNX200"
         bench_label  = "Nifty 200"
-        beta_bench_ticker = "^NSEI"
+    # Beta is now computed against the same benchmark used for the regime filter
+    # (previously always Nifty 50 / ^NSEI, regardless of universe).
+    beta_bench_ticker = bench_ticker
 
     print("Loading PIT universe...")
     pit_data = load_pit(pit_file)
@@ -689,7 +722,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     stock_data = load_or_fetch_data(all_tickers, fetch_start, fetch_end, refresh, cache_file=cache_file, us_mode=us_mode)
 
     # Fetch benchmark index for beta (retry up to 3 times on transient yfinance errors)
-    beta_label = "Nasdaq-100 (^NDX)" if qqq else ("S&P 500 (^GSPC)" if sp500 else "Nifty 50")
+    # Same series as the regime benchmark — see beta_bench_ticker assignment above.
+    beta_label = bench_label
     print(f"Fetching {beta_label} (beta)...")
     import time as _time
     n50_raw = pd.DataFrame()
@@ -778,7 +812,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     trading_days = sorted(d for d, c in day_counts.items() if c >= 50 and d >= START_DATE)
     print(f"  Trading days in backtest: {len(trading_days)} ({trading_days[0]} → {trading_days[-1]})")
 
-    rebal_dates = get_rebal_dates(trading_days, monthly=(n500 or qqq or overflow or mq500),
+    # 2-monthly is the default cadence for every variant; --monthly forces the old
+    # monthly cadence for comparison.
+    rebal_dates = get_rebal_dates(trading_days, monthly=monthly_override,
                                   weekly=False, rebal_day=rebal_day)
     print(f"  Rebalance dates: {len(rebal_dates)}")
 
@@ -794,17 +830,18 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     _twr_data = []            # (date, sub_period_return) for year-by-year TWR
     rebal_nav = []            # rebalance-date NAV snapshots for portfolio correlation analysis
 
+    _cadence_label = "Monthly Rebalance" if monthly_override else "2-Month Rebalance"
     if overflow:
-        banner = f"  OVERFLOW PIT BACKTEST  |  NAV/5 slot  |  Monthly Rebalance  |  Beta>1.2 Entry  |  Top-40 Exit (full universe)  |  {regime_label}"
+        banner = f"  OVERFLOW PIT BACKTEST  |  NAV/5 slot  |  {_cadence_label}  |  Beta>1.2 Entry  |  Top-40 Exit (full universe)  |  {regime_label}"
     elif qqq:
-        banner = f"  MOMQQQ PIT BACKTEST  |  NAV/10 slot  |  Monthly Rebalance  |  Nasdaq-100 Universe  |  No Beta Filter  |  {regime_label}"
+        banner = f"  MOMQQQ PIT BACKTEST  |  NAV/10 slot  |  {_cadence_label}  |  Nasdaq-100 Universe  |  No Beta Filter  |  {regime_label}"
     elif sp500:
-        banner = f"  MOMSP500 PIT BACKTEST  |  NAV/20 slot  |  2-Month Rebalance  |  S&P 500 Universe  |  No Beta Filter  |  {regime_label}"
+        banner = f"  MOMSP500 PIT BACKTEST  |  NAV/20 slot  |  {_cadence_label}  |  S&P 500 Universe  |  No Beta Filter  |  {regime_label}"
     elif n500:
-        banner = f"  MOM500 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Nifty500 Universe  |  Beta≤1.2  |  {regime_label}"
+        banner = f"  MOM500 PIT BACKTEST  |  NAV/20 slot  |  {_cadence_label}  |  Nifty500 Universe  |  Beta≤1.2  |  {regime_label}"
     elif mom20:
         _pb_tag = ("  |  +" + "+".join(f"{p['label']} {p['alloc']*100:.0f}%" for p in passive_list)) if passive_list else ""
-        banner = f"  MOM20 PIT BACKTEST  |  NAV/20 slot  |  Monthly Rebalance  |  Beta≤1.2  |  {regime_label}{_pb_tag}"
+        banner = f"  MOM20 PIT BACKTEST  |  NAV/20 slot  |  {_cadence_label}  |  Beta≤1.2  |  {regime_label}{_pb_tag}"
     else:
         banner = f"  MOM15 PIT BACKTEST  |  NAV/15 slot  |  2-Month Rebalance  |  Beta≤1.0  |  {regime_label}"
     print()
@@ -1092,7 +1129,12 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                     n200_ci = n200_iloc.get(rebal_day - timedelta(days=off))
                     if n200_ci is not None:
                         break
-            if n200_ci is not None:
+            if n200_ci is not None and regime_filter == "hmm":
+                bear_prob = hmm_bear_probability(n200_raw["Close"].values[:n200_ci+1])
+                if bear_prob is not None and bear_prob > 0.5:
+                    regime_off = True
+                    print(f"\n  [REGIME OFF] {bench_label} HMM bear-state prob {bear_prob:.2f} — holding all, skipping exits & entries")
+            elif n200_ci is not None:
                 n200_close = float(n200_raw["Close"].iloc[n200_ci])
                 # Pick MA column based on regime_filter ("sma200" | "ema200").
                 ma_col = "ema200" if regime_filter == "ema200" else "sma200"
@@ -1440,7 +1482,7 @@ if __name__ == "__main__":
     parser.add_argument("--overflow", action="store_true",
                         help="Run Overflow variant (5-slot, β>1.2, monthly rebalance)")
     parser.add_argument("--no-regime", action="store_true",
-                        help="Disable regime filter (allow entries even when Nifty200 < SMA200)")
+                        help="Disable regime filter (allow entries even when Nifty200 < EMA200)")
     parser.add_argument("--beta-cap", type=float, default=None,
                         help="Override beta cap (e.g. 1.35)")
     parser.add_argument("--regime-exit", action="store_true",
@@ -1455,6 +1497,8 @@ if __name__ == "__main__":
     parser.add_argument("--value-yield-floor", type=float, default=None,
                         help="Exclude the most expensive tail (lowest TTM EPS/Price) as a binary gate "
                              "(does not affect ranking). E.g. 0.15 excludes the cheapest-yield (most expensive) 15%%.")
+    parser.add_argument("--monthly", action="store_true",
+                        help="Force monthly rebalance (default for every variant is now 2-monthly)")
     parser.add_argument("--sp500", action="store_true",
                         help="Run on S&P 500 PIT universe (monthly, no beta filter)")
     parser.add_argument("--qqq", action="store_true",
@@ -1471,8 +1515,9 @@ if __name__ == "__main__":
                         help="Exit a holding if close < EMA(200) at rebalance")
     parser.add_argument("--rebal-day", choices=["start", "mid"], default="start",
                         help="Rebalance day-of-month: 'start' (1st trading day) or 'mid' (15th or next trading day)")
-    parser.add_argument("--regime", choices=["none", "sma200", "ema200"], default="sma200",
-                        help="Regime filter on the benchmark: 'none' (no filter), 'sma200' (default — Nifty200 < SMA200 → off), 'ema200' (uses EMA(200) instead)")
+    parser.add_argument("--regime", choices=["none", "sma200", "ema200", "hmm"], default="ema200",
+                        help="Regime filter on the benchmark: 'none' (no filter), 'ema200' (default — Nifty200 < EMA200 → off), "
+                             "'sma200' (legacy, statistically tied with ema200), 'hmm' (2-state Gaussian HMM on trailing returns, research)")
     parser.add_argument("--parabolic-filter", action="store_true",
                         help="Skip new entries where Ret12m > 300%% AND Ret3m/Ret12m > 0.5 (blowoff top)")
     parser.add_argument("--sector-cap", type=int, default=None,
@@ -1512,4 +1557,4 @@ if __name__ == "__main__":
         no_eps=args.no_eps, beta_drift_hold=args.beta_drift_hold, no_52w=args.no_52w,
         live_sector_cap=args.live_sector_cap, dip_entry=args.dip_entry, mq500=args.mq500,
         variability_cap_pct=args.quality_variability_cap,
-        value_yield_floor_pct=args.value_yield_floor)
+        value_yield_floor_pct=args.value_yield_floor, monthly_override=args.monthly)
