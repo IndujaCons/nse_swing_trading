@@ -8,9 +8,13 @@ no IO, no side effects.
 import numpy as np
 
 
-def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
+def compute_mom20_features(ticker, closes, i, price, bench_ret_series, bench_var):
     """Returns the mom20_raw entry for one ticker, or None if insufficient
-    data / degenerate σ. Math identical to the original inline block."""
+    data / degenerate σ. Math identical to the original inline block.
+
+    `bench_ret_series`/`bench_var` should be the regime benchmark's (Nifty200)
+    daily returns, matching the backtest (mom15_pit_report.py) — beta is
+    measured against the same universe Mom20 trades, not a fixed Nifty50."""
     if i < 252:
         return None
     try:
@@ -27,14 +31,14 @@ def compute_mom20_features(ticker, closes, i, price, n50_ret_series, n50_var):
         ema20_ext = round((price / ema20 - 1) * 100, 1) if ema20 > 0 else 0.0
         high_52w  = float(closes.iloc[i - 252:i + 1].max())
 
-        # Beta vs Nifty 50 (date-aligned).
+        # Beta vs regime benchmark (Nifty200), date-aligned.
         mom_beta = None
-        if n50_ret_series is not None and n50_var > 1e-10:
+        if bench_ret_series is not None and bench_var > 1e-10:
             stock_ret_series = closes.astype(float).pct_change().iloc[i - 251:i + 1]
-            common_dates = stock_ret_series.index.intersection(n50_ret_series.index)
+            common_dates = stock_ret_series.index.intersection(bench_ret_series.index)
             if len(common_dates) > 50:
                 sr = stock_ret_series.loc[common_dates].values
-                nr = n50_ret_series.loc[common_dates].values
+                nr = bench_ret_series.loc[common_dates].values
                 mask = ~(np.isnan(sr) | np.isnan(nr))
                 if mask.sum() > 50:
                     cov_val = np.cov(sr[mask], nr[mask])

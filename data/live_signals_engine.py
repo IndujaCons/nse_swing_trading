@@ -648,7 +648,7 @@ class LiveSignalsEngine:
                         if e10_now > e10_1w > e10_2w:
                             nifty_regime_on = True
 
-        # Precompute Nifty 50 daily returns (date-indexed for alignment)
+        # Precompute Nifty 50 daily returns (date-indexed for alignment) — used by Alpha20
         n50_ret_series = None
         n50_market_rets = None
         n50_rm = 0.0
@@ -662,6 +662,18 @@ class LiveSignalsEngine:
             n50_market_rets = n50_ret_series.values
             n50_rm = float(np.mean(n50_market_rets))
             n50_var = float(np.var(n50_market_rets))
+
+        # Precompute Nifty 200 daily returns — Mom20 beta reference (matches backtest:
+        # beta measured vs the regime benchmark, not a fixed Nifty50). Alpha20 keeps
+        # n50_ret_series/n50_var above; it's a dropped strategy, left untouched.
+        bench_ret_series = None
+        bench_var = 0.0
+        if not bench_raw.empty and len(bench_raw) >= 253:
+            bench_close_series = bench_raw["Close"].astype(float)
+            if bench_close_series.index.tz is not None:
+                bench_close_series.index = bench_close_series.index.tz_localize(None)
+            bench_ret_series = bench_close_series.pct_change().iloc[-252:]
+            bench_var = float(np.var(bench_ret_series.values))
 
         j_signals = []
         t_signals = []
@@ -769,12 +781,12 @@ class LiveSignalsEngine:
 
             # Mom20: raw momentum features for cross-sectional Z-score after loop
             mom_feat = compute_mom20_features(
-                ticker, closes, i, price, n50_ret_series, n50_var)
+                ticker, closes, i, price, bench_ret_series, bench_var)
             if mom_feat is not None:
                 mom20_raw.append(mom_feat)
             if i >= 253:  # previous session features for rank-change Δ
                 prev_feat = compute_mom20_features(
-                    ticker, closes, i - 1, float(closes.iloc[i - 1]), n50_ret_series, n50_var)
+                    ticker, closes, i - 1, float(closes.iloc[i - 1]), bench_ret_series, bench_var)
                 if prev_feat is not None:
                     mom20_raw_prev.append(prev_feat)
 
