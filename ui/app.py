@@ -2535,15 +2535,20 @@ def _get_rrg_data(tail_weeks=12, force_refresh=False):
     if not force_refresh and fresh:
         return _RRG_CACHE["data"]
 
-    def _compute():
+    def _compute(refresh_prices=False):
         from data.sector_zscore_backtest import fetch_all
         from data.rrg_engine import compute_rrg
-        closes, _opens, bench = fetch_all(refresh=False)
+        # refresh_prices=True re-scans for newly-available data (e.g. a
+        # synthetic index just built by synth_sector_index.py) instead of
+        # trusting today's already-written price cache — otherwise a sector
+        # that had no data at the FIRST request of the day stays missing for
+        # the rest of the day no matter how many times the user clicks Refresh.
+        closes, _opens, bench = fetch_all(refresh=refresh_prices)
         return compute_rrg(closes, bench, tail_weeks=tail_weeks)
 
     def _do_refresh():
         try:
-            payload = _compute()
+            payload = _compute(refresh_prices=False)
             _RRG_CACHE["data"] = payload
             _RRG_CACHE["timestamp"] = _t.time()
             _RRG_CACHE["tail_weeks"] = tail_weeks
@@ -2558,12 +2563,13 @@ def _get_rrg_data(tail_weeks=12, force_refresh=False):
             threading.Thread(target=_do_refresh, daemon=True).start()
         return _RRG_CACHE["data"]
 
-    # No cached data at all (cold start) — must block once.
+    # No cached data at all (cold start), or the user explicitly hit Refresh
+    # — must block once. Only an explicit force_refresh re-scans prices.
     if _rrg_refresh_lock.acquire(blocking=True, timeout=90):
         try:
             if _RRG_CACHE["data"] is not None and not force_refresh:
                 return _RRG_CACHE["data"]
-            payload = _compute()
+            payload = _compute(refresh_prices=force_refresh)
             _RRG_CACHE["data"] = payload
             _RRG_CACHE["timestamp"] = _t.time()
             _RRG_CACHE["tail_weeks"] = tail_weeks
