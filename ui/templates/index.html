@@ -1396,6 +1396,7 @@
                 <button class="strategy-tab" onclick="switchStrategy('backtest')">Backtest</button>
                 <button class="strategy-tab" onclick="switchStrategy('techmo')">TechMo</button>
                 <button class="strategy-tab" onclick="switchStrategy('summary')">Summary</button>
+                <button class="strategy-tab" onclick="switchStrategy('rrg')">RRG</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2966,6 +2967,26 @@
                 <div id="summary-body"></div>
             </div>
 
+            <!-- RRG (Relative Rotation Graph) Tab -->
+            <div id="rrg-panels" class="hidden" style="padding:24px;">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                    <span style="font-size:14px;font-weight:800;color:var(--text-primary);letter-spacing:1px;">RELATIVE ROTATION GRAPH — NSE Sectors vs Nifty 200</span>
+                    <button onclick="rrgLoad(true)"
+                        style="display:flex;align-items:center;gap:5px;padding:5px 14px;font-size:11px;font-weight:600;
+                               background:var(--bg-tertiary);color:var(--text-secondary);
+                               border:1px solid var(--border-color);border-radius:6px;cursor:pointer;
+                               transition:background 0.15s;"
+                        onmouseover="this.style.background='var(--bg-hover)'"
+                        onmouseout="this.style.background='var(--bg-tertiary)'">
+                        <span style="font-size:13px;">↻</span> Refresh
+                    </button>
+                    <span id="rrg-status" style="font-size:11px;color:var(--text-muted);"></span>
+                </div>
+                <div style="position:relative;height:640px;max-width:900px;margin:0 auto;">
+                    <canvas id="rrg-chart"></canvas>
+                </div>
+            </div>
+
             <!-- Note modal (shared for Mom20 position notes) -->
             <div id="note-modal" style="display:none;position:fixed;z-index:9999;background:var(--bg-white);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);padding:14px;width:320px;">
                 <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:8px;">POSITION NOTE — <span id="note-modal-ticker"></span></div>
@@ -3893,6 +3914,7 @@
             else if (strategy === 'backtest') tabs[4].classList.add('active');
             else if (strategy === 'techmo')  tabs[5].classList.add('active');
             else if (strategy === 'summary') tabs[6].classList.add('active');
+            else if (strategy === 'rrg')     tabs[7].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -3906,6 +3928,7 @@
             document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
             document.getElementById('techmo-panels').classList.toggle('hidden', strategy !== 'techmo');
             document.getElementById('summary-panels').classList.toggle('hidden', strategy !== 'summary');
+            document.getElementById('rrg-panels').classList.toggle('hidden', strategy !== 'rrg');
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
             document.getElementById('rs-settings').classList.toggle('hidden', strategy !== 'rs');
@@ -3932,6 +3955,9 @@
             }
             if (strategy === 'summary') {
                 loadSummary();
+            }
+            if (strategy === 'rrg') {
+                rrgLoad();
             }
         }
 
@@ -10686,6 +10712,112 @@ async function loadSummary() {
         renderSummary();
         status.textContent = 'Updated ' + new Date().toLocaleTimeString();
     } catch(e) {
+        status.textContent = 'Refresh failed — try again';
+    }
+}
+
+// ============ RRG (Relative Rotation Graph) ============
+let _rrgChart = null;
+let _rrgPluginRegistered = false;
+
+function _rrgRegisterPlugin() {
+    if (_rrgPluginRegistered) return;
+    _rrgPluginRegistered = true;
+    Chart.register({
+        id: 'rrgQuadrant',
+        // Quadrant backgrounds + 100/100 crosshair + corner captions, drawn
+        // behind the scatter datasets.
+        beforeDatasetsDraw(chart) {
+            if (chart.canvas.id !== 'rrg-chart') return;
+            const {ctx, chartArea: a, scales} = chart;
+            if (!a) return;
+            const px = scales.x.getPixelForValue(100), py = scales.y.getPixelForValue(100);
+            ctx.save();
+            const fill = (x0, y0, x1, y1, c) => { ctx.fillStyle = c; ctx.fillRect(x0, y0, x1 - x0, y1 - y0); };
+            fill(px, a.top, a.right, py, 'rgba(39,174,96,0.07)');     // top-right    Leading
+            fill(px, py, a.right, a.bottom, 'rgba(241,196,15,0.07)'); // bottom-right Weakening
+            fill(a.left, py, px, a.bottom, 'rgba(231,76,60,0.07)');   // bottom-left  Lagging
+            fill(a.left, a.top, px, py, 'rgba(52,152,219,0.07)');     // top-left     Improving
+            ctx.strokeStyle = 'rgba(128,128,128,0.5)'; ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom);
+            ctx.moveTo(a.left, py); ctx.lineTo(a.right, py);
+            ctx.stroke();
+            ctx.setLineDash([]); ctx.font = '700 11px sans-serif';
+            ctx.fillStyle = 'rgba(39,174,96,0.85)';  ctx.textAlign = 'right'; ctx.fillText('LEADING',    a.right - 6, a.top + 14);
+            ctx.fillStyle = 'rgba(241,196,15,0.95)'; ctx.fillText('WEAKENING', a.right - 6, a.bottom - 6);
+            ctx.fillStyle = 'rgba(231,76,60,0.85)';  ctx.textAlign = 'left';  ctx.fillText('LAGGING',    a.left + 6,  a.bottom - 6);
+            ctx.fillStyle = 'rgba(52,152,219,0.85)'; ctx.fillText('IMPROVING', a.left + 6,  a.top + 14);
+            ctx.restore();
+        },
+        // Label each sector at its latest (largest) point.
+        afterDatasetsDraw(chart) {
+            if (chart.canvas.id !== 'rrg-chart') return;
+            const {ctx, scales} = chart;
+            ctx.save(); ctx.font = '700 10px sans-serif'; ctx.textAlign = 'left';
+            chart.data.datasets.forEach((ds, i) => {
+                if (!chart.isDatasetVisible(i) || !ds.data.length) return;
+                const p = ds.data[ds.data.length - 1];
+                ctx.fillStyle = ds.borderColor;
+                ctx.fillText(ds._short || ds.label, scales.x.getPixelForValue(p.x) + 7,
+                                                    scales.y.getPixelForValue(p.y) + 3);
+            });
+            ctx.restore();
+        }
+    });
+}
+
+const RRG_QUADRANT_COLOR = { leading: '#27ae60', weakening: '#f1c40f', lagging: '#e74c3c', improving: '#3498db' };
+
+async function rrgLoad(force) {
+    const status = document.getElementById('rrg-status');
+    status.textContent = 'Loading…';
+    try {
+        const res = await fetch('/api/rrg' + (force ? '?refresh=1' : ''));
+        const d = await res.json();
+        if (!d.success) throw new Error(d.error || 'unavailable');
+        status.textContent = 'As of ' + d.as_of + (d.skipped && d.skipped.length ? ` · skipped ${d.skipped.length}` : '');
+
+        _rrgRegisterPlugin();
+        const datasets = d.sectors.map(s => {
+            const col = RRG_QUADRANT_COLOR[s.current.quadrant] || '#888';
+            const n = s.tail.length;
+            return {
+                label: s.name,
+                _short: s.name.replace('NIFTY ', ''),
+                data: s.tail.map(p => ({ x: p.x, y: p.y })),
+                borderColor: col,
+                backgroundColor: col,
+                showLine: true,
+                borderWidth: 1.5,
+                tension: 0,
+                pointRadius: s.tail.map((_, i) => i === n - 1 ? 6 : 2.5),
+                pointHoverRadius: s.tail.map((_, i) => i === n - 1 ? 8 : 4),
+            };
+        });
+
+        if (_rrgChart) _rrgChart.destroy();
+        _rrgChart = new Chart(document.getElementById('rrg-chart'), {
+            type: 'scatter',
+            data: { datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false, animation: false,
+                plugins: {
+                    legend: { display: true, position: 'right', labels: { boxWidth: 10, font: { size: 10 } } },
+                    tooltip: { callbacks: {
+                        title: items => items[0].dataset.label,
+                        label: c => ` RS-Ratio ${c.parsed.x.toFixed(2)}, RS-Momentum ${c.parsed.y.toFixed(2)}`
+                    } }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'RS-Ratio' },
+                         grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } },
+                    y: { title: { display: true, text: 'RS-Momentum' },
+                         grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } }
+                }
+            }
+        });
+    } catch (e) {
         status.textContent = 'Refresh failed — try again';
     }
 }

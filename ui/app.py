@@ -2519,6 +2519,73 @@ def _get_top5_sectors(force_refresh=False):
     return [r["symbol"] for r in _get_sector_ranking(force_refresh)[:5]]
 
 
+# RRG (Relative Rotation Graph) — 15-min TTL, stale-while-revalidate, same
+# pattern as _get_sector_ranking above. No disk persistence: the underlying
+# sector price cache (data/cache/sector_zscore_daily_<date>.pkl) is already
+# day-stamped and cheap to recompute from, so a restart only costs one
+# in-memory rebuild, not a fresh yfinance fetch.
+_RRG_CACHE = {"data": None, "timestamp": 0, "tail_weeks": 12}
+_rrg_refresh_lock = threading.Lock()
+
+
+def _get_rrg_data(tail_weeks=12, force_refresh=False):
+    import time as _t
+    fresh = (_RRG_CACHE["data"] is not None and _RRG_CACHE["tail_weeks"] == tail_weeks
+             and (_t.time() - _RRG_CACHE["timestamp"]) < 900)
+    if not force_refresh and fresh:
+        return _RRG_CACHE["data"]
+
+    def _compute():
+        from data.sector_zscore_backtest import fetch_all
+        from data.rrg_engine import compute_rrg
+        closes, _opens, bench = fetch_all(refresh=False)
+        return compute_rrg(closes, bench, tail_weeks=tail_weeks)
+
+    def _do_refresh():
+        try:
+            payload = _compute()
+            _RRG_CACHE["data"] = payload
+            _RRG_CACHE["timestamp"] = _t.time()
+            _RRG_CACHE["tail_weeks"] = tail_weeks
+        except Exception as e:
+            print(f"[rrg] refresh failed: {e}")
+        finally:
+            _rrg_refresh_lock.release()
+
+    if _RRG_CACHE["data"] is not None and not force_refresh:
+        # Stale data exists — serve it immediately, refresh in background.
+        if _rrg_refresh_lock.acquire(blocking=False):
+            threading.Thread(target=_do_refresh, daemon=True).start()
+        return _RRG_CACHE["data"]
+
+    # No cached data at all (cold start) — must block once.
+    if _rrg_refresh_lock.acquire(blocking=True, timeout=90):
+        try:
+            if _RRG_CACHE["data"] is not None and not force_refresh:
+                return _RRG_CACHE["data"]
+            payload = _compute()
+            _RRG_CACHE["data"] = payload
+            _RRG_CACHE["timestamp"] = _t.time()
+            _RRG_CACHE["tail_weeks"] = tail_weeks
+            return payload
+        except Exception as e:
+            print(f"[rrg] refresh failed: {e}")
+            return _RRG_CACHE["data"]
+        finally:
+            _rrg_refresh_lock.release()
+    return _RRG_CACHE["data"]
+
+
+@app.route("/api/rrg", methods=["GET"])
+def api_rrg():
+    tail_weeks = int(request.args.get("tail", 12))
+    force = request.args.get("refresh", "").lower() in ("1", "true", "yes")
+    data = _get_rrg_data(tail_weeks=tail_weeks, force_refresh=force)
+    if not data:
+        return jsonify({"success": False, "error": "rrg unavailable"})
+    return jsonify({"success": True, **data})
+
+
 def _load_sector_map():
     """ticker → primary_sector for current N200 (Phase 2 sector map CSV).
     Cached for the lifetime of the process — file is small and changes only
@@ -2559,6 +2626,9 @@ def _prewarm_caches():
             _fetch_etf_ltp(etf_syms)
         print(f"[prewarm] done — {len(ranking)} sectors, "
               f"{len(_ETF_LTP_CACHE)} ETFs cached")
+        rrg = _get_rrg_data(force_refresh=False)
+        print(f"[prewarm] rrg — {len(rrg.get('sectors', []))} sectors, "
+              f"{len(rrg.get('skipped', []))} skipped")
     except Exception as e:
         print(f"[prewarm] error: {e}")
 

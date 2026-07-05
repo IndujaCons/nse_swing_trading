@@ -56,11 +56,31 @@ HARDCODED = {
     ],
 }
 
+# Sectors whose Yahoo Finance sub-index ticker (^CNXxxx) stopped serving
+# historical data (broke sometime between 2026-05-08 and 2026-07-05 — see
+# memory/mom20.md-adjacent notes). Rebuilt as equal-weight synthetics from
+# the existing sector_mapping.STOCK_SECTOR_MAP constituent lists (already
+# curated for the Mom20/Mom500 sector-cap logic — no new scraping needed).
+FROM_STOCK_MAP = [
+    "NIFTY_PVT_BANK", "NIFTY_PSU_BANK", "NIFTY_FIN_SERVICE", "NIFTY_AUTO",
+    "NIFTY_METAL", "NIFTY_ENERGY", "NIFTY_FMCG", "NIFTY_REALTY",
+    "NIFTY_MEDIA", "NIFTY_MNC", "NIFTY_PSE", "NIFTY_CONSUMPTION",
+    "NIFTY_INFRA",
+]
+
 
 def fetch_constituents(index_name: str, retries: int = 3) -> list:
     """Pull constituent symbols. Retries on timeout (niftyindices is flaky)."""
     if index_name in HARDCODED:
         return HARDCODED[index_name]
+    if index_name in FROM_STOCK_MAP:
+        sys.path.insert(0, ROOT)
+        from sector_mapping import STOCK_SECTOR_MAP
+        sector_label = index_name.replace("_", " ")  # NIFTY_AUTO -> NIFTY AUTO
+        syms = [t for t, s in STOCK_SECTOR_MAP.items() if s == sector_label]
+        if not syms:
+            raise ValueError(f"No constituents found in STOCK_SECTOR_MAP for {sector_label}")
+        return syms
     if index_name not in INDEX_URLS:
         raise ValueError(f"Unknown index: {index_name}")
     url = f"https://www.niftyindices.com/IndexConstituent/{INDEX_URLS[index_name]}"
@@ -149,13 +169,13 @@ def build_one(index_name: str):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("index", nargs="?", default=None,
-                   help="One of: " + ", ".join(list(INDEX_URLS) + list(HARDCODED)))
+                   help="One of: " + ", ".join(list(INDEX_URLS) + list(HARDCODED) + FROM_STOCK_MAP))
     p.add_argument("--all", action="store_true",
                    help="Build all known synthetic indices")
     args = p.parse_args()
 
     if args.all:
-        for name in list(INDEX_URLS) + list(HARDCODED):
+        for name in list(INDEX_URLS) + list(HARDCODED) + FROM_STOCK_MAP:
             try:
                 build_one(name)
             except Exception as e:

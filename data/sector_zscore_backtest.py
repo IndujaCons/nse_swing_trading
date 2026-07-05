@@ -70,25 +70,34 @@ SECTOR_UNIVERSE = [
     # NIFTY BANK dropped — strict superset of (PVT BANK ∪ PSU BANK).
     # Keeping it would let the Z-score triple-count bank momentum and risk
     # 60% slot concentration in banking on a strong-bank month.
-    ("NIFTY PVT BANK",          "NIFTY_PVT_BANK.NS"),
-    ("NIFTY PSU BANK",          "^CNXPSUBANK"),
-    ("NIFTY FIN SERVICE",       "NIFTY_FIN_SERVICE.NS"),
+    #
+    # 2026-07-05: the 13 entries below were originally yfinance ^CNXxxx
+    # sub-index tickers. Those tickers stopped serving historical data on
+    # Yahoo's end sometime between 2026-05-08 and 2026-07-05 (confirmed —
+    # only the latest single day is returned regardless of date range or
+    # yfinance API used). Rebuilt as equal-weight synthetics from
+    # sector_mapping.STOCK_SECTOR_MAP via data/synth_sector_index.py
+    # (`python3 data/synth_sector_index.py --all`), matching the pattern
+    # already used for the 5 sectors below that were synthetic from the start.
+    ("NIFTY PVT BANK",          "synth:NIFTY_PVT_BANK"),
+    ("NIFTY PSU BANK",          "synth:NIFTY_PSU_BANK"),
+    ("NIFTY FIN SERVICE",       "synth:NIFTY_FIN_SERVICE"),
     ("NIFTY IT",                "^CNXIT"),
-    ("NIFTY AUTO",              "^CNXAUTO"),
-    ("NIFTY METAL",             "^CNXMETAL"),
-    ("NIFTY ENERGY",            "^CNXENERGY"),
-    ("NIFTY FMCG",              "^CNXFMCG"),
-    ("NIFTY REALTY",            "^CNXREALTY"),
-    ("NIFTY MEDIA",             "^CNXMEDIA"),
+    ("NIFTY AUTO",              "synth:NIFTY_AUTO"),
+    ("NIFTY METAL",             "synth:NIFTY_METAL"),
+    ("NIFTY ENERGY",            "synth:NIFTY_ENERGY"),
+    ("NIFTY FMCG",              "synth:NIFTY_FMCG"),
+    ("NIFTY REALTY",            "synth:NIFTY_REALTY"),
+    ("NIFTY MEDIA",             "synth:NIFTY_MEDIA"),
     # NIFTY MNC kept: tested dropping (Run 13) — CAGR -1.9pp, IR -0.17,
     # Sharpe -0.10. Even though every MNC stock classifies elsewhere via
     # precedence, the MNC INDEX itself is a useful cross-sector quality
     # blend that adds genuine diversified-factor signal to the rotation.
-    ("NIFTY MNC",               "^CNXMNC"),
-    ("NIFTY PSE",               "^CNXPSE"),
+    ("NIFTY MNC",               "synth:NIFTY_MNC"),
+    ("NIFTY PSE",               "synth:NIFTY_PSE"),
     # Re-added from Phase 2 sector map for wider breadth
-    ("NIFTY CONSUMPTION",       "^CNXCONSUM"),
-    ("NIFTY INFRA",             "^CNXINFRA"),
+    ("NIFTY CONSUMPTION",       "synth:NIFTY_CONSUMPTION"),
+    ("NIFTY INFRA",             "synth:NIFTY_INFRA"),
     # PHARMA dropped — strict subset of HEALTHCARE in N200
     # Synthetic indices (built via data/synth_sector_index.py — no yfinance series)
     ("NIFTY HEALTHCARE",        "synth:NIFTY_HEALTHCARE"),
