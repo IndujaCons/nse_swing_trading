@@ -10839,8 +10839,8 @@ function _rrgRender() {
         // what keeps 19 sectors legible at once. Selected sectors additionally
         // draw their 12-week trail (thin/low-opacity) leading into the same
         // bold, labeled head marker.
-        const points = showTrail ? s.tail.map(p => ({ x: p.x, y: p.y }))
-                                  : [{ x: s.current.x, y: s.current.y }];
+        const points = showTrail ? s.tail.map(p => ({ x: p.x, y: p.y, date: p.date }))
+                                  : [{ x: s.current.x, y: s.current.y, date: _rrgData.as_of }];
         const n = points.length;
         return {
             label: s.name,
@@ -10867,7 +10867,7 @@ function _rrgRender() {
                 // Direct on-chart labels (the plugin above) carry identity instead.
                 legend: { display: false },
                 tooltip: { callbacks: {
-                    title: items => items[0].dataset.label,
+                    title: items => `${items[0].dataset.label} — week of ${items[0].raw.date}`,
                     label: c => ` RS-Ratio ${c.parsed.x.toFixed(2)}, RS-Momentum ${c.parsed.y.toFixed(2)}`
                 } }
             },
