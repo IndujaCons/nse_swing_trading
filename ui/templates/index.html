@@ -2982,7 +2982,7 @@
                     </button>
                     <span id="rrg-status" style="font-size:11px;color:var(--text-muted);"></span>
                 </div>
-                <div style="position:relative;height:640px;max-width:900px;margin:0 auto;">
+                <div style="position:relative;height:820px;">
                     <canvas id="rrg-chart"></canvas>
                 </div>
             </div>
@@ -10750,17 +10750,27 @@ function _rrgRegisterPlugin() {
             ctx.fillStyle = 'rgba(52,152,219,0.85)'; ctx.fillText('IMPROVING', a.left + 6,  a.top + 14);
             ctx.restore();
         },
-        // Label each sector at its latest (largest) point.
+        // Label each sector at its latest (largest) point, with a background
+        // pill so text stays legible regardless of what's behind it (crossing
+        // trail lines, other labels, quadrant tint). This — not color or the
+        // legend — is the primary way to tell 19 overlapping series apart.
         afterDatasetsDraw(chart) {
             if (chart.canvas.id !== 'rrg-chart') return;
             const {ctx, scales} = chart;
-            ctx.save(); ctx.font = '700 10px sans-serif'; ctx.textAlign = 'left';
+            // Dashboard is single-themed (light) — no dark-mode CSS exists here.
+            const labelBg = 'rgba(255,255,255,0.85)';
+            const labelFg = '#1a1a1a';
+            ctx.save(); ctx.font = '700 10px sans-serif';
             chart.data.datasets.forEach((ds, i) => {
                 if (!chart.isDatasetVisible(i) || !ds.data.length) return;
                 const p = ds.data[ds.data.length - 1];
-                ctx.fillStyle = ds.borderColor;
-                ctx.fillText(ds._short || ds.label, scales.x.getPixelForValue(p.x) + 7,
-                                                    scales.y.getPixelForValue(p.y) + 3);
+                const x = scales.x.getPixelForValue(p.x) + 8, y = scales.y.getPixelForValue(p.y) + 3;
+                const text = ds._short || ds.label;
+                const w = ctx.measureText(text).width;
+                ctx.fillStyle = labelBg;
+                ctx.fillRect(x - 2, y - 10, w + 4, 13);
+                ctx.fillStyle = labelFg;
+                ctx.fillText(text, x, y);
             });
             ctx.restore();
         }
@@ -10768,6 +10778,11 @@ function _rrgRegisterPlugin() {
 }
 
 const RRG_QUADRANT_COLOR = { leading: '#27ae60', weakening: '#f1c40f', lagging: '#e74c3c', improving: '#3498db' };
+
+function _rrgHexToRgba(hex, alpha) {
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+}
 
 async function rrgLoad(force) {
     const status = document.getElementById('rrg-status');
@@ -10786,12 +10801,15 @@ async function rrgLoad(force) {
                 label: s.name,
                 _short: s.name.replace('NIFTY ', ''),
                 data: s.tail.map(p => ({ x: p.x, y: p.y })),
-                borderColor: col,
-                backgroundColor: col,
+                // Trail recedes (thin, low-opacity) so it reads as directional
+                // context, not something you have to trace through 18 others —
+                // the labeled head marker is the thing you actually identify by.
+                borderColor: _rrgHexToRgba(col, 0.35),
+                borderWidth: 1,
+                backgroundColor: s.tail.map((_, i) => i === n - 1 ? col : _rrgHexToRgba(col, 0.35)),
                 showLine: true,
-                borderWidth: 1.5,
                 tension: 0,
-                pointRadius: s.tail.map((_, i) => i === n - 1 ? 6 : 2.5),
+                pointRadius: s.tail.map((_, i) => i === n - 1 ? 6 : 1.5),
                 pointHoverRadius: s.tail.map((_, i) => i === n - 1 ? 8 : 4),
             };
         });
@@ -10803,7 +10821,9 @@ async function rrgLoad(force) {
             options: {
                 responsive: true, maintainAspectRatio: false, animation: false,
                 plugins: {
-                    legend: { display: true, position: 'right', labels: { boxWidth: 10, font: { size: 10 } } },
+                    // No native legend — 19 entries clip/crowd it uselessly.
+                    // Direct on-chart labels (the plugin above) carry identity instead.
+                    legend: { display: false },
                     tooltip: { callbacks: {
                         title: items => items[0].dataset.label,
                         label: c => ` RS-Ratio ${c.parsed.x.toFixed(2)}, RS-Momentum ${c.parsed.y.toFixed(2)}`
