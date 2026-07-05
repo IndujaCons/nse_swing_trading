@@ -2982,8 +2982,16 @@
                     </button>
                     <span id="rrg-status" style="font-size:11px;color:var(--text-muted);"></span>
                 </div>
-                <div style="position:relative;height:820px;">
-                    <canvas id="rrg-chart"></canvas>
+                <div style="display:flex;gap:16px;">
+                    <div style="position:relative;height:820px;flex:1 1 auto;min-width:0;">
+                        <canvas id="rrg-chart"></canvas>
+                    </div>
+                    <div style="flex:0 0 200px;">
+                        <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:6px;">
+                            SHOW TRAIL FOR
+                        </div>
+                        <div id="rrg-sector-list" style="max-height:780px;overflow-y:auto;font-size:11px;"></div>
+                    </div>
                 </div>
             </div>
 
@@ -10719,6 +10727,8 @@ async function loadSummary() {
 // ============ RRG (Relative Rotation Graph) ============
 let _rrgChart = null;
 let _rrgPluginRegistered = false;
+let _rrgData = null;             // last fetched payload, cached for toggle re-renders
+let _rrgSelected = new Set();    // sector names currently showing a full trail
 
 function _rrgRegisterPlugin() {
     if (_rrgPluginRegistered) return;
@@ -10750,14 +10760,13 @@ function _rrgRegisterPlugin() {
             ctx.fillStyle = 'rgba(52,152,219,0.85)'; ctx.fillText('IMPROVING', a.left + 6,  a.top + 14);
             ctx.restore();
         },
-        // Label each sector at its latest (largest) point, with a background
-        // pill so text stays legible regardless of what's behind it (crossing
-        // trail lines, other labels, quadrant tint). This — not color or the
-        // legend — is the primary way to tell 19 overlapping series apart.
+        // Label every sector at its current-position dot, with a background
+        // pill so text stays legible regardless of what's behind it. With
+        // trails off by default (dots only), this alone makes all 19 sectors
+        // individually readable — no need to trace lines or match colors.
         afterDatasetsDraw(chart) {
             if (chart.canvas.id !== 'rrg-chart') return;
             const {ctx, scales} = chart;
-            // Dashboard is single-themed (light) — no dark-mode CSS exists here.
             const labelBg = 'rgba(255,255,255,0.85)';
             const labelFg = '#1a1a1a';
             ctx.save(); ctx.font = '700 10px sans-serif';
@@ -10792,54 +10801,84 @@ async function rrgLoad(force) {
         const d = await res.json();
         if (!d.success) throw new Error(d.error || 'unavailable');
         status.textContent = 'As of ' + d.as_of + (d.skipped && d.skipped.length ? ` · skipped ${d.skipped.length}` : '');
-
-        _rrgRegisterPlugin();
-        const datasets = d.sectors.map(s => {
-            const col = RRG_QUADRANT_COLOR[s.current.quadrant] || '#888';
-            const n = s.tail.length;
-            return {
-                label: s.name,
-                _short: s.name.replace('NIFTY ', ''),
-                data: s.tail.map(p => ({ x: p.x, y: p.y })),
-                // Trail recedes (thin, low-opacity) so it reads as directional
-                // context, not something you have to trace through 18 others —
-                // the labeled head marker is the thing you actually identify by.
-                borderColor: _rrgHexToRgba(col, 0.35),
-                borderWidth: 1,
-                backgroundColor: s.tail.map((_, i) => i === n - 1 ? col : _rrgHexToRgba(col, 0.35)),
-                showLine: true,
-                tension: 0,
-                pointRadius: s.tail.map((_, i) => i === n - 1 ? 6 : 1.5),
-                pointHoverRadius: s.tail.map((_, i) => i === n - 1 ? 8 : 4),
-            };
-        });
-
-        if (_rrgChart) _rrgChart.destroy();
-        _rrgChart = new Chart(document.getElementById('rrg-chart'), {
-            type: 'scatter',
-            data: { datasets },
-            options: {
-                responsive: true, maintainAspectRatio: false, animation: false,
-                plugins: {
-                    // No native legend — 19 entries clip/crowd it uselessly.
-                    // Direct on-chart labels (the plugin above) carry identity instead.
-                    legend: { display: false },
-                    tooltip: { callbacks: {
-                        title: items => items[0].dataset.label,
-                        label: c => ` RS-Ratio ${c.parsed.x.toFixed(2)}, RS-Momentum ${c.parsed.y.toFixed(2)}`
-                    } }
-                },
-                scales: {
-                    x: { title: { display: true, text: 'RS-Ratio' },
-                         grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } },
-                    y: { title: { display: true, text: 'RS-Momentum' },
-                         grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } }
-                }
-            }
-        });
+        _rrgData = d;
+        _rrgRenderSectorList();
+        _rrgRender();
     } catch (e) {
         status.textContent = 'Refresh failed — try again';
     }
+}
+
+function _rrgRenderSectorList() {
+    const el = document.getElementById('rrg-sector-list');
+    if (!_rrgData) { el.innerHTML = ''; return; }
+    const sorted = [..._rrgData.sectors].sort((a, b) => b.current.x - a.current.x);
+    el.innerHTML = sorted.map(s => {
+        const col = RRG_QUADRANT_COLOR[s.current.quadrant] || '#888';
+        const checked = _rrgSelected.has(s.name) ? 'checked' : '';
+        return `<label style="display:flex;align-items:center;gap:6px;padding:3px 2px;cursor:pointer;">
+            <input type="checkbox" ${checked} onchange="_rrgToggleSector('${s.name}', this.checked)" style="margin:0;">
+            <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>
+            <span style="color:var(--text-secondary);">${s.name.replace('NIFTY ', '')}</span>
+        </label>`;
+    }).join('');
+}
+
+function _rrgToggleSector(name, checked) {
+    if (checked) _rrgSelected.add(name); else _rrgSelected.delete(name);
+    _rrgRender();
+}
+
+function _rrgRender() {
+    if (!_rrgData) return;
+    _rrgRegisterPlugin();
+    const datasets = _rrgData.sectors.map(s => {
+        const col = RRG_QUADRANT_COLOR[s.current.quadrant] || '#888';
+        const showTrail = _rrgSelected.has(s.name);
+        // Default (unselected): single current-position dot, no line — this is
+        // what keeps 19 sectors legible at once. Selected sectors additionally
+        // draw their 12-week trail (thin/low-opacity) leading into the same
+        // bold, labeled head marker.
+        const points = showTrail ? s.tail.map(p => ({ x: p.x, y: p.y }))
+                                  : [{ x: s.current.x, y: s.current.y }];
+        const n = points.length;
+        return {
+            label: s.name,
+            _short: s.name.replace('NIFTY ', ''),
+            data: points,
+            borderColor: _rrgHexToRgba(col, 0.4),
+            borderWidth: showTrail ? 1.5 : 0,
+            backgroundColor: points.map((_, i) => i === n - 1 ? col : _rrgHexToRgba(col, 0.4)),
+            showLine: showTrail,
+            tension: 0,
+            pointRadius: points.map((_, i) => i === n - 1 ? 6 : 2),
+            pointHoverRadius: points.map((_, i) => i === n - 1 ? 8 : 4),
+        };
+    });
+
+    if (_rrgChart) _rrgChart.destroy();
+    _rrgChart = new Chart(document.getElementById('rrg-chart'), {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false, animation: false,
+            plugins: {
+                // No native legend — 19 entries clip/crowd it uselessly.
+                // Direct on-chart labels (the plugin above) carry identity instead.
+                legend: { display: false },
+                tooltip: { callbacks: {
+                    title: items => items[0].dataset.label,
+                    label: c => ` RS-Ratio ${c.parsed.x.toFixed(2)}, RS-Momentum ${c.parsed.y.toFixed(2)}`
+                } }
+            },
+            scales: {
+                x: { title: { display: true, text: 'RS-Ratio' },
+                     grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } },
+                y: { title: { display: true, text: 'RS-Momentum' },
+                     grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } }
+            }
+        }
+    });
 }
 
 function _fmtPct(v) {
