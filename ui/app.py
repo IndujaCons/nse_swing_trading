@@ -2605,13 +2605,54 @@ def api_rrg():
 # fetching each sector's constituents fresh on click. Loaded once on first
 # drill-down request (not at boot) since it's ~134MB in memory.
 _RRG_STOCK_PRICES = None
+# mom500_daily.pkl is only manually refreshed (no cron) so it's routinely
+# several days to weeks stale. Comparing a stale stock series against the
+# RRG's daily-refreshed benchmark produces a spurious quadrant reading (found
+# 2026-07-13: VOLTAS showed a fake Lagging->Leading jump caused entirely by
+# this mismatch, not a real price move). Each ticker's tail is patched with a
+# quick incremental fetch (just the missing days) once per calendar day.
+_RRG_STOCK_PATCH_DATE = {}  # ticker -> "YYYY-MM-DD" of the last successful patch
+
+
+def _patch_stale_tail(ticker, base_series):
+    """Fetch only the days after base_series' last cached date, through
+    today, and append them. Returns base_series unchanged if already
+    patched today, already fresh, or the patch fetch fails — never raises."""
+    import datetime
+    today_str = datetime.date.today().isoformat()
+    if _RRG_STOCK_PATCH_DATE.get(ticker) == today_str:
+        return base_series
+    last_date = base_series.index[-1].date()
+    today = datetime.date.today()
+    if last_date >= today - datetime.timedelta(days=1):
+        _RRG_STOCK_PATCH_DATE[ticker] = today_str
+        return base_series
+    try:
+        import yfinance as yf
+        import pandas as pd
+        patch = yf.Ticker(f"{ticker}.NS").history(
+            start=(last_date + datetime.timedelta(days=1)).isoformat())
+        _RRG_STOCK_PATCH_DATE[ticker] = today_str
+        if patch.empty:
+            return base_series
+        patch_close = patch["Close"]
+        patch_close.index = (patch_close.index.tz_localize(None)
+                              if patch_close.index.tz else patch_close.index)
+        patch_close.index = pd.to_datetime(patch_close.index)
+        merged = pd.concat([base_series[base_series.index < patch_close.index[0]], patch_close])
+        _RRG_STOCK_PRICES[ticker] = merged  # cache the patched series for reuse this session
+        return merged
+    except Exception as e:
+        print(f"[rrg] patch failed for {ticker}: {e}")
+        return base_series
 
 
 def _get_rrg_stock_closes(tickers):
     """Return {ticker: pd.Series of daily Close} for the given tickers,
-    sourced from data/cache/mom500_daily.pkl. Tickers missing from that
-    cache (e.g. very recent listings) are fetched individually — not the
-    whole requested list — via synth_sector_index.fetch_constituent_prices."""
+    sourced from data/cache/mom500_daily.pkl (patched to today's date per
+    ticker, see _patch_stale_tail). Tickers missing from that cache (e.g.
+    very recent listings) are fetched individually — not the whole
+    requested list — via synth_sector_index.fetch_constituent_prices."""
     global _RRG_STOCK_PRICES
     if _RRG_STOCK_PRICES is None:
         import pickle
@@ -2634,7 +2675,7 @@ def _get_rrg_stock_closes(tickers):
     missing = []
     for t in tickers:
         if t in _RRG_STOCK_PRICES:
-            closes[t] = _RRG_STOCK_PRICES[t]
+            closes[t] = _patch_stale_tail(t, _RRG_STOCK_PRICES[t])
         else:
             missing.append(t)
     if missing:
