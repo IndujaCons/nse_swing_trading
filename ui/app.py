@@ -2617,10 +2617,18 @@ def _get_rrg_stock_closes(tickers):
         import pickle
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                              "data", "cache", "mom500_daily.pkl")
-        with open(path, "rb") as f:
-            raw = pickle.load(f)  # {ticker: OHLCV DataFrame}
-        _RRG_STOCK_PRICES = {t: df["Close"] for t, df in raw.items()}
-        print(f"[rrg] loaded {len(_RRG_STOCK_PRICES)} stock price series from mom500_daily.pkl")
+        try:
+            with open(path, "rb") as f:
+                raw = pickle.load(f)  # {ticker: OHLCV DataFrame}
+            _RRG_STOCK_PRICES = {t: df["Close"] for t, df in raw.items()}
+            print(f"[rrg] loaded {len(_RRG_STOCK_PRICES)} stock price series from mom500_daily.pkl")
+        except FileNotFoundError:
+            # Cache is gitignored and may not exist on a fresh checkout (e.g. a
+            # VPS that's never run mom15_pit_report.py --n500). Fall back to
+            # fetching every requested ticker live instead of crashing — slower
+            # on first use, but still works.
+            _RRG_STOCK_PRICES = {}
+            print(f"[rrg] {path} not found — drill-down will fetch tickers live")
 
     closes = {}
     missing = []
