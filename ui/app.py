@@ -2524,16 +2524,25 @@ def _get_top5_sectors(force_refresh=False):
 # sector price cache (data/cache/sector_zscore_daily_<date>.pkl) is already
 # day-stamped and cheap to recompute from, so a restart only costs one
 # in-memory rebuild, not a fresh yfinance fetch.
-_RRG_CACHE = {"data": None, "timestamp": 0, "tail_weeks": 12}
+# norm_window/roc_window are in units of the resulting bar (weeks if
+# resampled, trading days if not) — see data/rrg_engine.py:compute_rrg.
+_RRG_INTERVAL_PRESETS = {
+    "weekly": {"resample_rule": "W-FRI", "norm_window": 12, "roc_window": 5},
+    "daily":  {"resample_rule": None,    "norm_window": 20, "roc_window": 5},
+}
+_RRG_CACHE = {}  # (interval, tail_periods) -> {"data":..., "timestamp":...}
 _rrg_refresh_lock = threading.Lock()
 
 
-def _get_rrg_data(tail_weeks=12, force_refresh=False):
+def _get_rrg_data(interval="weekly", tail_periods=5, force_refresh=False):
     import time as _t
-    fresh = (_RRG_CACHE["data"] is not None and _RRG_CACHE["tail_weeks"] == tail_weeks
-             and (_t.time() - _RRG_CACHE["timestamp"]) < 900)
+    if interval not in _RRG_INTERVAL_PRESETS:
+        interval = "weekly"
+    key = (interval, tail_periods)
+    entry = _RRG_CACHE.get(key)
+    fresh = entry is not None and (_t.time() - entry["timestamp"]) < 900
     if not force_refresh and fresh:
-        return _RRG_CACHE["data"]
+        return entry["data"]
 
     def _compute(refresh_prices=False):
         from data.sector_zscore_backtest import fetch_all
@@ -2544,52 +2553,107 @@ def _get_rrg_data(tail_weeks=12, force_refresh=False):
         # that had no data at the FIRST request of the day stays missing for
         # the rest of the day no matter how many times the user clicks Refresh.
         closes, _opens, bench = fetch_all(refresh=refresh_prices)
-        return compute_rrg(closes, bench, tail_weeks=tail_weeks)
+        preset = _RRG_INTERVAL_PRESETS[interval]
+        return compute_rrg(closes, bench, tail_periods=tail_periods, **preset)
 
     def _do_refresh():
         try:
             payload = _compute(refresh_prices=False)
-            _RRG_CACHE["data"] = payload
-            _RRG_CACHE["timestamp"] = _t.time()
-            _RRG_CACHE["tail_weeks"] = tail_weeks
+            _RRG_CACHE[key] = {"data": payload, "timestamp": _t.time()}
         except Exception as e:
             print(f"[rrg] refresh failed: {e}")
         finally:
             _rrg_refresh_lock.release()
 
-    if _RRG_CACHE["data"] is not None and not force_refresh:
+    if entry is not None and not force_refresh:
         # Stale data exists — serve it immediately, refresh in background.
         if _rrg_refresh_lock.acquire(blocking=False):
             threading.Thread(target=_do_refresh, daemon=True).start()
-        return _RRG_CACHE["data"]
+        return entry["data"]
 
     # No cached data at all (cold start), or the user explicitly hit Refresh
     # — must block once. Only an explicit force_refresh re-scans prices.
     if _rrg_refresh_lock.acquire(blocking=True, timeout=90):
         try:
-            if _RRG_CACHE["data"] is not None and not force_refresh:
-                return _RRG_CACHE["data"]
+            cached = _RRG_CACHE.get(key)
+            if cached is not None and not force_refresh:
+                return cached["data"]
             payload = _compute(refresh_prices=force_refresh)
-            _RRG_CACHE["data"] = payload
-            _RRG_CACHE["timestamp"] = _t.time()
-            _RRG_CACHE["tail_weeks"] = tail_weeks
+            _RRG_CACHE[key] = {"data": payload, "timestamp": _t.time()}
             return payload
         except Exception as e:
             print(f"[rrg] refresh failed: {e}")
-            return _RRG_CACHE["data"]
+            return (_RRG_CACHE.get(key) or {}).get("data")
         finally:
             _rrg_refresh_lock.release()
-    return _RRG_CACHE["data"]
+    return (_RRG_CACHE.get(key) or {}).get("data")
 
 
 @app.route("/api/rrg", methods=["GET"])
 def api_rrg():
-    tail_weeks = int(request.args.get("tail", 12))
+    interval = request.args.get("interval", "weekly")
+    tail_periods = int(request.args.get("tail", 5))
     force = request.args.get("refresh", "").lower() in ("1", "true", "yes")
-    data = _get_rrg_data(tail_weeks=tail_weeks, force_refresh=force)
+    data = _get_rrg_data(interval=interval, tail_periods=tail_periods, force_refresh=force)
     if not data:
         return jsonify({"success": False, "error": "rrg unavailable"})
     return jsonify({"success": True, **data})
+
+
+# Lazily-loaded stock-level price cache for RRG drill-down — reuses the
+# existing 803-ticker Nifty500-union pickle (2019 -> present) instead of
+# fetching each sector's constituents fresh on click. Loaded once on first
+# drill-down request (not at boot) since it's ~134MB in memory.
+_RRG_STOCK_PRICES = None
+
+
+def _get_rrg_stock_closes(tickers):
+    """Return {ticker: pd.Series of daily Close} for the given tickers,
+    sourced from data/cache/mom500_daily.pkl. Tickers missing from that
+    cache (e.g. very recent listings) are fetched individually — not the
+    whole requested list — via synth_sector_index.fetch_constituent_prices."""
+    global _RRG_STOCK_PRICES
+    if _RRG_STOCK_PRICES is None:
+        import pickle
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                             "data", "cache", "mom500_daily.pkl")
+        with open(path, "rb") as f:
+            raw = pickle.load(f)  # {ticker: OHLCV DataFrame}
+        _RRG_STOCK_PRICES = {t: df["Close"] for t, df in raw.items()}
+        print(f"[rrg] loaded {len(_RRG_STOCK_PRICES)} stock price series from mom500_daily.pkl")
+
+    closes = {}
+    missing = []
+    for t in tickers:
+        if t in _RRG_STOCK_PRICES:
+            closes[t] = _RRG_STOCK_PRICES[t]
+        else:
+            missing.append(t)
+    if missing:
+        from data.synth_sector_index import fetch_constituent_prices
+        closes.update(fetch_constituent_prices(missing))
+    return closes
+
+
+@app.route("/api/rrg/stocks", methods=["GET"])
+def api_rrg_stocks():
+    from data.rrg_engine import compute_rrg, get_sector_constituents
+    from data.sector_zscore_backtest import fetch_all
+    sector = request.args.get("sector", "")
+    interval = request.args.get("interval", "weekly")
+    tail_periods = int(request.args.get("tail", 5))
+    if interval not in _RRG_INTERVAL_PRESETS:
+        interval = "weekly"
+
+    tickers = get_sector_constituents(sector)
+    if not tickers:
+        return jsonify({"success": False, "error": f"no constituents found for {sector}"})
+
+    closes = _get_rrg_stock_closes(tickers)
+    _closes_unused, _opens_unused, bench = fetch_all(refresh=False)  # same Nifty200 benchmark as sector view
+    preset = _RRG_INTERVAL_PRESETS[interval]
+    data = compute_rrg(closes, bench, tail_periods=tail_periods, **preset)
+    return jsonify({"success": True, "sector": sector, **data})
 
 
 def _load_sector_map():
