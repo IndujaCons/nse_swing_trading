@@ -2996,9 +2996,6 @@
                 <div style="display:flex;gap:16px;">
                     <div style="position:relative;height:820px;flex:1 1 auto;min-width:0;">
                         <canvas id="rrg-chart"></canvas>
-                        <div id="rrg-info-card" style="display:none;position:absolute;z-index:10;pointer-events:none;
-                               background:var(--bg-white);border:1px solid var(--border-color);border-radius:8px;
-                               box-shadow:0 4px 16px rgba(0,0,0,0.15);padding:10px 12px;font-size:11px;min-width:170px;"></div>
                         <div id="rrg-loading-overlay" style="display:none;position:absolute;inset:0;z-index:20;
                                background:rgba(255,255,255,0.75);align-items:center;justify-content:center;
                                font-size:16px;font-weight:700;color:var(--text-secondary);">
@@ -10982,21 +10979,6 @@ function _rrgBuildDatasets() {
         });
 }
 
-function _rrgShowInfoCard(dsIndex, x, y) {
-    const card = document.getElementById('rrg-info-card');
-    const ds = _rrgChart.data.datasets[dsIndex];
-    if (!ds || !ds.data.length) { card.style.display = 'none'; return; }
-    const p = ds.data[ds.data.length - 1];
-    card.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">${ds.label}</div>
-        <div style="color:var(--text-muted);">RS-Ratio: <b style="color:var(--text-primary);">${p.x.toFixed(2)}</b></div>
-        <div style="color:var(--text-muted);">RS-Momentum: <b style="color:var(--text-primary);">${p.y.toFixed(2)}</b></div>
-        <div style="color:var(--text-muted);">${p.date}</div>
-        ${_rrgMode === 'sectors' ? '<div style="color:var(--text-muted);margin-top:4px;font-style:italic;">Click to see stocks</div>' : ''}`;
-    card.style.left = Math.min(x + 14, _rrgChart.canvas.width - 190) + 'px';
-    card.style.top = Math.max(y - 60, 4) + 'px';
-    card.style.display = 'block';
-}
-
 function _rrgRender() {
     if (!_rrgData) return;
     _rrgRegisterPlugin();
@@ -11010,10 +10992,11 @@ function _rrgRender() {
             responsive: true, maintainAspectRatio: false, animation: false,
             interaction: { mode: 'nearest', intersect: false },  // hover near a line, not just exact points
             onHover: (evt, elements) => {
-                const card = document.getElementById('rrg-info-card');
+                // Fades non-hovered series so the highlighted one stands out — all
+                // identifying info (name, position) is already on the chart itself
+                // via the label pill, so no separate popup is shown.
                 if (!elements.length) {
                     if (_rrgHoverName !== null) { _rrgHoverName = null; _rrgChart.data.datasets = _rrgBuildDatasets(); _rrgChart.update('none'); }
-                    card.style.display = 'none';
                     return;
                 }
                 const dsIndex = elements[0].datasetIndex;
@@ -11023,7 +11006,6 @@ function _rrgRender() {
                     _rrgChart.data.datasets = _rrgBuildDatasets();
                     _rrgChart.update('none');
                 }
-                _rrgShowInfoCard(dsIndex, evt.x, evt.y);
             },
             // Drill-down is triggered only from the sidebar name (see
             // _rrgRenderSectorList) — clicking chart points precisely enough to
@@ -11034,7 +11016,7 @@ function _rrgRender() {
                 // No native legend — 19+ entries clip/crowd it uselessly.
                 // Direct on-chart labels (the plugin above) carry identity instead.
                 legend: { display: false },
-                tooltip: { enabled: false }  // replaced by the custom info card on hover
+                tooltip: { enabled: false }  // no popup — the on-chart label pill + fade-on-hover carry all the info needed
             },
             scales: {
                 x: { title: { display: true, text: 'RS-Ratio' },
