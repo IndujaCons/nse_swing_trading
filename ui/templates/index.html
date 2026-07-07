@@ -10883,9 +10883,15 @@ async function rrgDrillDown(sectorName) {
     const overlay = document.getElementById('rrg-loading-overlay');
     status.textContent = 'Loading stocks…';
     overlay.style.display = 'flex';
+    const minVisible = new Promise(r => setTimeout(r, 300));  // guarantee the overlay is
+    // actually perceivable even when the fetch resolves in a few ms (e.g. mom500_daily.pkl
+    // already loaded in memory) — otherwise it can flash on/off invisibly fast.
     try {
         const tail = RRG_TAIL_PERIODS[_rrgInterval];
-        const res = await fetch(`/api/rrg/stocks?sector=${encodeURIComponent(sectorName)}&interval=${_rrgInterval}&tail=${tail}`);
+        const [res] = await Promise.all([
+            fetch(`/api/rrg/stocks?sector=${encodeURIComponent(sectorName)}&interval=${_rrgInterval}&tail=${tail}`),
+            minVisible,
+        ]);
         const d = await res.json();
         if (!d.success) throw new Error(d.error || 'unavailable');
         status.textContent = 'As of ' + d.as_of + (d.skipped && d.skipped.length ? ` · skipped ${d.skipped.length}` : '');
