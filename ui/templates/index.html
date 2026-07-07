@@ -3008,7 +3008,7 @@
                         </div>
                         <div id="rrg-sector-list-hint" style="display:none;font-size:10px;color:var(--text-muted);
                                font-style:italic;margin-bottom:8px;">
-                            Click a name below to see its stocks →
+                            Click a sector's dot on the chart, or a name below, to see its stocks →
                         </div>
                         <div id="rrg-sector-list" style="max-height:780px;overflow-y:auto;font-size:11px;"></div>
                     </div>
@@ -10994,7 +10994,10 @@ function _rrgRender() {
             onHover: (evt, elements) => {
                 // Fades non-hovered series so the highlighted one stands out — all
                 // identifying info (name, position) is already on the chart itself
-                // via the label pill, so no separate popup is shown.
+                // via the label pill, so no separate popup is shown. Cursor switches
+                // to a pointer over a hoverable point — the visual cue for "this is
+                // clickable" that was missing before (clicking did nothing silently).
+                evt.native.target.style.cursor = (elements.length && _rrgMode === 'sectors') ? 'pointer' : 'default';
                 if (!elements.length) {
                     if (_rrgHoverName !== null) { _rrgHoverName = null; _rrgChart.data.datasets = _rrgBuildDatasets(); _rrgChart.update('none'); }
                     return;
@@ -11007,11 +11010,16 @@ function _rrgRender() {
                     _rrgChart.update('none');
                 }
             },
-            // Drill-down is triggered only from the sidebar name (see
-            // _rrgRenderSectorList) — clicking chart points precisely enough to
-            // register with 19+ overlapping curves was confusing ("where do I
-            // click?"). The sidebar list is the one clear, always-visible
-            // affordance for it.
+            // Click a chart point to drill down (in addition to the sidebar name —
+            // both work). Uses 'nearest'+intersect:true (a tighter hit-test than the
+            // hover interaction above) so clicking empty canvas space between curves
+            // doesn't trigger a drill-down on whatever's merely closest.
+            onClick: (evt) => {
+                if (_rrgMode !== 'sectors') return;
+                const hit = _rrgChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
+                if (!hit.length) return;
+                rrgDrillDown(_rrgChart.data.datasets[hit[0].datasetIndex].label);
+            },
             plugins: {
                 // No native legend — 19+ entries clip/crowd it uselessly.
                 // Direct on-chart labels (the plugin above) carry identity instead.
