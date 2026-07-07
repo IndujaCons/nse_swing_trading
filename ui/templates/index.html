@@ -2999,10 +2999,19 @@
                         <div id="rrg-info-card" style="display:none;position:absolute;z-index:10;pointer-events:none;
                                background:var(--bg-white);border:1px solid var(--border-color);border-radius:8px;
                                box-shadow:0 4px 16px rgba(0,0,0,0.15);padding:10px 12px;font-size:11px;min-width:170px;"></div>
+                        <div id="rrg-loading-overlay" style="display:none;position:absolute;inset:0;z-index:20;
+                               background:rgba(255,255,255,0.75);align-items:center;justify-content:center;
+                               font-size:16px;font-weight:700;color:var(--text-secondary);">
+                            Loading stocks…
+                        </div>
                     </div>
                     <div style="flex:0 0 200px;">
                         <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:6px;">
                             SHOW / HIDE
+                        </div>
+                        <div id="rrg-sector-list-hint" style="display:none;font-size:10px;color:var(--text-muted);
+                               font-style:italic;margin-bottom:8px;">
+                            Click a name below to see its stocks →
                         </div>
                         <div id="rrg-sector-list" style="max-height:780px;overflow-y:auto;font-size:11px;"></div>
                     </div>
@@ -10750,7 +10759,7 @@ let _rrgDrilldownSector = null;
 let _rrgHoverName = null;        // name of the currently-hovered series, or null
 
 const RRG_QUADRANT_COLOR = { leading: '#27ae60', weakening: '#f1c40f', lagging: '#e74c3c', improving: '#3498db' };
-const RRG_TAIL_PERIODS = { weekly: 5, daily: 10 };
+const RRG_TAIL_PERIODS = { weekly: 5, daily: 5 };
 
 function _rrgHexToRgba(hex, alpha) {
     const n = parseInt(hex.slice(1), 16);
@@ -10871,7 +10880,9 @@ function rrgSetInterval(interval) {
 
 async function rrgDrillDown(sectorName) {
     const status = document.getElementById('rrg-status');
+    const overlay = document.getElementById('rrg-loading-overlay');
     status.textContent = 'Loading stocks…';
+    overlay.style.display = 'flex';
     try {
         const tail = RRG_TAIL_PERIODS[_rrgInterval];
         const res = await fetch(`/api/rrg/stocks?sector=${encodeURIComponent(sectorName)}&interval=${_rrgInterval}&tail=${tail}`);
@@ -10888,6 +10899,8 @@ async function rrgDrillDown(sectorName) {
         _rrgRender();
     } catch (e) {
         status.textContent = 'Drill-down failed — try again';
+    } finally {
+        overlay.style.display = 'none';
     }
 }
 
@@ -10905,20 +10918,26 @@ function rrgBackToSectors() {
 
 function _rrgRenderSectorList() {
     const el = document.getElementById('rrg-sector-list');
+    const hint = document.getElementById('rrg-sector-list-hint');
+    if (hint) hint.style.display = _rrgMode === 'sectors' ? 'block' : 'none';
     if (!_rrgData) { el.innerHTML = ''; return; }
     const sorted = [..._rrgData.sectors].sort((a, b) => b.current.x - a.current.x);
     el.innerHTML = sorted.map(s => {
         const col = RRG_QUADRANT_COLOR[s.current.quadrant] || '#888';
         const checked = !_rrgHidden.has(s.name) ? 'checked' : '';
         const shortName = s.name.replace('NIFTY ', '');
-        const nameAttrs = _rrgMode === 'sectors'
-            ? `onclick="rrgDrillDown('${s.name.replace(/'/g, "\\'")}')" style="cursor:pointer;" title="Click to see constituent stocks"`
-            : '';
-        return `<label style="display:flex;align-items:center;gap:6px;padding:3px 2px;">
+        const nameEl = _rrgMode === 'sectors'
+            ? `<span onclick="rrgDrillDown('${s.name.replace(/'/g, "\\'")}')"
+                     title="Click to see constituent stocks"
+                     style="color:var(--accent-color, #4a90d9);cursor:pointer;font-weight:600;"
+                     onmouseover="this.style.textDecoration='underline'"
+                     onmouseout="this.style.textDecoration='none'">${shortName} →</span>`
+            : `<span style="color:var(--text-secondary);">${shortName}</span>`;
+        return `<div style="display:flex;align-items:center;gap:6px;padding:3px 2px;">
             <input type="checkbox" ${checked} onchange="_rrgToggleHidden('${s.name.replace(/'/g, "\\'")}', this.checked)" style="margin:0;">
             <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>
-            <span style="color:var(--text-secondary);" ${nameAttrs}>${shortName}</span>
-        </label>`;
+            ${nameEl}
+        </div>`;
     }).join('');
 }
 
@@ -10945,8 +10964,11 @@ function _rrgBuildDatasets() {
                 borderWidth: 1.5,
                 backgroundColor: points.map((_, i) => _rrgHexToRgba(col, i === n - 1 ? alpha : (faded ? 0.1 : 0.5))),
                 showLine: true,
-                tension: 0.35,       // smooth curved tail instead of jagged straight segments
-                cubicInterpolationMode: 'monotone',
+                // Plain Catmull-Rom-style tension (NOT cubicInterpolationMode:'monotone' —
+                // monotone mode ignores tension and avoids overshoot, which looks flatter
+                // and more angular right at the frequent direction-reversals in an RRG
+                // path; tension alone gives the genuinely smooth curve we want here).
+                tension: 0.45,
                 pointRadius: points.map((_, i) => i === n - 1 ? 6 : 2),
                 pointHoverRadius: points.map((_, i) => i === n - 1 ? 8 : 4),
                 order: faded ? 2 : 1,  // keep the highlighted series' pixels on top
@@ -10997,16 +11019,11 @@ function _rrgRender() {
                 }
                 _rrgShowInfoCard(dsIndex, evt.x, evt.y);
             },
-            onClick: (evt) => {
-                if (_rrgMode !== 'sectors') return;
-                // Require an actual intersect for clicks (unlike hover, which uses the
-                // forgiving 'nearest'/no-intersect mode above) — otherwise clicking
-                // empty canvas space would trigger a drill-down on whatever's closest.
-                const hit = _rrgChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
-                if (!hit.length) return;
-                const name = _rrgChart.data.datasets[hit[0].datasetIndex].label;
-                rrgDrillDown(name);
-            },
+            // Drill-down is triggered only from the sidebar name (see
+            // _rrgRenderSectorList) — clicking chart points precisely enough to
+            // register with 19+ overlapping curves was confusing ("where do I
+            // click?"). The sidebar list is the one clear, always-visible
+            // affordance for it.
             plugins: {
                 // No native legend — 19+ entries clip/crowd it uselessly.
                 // Direct on-chart labels (the plugin above) carry identity instead.
