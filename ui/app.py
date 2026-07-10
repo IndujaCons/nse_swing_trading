@@ -4841,7 +4841,14 @@ def api_techmo_performance_user(user_id):
         total_current += value
         holdings.append({
             "ticker":      t,
-            "cluster":     h.get("cluster", TECHMO_UNIVERSE.get(t, "")),
+            # Prefer the current universe's classification over what was stored at
+            # entry time — TECHMO_UNIVERSE's mapping gets refined periodically, and
+            # showing a stale label (e.g. ARM entered under an old "Other" bucket
+            # before it was reclassified into "Compute") makes the cluster cap look
+            # broken: a position can silently count toward a different cluster's cap
+            # than what's displayed. Falls back to the stored label only if the
+            # ticker has left the universe entirely.
+            "cluster":     TECHMO_UNIVERSE.get(t, h.get("cluster", "")),
             "rank":        live_rank_map.get(t, h.get("rank")),
             "shares":      qty,
             "entry_price": ep,
@@ -5071,7 +5078,11 @@ def api_techmo_basket(user_id):
             now_px = get_px(t, ep)
             exits.append({
                 "ticker":      t,
-                "cluster":     h.get("cluster", TECHMO_UNIVERSE.get(t, "Other")),
+                # Same live-over-stored preference as api_techmo_portfolio_get —
+                # this must match the cluster actually used for cap enforcement
+                # (sig_map[t]["cluster"], sourced from the same TECHMO_UNIVERSE),
+                # or the displayed reason won't make sense against what's shown.
+                "cluster":     TECHMO_UNIVERSE.get(t, h.get("cluster", "Other")),
                 "rank":        r,
                 "entry_price": round(ep, 2),
                 "now_price":   round(now_px, 2),
