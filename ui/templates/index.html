@@ -9426,6 +9426,7 @@ function techmoRenderBasket(d) {
             const rows = d.exits.map((e, i) => {
                 const pc = e.pnl_pct >= 0 ? 'var(--green)' : '#ef5350';
                 const ps = (e.pnl_pct >= 0 ? '+' : '') + e.pnl_pct.toFixed(2) + '%';
+                const reasonHtml = `${e.reason || ''}${e.rank_gt_days > 1 ? ` <span style="color:#ef5350;">(>24 for ${e.rank_gt_days}d)</span>` : ''}`;
                 return `<tr style="border-bottom:1px solid var(--border-color);">
                     <td style="padding:4px 8px;color:var(--text-muted);font-family:monospace;">${i+1}</td>
                     <td style="padding:4px 8px;font-weight:700;color:#ef5350;font-family:monospace;cursor:pointer;" onclick="techmoOpenChart('${e.ticker}')">${e.ticker}</td>
@@ -9435,6 +9436,7 @@ function techmoRenderBasket(d) {
                     <td style="padding:4px 8px;text-align:right;font-family:monospace;">$${e.now_price.toFixed(2)}</td>
                     <td style="padding:4px 8px;text-align:right;color:${pc};font-weight:700;font-family:monospace;">${ps}</td>
                     <td style="padding:4px 8px;text-align:right;color:var(--text-muted);font-family:monospace;">${e.shares}</td>
+                    <td style="padding:4px 8px;font-size:10px;color:var(--text-muted);font-family:monospace;">${reasonHtml}</td>
                 </tr>`;
             }).join('');
             exitsBody.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -9447,6 +9449,7 @@ function techmoRenderBasket(d) {
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Now $</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">P&amp;L%</th>
                     <th style="text-align:right;padding:4px 8px;font-family:monospace;">Shares</th>
+                    <th style="text-align:left;padding:4px 8px;font-family:monospace;">Reason</th>
                 </tr></thead><tbody>${rows}</tbody>
             </table>`;
         }

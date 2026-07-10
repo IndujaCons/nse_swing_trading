@@ -4347,6 +4347,38 @@ TECHMO_UNIVERSE.update({
 
 _TECHMO_SCAN_CACHE = {"data": None, "ts": 0}
 _TECHMO_VAL_CACHE  = {"data": None, "ts": 0}   # PE/FwdPE/PEG, 1-hr TTL
+
+TECHMO_RANK_STREAK_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "data_store", "techmo_rank_streak.json")
+
+
+def _update_techmo_rank_streak(unfiltered_rank_map, buffer_out):
+    """Day-boundary consecutive-days-over-buffer counter, same pattern as
+    Mom20's rank_gt40_streak in live_signals_engine.py — but TechMo's scan
+    cache is in-memory only (no daily-cache file to piggyback on), so this
+    gets its own tiny persisted file. Increments once per calendar day;
+    intraday re-scans read the same day's value unchanged."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    try:
+        with open(TECHMO_RANK_STREAK_FILE) as f:
+            saved = json.load(f)
+    except Exception:
+        saved = {"date": "", "streak": {}}
+
+    if saved.get("date") != today:
+        prev_streak = saved.get("streak", {})
+        streak = {
+            t: (prev_streak.get(t, 0) + 1) if unfiltered_rank_map.get(t, 0) > buffer_out else 0
+            for t in unfiltered_rank_map
+        }
+        try:
+            os.makedirs(os.path.dirname(TECHMO_RANK_STREAK_FILE), exist_ok=True)
+            with open(TECHMO_RANK_STREAK_FILE, "w") as f:
+                json.dump({"date": today, "streak": streak}, f)
+        except Exception:
+            pass
+        return streak
+    return saved.get("streak", {})
 _USDINR_CACHE = {"rate": None, "ts": 0}
 
 def _get_usdinr() -> float:
@@ -4949,18 +4981,11 @@ def api_techmo_basket(user_id):
         return jsonify({"success": False, "error": "scan_required"})
 
     signals = _TECHMO_SCAN_CACHE["data"].get("signals", [])  # sorted by score desc
-
-    # Greedy top-12 with max 2/cluster (same rule as scanner)
-    target, cluster_count = [], {}
-    for sig in signals:
-        c = sig["cluster"]
-        if cluster_count.get(c, 0) < 2:
-            target.append(sig)
-            cluster_count[c] = cluster_count.get(c, 0) + 1
-        if len(target) == 12:
-            break
-    target_tickers = {s["ticker"] for s in target}
+    sig_map = {sig["ticker"]: sig for sig in signals}
     unfiltered_rank_map = {sig["ticker"]: sig["rank"] for sig in signals}
+    BUFFER_OUT = 24
+    CLUSTER_CAP = 2
+    rank_gt_streak = _update_techmo_rank_streak(unfiltered_rank_map, BUFFER_OUT)
 
     # User portfolio
     try:
@@ -4974,6 +4999,52 @@ def api_techmo_basket(user_id):
     capital = float(pf.get("capital", 0) or 0)
     per_slot = capital / 12 if capital > 0 else 0
 
+    # Cluster cap with holds-first priority (mirrors mom20_basket.py's sector
+    # cap): a held stock is only displaced by the cap if its own cluster is
+    # already full from OTHER holds ranked ahead of it — new entries never
+    # bump an existing hold out of its cluster's slots, they're just skipped
+    # if the cluster's full. Previously this was a single greedy pass over
+    # all signals with no such priority, so a held stock could lose its
+    # cluster slot to a better-ranked non-held stock with zero visibility
+    # into why — it just silently vanished from `target`.
+    held_sigs = sorted((sig_map[t] for t in held_set if t in sig_map),
+                       key=lambda s: s["rank"])
+    entry_candidates = sorted((s for s in signals if s["ticker"] not in held_set),
+                              key=lambda s: s["rank"])
+    combined = [(s, True) for s in held_sigs] + [(s, False) for s in entry_candidates]
+
+    cluster_count = {}
+    approved = set()
+    displaced_hold_set = set()
+    for sig, is_hold in combined:
+        if not is_hold and len(approved) >= 12:
+            continue  # entries stop once slots are full; holds always get evaluated
+        c = sig["cluster"]
+        if cluster_count.get(c, 0) < CLUSTER_CAP:
+            approved.add(sig["ticker"])
+            cluster_count[c] = cluster_count.get(c, 0) + 1
+        elif is_hold:
+            displaced_hold_set.add(sig["ticker"])
+        # dropped entries are simply skipped
+
+    # Backfill any slots freed by displaced holds / cluster-blocked entries,
+    # same as mom20_basket.py — scan the full ranked list for the next
+    # uncapped candidate.
+    if len(approved) < 12:
+        for s in sorted(signals, key=lambda x: x["rank"]):
+            if len(approved) >= 12:
+                break
+            t = s["ticker"]
+            if t in approved or t in held_set:
+                continue
+            c = s["cluster"]
+            if cluster_count.get(c, 0) < CLUSTER_CAP:
+                approved.add(t)
+                cluster_count[c] = cluster_count.get(c, 0) + 1
+
+    target = [sig_map[t] for t in approved]
+    target_tickers = approved
+
     # Prices: persisted live prices > scan prices
     scan_prices = {sig["ticker"]: sig["price"] for sig in signals}
     live_prices = {}
@@ -4985,24 +5056,30 @@ def api_techmo_basket(user_id):
     def get_px(ticker, fallback=0):
         return live_prices.get(ticker) or scan_prices.get(ticker) or fallback
 
-    BUFFER_OUT = 24
     exits = []
     for h in basket:
         t = h["ticker"]
         if t not in target_tickers:
             r = unfiltered_rank_map.get(t, 999)
-            if r > BUFFER_OUT:
-                ep     = h.get("entry_price", 0)
-                now_px = get_px(t, ep)
-                exits.append({
-                    "ticker":      t,
-                    "cluster":     h.get("cluster", TECHMO_UNIVERSE.get(t, "Other")),
-                    "rank":        r,
-                    "entry_price": round(ep, 2),
-                    "now_price":   round(now_px, 2),
-                    "pnl_pct":     round((now_px / ep - 1) * 100, 2) if ep else 0,
-                    "shares":      h.get("qty") or h.get("shares", 0),
-                })
+            if t in displaced_hold_set:
+                reason = f"cluster cap ≤{CLUSTER_CAP} exceeded"
+            elif r > BUFFER_OUT:
+                reason = f"rank {r} > {BUFFER_OUT}"
+            else:
+                continue  # within buffer, just not promoted to top-12 — keep holding
+            ep     = h.get("entry_price", 0)
+            now_px = get_px(t, ep)
+            exits.append({
+                "ticker":      t,
+                "cluster":     h.get("cluster", TECHMO_UNIVERSE.get(t, "Other")),
+                "rank":        r,
+                "entry_price": round(ep, 2),
+                "now_price":   round(now_px, 2),
+                "pnl_pct":     round((now_px / ep - 1) * 100, 2) if ep else 0,
+                "shares":      h.get("qty") or h.get("shares", 0),
+                "reason":      reason,
+                "rank_gt_days": rank_gt_streak.get(t, 0),
+            })
 
     entries = []
     for sig in target:
