@@ -1396,7 +1396,6 @@
                 <button class="strategy-tab" onclick="switchStrategy('backtest')">Backtest</button>
                 <button class="strategy-tab" onclick="switchStrategy('techmo')">TechMo</button>
                 <button class="strategy-tab" onclick="switchStrategy('summary')">Summary</button>
-                <button class="strategy-tab" onclick="switchStrategy('rrg')">RRG</button>
             </div>
             <span class="last-updated" id="last-updated">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
@@ -2967,54 +2966,6 @@
                 <div id="summary-body"></div>
             </div>
 
-            <!-- RRG (Relative Rotation Graph) Tab -->
-            <div id="rrg-panels" class="hidden" style="padding:24px;">
-                <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
-                    <span id="rrg-title" style="font-size:14px;font-weight:800;color:var(--text-primary);letter-spacing:1px;">RELATIVE ROTATION GRAPH — NSE Sectors vs Nifty 200</span>
-                    <button id="rrg-back-btn" onclick="rrgBackToSectors()" style="display:none;padding:5px 14px;font-size:11px;font-weight:600;
-                               background:var(--bg-tertiary);color:var(--text-secondary);
-                               border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">
-                        ← Back to Sectors
-                    </button>
-                    <select id="rrg-interval" onchange="rrgSetInterval(this.value)"
-                        style="padding:5px 10px;font-size:11px;font-family:inherit;background:var(--bg-tertiary);
-                               color:var(--text-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">
-                        <option value="weekly">Weekly</option>
-                        <option value="daily">Daily</option>
-                    </select>
-                    <button onclick="rrgLoad(true)"
-                        style="display:flex;align-items:center;gap:5px;padding:5px 14px;font-size:11px;font-weight:600;
-                               background:var(--bg-tertiary);color:var(--text-secondary);
-                               border:1px solid var(--border-color);border-radius:6px;cursor:pointer;
-                               transition:background 0.15s;"
-                        onmouseover="this.style.background='var(--bg-hover)'"
-                        onmouseout="this.style.background='var(--bg-tertiary)'">
-                        <span style="font-size:13px;">↻</span> Refresh
-                    </button>
-                    <span id="rrg-status" style="font-size:11px;color:var(--text-muted);"></span>
-                </div>
-                <div style="display:flex;gap:16px;">
-                    <div style="position:relative;height:820px;flex:1 1 auto;min-width:0;">
-                        <canvas id="rrg-chart"></canvas>
-                        <div id="rrg-loading-overlay" style="display:none;position:absolute;inset:0;z-index:20;
-                               background:rgba(255,255,255,0.75);align-items:center;justify-content:center;
-                               font-size:16px;font-weight:700;color:var(--text-secondary);">
-                            Loading stocks…
-                        </div>
-                    </div>
-                    <div style="flex:0 0 200px;">
-                        <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:6px;">
-                            SHOW / HIDE
-                        </div>
-                        <div id="rrg-sector-list-hint" style="display:none;font-size:10px;color:var(--text-muted);
-                               font-style:italic;margin-bottom:8px;">
-                            Click a sector's dot on the chart, or a name below, to see its stocks →
-                        </div>
-                        <div id="rrg-sector-list" style="max-height:780px;overflow-y:auto;font-size:11px;"></div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Note modal (shared for Mom20 position notes) -->
             <div id="note-modal" style="display:none;position:fixed;z-index:9999;background:var(--bg-white);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);padding:14px;width:320px;">
                 <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:8px;">POSITION NOTE — <span id="note-modal-ticker"></span></div>
@@ -3942,7 +3893,6 @@
             else if (strategy === 'backtest') tabs[4].classList.add('active');
             else if (strategy === 'techmo')  tabs[5].classList.add('active');
             else if (strategy === 'summary') tabs[6].classList.add('active');
-            else if (strategy === 'rrg')     tabs[7].classList.add('active');
 
             // Toggle panels
             const wlPanels = document.getElementById('watchlist-panels');
@@ -3956,7 +3906,6 @@
             document.getElementById('backtest-panels').classList.toggle('hidden', strategy !== 'backtest');
             document.getElementById('techmo-panels').classList.toggle('hidden', strategy !== 'techmo');
             document.getElementById('summary-panels').classList.toggle('hidden', strategy !== 'summary');
-            document.getElementById('rrg-panels').classList.toggle('hidden', strategy !== 'rrg');
             // Toggle sidebar settings
             document.getElementById('watchlist-settings').classList.toggle('hidden', strategy !== 'watchlist');
             document.getElementById('rs-settings').classList.toggle('hidden', strategy !== 'rs');
@@ -3983,9 +3932,6 @@
             }
             if (strategy === 'summary') {
                 loadSummary();
-            }
-            if (strategy === 'rrg') {
-                rrgLoad();
             }
         }
 
@@ -10745,298 +10691,6 @@ async function loadSummary() {
     } catch(e) {
         status.textContent = 'Refresh failed — try again';
     }
-}
-
-// ============ RRG (Relative Rotation Graph) ============
-let _rrgChart = null;
-let _rrgPluginRegistered = false;
-let _rrgData = null;             // currently displayed payload (sectors or drilled-into stocks)
-let _rrgSectorData = null;       // cached sector-level payload, restored by "Back to Sectors"
-let _rrgHidden = new Set();      // names unchecked in the sidebar (hidden entirely)
-let _rrgInterval = 'weekly';
-let _rrgMode = 'sectors';        // 'sectors' | 'stocks'
-let _rrgDrilldownSector = null;
-let _rrgHoverName = null;        // name of the currently-hovered series, or null
-
-const RRG_QUADRANT_COLOR = { leading: '#27ae60', weakening: '#f1c40f', lagging: '#e74c3c', improving: '#3498db' };
-const RRG_TAIL_PERIODS = { weekly: 5, daily: 5 };
-
-function _rrgHexToRgba(hex, alpha) {
-    const n = parseInt(hex.slice(1), 16);
-    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
-}
-
-function _rrgRegisterPlugin() {
-    if (_rrgPluginRegistered) return;
-    _rrgPluginRegistered = true;
-    Chart.register({
-        id: 'rrgQuadrant',
-        // Quadrant backgrounds + 100/100 crosshair + corner captions, drawn
-        // behind the scatter datasets.
-        beforeDatasetsDraw(chart) {
-            if (chart.canvas.id !== 'rrg-chart') return;
-            const {ctx, chartArea: a, scales} = chart;
-            if (!a) return;
-            const px = scales.x.getPixelForValue(100), py = scales.y.getPixelForValue(100);
-            ctx.save();
-            const fill = (x0, y0, x1, y1, c) => { ctx.fillStyle = c; ctx.fillRect(x0, y0, x1 - x0, y1 - y0); };
-            fill(px, a.top, a.right, py, 'rgba(39,174,96,0.07)');     // top-right    Leading
-            fill(px, py, a.right, a.bottom, 'rgba(241,196,15,0.07)'); // bottom-right Weakening
-            fill(a.left, py, px, a.bottom, 'rgba(231,76,60,0.07)');   // bottom-left  Lagging
-            fill(a.left, a.top, px, py, 'rgba(52,152,219,0.07)');     // top-left     Improving
-            ctx.strokeStyle = 'rgba(128,128,128,0.5)'; ctx.setLineDash([4, 4]);
-            ctx.beginPath();
-            ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom);
-            ctx.moveTo(a.left, py); ctx.lineTo(a.right, py);
-            ctx.stroke();
-            ctx.setLineDash([]); ctx.font = '700 11px sans-serif';
-            ctx.fillStyle = 'rgba(39,174,96,0.85)';  ctx.textAlign = 'right'; ctx.fillText('LEADING',    a.right - 6, a.top + 14);
-            ctx.fillStyle = 'rgba(241,196,15,0.95)'; ctx.fillText('WEAKENING', a.right - 6, a.bottom - 6);
-            ctx.fillStyle = 'rgba(231,76,60,0.85)';  ctx.textAlign = 'left';  ctx.fillText('LAGGING',    a.left + 6,  a.bottom - 6);
-            ctx.fillStyle = 'rgba(52,152,219,0.85)'; ctx.fillText('IMPROVING', a.left + 6,  a.top + 14);
-            ctx.restore();
-        },
-        // Label every visible series at its current-position dot (background
-        // pill keeps it legible over crossing lines), and draw a small
-        // arrowhead at the tail's head showing direction of travel.
-        afterDatasetsDraw(chart) {
-            if (chart.canvas.id !== 'rrg-chart') return;
-            const {ctx, scales} = chart;
-            ctx.save();
-            chart.data.datasets.forEach((ds, i) => {
-                if (!chart.isDatasetVisible(i) || !ds.data.length) return;
-                const pts = ds.data;
-                const p = pts[pts.length - 1];
-                const px = scales.x.getPixelForValue(p.x), py = scales.y.getPixelForValue(p.y);
-
-                // Arrowhead: direction from the second-to-last point into the head.
-                if (pts.length >= 2) {
-                    const prev = pts[pts.length - 2];
-                    const ppx = scales.x.getPixelForValue(prev.x), ppy = scales.y.getPixelForValue(prev.y);
-                    const dx = px - ppx, dy = py - ppy;
-                    const dist = Math.hypot(dx, dy);
-                    if (dist > 2) {
-                        const ux = dx / dist, uy = dy / dist;
-                        const size = 7;
-                        const bx = px - ux * size, by = py - uy * size;  // arrow base, behind the tip
-                        const perpX = -uy * (size * 0.55), perpY = ux * (size * 0.55);
-                        ctx.fillStyle = ds._solidColor || ds.borderColor;
-                        ctx.beginPath();
-                        ctx.moveTo(px, py);
-                        ctx.lineTo(bx + perpX, by + perpY);
-                        ctx.lineTo(bx - perpX, by - perpY);
-                        ctx.closePath();
-                        ctx.fill();
-                    }
-                }
-
-                // Label pill.
-                ctx.font = '700 10px sans-serif';
-                const labelBg = 'rgba(255,255,255,0.85)';
-                const labelFg = '#1a1a1a';
-                const text = ds._short || ds.label;
-                const w = ctx.measureText(text).width;
-                const lx = px + 8, ly = py + 3;
-                ctx.fillStyle = labelBg;
-                ctx.fillRect(lx - 2, ly - 10, w + 4, 13);
-                ctx.fillStyle = labelFg;
-                ctx.fillText(text, lx, ly);
-            });
-            ctx.restore();
-        }
-    });
-}
-
-async function rrgLoad(force) {
-    const status = document.getElementById('rrg-status');
-    status.textContent = 'Loading…';
-    try {
-        const tail = RRG_TAIL_PERIODS[_rrgInterval];
-        const res = await fetch(`/api/rrg?interval=${_rrgInterval}&tail=${tail}` + (force ? '&refresh=1' : ''));
-        const d = await res.json();
-        if (!d.success) throw new Error(d.error || 'unavailable');
-        status.textContent = 'As of ' + d.as_of + (d.skipped && d.skipped.length ? ` · skipped ${d.skipped.length}` : '');
-        _rrgSectorData = d;
-        _rrgData = d;
-        _rrgMode = 'sectors';
-        _rrgDrilldownSector = null;
-        document.getElementById('rrg-back-btn').style.display = 'none';
-        document.getElementById('rrg-title').textContent = 'RELATIVE ROTATION GRAPH — NSE Sectors vs Nifty 200';
-        _rrgRenderSectorList();
-        _rrgRender();
-    } catch (e) {
-        status.textContent = 'Refresh failed — try again';
-    }
-}
-
-function rrgSetInterval(interval) {
-    _rrgInterval = interval;
-    if (_rrgMode === 'stocks' && _rrgDrilldownSector) {
-        rrgDrillDown(_rrgDrilldownSector);
-    } else {
-        rrgLoad(false);
-    }
-}
-
-async function rrgDrillDown(sectorName) {
-    const status = document.getElementById('rrg-status');
-    const overlay = document.getElementById('rrg-loading-overlay');
-    status.textContent = 'Loading stocks…';
-    overlay.style.display = 'flex';
-    const minVisible = new Promise(r => setTimeout(r, 300));  // guarantee the overlay is
-    // actually perceivable even when the fetch resolves in a few ms (e.g. mom500_daily.pkl
-    // already loaded in memory) — otherwise it can flash on/off invisibly fast.
-    try {
-        const tail = RRG_TAIL_PERIODS[_rrgInterval];
-        const [res] = await Promise.all([
-            fetch(`/api/rrg/stocks?sector=${encodeURIComponent(sectorName)}&interval=${_rrgInterval}&tail=${tail}`),
-            minVisible,
-        ]);
-        const d = await res.json();
-        if (!d.success) throw new Error(d.error || 'unavailable');
-        status.textContent = 'As of ' + d.as_of + (d.skipped && d.skipped.length ? ` · skipped ${d.skipped.length}` : '');
-        _rrgData = d;
-        _rrgMode = 'stocks';
-        _rrgDrilldownSector = sectorName;
-        _rrgHidden.clear();
-        document.getElementById('rrg-back-btn').style.display = 'inline-block';
-        document.getElementById('rrg-title').textContent = `${sectorName} — Constituent Stocks vs Nifty 200`;
-        _rrgRenderSectorList();
-        _rrgRender();
-    } catch (e) {
-        status.textContent = 'Drill-down failed — try again';
-    } finally {
-        overlay.style.display = 'none';
-    }
-}
-
-function rrgBackToSectors() {
-    _rrgData = _rrgSectorData;
-    _rrgMode = 'sectors';
-    _rrgDrilldownSector = null;
-    _rrgHidden.clear();
-    document.getElementById('rrg-back-btn').style.display = 'none';
-    document.getElementById('rrg-title').textContent = 'RELATIVE ROTATION GRAPH — NSE Sectors vs Nifty 200';
-    document.getElementById('rrg-status').textContent = 'As of ' + (_rrgData ? _rrgData.as_of : '');
-    _rrgRenderSectorList();
-    _rrgRender();
-}
-
-function _rrgRenderSectorList() {
-    const el = document.getElementById('rrg-sector-list');
-    const hint = document.getElementById('rrg-sector-list-hint');
-    if (hint) hint.style.display = _rrgMode === 'sectors' ? 'block' : 'none';
-    if (!_rrgData) { el.innerHTML = ''; return; }
-    const sorted = [..._rrgData.sectors].sort((a, b) => b.current.x - a.current.x);
-    el.innerHTML = sorted.map(s => {
-        const col = RRG_QUADRANT_COLOR[s.current.quadrant] || '#888';
-        const checked = !_rrgHidden.has(s.name) ? 'checked' : '';
-        const shortName = s.name.replace('NIFTY ', '');
-        const nameEl = _rrgMode === 'sectors'
-            ? `<span onclick="rrgDrillDown('${s.name.replace(/'/g, "\\'")}')"
-                     title="Click to see constituent stocks"
-                     style="color:var(--accent-color, #4a90d9);cursor:pointer;font-weight:600;"
-                     onmouseover="this.style.textDecoration='underline'"
-                     onmouseout="this.style.textDecoration='none'">${shortName} →</span>`
-            : `<span style="color:var(--text-secondary);">${shortName}</span>`;
-        return `<div style="display:flex;align-items:center;gap:6px;padding:3px 2px;">
-            <input type="checkbox" ${checked} onchange="_rrgToggleHidden('${s.name.replace(/'/g, "\\'")}', this.checked)" style="margin:0;">
-            <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>
-            ${nameEl}
-        </div>`;
-    }).join('');
-}
-
-function _rrgToggleHidden(name, checked) {
-    if (checked) _rrgHidden.delete(name); else _rrgHidden.add(name);
-    _rrgRender();
-}
-
-function _rrgBuildDatasets() {
-    return _rrgData.sectors
-        .filter(s => !_rrgHidden.has(s.name))
-        .map(s => {
-            const col = RRG_QUADRANT_COLOR[s.current.quadrant] || '#888';
-            const faded = _rrgHoverName !== null && _rrgHoverName !== s.name;
-            const alpha = faded ? 0.12 : 1;
-            const points = s.tail.map(p => ({ x: p.x, y: p.y, date: p.date }));
-            const n = points.length;
-            return {
-                label: s.name,
-                _short: s.name.replace('NIFTY ', ''),
-                _solidColor: _rrgHexToRgba(col, alpha),
-                data: points,
-                borderColor: _rrgHexToRgba(col, faded ? 0.1 : 0.55),
-                borderWidth: 1.5,
-                backgroundColor: points.map((_, i) => _rrgHexToRgba(col, i === n - 1 ? alpha : (faded ? 0.1 : 0.5))),
-                showLine: true,
-                // Plain Catmull-Rom-style tension (NOT cubicInterpolationMode:'monotone' —
-                // monotone mode ignores tension and avoids overshoot, which looks flatter
-                // and more angular right at the frequent direction-reversals in an RRG
-                // path; tension alone gives the genuinely smooth curve we want here).
-                tension: 0.45,
-                pointRadius: points.map((_, i) => i === n - 1 ? 6 : 2),
-                pointHoverRadius: points.map((_, i) => i === n - 1 ? 8 : 4),
-                order: faded ? 2 : 1,  // keep the highlighted series' pixels on top
-            };
-        });
-}
-
-function _rrgRender() {
-    if (!_rrgData) return;
-    _rrgRegisterPlugin();
-    const datasets = _rrgBuildDatasets();
-
-    if (_rrgChart) _rrgChart.destroy();
-    _rrgChart = new Chart(document.getElementById('rrg-chart'), {
-        type: 'scatter',
-        data: { datasets },
-        options: {
-            responsive: true, maintainAspectRatio: false, animation: false,
-            interaction: { mode: 'nearest', intersect: false },  // hover near a line, not just exact points
-            onHover: (evt, elements) => {
-                // Fades non-hovered series so the highlighted one stands out — all
-                // identifying info (name, position) is already on the chart itself
-                // via the label pill, so no separate popup is shown. Cursor switches
-                // to a pointer over a hoverable point — the visual cue for "this is
-                // clickable" that was missing before (clicking did nothing silently).
-                evt.native.target.style.cursor = (elements.length && _rrgMode === 'sectors') ? 'pointer' : 'default';
-                if (!elements.length) {
-                    if (_rrgHoverName !== null) { _rrgHoverName = null; _rrgChart.data.datasets = _rrgBuildDatasets(); _rrgChart.update('none'); }
-                    return;
-                }
-                const dsIndex = elements[0].datasetIndex;
-                const name = _rrgChart.data.datasets[dsIndex].label;
-                if (name !== _rrgHoverName) {
-                    _rrgHoverName = name;
-                    _rrgChart.data.datasets = _rrgBuildDatasets();
-                    _rrgChart.update('none');
-                }
-            },
-            // Click a chart point to drill down (in addition to the sidebar name —
-            // both work). Uses 'nearest'+intersect:true (a tighter hit-test than the
-            // hover interaction above) so clicking empty canvas space between curves
-            // doesn't trigger a drill-down on whatever's merely closest.
-            onClick: (evt) => {
-                if (_rrgMode !== 'sectors') return;
-                const hit = _rrgChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
-                if (!hit.length) return;
-                rrgDrillDown(_rrgChart.data.datasets[hit[0].datasetIndex].label);
-            },
-            plugins: {
-                // No native legend — 19+ entries clip/crowd it uselessly.
-                // Direct on-chart labels (the plugin above) carry identity instead.
-                legend: { display: false },
-                tooltip: { enabled: false }  // no popup — the on-chart label pill + fade-on-hover carry all the info needed
-            },
-            scales: {
-                x: { title: { display: true, text: 'RS-Ratio' },
-                     grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } },
-                y: { title: { display: true, text: 'RS-Momentum' },
-                     grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#888', font: { size: 10 } } }
-            }
-        }
-    });
 }
 
 function _fmtPct(v) {
