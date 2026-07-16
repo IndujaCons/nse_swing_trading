@@ -9171,11 +9171,14 @@ function techmoRender(d) {
     if (posEl)   posEl.textContent   = (d.holdings || []).length + ' / 12';
     if (rebalEl) rebalEl.textContent = d.next_rebalance || '—';
 
-    const pnlColor = d.total_pnl >= 0 ? 'var(--green)' : '#ef5350';
+    // Must match the sign of total_pnl_pct (realized + unrealized combined) since
+    // that's what's actually displayed here — not total_pnl alone (unrealized-only),
+    // which can be positive while the combined return is negative and vice versa.
+    const returnsColor = d.total_pnl_pct >= 0 ? 'var(--green)' : '#ef5350';
     const fmtUSD = v => '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     document.getElementById('techmo-tracker-returns').textContent  = (d.total_pnl_pct >= 0 ? '+' : '') + d.total_pnl_pct.toFixed(2) + '%';
-    document.getElementById('techmo-tracker-returns').style.color  = pnlColor;
+    document.getElementById('techmo-tracker-returns').style.color  = returnsColor;
     document.getElementById('techmo-tracker-since').textContent    = d.tracking_since || d.entry_date || '—';
     document.getElementById('techmo-tracker-invested').textContent = fmtUSD(d.total_cost);
     document.getElementById('techmo-tracker-current').textContent  = fmtUSD(d.total_current);
