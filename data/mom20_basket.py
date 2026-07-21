@@ -29,7 +29,8 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
                     top5_sectors: list = None,
                     etf_prices: dict = None,
                     mom20_overflow: list = None,
-                    rank_gt40_streak: dict = None) -> dict:
+                    rank_gt40_streak: dict = None,
+                    rank_le15_streak: dict = None) -> dict:
     """
     Compute exits + entries for a Mom20 rebalance and return basket data.
 
@@ -257,6 +258,7 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
             "volatility":        vol_map.get(ticker, 0),
             "vol_3m":            vol_3m_map.get(ticker, 0),
             "ema20_ext":         s.get("ema20_ext"),
+            "rank_le15_days":    (rank_le15_streak or {}).get(ticker, 0),
         })
     entries.sort(key=lambda x: x["rank"])
 

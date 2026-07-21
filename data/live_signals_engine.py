@@ -1222,15 +1222,26 @@ class LiveSignalsEngine:
                     t: (_existing_streak.get(t, 0) + 1) if _today_ranks.get(t, 0) > 40 else 0
                     for t in _today_ranks
                 }
+                # Mirror for entries: +1 for each ticker still <= 15 (the entry
+                # buffer), reset to 0 otherwise — so a single-day pop into the
+                # entry zone doesn't read the same as a stock that's been
+                # sitting there persistently.
+                _existing_entry_streak = _existing.get("rank_le15_streak") or {}
+                data["rank_le15_streak"] = {
+                    t: (_existing_entry_streak.get(t, 0) + 1) if 0 < _today_ranks.get(t, 0) <= 15 else 0
+                    for t in _today_ranks
+                }
             else:
                 data["prev_ranks"]     = _existing.get("prev_ranks") or {}
                 data["prev_rank_date"] = _existing.get("prev_rank_date") or ""
                 # Intraday re-scan: carry streak forward unchanged
                 data["rank_gt40_streak"] = _existing.get("rank_gt40_streak") or {}
+                data["rank_le15_streak"] = _existing.get("rank_le15_streak") or {}
         except Exception:
             data["prev_ranks"]     = {}
             data["prev_rank_date"] = ""
             data["rank_gt40_streak"] = {}
+            data["rank_le15_streak"] = {}
 
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)

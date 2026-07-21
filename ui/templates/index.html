@@ -9767,12 +9767,18 @@ function _renderMom20Basket(d) {
         `<input type="checkbox" class="${cls}" data-ticker="${ticker}" ${checked ? 'checked' : ''}
          style="accent-color:${checked ? 'var(--green)' : '#ef5350'};cursor:pointer;" onchange="mom20SyncSelectAll()">`;
 
+    // Days the ticker has held rank <= 15 (the entry buffer) — a single-day
+    // pop into range reads very differently from a stock that's persistently
+    // qualified, so surface it right next to rank rather than hiding it.
+    const entryDaysBadge = e => e.rank_le15_days > 0
+        ? ` <span style="font-size:9px;color:var(--text-muted);">(${e.rank_le15_days}d)</span>` : '';
+
     const entryRows = entries.map((e,i) => `<tr>
             <td style="text-align:center;">${chkEntry(e.ticker)}</td>
             <td>${i+1}</td>
             <td>${tickerLink(e.ticker,'var(--green)')}</td>
             <td style="color:var(--text-muted);font-size:11px">${sectorOf(e)}</td>
-            <td>${rankCell(e.rank)}</td>
+            <td>${rankCell(e.rank)}${entryDaysBadge(e)}</td>
             <td>${fmtP(e.price)}</td>
             <td style="font-weight:700">${e.qty}</td>
             <td>${fmt(e.capital_allocated)}</td>
