@@ -781,12 +781,13 @@ class LiveSignalsEngine:
 
             # Mom20: raw momentum features for cross-sectional Z-score after loop
             mom_feat = compute_mom20_features(
-                ticker, closes, i, price, bench_ret_series, bench_var)
+                ticker, closes, i, price, bench_ret_series, bench_var, highs=highs)
             if mom_feat is not None:
                 mom20_raw.append(mom_feat)
             if i >= 253:  # previous session features for rank-change Δ
                 prev_feat = compute_mom20_features(
-                    ticker, closes, i - 1, float(closes.iloc[i - 1]), bench_ret_series, bench_var)
+                    ticker, closes, i - 1, float(closes.iloc[i - 1]), bench_ret_series, bench_var,
+                    highs=highs)
                 if prev_feat is not None:
                     mom20_raw_prev.append(prev_feat)
 
@@ -1222,13 +1223,13 @@ class LiveSignalsEngine:
                     t: (_existing_streak.get(t, 0) + 1) if _today_ranks.get(t, 0) > 40 else 0
                     for t in _today_ranks
                 }
-                # Mirror for entries: +1 for each ticker still <= 15 (the entry
-                # buffer), reset to 0 otherwise — so a single-day pop into the
-                # entry zone doesn't read the same as a stock that's been
+                # Mirror for entries: +1 for each ticker still <= 20 (top-20
+                # portfolio size), reset to 0 otherwise — so a single-day pop
+                # into range doesn't read the same as a stock that's been
                 # sitting there persistently.
-                _existing_entry_streak = _existing.get("rank_le15_streak") or {}
-                data["rank_le15_streak"] = {
-                    t: (_existing_entry_streak.get(t, 0) + 1) if 0 < _today_ranks.get(t, 0) <= 15 else 0
+                _existing_entry_streak = _existing.get("rank_le20_streak") or {}
+                data["rank_le20_streak"] = {
+                    t: (_existing_entry_streak.get(t, 0) + 1) if 0 < _today_ranks.get(t, 0) <= 20 else 0
                     for t in _today_ranks
                 }
             else:
@@ -1236,12 +1237,12 @@ class LiveSignalsEngine:
                 data["prev_rank_date"] = _existing.get("prev_rank_date") or ""
                 # Intraday re-scan: carry streak forward unchanged
                 data["rank_gt40_streak"] = _existing.get("rank_gt40_streak") or {}
-                data["rank_le15_streak"] = _existing.get("rank_le15_streak") or {}
+                data["rank_le20_streak"] = _existing.get("rank_le20_streak") or {}
         except Exception:
             data["prev_ranks"]     = {}
             data["prev_rank_date"] = ""
             data["rank_gt40_streak"] = {}
-            data["rank_le15_streak"] = {}
+            data["rank_le20_streak"] = {}
 
         with open(self.cache_file, 'w') as f:
             json.dump(data, f, indent=2)

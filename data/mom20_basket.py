@@ -30,7 +30,7 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
                     etf_prices: dict = None,
                     mom20_overflow: list = None,
                     rank_gt40_streak: dict = None,
-                    rank_le15_streak: dict = None) -> dict:
+                    rank_le20_streak: dict = None) -> dict:
     """
     Compute exits + entries for a Mom20 rebalance and return basket data.
 
@@ -193,6 +193,19 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
     for ticker, is_hold, item in combined:
         if is_fresh and not is_hold and len(approved_entries_set) >= N_SLOTS:
             break
+        # 52-week-high filter — new entries only, matches the backtest's
+        # "reject any candidate more than 20% off its 52-week high" rule
+        # (mom15_pit_report.py). Previously only checked inside the backfill
+        # loop below, which the common case (top-15 already fills all 20
+        # slots) never reaches — so live could buy extended pullbacks the
+        # backtest would have explicitly skipped. Holds are exempt: this is
+        # an entry-time filter, not a reason to force-exit an existing
+        # position that's since pulled back.
+        if not is_hold:
+            high_52w = item.get("high_52w")
+            price = item.get("price", 0)
+            if high_52w and price and price < high_52w * 0.80:
+                continue
         sec = (sector_map or {}).get(ticker)
         if sec is None or sec_counts.get(sec, 0) < SECTOR_CAP:
             (approved_holds_set if is_hold else approved_entries_set).add(ticker)
@@ -258,7 +271,7 @@ def generate_basket(user: dict, signals: list, current_portfolio: dict,
             "volatility":        vol_map.get(ticker, 0),
             "vol_3m":            vol_3m_map.get(ticker, 0),
             "ema20_ext":         s.get("ema20_ext"),
-            "rank_le15_days":    (rank_le15_streak or {}).get(ticker, 0),
+            "rank_le20_days":    (rank_le20_streak or {}).get(ticker, 0),
         })
     entries.sort(key=lambda x: x["rank"])
 

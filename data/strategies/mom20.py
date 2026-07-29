@@ -8,13 +8,21 @@ no IO, no side effects.
 import numpy as np
 
 
-def compute_mom20_features(ticker, closes, i, price, bench_ret_series, bench_var):
+def compute_mom20_features(ticker, closes, i, price, bench_ret_series, bench_var, highs=None):
     """Returns the mom20_raw entry for one ticker, or None if insufficient
     data / degenerate σ. Math identical to the original inline block.
 
     `bench_ret_series`/`bench_var` should be the regime benchmark's (Nifty200)
     daily returns, matching the backtest (mom15_pit_report.py) — beta is
-    measured against the same universe Mom20 trades, not a fixed Nifty50."""
+    measured against the same universe Mom20 trades, not a fixed Nifty50.
+
+    `highs`: daily High series, same index as `closes`. Used for high_52w —
+    the backtest (mom15_pit_report.py) computes this from the High column,
+    not Close, so using Close here understated the true 52-week high and
+    made the "not more than 20% off highs" entry filter systematically too
+    lenient. Falls back to `closes` if highs isn't passed (keeps this
+    backward-compatible for any other caller), but every real caller should
+    supply it."""
     if i < 252:
         return None
     try:
@@ -29,7 +37,8 @@ def compute_mom20_features(ticker, closes, i, price, bench_ret_series, bench_var
 
         ema20     = float(closes.ewm(span=20, adjust=False).mean().iloc[i])
         ema20_ext = round((price / ema20 - 1) * 100, 1) if ema20 > 0 else 0.0
-        high_52w  = float(closes.iloc[i - 252:i + 1].max())
+        high_source = highs if highs is not None else closes
+        high_52w  = float(high_source.iloc[i - 252:i + 1].max())
 
         # Beta vs regime benchmark (Nifty200), date-aligned.
         mom_beta = None
