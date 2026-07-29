@@ -9767,11 +9767,12 @@ function _renderMom20Basket(d) {
         `<input type="checkbox" class="${cls}" data-ticker="${ticker}" ${checked ? 'checked' : ''}
          style="accent-color:${checked ? 'var(--green)' : '#ef5350'};cursor:pointer;" onchange="mom20SyncSelectAll()">`;
 
-    // Days the ticker has held rank <= 15 (the entry buffer) — a single-day
-    // pop into range reads very differently from a stock that's persistently
-    // qualified, so surface it right next to rank rather than hiding it.
-    const entryDaysBadge = e => e.rank_le15_days > 0
-        ? ` <span style="font-size:9px;color:var(--text-muted);">(${e.rank_le15_days}d)</span>` : '';
+    // Days the ticker has held rank <= 20 (top-20 portfolio size) — a
+    // single-day pop into range reads very differently from a stock that's
+    // persistently qualified, so surface it right next to rank rather than
+    // hiding it.
+    const entryDaysBadge = e => e.rank_le20_days > 0
+        ? ` <span style="font-size:9px;color:var(--text-muted);">(${e.rank_le20_days}d)</span>` : '';
 
     const entryRows = entries.map((e,i) => `<tr>
             <td style="text-align:center;">${chkEntry(e.ticker)}</td>

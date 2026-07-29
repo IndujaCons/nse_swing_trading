@@ -2735,7 +2735,7 @@ def api_mom20_basket_preview(user_id):
                                   etf_prices=_etf_prices,
                                   mom20_overflow=mom20_overflow,
                                   rank_gt40_streak=result.get("rank_gt40_streak"),
-                                  rank_le15_streak=result.get("rank_le15_streak"))
+                                  rank_le20_streak=result.get("rank_le20_streak"))
 
     # Append overflow candidates (combined unfiltered rank ≤ 15 = buffer_in, β > 1.2) as optional entries
     capital    = user.get("strategies", {}).get("mom20", {}).get("capital", 0) or 0
@@ -2828,7 +2828,7 @@ def api_mom20_basket_download(user_id):
                                   etf_prices=_etf_prices,
                                   mom20_overflow=mom20_overflow,
                                   rank_gt40_streak=result.get("rank_gt40_streak"),
-                                  rank_le15_streak=result.get("rank_le15_streak"))
+                                  rank_le20_streak=result.get("rank_le20_streak"))
     from data.mom20_basket import to_zerodha_json
     json_content = to_zerodha_json(basket_data)
 
