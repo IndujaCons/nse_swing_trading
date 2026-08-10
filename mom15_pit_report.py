@@ -38,6 +38,7 @@ PARABOLIC_FILTER  = False          # skip new entries where Ret12m>300% AND Ret3
 NO_EPS_FILTER     = False          # skip EPS gate entirely (test flag)
 BETA_DRIFT_HOLD   = False          # held stocks with β>cap are NOT forced out (test flag)
 NO_52W_FILTER     = False          # skip 52-week high proximity filter (test flag)
+FIFTY2W_PCT       = 20.0           # max % below 52-week high allowed for new entries (test flag: --52w-threshold)
 LIVE_SECTOR_CAP   = False          # sector cap: holds pre-approved, only entries gated (matches live basket)
 LONG_PD      = 252            # 12m in trading days
 SHORT_PD     = 63             # 3m in trading days
@@ -210,6 +211,39 @@ def eps_passes(eps_db, ticker, day):
         return True
     return (latest / prev - 1) > 0.0
 
+def profit_growth_passes(eps_db, ticker, day):
+    """True unless annual Net Profit fails EITHER: (a) latest FY > prior FY, or
+    (b) latest FY > FY three years prior — a binary gate, test flag for
+    --profit-growth-filter. Annual-only (not TTM like eps_passes): user's ask was
+    "profit growth YoY and 3yr", matching how screener.in itself reports these as
+    FY-over-FY figures. Each leg is checked independently and skipped (pass-through)
+    if that specific comparison lacks data — same missing-data convention as
+    eps_passes/earnings_yield, so a young listing with only 2 years of annual
+    profit data isn't penalized for the missing 3yr leg."""
+    if ticker not in eps_db:
+        return True
+    d = eps_db[ticker]
+    if not isinstance(d, dict):
+        return True
+    annual = d.get("annual_profit", {})
+    valid_a = {ps: v for ps, v in annual.items()
+               if ps.split() and MON_MAP.get(ps.split()[0], 0) and _eps_avail(ps) <= day}
+    if len(valid_a) < 2:
+        return True
+    sorted_a = sorted(valid_a.keys(), key=_eps_sort_key)
+    latest = valid_a[sorted_a[-1]]
+
+    prev = valid_a[sorted_a[-2]]
+    if abs(prev) >= 0.01 and (latest / prev - 1) <= 0.0:
+        return False
+
+    if len(sorted_a) >= 4:
+        three_yr_ago = valid_a[sorted_a[-4]]
+        if abs(three_yr_ago) >= 0.01 and (latest / three_yr_ago - 1) <= 0.0:
+            return False
+
+    return True
+
 def eps_growth_variability(eps_db, ticker, day, years=5):
     """Std dev of YoY annual EPS growth over the trailing `years` (NSE Quality methodology).
     g(n) = (EPS(n)-EPS(n-1))/EPS(n-1) if EPS(n-1)>0, else -(EPS(n)-EPS(n-1))/EPS(n-1) if EPS(n-1)<0.
@@ -344,7 +378,7 @@ def load_or_fetch_data(tickers, fetch_start, fetch_end, refresh=False, cache_fil
 # ── SCORING ───────────────────────────────────────────────────────────────────
 def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
                    n50_iloc, eps_db, quality_eps_db=None, variability_cap_pct=None,
-                   value_yield_floor_pct=None):
+                   value_yield_floor_pct=None, profit_growth_filter=False):
     pit_set = get_pit_universe(pit_data, day)
     raw = {}
 
@@ -418,8 +452,15 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
         raw = {t: s for t, s in raw.items() if s["beta"] >= BETA_MIN}
 
     # EPS filter
-    if eps_db:
+    if eps_db and not NO_EPS_FILTER:
         raw = {t: s for t, s in raw.items() if eps_passes(eps_db, t, day)}
+
+    # Profit-growth gate (test flag --profit-growth-filter): exclude names whose
+    # annual Net Profit isn't growing both YoY and vs 3 years ago. Binary filter,
+    # does NOT touch scoring/ranking — same convention as the quality/value gates
+    # below.
+    if profit_growth_filter and eps_db:
+        raw = {t: s for t, s in raw.items() if profit_growth_passes(eps_db, t, day)}
 
     # Quality eligibility (MQ variant only): require usable EPS-growth-variability data
     if quality_eps_db:
@@ -571,13 +612,15 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         sector_cap=None, addv_min=None, niftybees=False, goldbees=False, sip=0,
         no_eps=False, beta_drift_hold=False, no_52w=False, live_sector_cap=False,
         dip_entry=False, mq500=False, variability_cap_pct=None, value_yield_floor_pct=None,
-        monthly_override=False):
+        monthly_override=False, overlay_exit=None, overlay_cadence="daily",
+        profit_growth_filter=False, fifty2w_pct=20.0):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD, NO_52W_FILTER, LIVE_SECTOR_CAP
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD, NO_52W_FILTER, LIVE_SECTOR_CAP, FIFTY2W_PCT
     PARABOLIC_FILTER = parabolic_filter
     NO_EPS_FILTER    = no_eps
     BETA_DRIFT_HOLD  = beta_drift_hold
     NO_52W_FILTER    = no_52w
+    FIFTY2W_PCT      = fifty2w_pct
     LIVE_SECTOR_CAP  = live_sector_cap
     BETA_MIN  = None  # reset each run
     ADDV_MIN  = addv_min  # None = disabled
@@ -686,10 +729,15 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             with open(EPS_FILE) as f:
                 quality_eps_db = json.load(f)
             print(f"  {len(quality_eps_db)} stocks with EPS data (quality factor, no binary gate)")
-    elif os.path.exists(EPS_FILE) and not NO_EPS_FILTER:
+    elif os.path.exists(EPS_FILE) and (not NO_EPS_FILTER or profit_growth_filter):
+        # Loaded even under --no-eps when --profit-growth-filter is requested — same
+        # JSON file also holds the annual_profit data that gate needs; the TTM
+        # eps_passes() gate itself is separately skipped below when NO_EPS_FILTER is set.
         with open(EPS_FILE) as f:
             eps_db = json.load(f)
         print(f"  {len(eps_db)} stocks with EPS data")
+        if NO_EPS_FILTER:
+            print("  TTM EPS filter disabled (--no-eps) — profit-growth filter still active")
     elif NO_EPS_FILTER:
         print("  EPS filter disabled (--no-eps)")
 
@@ -822,6 +870,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     cash      = 10_00_000.0 if overflow else 20_00_000.0
     _starting_cash = cash
     portfolio = {}            # ticker → {entry_date, entry_price, shares, entry_cost}
+    overlay_below_streak = {}  # ticker -> consecutive monitoring-days below EMA50 (--overlay-exit ema50_2d only)
     all_trades = []           # closed trades
     total_charges = 0.0
     _sip_total = 0.0          # cumulative SIP injected
@@ -951,7 +1000,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         scores = compute_scores(rebal_day, stock_data, date_to_iloc, pit_data,
                                 n50_raw, n50_iloc, eps_db, quality_eps_db=quality_eps_db,
                                 variability_cap_pct=variability_cap_pct,
-                                value_yield_floor_pct=value_yield_floor_pct)
+                                value_yield_floor_pct=value_yield_floor_pct,
+                                profit_growth_filter=profit_growth_filter)
         if not scores:
             print(f"  ⚠ Insufficient scored stocks — skipping rebalance")
             continue
@@ -970,7 +1020,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                                                pit_data, n50_raw, n50_iloc, eps_db,
                                                quality_eps_db=quality_eps_db,
                                                variability_cap_pct=variability_cap_pct,
-                                               value_yield_floor_pct=value_yield_floor_pct)
+                                               value_yield_floor_pct=value_yield_floor_pct,
+                                               profit_growth_filter=profit_growth_filter)
             BETA_MIN, BETA_CAP = old_beta_min, old_beta_cap
             if scores_unfiltered:
                 ranked_unfiltered = sorted(scores_unfiltered.items(),
@@ -986,7 +1037,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                                         pit_data, n50_raw, n50_iloc, eps_db,
                                         quality_eps_db=quality_eps_db,
                                         variability_cap_pct=variability_cap_pct,
-                                        value_yield_floor_pct=value_yield_floor_pct)
+                                        value_yield_floor_pct=value_yield_floor_pct,
+                                        profit_growth_filter=profit_growth_filter)
         BETA_MIN, BETA_CAP = old_beta_min, old_beta_cap
         if scores_display:
             ranked_display = sorted(scores_display.items(), key=lambda x: -x[1]["composite"])
@@ -1232,7 +1284,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             s = scores[t]
             ep = s["price"]
 
-            # 52-week high filter: skip new entries > 20% below 52w high
+            # 52-week high filter: skip new entries > FIFTY2W_PCT% below 52w high
             idx_map = date_to_iloc.get(t, {})
             ci = idx_map.get(rebal_day)
             if ci is None:
@@ -1244,7 +1296,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             if not NO_52W_FILTER and not qqq and not sp500 and not overflow and ci is not None and ci >= 252:
                 high_52w = float(stock_data[t]["High"].iloc[ci-252:ci+1].max())
                 dist_from_high = (ep / high_52w - 1) * 100
-                if ep < high_52w * 0.80:
+                if ep < high_52w * (1 - FIFTY2W_PCT / 100.0):
                     skipped_52w.append((t, ticker_rank[t], f"{ep:,.1f}",
                                         f"{high_52w:,.1f}", f"{dist_from_high:.1f}%"))
                     continue
@@ -1263,6 +1315,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 "entry_price": ep,
                 "shares": shares,
             }
+            overlay_below_streak[t] = 0  # fresh holding period — no carryover from a prior one
             r12, r3 = s['ret_12m'], s['ret_3m']
             para_warn = r12 > 3.0 and r3 > 0 and (r3 / r12) > 0.5
             ext = ema20_ext(stock_data, date_to_iloc, t, rebal_day)
@@ -1351,6 +1404,64 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         ) if passive_list else ""
         print(f"\n  AFTER: Invested {inr(invested)} | Cash {inr(cash)} | "
               f"Total {inr(total_now)} | Positions {len(portfolio)}/{MAX_SLOTS} | Slot {inr(per_slot)}{p_str}")
+
+        # ── INTRA-REBALANCE OVERLAY EXIT (test flag — inert unless --overlay-exit
+        # is passed, zero effect on the frozen default --mom20 spec). Monitors
+        # currently-held positions on every trading day (or every Friday, for
+        # --overlay-cadence weekly) between this rebalance and the next one, and
+        # force-exits at that day's close if the rule triggers. A vacated slot
+        # simply sits as cash until the next scheduled rebalance — this doesn't
+        # go hunting for a replacement mid-cycle, matching how a trader running
+        # this manually would actually operate. Skipped during regime-off (same
+        # "hold everything, don't churn" logic as the EMA200 exit filter above),
+        # unless --regime-exit is also set.
+        if overlay_exit and not (regime_off and not regime_exit):
+            window_end = rebal_dates[rebal_idx + 1] if rebal_idx + 1 < len(rebal_dates) \
+                else trading_days[-1] + timedelta(days=1)
+            monitor_days = [d for d in trading_days if rebal_day < d < window_end]
+            if overlay_cadence == "weekly":
+                monitor_days = [d for d in monitor_days if d.weekday() == 4]  # Friday
+            for mday in monitor_days:
+                for t in list(portfolio.keys()):
+                    idx_map = date_to_iloc.get(t, {})
+                    ci = idx_map.get(mday)
+                    if ci is None or ci < 50:
+                        continue
+                    closes_arr = stock_data[t]["Close"].iloc[max(0, ci - 100):ci + 1]
+                    if len(closes_arr) < 50:
+                        continue
+                    close_val = float(closes_arr.iloc[-1])
+                    triggered = False
+                    if overlay_exit == "sma50":
+                        sma50 = float(closes_arr.rolling(50).mean().iloc[-1])
+                        triggered = close_val < sma50
+                    elif overlay_exit == "ema50_2d":
+                        ema50 = float(closes_arr.ewm(span=50, adjust=False).mean().iloc[-1])
+                        if close_val < ema50:
+                            overlay_below_streak[t] = overlay_below_streak.get(t, 0) + 1
+                        else:
+                            overlay_below_streak[t] = 0
+                        triggered = overlay_below_streak.get(t, 0) >= 2
+                    if not triggered:
+                        continue
+                    pos = portfolio[t]
+                    gross_pnl = (close_val - pos["entry_price"]) * pos["shares"]
+                    buy_val = pos["entry_price"] * pos["shares"]
+                    sell_val = close_val * pos["shares"]
+                    chg = calc_charges(buy_val, sell_val)
+                    net_pnl = gross_pnl - chg
+                    hold_days = (mday - pos["entry_date"]).days
+                    cash += sell_val
+                    total_charges += chg
+                    all_trades.append({
+                        "ticker": t, "entry": pos["entry_date"], "exit": mday,
+                        "entry_price": pos["entry_price"], "exit_price": close_val,
+                        "shares": pos["shares"], "gross_pnl": gross_pnl,
+                        "charges": chg, "net_pnl": net_pnl, "hold_days": hold_days,
+                        "overlay_exit": overlay_exit,
+                    })
+                    del portfolio[t]
+                    overlay_below_streak.pop(t, None)
 
     # ── FINAL SUMMARY ─────────────────────────────────────────────────────────
     # Mark open positions at last available price
@@ -1530,6 +1641,8 @@ if __name__ == "__main__":
                         help="Held stocks with β>cap are NOT forced out (matches live basket)")
     parser.add_argument("--no-52w", action="store_true",
                         help="Disable 52-week high proximity filter (test: measure its impact)")
+    parser.add_argument("--52w-threshold", dest="fifty2w_pct", type=float, default=20.0,
+                        help="Max %% below 52-week high allowed for new entries (default: 20)")
     parser.add_argument("--live-sector-cap", action="store_true",
                         help="Sector cap: pre-approve holds, only gate new entries (matches live basket)")
     parser.add_argument("--niftybees", action="store_true",
@@ -1540,6 +1653,17 @@ if __name__ == "__main__":
                         help="Inject this amount (₹) of fresh capital at every rebalance (e.g. --sip 100000 for ₹1L/mo)")
     parser.add_argument("--dip-entry", action="store_true",
                         help="Entries only when Nifty200 daily close < SMA20 (exits always proceed)")
+    parser.add_argument("--overlay-exit", choices=["sma50", "ema50_2d"], default=None,
+                        help="Intra-rebalance overlay: force-exit a holding early if its close < 50-day "
+                             "SMA (sma50) or closes < 50-day EMA for 2 consecutive monitoring days "
+                             "(ema50_2d). Monitored on --overlay-cadence between rebalances; vacated "
+                             "slots sit as cash until the next scheduled rebalance.")
+    parser.add_argument("--overlay-cadence", choices=["daily", "weekly"], default="daily",
+                        help="How often --overlay-exit is checked between rebalances — every trading "
+                             "day, or only on Fridays (default: daily)")
+    parser.add_argument("--profit-growth-filter", action="store_true",
+                        help="Exclude names whose annual Net Profit isn't growing both YoY and vs "
+                             "3 years ago, as a binary gate (test flag, inert unless passed)")
     args = parser.parse_args()
     # `--no-regime` (legacy) takes precedence and forces 'none'.
     regime_filter = "none" if args.no_regime else args.regime
@@ -1557,4 +1681,6 @@ if __name__ == "__main__":
         no_eps=args.no_eps, beta_drift_hold=args.beta_drift_hold, no_52w=args.no_52w,
         live_sector_cap=args.live_sector_cap, dip_entry=args.dip_entry, mq500=args.mq500,
         variability_cap_pct=args.quality_variability_cap,
-        value_yield_floor_pct=args.value_yield_floor, monthly_override=args.monthly)
+        value_yield_floor_pct=args.value_yield_floor, monthly_override=args.monthly,
+        overlay_exit=args.overlay_exit, overlay_cadence=args.overlay_cadence,
+        profit_growth_filter=args.profit_growth_filter, fifty2w_pct=args.fifty2w_pct)

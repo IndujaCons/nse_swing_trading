@@ -7,7 +7,8 @@ Output: data/quarterly_eps.json
 Format: {
   "RELIANCE": {
     "quarterly": {"Dec 2022": 11.67, "Mar 2023": 14.26, ...},
-    "annual": {"Mar 2014": 16.31, "Mar 2015": 17.07, ...}
+    "annual": {"Mar 2014": 16.31, "Mar 2015": 17.07, ...},
+    "annual_profit": {"Mar 2014": 21984.0, "Mar 2015": 23566.0, ...}
   }, ...
 }
 
@@ -70,7 +71,7 @@ def fetch_eps(session, ticker):
         if len(tables) < 2:
             continue
 
-        result = {"quarterly": {}, "annual": {}}
+        result = {"quarterly": {}, "annual": {}, "annual_profit": {}}
 
         # Table 0: Quarterly results
         # Table 1: Annual P&L
@@ -99,6 +100,21 @@ def fetch_eps(session, ticker):
                         except (ValueError, TypeError):
                             continue
                     break
+
+            # Net Profit row (annual table only — feeds the YoY/3yr profit-growth gate)
+            if key == "annual":
+                for row in rows:
+                    cells = [td.text.strip() for td in row.find_all(["th", "td"])]
+                    if cells and "Net Profit" in cells[0]:
+                        profit_values = cells[1:]
+                        for p, v in zip(periods, profit_values):
+                            if not p or not v or p == "TTM":
+                                continue
+                            try:
+                                result["annual_profit"][p] = float(v.replace(",", "").strip())
+                            except (ValueError, TypeError):
+                                continue
+                        break
 
         if result["quarterly"] or result["annual"]:
             return result
@@ -201,8 +217,8 @@ def main():
                 try:
                     parts = lq.split(); m, y = MON_MAP_S.get(parts[0], 0), int(parts[1])
                     lq_date = datetime.date(y, m, 1) if m else datetime.date(2000, 1, 1)
-                    if lq_date >= cutoff:
-                        continue  # quarterly data is fresh — skip
+                    if lq_date >= cutoff and existing[ticker].get("annual_profit"):
+                        continue  # quarterly fresh AND annual_profit already backfilled — skip
                 except Exception:
                     pass
 

@@ -101,9 +101,19 @@ def save_portfolio(state: dict, user_id=None, portfolio_file: str = None):
     os.replace(tmp, path)
 
 
+REBAL_MONTHS = {2, 4, 6, 8, 10, 12}  # frozen Mom20 spec — matches mom15_pit_report.py get_rebal_dates()
+
+
 def get_next_rebalance_date() -> date:
     today = date.today()
-    first = date(today.year + 1, 1, 1) if today.month == 12 else date(today.year, today.month + 1, 1)
+    year, month = today.year, today.month + 1
+    if month > 12:
+        year, month = year + 1, 1
+    while month not in REBAL_MONTHS:
+        month += 1
+        if month > 12:
+            year, month = year + 1, 1
+    first = date(year, month, 1)
     while first.weekday() >= 5:
         first += timedelta(days=1)
     return first
