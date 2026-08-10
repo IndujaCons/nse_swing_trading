@@ -2332,7 +2332,8 @@ _ETF_LTP_CACHE_FILE     = os.path.join(_CACHE_DIR_A, "etf_ltp_cache.json")
 
 # Sector ranking — 15-min TTL (stale-while-revalidate: serve stale immediately).
 _SECTOR_RANK_CACHE = {"ranking": None, "timestamp": 0,
-                      "prev_sector_ranks": {}, "prev_sector_rank_date": ""}
+                      "prev_sector_ranks": {}, "prev_sector_rank_date": "",
+                      "rank_history": []}
 _sector_rank_refresh_lock = threading.Lock()  # one background refresh at a time
 
 # ETF LTP — per-symbol 5-min TTL (LTPs change intraday but a few minutes of
@@ -2345,6 +2346,22 @@ _ETF_LTP_TTL   = 300
 _SECTOR_MAP_CACHE = None
 
 
+def _seeded_rank_history(raw: dict) -> list:
+    """rank_history from a raw sector_ranking_cache.json dict, migration-seeded from
+    the old single-snapshot fields (prev_sector_ranks/prev_sector_rank_date) when the
+    key is absent — shared by load and save so an old-schema file on disk gets a usable
+    (1-snapshot) Climb window immediately, not just in the in-memory cache until the
+    next save silently drops it."""
+    hist = raw.get("rank_history")
+    if hist:
+        return hist
+    prev_ranks = raw.get("prev_sector_ranks") or {}
+    prev_date  = raw.get("prev_sector_rank_date") or ""
+    if prev_ranks and prev_date:
+        return [{"date": prev_date, "n": len(prev_ranks), "ranks": prev_ranks}]
+    return []
+
+
 def _load_sector_rank_disk():
     """Load sector_ranking_cache.json into memory if present."""
     try:
@@ -2355,6 +2372,7 @@ def _load_sector_rank_disk():
             _SECTOR_RANK_CACHE["timestamp"]             = float(d.get("timestamp", 0))
             _SECTOR_RANK_CACHE["prev_sector_ranks"]     = d.get("prev_sector_ranks") or {}
             _SECTOR_RANK_CACHE["prev_sector_rank_date"] = d.get("prev_sector_rank_date") or ""
+            _SECTOR_RANK_CACHE["rank_history"]          = _seeded_rank_history(d)
     except Exception:
         pass
 
@@ -2365,18 +2383,27 @@ def _save_sector_rank_disk():
         today_str = datetime.now().strftime("%Y-%m-%d")
         prev_ranks = {}
         prev_rank_date = ""
+        rank_history = []
         try:
             with open(_SECTOR_RANK_CACHE_FILE) as _f:
                 _existing = json.load(_f)
             existing_ts = float(_existing.get("timestamp", 0))
+            rank_history = list(_seeded_rank_history(_existing))
             if existing_ts:
                 existing_date = datetime.fromtimestamp(existing_ts).strftime("%Y-%m-%d")
                 if existing_date < today_str:
-                    # New day: promote existing on-disk ranking as prev_sector_ranks
+                    # New day: promote existing on-disk ranking as prev_sector_ranks,
+                    # and append that same retiring snapshot onto the rolling history
+                    # (Trigger A — sector rank climb over a multi-day window).
                     prev_ranks = {r["symbol"]: r["rank"]
                                   for r in (_existing.get("ranking") or []) if r.get("rank")}
                     prev_rank_date = existing_date
+                    if prev_ranks and (not rank_history or rank_history[-1]["date"] != existing_date):
+                        rank_history.append({"date": existing_date, "n": len(prev_ranks),
+                                              "ranks": prev_ranks})
+                    rank_history = rank_history[-10:]
                 else:
+                    # Same day: carry everything forward unchanged — no append.
                     prev_ranks     = _existing.get("prev_sector_ranks") or {}
                     prev_rank_date = _existing.get("prev_sector_rank_date") or ""
         except Exception:
@@ -2387,9 +2414,11 @@ def _save_sector_rank_disk():
                 "timestamp":             _SECTOR_RANK_CACHE["timestamp"],
                 "prev_sector_ranks":     prev_ranks,
                 "prev_sector_rank_date": prev_rank_date,
+                "rank_history":          rank_history,
             }, f)
         _SECTOR_RANK_CACHE["prev_sector_ranks"]     = prev_ranks
         _SECTOR_RANK_CACHE["prev_sector_rank_date"] = prev_rank_date
+        _SECTOR_RANK_CACHE["rank_history"]          = rank_history
     except Exception as e:
         print(f"[cache] sector rank disk save failed: {e}")
 
@@ -2648,28 +2677,84 @@ def api_delete_user(user_id):
 
 @app.route("/api/sector-ranking", methods=["GET"])
 def api_sector_ranking():
-    """Today's Phase 1 sector Z-score ranking (19 sectors). 15-min TTL."""
+    """Today's Phase 1 sector Z-score ranking (19 sectors). 15-min TTL.
+
+    Also carries two informational-only "sector heating up" signals — neither
+    is read by generate_basket() or any strategy logic, both are display only:
+      - rank_climb: sector rank change vs the oldest snapshot in a short rolling
+        window (Trigger A).
+      - breadth_*: how many Nifty200 stocks in that sector have accelerating
+        3-month risk-adjusted momentum vs ~1 trading week ago (Trigger B),
+        merged in from the live Mom20 scanner's cache.
+    """
     from datetime import date as _date
     force = request.args.get("refresh", "").lower() in ("1", "true", "yes")
     ranking = _get_sector_ranking(force_refresh=force)
     if not ranking:
         return jsonify({"success": False, "error": "ranking unavailable"})
     prev_ranks = _SECTOR_RANK_CACHE.get("prev_sector_ranks") or {}
+
+    # Trigger A: rank climb vs the oldest snapshot currently in the rolling window.
+    rank_history = _SECTOR_RANK_CACHE.get("rank_history") or []
+    oldest_snapshot = rank_history[0] if rank_history else None
+    oldest_ranks = (oldest_snapshot or {}).get("ranks") or {}
+    oldest_date = (oldest_snapshot or {}).get("date") or ""
+
+    # Trigger B: breadth, merged from the live Mom20 scanner's own cache. Read the
+    # file directly — do NOT call scan_entry_signals() here, which would trigger a
+    # full ~60s N200 rescan on a stale cache and hang this endpoint.
+    breadth_by_sector = {}
+    breadth_as_of = ""
+    breadth_cached_at = ""
+    try:
+        from config.settings import LIVE_SIGNALS_CACHE_FILE
+        with open(LIVE_SIGNALS_CACHE_FILE) as f:
+            ls = json.load(f)
+        breadth_by_sector = ls.get("mom20_sector_breadth") or {}
+        breadth_as_of = ls.get("actual_date") or ""
+        breadth_cached_at = ls.get("last_updated") or ""
+    except Exception:
+        pass
+
     ranked_with_delta = []
     for r in ranking:
         entry = dict(r)
-        prev_r = prev_ranks.get(r["symbol"])
+        symbol = r["symbol"]
+        prev_r = prev_ranks.get(symbol)
         curr_r = r.get("rank")
         entry["rank_delta"] = (prev_r - curr_r
                                if prev_r is not None and curr_r is not None else None)
+
+        oldest_r = oldest_ranks.get(symbol)
+        entry["rank_climb"] = (oldest_r - curr_r
+                               if oldest_r is not None and curr_r is not None else None)
+
+        b = breadth_by_sector.get(symbol)
+        if b and b.get("n_eval"):
+            entry["breadth_risers"] = b["risers"]
+            entry["breadth_n"]      = b["n_eval"]
+            entry["breadth_mapped"] = b["n_mapped"]
+            entry["breadth_pct"]    = b["pct"]
+        else:
+            entry["breadth_risers"] = None
+            entry["breadth_n"]      = 0
+            entry["breadth_mapped"] = (b or {}).get("n_mapped", 0)
+            entry["breadth_pct"]    = None
+
         ranked_with_delta.append(entry)
+
     return jsonify({
-        "success":        True,
-        "as_of":          _date.today().isoformat(),
-        "ranking":        ranked_with_delta,
-        "top5":           [r["symbol"] for r in ranking[:5]],
-        "cached_at":      _SECTOR_RANK_CACHE["timestamp"],
-        "prev_rank_date": _SECTOR_RANK_CACHE.get("prev_sector_rank_date") or "",
+        "success":              True,
+        "as_of":                _date.today().isoformat(),
+        "ranking":              ranked_with_delta,
+        "top5":                 [r["symbol"] for r in ranking[:5]],
+        "cached_at":            _SECTOR_RANK_CACHE["timestamp"],
+        "prev_rank_date":       _SECTOR_RANK_CACHE.get("prev_sector_rank_date") or "",
+        "rank_climb_from_date": oldest_date,
+        "rank_climb_window":    len(rank_history),
+        "breadth_as_of":        breadth_as_of,
+        "breadth_cached_at":    breadth_cached_at,
+        "breadth_lookback":     5,
     })
 
 

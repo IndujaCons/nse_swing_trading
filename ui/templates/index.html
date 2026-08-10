@@ -8440,12 +8440,17 @@ function mom20RenderSectorRanking(d) {
             const colour = (v) => v >= 0 ? '#26a69a' : '#ef5350';
             const label = SECTOR_LABEL[row.symbol] || row.symbol.replace('NIFTY ', '');
             const bg = isTop5 ? 'background:rgba(255,107,53,0.08);' : '';
+            const climbTitle = row.rank_climb != null
+                ? `Climb: vs rank on ${d.rank_climb_from_date || '?'} (${d.rank_climb_window || 0} snapshot${(d.rank_climb_window||0)===1?'':'s'})`
+                : 'Not enough history yet';
             return `<tr style="${bg}border-bottom:1px solid var(--border-color);">
                 <td style="padding:5px 8px;font-family:monospace;color:${isTop5?'#ff6b35':'var(--text-muted)'};font-weight:${isTop5?'700':'400'};">${row.rank}${rankDeltaBadge(row.rank_delta)}</td>
                 <td style="padding:5px 8px;font-family:monospace;color:var(--text-primary);${isTop5?'font-weight:700;':''}">${label}</td>
                 <td style="padding:5px 8px;font-family:monospace;text-align:right;color:var(--text-primary);">${row.score.toFixed(2)}</td>
                 <td style="padding:5px 8px;font-family:monospace;text-align:right;color:${colour(row.ret_12m)};">${fmt(row.ret_12m)}</td>
                 <td style="padding:5px 8px;font-family:monospace;text-align:right;color:${colour(row.ret_3m)};">${fmt(row.ret_3m)}</td>
+                <td style="padding:5px 8px;font-family:monospace;text-align:center;" title="${climbTitle}">${rankDeltaBadge(row.rank_climb) || '<span style="font-size:10px;color:var(--text-muted);">—</span>'}</td>
+                <td style="padding:5px 8px;font-family:monospace;text-align:center;" title="Breadth: rising 3M momentum vs ${d.breadth_lookback||5} sessions ago, as of ${d.breadth_as_of || '?'} (${row.breadth_mapped||0} N200 stocks in sector)">${breadthBadge(row)}</td>
             </tr>`;
         }).join('');
     body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -8455,12 +8460,34 @@ function mom20RenderSectorRanking(d) {
             <th style="text-align:right;padding:5px 8px;font-family:monospace;">Score</th>
             <th style="text-align:right;padding:5px 8px;font-family:monospace;">12M</th>
             <th style="text-align:right;padding:5px 8px;font-family:monospace;">3M</th>
-        </tr></thead><tbody>${rows}</tbody></table>`;
+            <th style="text-align:center;padding:5px 8px;font-family:monospace;">Climb</th>
+            <th style="text-align:center;padding:5px 8px;font-family:monospace;">Breadth</th>
+        </tr></thead><tbody>${rows}</tbody>
+        </table>
+        <div style="padding:6px 8px;font-size:10px;color:var(--text-muted);">
+            Climb = rank change vs oldest snapshot in window (hover for date) · Breadth = stocks with rising 3M risk-adjusted momentum vs 5 sessions ago · both informational only, not used by the basket.
+        </div>`;
     if (status) {
         const ts = d.cached_at ? new Date(d.cached_at * 1000) : null;
         const tstr = ts ? ts.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:false}) : d.as_of;
         status.textContent = `cached @ ${tstr}`;
     }
+}
+
+// Breadth badge for the Mom20 sector table (Trigger B — display only, see
+// mom20RenderSectorRanking). "—" when the sector has no evaluable N200 stocks
+// (either genuinely zero constituents, e.g. NIFTY MEDIA/MNC, or the live-signals
+// cache hasn't run yet) — distinct from a real "0 of N" reading.
+function breadthBadge(row) {
+    if (row.breadth_risers == null || !row.breadth_n) {
+        return '<span style="font-size:10px;color:var(--text-muted);">—</span>';
+    }
+    const pct = row.breadth_pct;
+    let color;
+    if (pct >= 60)      color = 'var(--green)';
+    else if (pct >= 40) color = '#f59e0b';
+    else                color = 'var(--text-muted)';
+    return `<span style="font-size:10px;color:${color};font-weight:600;">${row.breadth_risers} of ${row.breadth_n}</span>`;
 }
 
 // Live Prices button handler — refreshes the basket structure (entries/exits/holds)

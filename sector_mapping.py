@@ -218,3 +218,39 @@ STOCK_SECTOR_MAP = {
     "ABLBL": "NIFTY FMCG", "ABREL": "NIFTY INFRA", "PGEL": "NIFTY ENERGY",
     "ENRIN": "NIFTY INFRA", "JUBLINGREA": "NIFTY COMMODITIES", "ITCHOTELS": "NIFTY CONSUMPTION",
 }
+
+
+# ── Nifty200 sector map (CSV-backed) ────────────────────────────────────────
+# Cleaner join against score_live_sectors()'s 19-symbol ranked universe than
+# STOCK_SECTOR_MAP above: covers all 200 current Nifty200 tickers with sector
+# names that match the ranked universe exactly (STOCK_SECTOR_MAP dumps many
+# stocks into a catch-all "NIFTY INFRA" bucket and emits "NIFTY PHARMA" /
+# "NIFTY COMMODITIES", neither of which is a ranked sector).
+import csv as _csv
+import os as _os
+
+_N200_SECTOR_MAP_CACHE = None
+
+
+def load_n200_sector_map():
+    """ticker -> primary_sector for current Nifty200 constituents, from
+    nse_const/nifty200_sector_map.csv. Cached in-process (static file, only
+    changes on manual N200 reconstitution edits). Returns {} if the file is
+    missing."""
+    global _N200_SECTOR_MAP_CACHE
+    if _N200_SECTOR_MAP_CACHE is not None:
+        return _N200_SECTOR_MAP_CACHE
+    path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
+                          "nse_const", "nifty200_sector_map.csv")
+    result = {}
+    try:
+        with open(path, newline="") as f:
+            for row in _csv.DictReader(f):
+                ticker = (row.get("ticker") or "").strip()
+                sector = (row.get("primary_sector") or "").strip()
+                if ticker and sector:
+                    result[ticker] = sector
+    except Exception:
+        result = {}
+    _N200_SECTOR_MAP_CACHE = result
+    return result

@@ -20,7 +20,7 @@ from config.settings import (
     LIVE_SIGNALS_CACHE_FILE, LIVE_POSITIONS_FILE, LIVE_SIGNALS_HISTORY_FILE,
     get_cache_ttl, load_config
 )
-from sector_mapping import STOCK_SECTOR_MAP
+from sector_mapping import STOCK_SECTOR_MAP, load_n200_sector_map
 
 # Per-strategy compute functions (Phase 2 refactor — see data/strategies/).
 from data.strategies.mom20    import compute_mom20_features
@@ -685,6 +685,9 @@ class LiveSignalsEngine:
         rs_ibd_history = {}  # ticker -> list of weighted scores for last 5 days
         mom20_raw = []       # collect momentum data for Mom20/Mom15 scoring after loop
         mom20_raw_prev = []  # same but at i-1 (previous session) — for rank-change Δ
+        mom20_mr3_wk = {}    # ticker -> mr_3 at i-5 (~1 trading week). Sector-breadth
+                              # display input only (Trigger B) — flat float dict, not a
+                              # feature-dict list, so it can't get pulled into scoring.
         alpha20_raw = []  # collect data for Alpha20 CAPM scoring after loop
         rs63_signals = []  # RS63 satellite signals
         actual_date = None  # Track actual last trading date from data
@@ -790,6 +793,11 @@ class LiveSignalsEngine:
                     highs=highs)
                 if prev_feat is not None:
                     mom20_raw_prev.append(prev_feat)
+            if i >= 257:  # ~1 trading week back — sector-breadth display input (Trigger B)
+                wk_feat = compute_mom20_features(
+                    ticker, closes, i - 5, float(closes.iloc[i - 5]), None, 0.0, highs=highs)
+                if wk_feat is not None and wk_feat.get("mr_3") is not None:
+                    mom20_mr3_wk[ticker] = wk_feat["mr_3"]
 
             # Alpha20: CAPM alpha features for cross-sectional ranking after loop
             alpha_feat = compute_alpha20_features(
@@ -1105,6 +1113,33 @@ class LiveSignalsEngine:
                         "atr_pct": 0,
                     })
 
+        # Mom20 sector breadth (display-only, Trigger B): count of Nifty200 stocks per
+        # sector whose 3-month risk-adjusted momentum (mr_3) is higher today than it was
+        # ~1 trading week ago. Purely informational — never feeds mom20_signals/scoring
+        # above. Reads only ticker+mr_3 off mom20_raw; norm_score/norm_score_uc already
+        # written onto those dicts by the blocks above are irrelevant here.
+        mom20_sector_breadth = {}
+        _n200_sector_map = load_n200_sector_map()
+        _breadth_unmapped = 0
+        _breadth_n_evaluated = 0
+        for d in mom20_raw:
+            sector = _n200_sector_map.get(d["ticker"])
+            if sector is None:
+                _breadth_unmapped += 1
+                continue
+            b = mom20_sector_breadth.setdefault(sector, {"risers": 0, "n_eval": 0, "n_mapped": 0})
+            b["n_mapped"] += 1
+            now_mr3 = d.get("mr_3")
+            wk_mr3 = mom20_mr3_wk.get(d["ticker"])
+            if now_mr3 is None or wk_mr3 is None:
+                continue
+            b["n_eval"] += 1
+            _breadth_n_evaluated += 1
+            if now_mr3 > wk_mr3:
+                b["risers"] += 1
+        for b in mom20_sector_breadth.values():
+            b["pct"] = round(100.0 * b["risers"] / b["n_eval"], 1) if b["n_eval"] else None
+
         # RS63 Satellite: rank by volume ratio high to low
         rs63_signals.sort(key=lambda s: s.get("vol_ratio") or 0, reverse=True)
         for rank_i, s in enumerate(rs63_signals):
@@ -1167,6 +1202,13 @@ class LiveSignalsEngine:
             "rs63_signals": rs63_signals[:25],
             "nifty_regime": "ON" if nifty_regime_on else "OFF",
             "mom20_regime": "ON" if mom20_regime_on else "OFF",
+            "mom20_sector_breadth": mom20_sector_breadth,
+            "mom20_sector_breadth_meta": {
+                "lookback_sessions": 5,
+                "metric": "mr_3",
+                "n_evaluated": _breadth_n_evaluated,
+                "unmapped": _breadth_unmapped,
+            },
             "sector_momentum": sector_momentum,
             "last_updated": datetime.now().isoformat(),
             "universe": universe,
