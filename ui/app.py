@@ -2317,7 +2317,7 @@ from data.user_registry import (
     etf_positions_path, etf_history_path,
     baskets_dir, trade_books_dir,
 )
-from data.mom20_basket import generate_basket, to_zerodha_csv, parse_trade_book, sync_portfolio_from_trades
+from data.mom20_basket import generate_basket, to_zerodha_csv, parse_trade_book, sync_portfolio_from_trades, compute_initial_capital
 from data.dividends import compute_dividend_ledger, load_dividend_ledger
 
 ensure_all_dirs()
@@ -3491,17 +3491,9 @@ def _api_mom20_performance_inner(user_id):
     try:
         with open(mom20_history_path(user_id)) as _hf:
             _hist = json.load(_hf)
-        realized_pnl = _retrospective_realized_pnl(_hist)
-        for rb in _hist:
-            # buys + top_ups — a top-up previously vanished here, understating
-            # cumulative capital deployed (same bug already fixed in
-            # api_mom20_rebuild_portfolio / _retrospective_realized_pnl).
-            buy_tot  = sum(t.get("qty", 0) * t.get("price", 0)
-                          for t in rb.get("buys", []) + rb.get("top_ups", []))
-            sell_tot = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("sells", []))
-            net = buy_tot - sell_tot
-            if net > 0:
-                initial_capital += net
+        realized_pnl    = _retrospective_realized_pnl(_hist)
+        initial_capital = compute_initial_capital(_hist)  # data/mom20_basket.py — shared with
+                                                            # api_portfolio_summary + the daily email
     except Exception:
         pass
     realized_pnl    = round(realized_pnl, 2)
@@ -5483,13 +5475,7 @@ def api_portfolio_summary():
                 with open(mom20_history_path(uid)) as _f:
                     _hist = json.load(_f)
                 _realized = _retrospective_realized_pnl(_hist)
-                for _rb in _hist:
-                    # buys + top_ups — same fix as _api_mom20_performance_inner
-                    _buy  = sum(t.get("qty", 0) * t.get("price", 0)
-                               for t in _rb.get("buys", []) + _rb.get("top_ups", []))
-                    _sell = sum(t.get("qty", 0) * t.get("price", 0) for t in _rb.get("sells", []))
-                    if _buy - _sell > 0:
-                        _init_cap += _buy - _sell
+                _init_cap = compute_initial_capital(_hist)  # shared with Tracker + the daily email
             except Exception:
                 pass
             _te, _tc = 0.0, 0.0

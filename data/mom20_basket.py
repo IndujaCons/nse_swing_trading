@@ -591,3 +591,26 @@ def sync_portfolio_from_trades(portfolio: dict, trades: list, basket_data: dict)
     portfolio["status"]  = "invested" if basket else "empty"
     portfolio["last_synced"] = date.today().isoformat()
     return portfolio
+
+
+def compute_initial_capital(history: list) -> float:
+    """Cumulative net capital committed to Mom20 across all rebalances — the
+    single, standardized "Invested" figure used by the Dashboard Tracker, the
+    cross-strategy Summary tab, and the daily email (previously three
+    independent, drifting implementations).
+
+    Per rebalance: buy_total (including top_ups — a top-up is stored as its
+    own history key and was silently excluded here in three of the four prior
+    copies) minus sell_total. A pure rotation (sells fund buys) contributes 0.
+    A net withdrawal (sells > buys, not reinvested) REDUCES the running total,
+    floored at 0 — money taken out of the strategy is no longer capital at
+    risk, so it shouldn't keep inflating the historical "Invested" figure and
+    understating Returns% going forward.
+    """
+    capital = 0.0
+    for rb in history:
+        buy_tot = sum(t.get("qty", 0) * t.get("price", 0)
+                      for t in rb.get("buys", []) + rb.get("top_ups", []))
+        sell_tot = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("sells", []))
+        capital = max(0.0, capital + (buy_tot - sell_tot))
+    return round(capital, 2)

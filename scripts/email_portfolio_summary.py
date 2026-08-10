@@ -34,6 +34,7 @@ from data.user_registry import (
     etf_positions_path, etf_history_path,
     techmo_portfolio_path, techmo_history_path,
 )
+from data.mom20_basket import compute_initial_capital
 
 _OPTIONS_HEDGE_FILE = os.path.join(_ROOT, "data_store", "options_hedge.json")
 
@@ -107,7 +108,7 @@ def _realised_from_mom20_history(hist: list) -> float:
     pos_book = {}
     total = 0.0
     for rb in hist:
-        for t in rb.get("buys", []):
+        for t in rb.get("buys", []) + rb.get("top_ups", []):
             tk, qty, price = t.get("ticker"), t.get("qty", 0), t.get("price", 0)
             if not tk or not qty or not price:
                 continue
@@ -125,18 +126,6 @@ def _realised_from_mom20_history(hist: list) -> float:
                 pnl = (t.get("price", 0) - ep) * t.get("qty", 0)
             total += pnl or 0
             pos_book.pop(tk, None)
-    return round(total, 2)
-
-
-def _initial_capital_from_history(hist: list) -> float:
-    """Sum of net cash additions across all rebalances (matches dashboard logic)."""
-    total = 0.0
-    for rb in hist:
-        buy_tot  = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("buys",  []))
-        sell_tot = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("sells", []))
-        net = buy_tot - sell_tot
-        if net > 0:
-            total += net
     return round(total, 2)
 
 
@@ -161,15 +150,16 @@ def build_mom20_summary(user_id: str, capital: float):
     port   = load_json(mom20_portfolio_path(user_id), {})
     basket = port.get("basket", [])
     if not basket:
-        return None, capital, 0.0
+        return None, capital, 0.0, 0.0
 
     prices = fetch_live_prices([p["ticker"] for p in basket])
     rows   = _build_rows(basket, prices)
 
-    hist     = load_json(mom20_history_path(user_id), [])
-    realised = _realised_from_mom20_history(hist)
+    hist            = load_json(mom20_history_path(user_id), [])
+    realised        = _realised_from_mom20_history(hist)
+    initial_capital = compute_initial_capital(hist)  # shared with the dashboard + Summary tab
 
-    return rows, sum(r[3] * r[1] for r in rows), realised
+    return rows, sum(r[3] * r[1] for r in rows), realised, initial_capital
 
 
 def build_etf_summary(user_id: str, capital: float):
@@ -207,7 +197,8 @@ def _pnl_color(pnl):
     return "#16a34a" if pnl >= 0 else "#dc2626"
 
 
-def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0) -> str:
+def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0,
+                     invested_override: float = None) -> str:
     if not rows:
         return ""
 
@@ -232,9 +223,15 @@ def _strategy_table(title: str, currency: str, rows: list, realised: float = 0.0
             <td style="padding:6px 10px;text-align:right;">{pnl_fmt}</td>
         </tr>"""
 
-    total_invested = sum(r[1] * r[2] for r in rows)   # qty * entry_price
+    cost_basis     = sum(r[1] * r[2] for r in rows)   # qty * entry_price — current holdings only
     total_current  = sum(r[1] * r[3] for r in rows)   # qty * ltp
-    total_pnl      = total_current - total_invested
+    total_pnl      = total_current - cost_basis        # unrealised P&L — always vs actual cost basis,
+                                                         # never the invested_override (see below)
+    # "Invested" for display + the Returns% denominator — Mom20 passes its cumulative
+    # capital-injected figure here (data/mom20_basket.py:compute_initial_capital) so it
+    # matches the Dashboard Tracker and Summary tab; ETF/TechMo pass nothing and keep
+    # today's cost-basis behaviour unchanged.
+    total_invested = invested_override if invested_override is not None else cost_basis
     pnl_pct        = (total_pnl / total_invested * 100) if total_invested else 0
     tc = _pnl_color(total_pnl)
     pnl_sign = "+" if total_pnl >= 0 else "-"
@@ -303,15 +300,16 @@ def build_html_email(user: dict, today: date) -> str:
         unrealised = sum(r[1] * r[3] for r in rows) - sum(r[1] * r[2] for r in rows)
         return ((unrealised + realised) / invested * 100) if invested else 0.0
 
-    mom20_pct  = None
-    etf_pct    = None
-    techmo_pct = None
+    mom20_pct      = None
+    etf_pct        = None
+    techmo_pct     = None
+    mom20_invested = 0.0
 
     if mom20_cfg.get("active"):
-        rows, val, realised = build_mom20_summary(user["id"], mom20_cfg.get("capital", 0))
+        rows, val, realised, mom20_invested = build_mom20_summary(user["id"], mom20_cfg.get("capital", 0))
         if rows:
-            mom20_pct = _returns_pct(rows, realised, sum(r[1] * r[2] for r in rows))
-            sections += _strategy_table("Mom20", "₹", rows, realised)
+            mom20_pct = _returns_pct(rows, realised, mom20_invested)
+            sections += _strategy_table("Mom20", "₹", rows, realised, invested_override=mom20_invested)
         else:
             sections += _not_invested_block("Mom20", "#1d4ed8")
 
@@ -339,15 +337,9 @@ def build_html_email(user: dict, today: date) -> str:
     try:
         options_data = load_json(_OPTIONS_HEDGE_FILE, {})
         amt = options_data.get(user["id"])
-        if amt is not None and mom20_pct is not None:
-            mom20_invested = sum(r[1] * r[2] for r in (rows or []))  # fallback
-            # re-fetch Mom20 invested for options % calculation
-            _pf = load_json(mom20_portfolio_path(user["id"]), {})
-            _basket = _pf.get("basket", [])
-            _inv = sum(p.get("qty", 0) * p.get("entry_price", 0) for p in _basket)
-            if _inv > 0:
-                options_amt = float(amt)
-                options_pct = options_amt / _inv * 100
+        if amt is not None and mom20_pct is not None and mom20_invested > 0:
+            options_amt = float(amt)
+            options_pct = options_amt / mom20_invested * 100
     except Exception:
         pass
 
