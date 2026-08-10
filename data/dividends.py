@@ -92,6 +92,20 @@ def _is_fresh(entry: dict) -> bool:
     return (datetime.now(IST) - fetched) < timedelta(hours=DIVIDEND_TTL_HOURS)
 
 
+def _parse_dividend_amount(v) -> float:
+    """yfinance's .dividends Series is normally float64, but for some tickers
+    (confirmed: DALMIABHA.NS directly, and several BSE-fallback .BO symbols
+    resolved via TICKER_ALIASES) Yahoo returns per-share amounts as strings
+    with a currency suffix, e.g. '5.2 INR' instead of 5.2 — this crashed the
+    plain float(v) conversion. Extracts the leading numeric token; returns 0.0
+    (skipped by the caller) if nothing numeric is found, rather than raising."""
+    if isinstance(v, (int, float)):
+        return round(float(v), 4)
+    import re
+    m = re.match(r"[\d.]+", str(v).strip())
+    return round(float(m.group()), 4) if m else 0.0
+
+
 def _fetch_one(ticker: str) -> dict:
     """Returns {"fetched_at", "symbol_used", "dividends": {date_str: per_share}}
     or None on a fetch exception on every symbol tried (caller keeps it out of
@@ -106,7 +120,11 @@ def _fetch_one(ticker: str) -> dict:
             if is_last:
                 return None
             continue
-        divs = {d.strftime("%Y-%m-%d"): round(float(v), 4) for d, v in s.items() if v}
+        divs = {}
+        for d, v in s.items():
+            amount = _parse_dividend_amount(v)
+            if amount:
+                divs[d.strftime("%Y-%m-%d")] = amount
         if divs or is_last:
             # Non-empty result, OR this was the last symbol to try (including a
             # genuinely-empty-but-successful fetch — a real non-payer, cache it
