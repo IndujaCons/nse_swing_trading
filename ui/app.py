@@ -3509,7 +3509,12 @@ def _api_mom20_performance_inner(user_id):
     realized_pnl    = round(realized_pnl, 2)
     initial_capital = round(initial_capital, 2) or round(total_entry, 2)
 
-    total_pnl        = round(unrealized_pnl + realized_pnl, 2)
+    # Returns include dividends — unrealized_pnl/realized_pnl themselves stay
+    # pure price P&L (the Realized P&L tile's own meaning is unchanged; the
+    # Dividends tile already shows that figure separately), but the aggregate
+    # Returns %/total_pnl should reflect actual total return, not just price.
+    dividends_total  = div_ledger.get("totals", {}).get("grand", 0)
+    total_pnl        = round(unrealized_pnl + realized_pnl + dividends_total, 2)
     total_return_pct = round(total_pnl / initial_capital * 100, 2) if initial_capital else 0
 
     return jsonify({
