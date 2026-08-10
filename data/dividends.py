@@ -20,6 +20,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta, timezone
 
+import pandas as pd
 import yfinance as yf
 
 from data.user_registry import (
@@ -120,6 +121,17 @@ def _fetch_one(ticker: str) -> dict:
             if is_last:
                 return None
             continue
+        # yfinance has changed .dividends' return type across versions: a plain
+        # Series (confirmed on yfinance 1.0) vs a single-column DataFrame named
+        # "Dividends" (confirmed on 1.2.2 — deployed on the EC2 box while dev ran
+        # 1.0, since requirements.txt only pins yfinance>=1.0). Iterating a
+        # DataFrame's .items() yields (column_name, column_Series) pairs, not
+        # (date, amount) — silently produced zero matches instead of crashing,
+        # because _parse_dividend_amount correctly rejected the column NAME
+        # ("Dividends") as unparseable and the `if amount` guard short-circuited
+        # before d.strftime() could raise on a non-Timestamp key.
+        if isinstance(s, pd.DataFrame):
+            s = s.iloc[:, 0] if not s.empty else pd.Series(dtype=float)
         divs = {}
         for d, v in s.items():
             amount = _parse_dividend_amount(v)
