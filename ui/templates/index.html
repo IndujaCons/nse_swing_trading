@@ -2406,8 +2406,6 @@
                                     <th style="text-align:right;padding:5px 8px;font-family:monospace;">Qty</th>
                                     <th style="text-align:right;padding:5px 8px;font-family:monospace;">Unreal P&amp;L</th>
                                     <th id="th-return" onclick="mom20TrackerSetSort('return')" style="text-align:right;padding:5px 8px;cursor:pointer;user-select:none;font-family:monospace;">P&amp;L% <span id="th-return-arrow">▼</span></th>
-                                    <th style="text-align:right;padding:5px 8px;font-family:monospace;">Div ₹</th>
-                                    <th style="text-align:left;padding:5px 8px;font-family:monospace;color:#a78bfa;">Note</th>
                                 </tr>
                             </thead>
                             <tbody id="mom20-tracker-tbody"></tbody>
@@ -2972,18 +2970,6 @@
                     <span id="summary-status" style="font-size:11px;color:var(--text-muted);"></span>
                 </div>
                 <div id="summary-body"></div>
-            </div>
-
-            <!-- Note modal (shared for Mom20 position notes) -->
-            <div id="note-modal" style="display:none;position:fixed;z-index:9999;background:var(--bg-white);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);padding:14px;width:320px;">
-                <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:8px;">POSITION NOTE — <span id="note-modal-ticker"></span></div>
-                <textarea id="note-modal-text" rows="4" placeholder="Why did you take this? Context, sector score, macro theme…"
-                    style="width:100%;box-sizing:border-box;padding:7px 9px;font-family:inherit;font-size:12px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;resize:vertical;outline:none;"></textarea>
-                <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
-                    <button onclick="noteModalClear()" style="padding:4px 12px;font-size:11px;background:transparent;color:#dc3545;border:1px solid #dc3545;border-radius:4px;cursor:pointer;">Clear</button>
-                    <button onclick="noteModalClose()" style="padding:4px 12px;font-size:11px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">Cancel</button>
-                    <button onclick="noteModalSave()" style="padding:4px 12px;font-size:11px;background:#a78bfa;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700;">Save</button>
-                </div>
             </div>
 
         </main>
@@ -8400,7 +8386,7 @@ function _mom20ResetTrackerDisplay() {
                  'mom20-tracker-dividends','mom20-tracker-div-sub'];
     ids.forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = '—'; el.style.color = ''; } });
     const tbody = document.getElementById('mom20-tracker-tbody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">Loading…</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">Loading…</td></tr>';
     const chartWrap = document.getElementById('mom20-perf-chart-wrap');
     if (chartWrap) chartWrap.style.display = 'none';
     if (_mom20PerfChart) { _mom20PerfChart.destroy(); _mom20PerfChart = null; }
@@ -8738,7 +8724,7 @@ function mom20RenderPerformance(d, live=false) {
     if (!d.holdings || !d.holdings.length) {
         if (status) status.textContent = 'No holdings — upload trade book to start tracking';
         const tbody = document.getElementById('mom20-tracker-tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
         return;
     }
 
@@ -9739,8 +9725,6 @@ function mom20TrackerRender() {
         const unrealPnl = Math.round((h.current_price - h.entry_price) * h.qty);
         const pnlSign = unrealPnl >= 0 ? '+' : '';
         const td = 'padding:4px 8px;font-family:monospace;';
-        const noteText = h.note || '';
-        const noteDisplay = noteText ? `<span title="${noteText.replace(/"/g,'&quot;')}" style="color:#a78bfa;font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle;">${noteText.length > 28 ? noteText.slice(0,28)+'…' : noteText}</span>` : `<span style="color:var(--text-muted);font-size:13px;">＋</span>`;
         return `<tr data-ticker="${h.ticker}" style="border-bottom:1px solid var(--border-color);">
             <td style="${td}font-weight:700;cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${h.ticker}</td>
             <td style="${td}color:var(--text-muted);font-size:11px;cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${mom20SectorLabel(h.ticker)}</td>
@@ -9752,8 +9736,6 @@ function mom20TrackerRender() {
             <td style="${td}text-align:right;color:var(--text-muted);cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${h.qty}</td>
             <td style="${td}text-align:right;font-weight:700;color:${color};cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${pnlSign}₹${Math.abs(unrealPnl).toLocaleString('en-IN')}</td>
             <td style="${td}text-align:right;font-weight:700;color:${color};cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${sign}${h.return_pct.toFixed(1)}%</td>
-            <td style="${td}text-align:right;color:var(--text-muted);">${h.dividend != null && h.dividend > 0 ? '₹' + Math.round(h.dividend).toLocaleString('en-IN') : '—'}</td>
-            <td style="${td}cursor:pointer;" onclick="noteModalOpen('${h.ticker}', ${JSON.stringify(noteText).replace(/</g,'\\u003c')})">${noteDisplay}</td>
         </tr>`;
     }).join('');
 }
@@ -10739,65 +10721,6 @@ function nfPopulateUsers() {
         kiteUsers.map(u => `<option value="${u.config_user_id}">${u.name || u.config_user_id}</option>`).join('');
     if (cur) sel.value = cur;
 }
-
-// ── Position note modal ───────────────────────────────────────────────────────
-
-let _noteModalTicker = null;
-
-function noteModalOpen(ticker, existingNote) {
-    _noteModalTicker = ticker;
-    document.getElementById('note-modal-ticker').textContent = ticker;
-    document.getElementById('note-modal-text').value = existingNote || '';
-    const modal = document.getElementById('note-modal');
-    modal.style.display = 'block';
-    // Centre on screen
-    modal.style.top  = '50%';
-    modal.style.left = '50%';
-    modal.style.transform = 'translate(-50%, -50%)';
-    document.getElementById('note-modal-text').focus();
-}
-
-function noteModalClose() {
-    document.getElementById('note-modal').style.display = 'none';
-    _noteModalTicker = null;
-}
-
-function noteModalClear() {
-    document.getElementById('note-modal-text').value = '';
-    noteModalSave();
-}
-
-async function noteModalSave() {
-    if (!_noteModalTicker) return;
-    const note = (document.getElementById('note-modal-text').value || '').trim();
-    const uid  = _mom20SelectedUser?.id;
-    if (!uid) { showToast('No user selected', 'error'); return; }
-    try {
-        const r = await fetch(`/api/portfolio-users/${uid}/mom20-position-note`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ticker: _noteModalTicker, note}),
-        });
-        const d = await r.json();
-        if (d.success) {
-            const h = _mom20TrackerHoldings.find(x => x.ticker === _noteModalTicker);
-            if (h) h.note = note;
-            mom20TrackerRender();
-            noteModalClose();
-            showToast('Note saved', 'success');
-        } else {
-            showToast(d.error || 'Error saving note', 'error');
-        }
-    } catch(e) { showToast('Failed to save note', 'error'); }
-}
-
-// Close note modal on backdrop click
-document.addEventListener('click', function(e) {
-    const modal = document.getElementById('note-modal');
-    if (modal && modal.style.display !== 'none' && !modal.contains(e.target)) {
-        noteModalClose();
-    }
-});
 
 // ── Portfolio Summary ──────────────────────────────────────────────────────────
 

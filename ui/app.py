@@ -3369,7 +3369,6 @@ def _api_mom20_performance_inner(user_id):
         pass
 
     div_ledger = load_dividend_ledger(user_id)
-    div_open = div_ledger.get("open", {})
 
     if not basket:
         return jsonify({"success": True, "holdings": [], "initial_capital": 0,
@@ -3466,9 +3465,6 @@ def _api_mom20_performance_inner(user_id):
 
         # rank_delta from scanner (data-driven, prev session from price data)
         rank_delta = scanner_rank_deltas.get(t)
-        # Dividend — from the last "💰 Dividends" refresh (data/dividends.py), not
-        # live network here. None (not 0) when never computed, so the UI can show
-        # "—" instead of a misleading zero.
         holdings.append({
             "ticker":        t,
             "rank":          row_rank,
@@ -3480,8 +3476,6 @@ def _api_mom20_performance_inner(user_id):
             "entry_value":   entry_val,
             "current_value": curr_val,
             "return_pct":    ret_pct,
-            "note":          h.get("note", ""),
-            "dividend":      div_open.get(t, {}).get("dividend"),
         })
 
     holdings.sort(key=lambda x: x["return_pct"], reverse=True)
@@ -3562,41 +3556,6 @@ def api_mom20_dividends_refresh(user_id):
         import traceback as _tb
         print(f"[mom20-dividends/refresh] unhandled error for {user_id}: {_e}\n{_tb.format_exc()}")
         return jsonify({"success": False, "error": str(_e)})
-
-
-# ── Mom20 per-position note ───────────────────────────────────────────────────
-
-@app.route("/api/portfolio-users/<user_id>/mom20-position-note", methods=["POST"])
-def api_mom20_position_note(user_id):
-    """Save (or clear) a free-text note on a Mom20 basket holding."""
-    if not get_user(user_id):
-        return jsonify({"success": False, "error": "user not found"})
-    body = request.get_json(silent=True) or {}
-    ticker = (body.get("ticker") or "").strip().upper()
-    note   = (body.get("note") or "").strip()
-    if not ticker:
-        return jsonify({"success": False, "error": "ticker required"})
-    pf_path = mom20_portfolio_path(user_id)
-    try:
-        with open(pf_path) as f:
-            pf = json.load(f)
-    except Exception:
-        return jsonify({"success": False, "error": "portfolio not found"})
-    matched = False
-    for h in pf.get("basket", []):
-        if h.get("ticker") == ticker:
-            if note:
-                h["note"] = note
-            else:
-                h.pop("note", None)
-            matched = True
-            break
-    if not matched:
-        return jsonify({"success": False, "error": f"{ticker} not in basket"})
-    with open(pf_path, "w") as f:
-        json.dump(pf, f, indent=2)
-    return jsonify({"success": True})
-
 
 
 
