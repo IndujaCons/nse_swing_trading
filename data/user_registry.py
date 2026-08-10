@@ -136,6 +136,17 @@ def mom20_live_prices_path(user_id: str) -> str:
     return os.path.join(user_dir(user_id), "mom20_live_prices.json")
 
 
+def mom20_dividends_path(user_id: str) -> str:
+    return os.path.join(user_dir(user_id), "mom20_dividends.json")
+
+
+def dividend_cache_path() -> str:
+    """Shared, NOT per-user — dividend history is per-instrument, so every user
+    holding the same stock reads/writes the same cache instead of each
+    triggering their own yfinance fetch."""
+    return os.path.join(DATA_STORE, "dividend_history_cache.json")
+
+
 def techmo_portfolio_path(user_id: str) -> str:
     return os.path.join(user_dir(user_id), "techmo_portfolio.json")
 

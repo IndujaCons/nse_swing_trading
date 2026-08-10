@@ -2318,6 +2318,7 @@ from data.user_registry import (
     baskets_dir, trade_books_dir,
 )
 from data.mom20_basket import generate_basket, to_zerodha_csv, parse_trade_book, sync_portfolio_from_trades
+from data.dividends import compute_dividend_ledger, load_dividend_ledger
 
 ensure_all_dirs()
 
@@ -3065,27 +3066,44 @@ def api_mom20_seed(user_id):
     return jsonify({"success": True, "seeded": len(basket)})
 
 
+def _norm_trade_date(raw) -> str:
+    """First 10 chars of a raw trade_date (which may carry a time component,
+    e.g. Zerodha's 'Time' column: '2026-01-05 09:20:33'), validated as
+    YYYY-MM-DD. Returns '' if unparseable so callers can fall back cleanly."""
+    import re as _re
+    s = (raw or "")[:10]
+    return s if _re.match(r"^\d{4}-\d{2}-\d{2}$", s) else ""
+
+
 def _retrospective_realized_pnl(history: list) -> float:
     """Walk history chronologically to compute realized P&L for sells that
-    predate the enrichment feature (missing 'pnl' field).  Returns total."""
-    pos_book = {}  # ticker → entry_price (weighted avg across rebalances)
+    predate the enrichment feature (missing 'pnl' field), and back-fill
+    'entry_date' for sells that never got one (seeded positions, or sells
+    enriched with entry_price/pnl but not entry_date).  Returns total P&L.
+
+    Reads buys AND top_ups — a position topped up mid-hold previously had its
+    top-up quantity silently ignored here, understating qty (and therefore
+    entry_price/pnl) for any topped-up-then-sold ticker."""
+    pos_book = {}  # ticker → {entry_price, qty, entry_date} (weighted avg across rebalances)
     total = 0.0
     for rb in history:
-        for t in rb.get("buys", []):
+        for t in rb.get("buys", []) + rb.get("top_ups", []):
             ticker = t.get("ticker")
             qty    = t.get("qty", 0)
             price  = t.get("price", 0)
             if not ticker or not qty or not price:
                 continue
+            d = _norm_trade_date(t.get("trade_date")) or rb.get("rebalance_date", "")
             if ticker in pos_book:
                 old = pos_book[ticker]
                 new_qty = old["qty"] + qty
                 pos_book[ticker] = {
                     "entry_price": round((old["qty"] * old["entry_price"] + qty * price) / new_qty, 2),
                     "qty": new_qty,
+                    "entry_date": old["entry_date"],  # preserve the ORIGINAL entry, not the top-up date
                 }
             else:
-                pos_book[ticker] = {"entry_price": price, "qty": qty}
+                pos_book[ticker] = {"entry_price": price, "qty": qty, "entry_date": d}
 
         for t in rb.get("sells", []):
             ticker = t.get("ticker")
@@ -3096,6 +3114,11 @@ def _retrospective_realized_pnl(history: list) -> float:
                 t["entry_price"] = ep
                 t["pnl"]         = pnl
                 t["pnl_pct"]     = round((t.get("price", 0) / ep - 1) * 100, 2) if ep else 0
+            # entry_date back-fill is independent of the pnl branch above — a sell can
+            # already have pnl set (enriched at upload time) while entry_date is still
+            # "" (seeded positions never got one), so this must not be gated on pnl.
+            if not t.get("entry_date") and ticker in pos_book:
+                t["entry_date"] = pos_book[ticker]["entry_date"]
             total += pnl or 0
             pos_book.pop(ticker, None)
     return round(total, 2)
@@ -3119,7 +3142,11 @@ def api_mom20_rebuild_portfolio(user_id):
     for rb in history:
         for sell in rb.get("sells", []):
             basket.pop(sell.get("ticker"), None)
-        for buy in rb.get("buys", []):
+        # buys + top_ups — a top-up previously vanished here, silently dropping its
+        # quantity from the rebuilt basket. The merge branch below already handles
+        # "ticker already in basket" generically, so feeding it the full trade set
+        # (not just fresh entries) is all this fix needs.
+        for buy in rb.get("buys", []) + rb.get("top_ups", []):
             ticker = buy.get("ticker")
             qty    = buy.get("qty", 0)
             price  = buy.get("price", 0)
@@ -3177,12 +3204,13 @@ def api_mom20_delete_history(user_id, idx):
         json.dump(history, f, indent=2)
     os.replace(tmp, hist_path)
 
-    # Rebuild portfolio from remaining history
+    # Rebuild portfolio from remaining history (buys + top_ups — see the same
+    # fix and rationale in api_mom20_rebuild_portfolio above)
     basket = {}
     for rb in history:
         for sell in rb.get("sells", []):
             basket.pop(sell.get("ticker"), None)
-        for buy in rb.get("buys", []):
+        for buy in rb.get("buys", []) + rb.get("top_ups", []):
             ticker = buy.get("ticker")
             qty    = buy.get("qty", 0)
             price  = buy.get("price", 0)
@@ -3233,9 +3261,19 @@ def api_mom20_history(user_id):
 
     # Enrich sells missing P&L (pre-enrichment uploads) and patch rebal totals
     _retrospective_realized_pnl(history)
+    # Dividend join (display-only) — same exit-date precedence as build_hold_episodes
+    # (data/dividends.py): sell.trade_date first, falling back to rebalance_date.
+    # Computed server-side so a late-uploaded trade book's key still matches; the
+    # frontend must not re-derive this key from rebalance_date alone.
+    div_ledger = load_dividend_ledger(user_id)
+    div_closed = div_ledger.get("closed", {})
     for rb in history:
         if rb.get("realized_pnl") is None:
             rb["realized_pnl"] = round(sum(t.get("pnl", 0) for t in rb.get("sells", [])), 2)
+        for t in rb.get("sells", []):
+            exit_date = _norm_trade_date(t.get("trade_date")) or rb.get("rebalance_date", "")
+            rec = div_closed.get(f"{t.get('ticker')}|{exit_date}")
+            t["dividend"] = rec["dividend"] if rec else None
 
     cumulative_realized = round(sum(rb.get("realized_pnl", 0) for rb in history), 2)
     total_invested = round(sum(t.get("qty", 0) * t.get("price", 0)
@@ -3330,12 +3368,18 @@ def _api_mom20_performance_inner(user_id):
     except Exception:
         pass
 
+    div_ledger = load_dividend_ledger(user_id)
+    div_open = div_ledger.get("open", {})
+
     if not basket:
         return jsonify({"success": True, "holdings": [], "initial_capital": 0,
                         "total_entry_value": 0, "total_current_value": 0,
                         "unrealized_pnl": 0, "realized_pnl": 0, "total_pnl": 0,
                         "total_return_pct": 0, "tracking_since": None,
-                        "prices_updated_at": prices_updated_at})
+                        "prices_updated_at": prices_updated_at,
+                        "dividends_updated_at": div_ledger.get("updated_at"),
+                        "dividends_open_total": 0, "dividends_closed_total": 0,
+                        "dividends_grand_total": 0})
 
     tickers = [h["ticker"] for h in basket]
 
@@ -3422,6 +3466,9 @@ def _api_mom20_performance_inner(user_id):
 
         # rank_delta from scanner (data-driven, prev session from price data)
         rank_delta = scanner_rank_deltas.get(t)
+        # Dividend — from the last "💰 Dividends" refresh (data/dividends.py), not
+        # live network here. None (not 0) when never computed, so the UI can show
+        # "—" instead of a misleading zero.
         holdings.append({
             "ticker":        t,
             "rank":          row_rank,
@@ -3434,6 +3481,7 @@ def _api_mom20_performance_inner(user_id):
             "current_value": curr_val,
             "return_pct":    ret_pct,
             "note":          h.get("note", ""),
+            "dividend":      div_open.get(t, {}).get("dividend"),
         })
 
     holdings.sort(key=lambda x: x["return_pct"], reverse=True)
@@ -3477,7 +3525,38 @@ def _api_mom20_performance_inner(user_id):
         "total_return_pct":   total_return_pct,      # total P&L / initial capital
         "tracking_since":     earliest_date,
         "prices_updated_at":  prices_updated_at,
+        "dividends_updated_at":  div_ledger.get("updated_at"),
+        "dividends_open_total":  div_ledger.get("totals", {}).get("open", 0),
+        "dividends_closed_total": div_ledger.get("totals", {}).get("closed", 0),
+        "dividends_grand_total": div_ledger.get("totals", {}).get("grand", 0),
     })
+
+
+# ── Mom20 dividends ────────────────────────────────────────────────────────────
+
+@app.route("/api/portfolio-users/<user_id>/mom20-dividends", methods=["GET"])
+def api_mom20_dividends(user_id):
+    """Cache read only, no network — whatever the last '💰 Dividends' refresh
+    persisted. Returns the zero-shape when nothing has been computed yet."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    return jsonify({"success": True, **load_dividend_ledger(user_id)})
+
+
+@app.route("/api/portfolio-users/<user_id>/mom20-dividends/refresh", methods=["POST"])
+def api_mom20_dividends_refresh(user_id):
+    """Recompute the dividend ledger — fetches any stale/missing tickers from
+    Yahoo (shared 24h cache across all users), replays trade history for the
+    per-lot timeline, and persists. Can take a few seconds on a cold cache."""
+    if not get_user(user_id):
+        return jsonify({"success": False, "error": "user not found"})
+    try:
+        ledger = compute_dividend_ledger(user_id, refresh=True)
+        return jsonify({"success": True, **ledger})
+    except Exception as _e:
+        import traceback as _tb
+        print(f"[mom20-dividends/refresh] unhandled error for {user_id}: {_e}\n{_tb.format_exc()}")
+        return jsonify({"success": False, "error": str(_e)})
 
 
 # ── Mom20 per-position note ───────────────────────────────────────────────────

@@ -2357,10 +2357,12 @@
                         <span style="font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:1px;">PORTFOLIO TRACKER</span>
                         <button id="mom20-live-prices-btn" onclick="mom20LivePricesAndBasket()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;">⚡ Live Prices</button>
                         <button id="mom20-rebuild-btn" onclick="mom20RebuildPortfolio()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;" title="Replay all trade books to fix qty discrepancies">↺ Rebuild from History</button>
+                        <button id="mom20-dividends-btn" onclick="mom20RefreshDividends()" style="padding:2px 9px;font-size:10px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border-color);border-radius:4px;cursor:pointer;" title="Fetch/refresh dividend income for open and closed holdings">💰 Dividends</button>
                         <span id="mom20-tracker-status" style="font-size:10px;color:var(--text-muted);"></span>
+                        <span id="mom20-dividend-status" style="font-size:10px;color:var(--text-muted);"></span>
                     </div>
                     <!-- Summary strip -->
-                    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:10px;">
+                    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:14px 18px;margin-bottom:10px;">
                         <div>
                             <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Returns</div>
                             <div id="mom20-tracker-returns" style="font-size:20px;font-weight:700;">—</div>
@@ -2382,6 +2384,11 @@
                             <div id="mom20-tracker-realized" style="font-size:15px;font-weight:700;">—</div>
                             <div id="mom20-tracker-unrealized" style="font-size:10px;color:var(--text-muted);margin-top:2px;"></div>
                         </div>
+                        <div>
+                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px;">Dividends</div>
+                            <div id="mom20-tracker-dividends" style="font-size:15px;font-weight:700;color:var(--green);">—</div>
+                            <div id="mom20-tracker-div-sub" style="font-size:10px;color:var(--text-muted);margin-top:2px;"></div>
+                        </div>
                     </div>
                     <!-- Holdings table + chart side panel -->
                     <div style="display:flex;gap:12px;align-items:flex-start;">
@@ -2399,6 +2406,7 @@
                                     <th style="text-align:right;padding:5px 8px;font-family:monospace;">Qty</th>
                                     <th style="text-align:right;padding:5px 8px;font-family:monospace;">Unreal P&amp;L</th>
                                     <th id="th-return" onclick="mom20TrackerSetSort('return')" style="text-align:right;padding:5px 8px;cursor:pointer;user-select:none;font-family:monospace;">P&amp;L% <span id="th-return-arrow">▼</span></th>
+                                    <th style="text-align:right;padding:5px 8px;font-family:monospace;">Div ₹</th>
                                     <th style="text-align:left;padding:5px 8px;font-family:monospace;color:#a78bfa;">Note</th>
                                 </tr>
                             </thead>
@@ -6794,10 +6802,14 @@
             const rebalPnlStr = rebalPnl != null
                 ? `  <span style="color:${rebalPnl >= 0 ? color.g : color.r};font-weight:700;font-size:11px;">${rebalPnl >= 0 ? '+' : ''}₹${Math.round(rebalPnl).toLocaleString('en-IN')}</span>`
                 : '';
+            // Single source of truth for both the header and row grids below —
+            // was duplicated as two separate literals, a real risk of the two
+            // drifting out of alignment when adding a column.
+            const sellCols = '100px 45px 72px 72px 70px 60px 62px';
             const sellsHtml = sells.length === 0
                 ? `<div style="color:${color.m};padding-left:4px;">—</div>`
-                : `<div style="display:grid;grid-template-columns:100px 45px 72px 72px 70px 60px;gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
-                       <span>Stock</span><span>Qty</span><span>Entry ₹</span><span>Fill ₹</span><span>Value ₹</span><span>P&L</span></div>` +
+                : `<div style="display:grid;grid-template-columns:${sellCols};gap:4px;color:${color.m};font-size:10px;margin-bottom:4px;">
+                       <span>Stock</span><span>Qty</span><span>Entry ₹</span><span>Fill ₹</span><span>Value ₹</span><span>P&L</span><span>Div ₹</span></div>` +
                   sells.map(e => {
                     const ticker   = e.ticker || '';
                     const qty      = e.qty || 0;
@@ -6807,13 +6819,15 @@
                     const pnl      = e.pnl != null ? e.pnl : (entryP && price && qty ? (price - entryP) * qty : null);
                     const pnlColor = pnl == null ? color.m : pnl >= 0 ? color.g : color.r;
                     const pnlStr   = pnl != null ? (pnl >= 0 ? '+' : '') + Math.round(pnl).toLocaleString('en-IN') : '—';
-                    return `<div style="display:grid;grid-template-columns:100px 45px 72px 72px 70px 60px;gap:4px;">
+                    const divStr   = e.dividend != null && e.dividend > 0 ? '₹' + Math.round(e.dividend).toLocaleString('en-IN') : '—';
+                    return `<div style="display:grid;grid-template-columns:${sellCols};gap:4px;">
                         <span style="color:${color.r};">${ticker}</span>
                         <span style="color:${color.m};">${qty}</span>
                         <span style="color:${color.m};">${entryP ? entryP.toFixed(2) : '—'}</span>
                         <span style="color:${color.m};">${price ? price.toFixed(2) : '—'}</span>
                         <span style="color:${color.m};">${val != null ? fmt(val) : '—'}</span>
                         <span style="color:${pnlColor};font-weight:600;">${pnlStr}</span>
+                        <span style="color:${color.m};">${divStr}</span>
                     </div>`;
                   }).join('');
             const sellsSection = `
@@ -8364,6 +8378,12 @@ function mom20OnUserChange() {
     _mom20LiveBusy = false;
     const liveBtn = document.getElementById('mom20-live-prices-btn');
     if (liveBtn) { liveBtn.disabled = false; liveBtn.style.opacity = ''; liveBtn.style.cursor = 'pointer'; }
+    // Same reset for the dividends button
+    _mom20DivBusy = false;
+    const divBtn = document.getElementById('mom20-dividends-btn');
+    if (divBtn) { divBtn.disabled = false; divBtn.style.opacity = ''; divBtn.style.cursor = 'pointer'; }
+    const divStatusEl = document.getElementById('mom20-dividend-status');
+    if (divStatusEl) divStatusEl.textContent = '';
     if (historyPanel && historyPanel.style.display !== 'none') mom20LoadHistory();
     // Clear stale previous-user data immediately before new user's data arrives
     _mom20BasketData = null;
@@ -8376,10 +8396,11 @@ function mom20OnUserChange() {
 
 function _mom20ResetTrackerDisplay() {
     const ids = ['mom20-tracker-returns','mom20-tracker-since','mom20-tracker-invested',
-                 'mom20-tracker-current','mom20-tracker-realized','mom20-tracker-unrealized'];
+                 'mom20-tracker-current','mom20-tracker-realized','mom20-tracker-unrealized',
+                 'mom20-tracker-dividends','mom20-tracker-div-sub'];
     ids.forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = '—'; el.style.color = ''; } });
     const tbody = document.getElementById('mom20-tracker-tbody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">Loading…</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">Loading…</td></tr>';
     const chartWrap = document.getElementById('mom20-perf-chart-wrap');
     if (chartWrap) chartWrap.style.display = 'none';
     if (_mom20PerfChart) { _mom20PerfChart.destroy(); _mom20PerfChart = null; }
@@ -8526,6 +8547,60 @@ async function mom20LivePricesAndBasket() {
     }
 }
 
+// Dividend refresh — clones mom20LivePricesAndBasket()'s exact re-entrancy/disable/
+// status-text/finally-restore pattern. Uses its own status span (mom20-dividend-status)
+// rather than mom20-tracker-status, which mom20RenderPerformance overwrites with
+// "Prices updated …". Both routes hit the shared, TTL-cached dividend store
+// (data/dividends.py) — this can take longer than Live Prices on a cold cache
+// (up to ~100 distinct tickers across all history), hence the longer timeout.
+let _mom20DivBusy = false;
+async function mom20RefreshDividends() {
+    if (_mom20DivBusy) return;
+    _mom20DivBusy = true;
+    const uid = _mom20SelectedUser?.id;
+    const btn = document.getElementById('mom20-dividends-btn');
+    const statusEl = document.getElementById('mom20-dividend-status');
+    if (!uid) { _mom20DivBusy = false; return; }
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'wait';
+    }
+    if (statusEl) statusEl.textContent = 'Fetching dividends…';
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 90000);
+        const r = await fetch(`/api/portfolio-users/${uid}/mom20-dividends/refresh`,
+                               {method: 'POST', signal: controller.signal});
+        clearTimeout(timeout);
+        const d = await r.json();
+        if (!d.success) {
+            if (statusEl) statusEl.textContent = `Error: ${d.error || 'failed'}`;
+            return;
+        }
+        if (statusEl) {
+            const failed = (d.coverage?.failed || []).length;
+            statusEl.textContent = failed
+                ? `Dividends updated (${failed} ticker${failed===1?'':'s'} unavailable)`
+                : 'Dividends updated';
+        }
+        await mom20LoadPerformance(false);
+        if (document.getElementById('mom20-history-panel')?.style.display !== 'none') {
+            _mom20HistoryLoaded = false;
+            await mom20LoadHistory();
+        }
+    } catch (e) {
+        if (statusEl) statusEl.textContent = 'Load failed — try again';
+    } finally {
+        _mom20DivBusy = false;
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor = 'pointer';
+        }
+    }
+}
+
 async function mom20DeleteRebalance(storageIdx, dateLabel) {
     const uid = _mom20SelectedUser?.id;
     if (!uid) { showToast('Select a user first', 'error'); return; }
@@ -8629,6 +8704,18 @@ function mom20RenderPerformance(d, live=false) {
         return;
     }
 
+    // Dividend summary tile — populated before the no-holdings early return below,
+    // since a fully-exited portfolio can still have a nonzero closed dividend total.
+    const fmtInrDiv = v => '₹' + Math.round(v || 0).toLocaleString('en-IN');
+    const divEl = document.getElementById('mom20-tracker-dividends');
+    const divSubEl = document.getElementById('mom20-tracker-div-sub');
+    if (divEl) divEl.textContent = fmtInrDiv(d.dividends_grand_total);
+    if (divSubEl) {
+        divSubEl.textContent = d.dividends_updated_at
+            ? `Open ${fmtInrDiv(d.dividends_open_total)} · Closed ${fmtInrDiv(d.dividends_closed_total)}`
+            : 'Click 💰 Dividends to fetch';
+    }
+
     // Apply fresh prices to the basket panel (Entries qty×price, Exits price)
     if (live && d.fresh_prices && _mom20BasketData) {
         const fp = d.fresh_prices;
@@ -8651,7 +8738,7 @@ function mom20RenderPerformance(d, live=false) {
     if (!d.holdings || !d.holdings.length) {
         if (status) status.textContent = 'No holdings — upload trade book to start tracking';
         const tbody = document.getElementById('mom20-tracker-tbody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px;">No holdings found — upload trade book to seed portfolio</td></tr>`;
         return;
     }
 
@@ -9665,6 +9752,7 @@ function mom20TrackerRender() {
             <td style="${td}text-align:right;color:var(--text-muted);cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${h.qty}</td>
             <td style="${td}text-align:right;font-weight:700;color:${color};cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${pnlSign}₹${Math.abs(unrealPnl).toLocaleString('en-IN')}</td>
             <td style="${td}text-align:right;font-weight:700;color:${color};cursor:pointer;" onclick="openTrackerChart('${h.ticker}')">${sign}${h.return_pct.toFixed(1)}%</td>
+            <td style="${td}text-align:right;color:var(--text-muted);">${h.dividend != null && h.dividend > 0 ? '₹' + Math.round(h.dividend).toLocaleString('en-IN') : '—'}</td>
             <td style="${td}cursor:pointer;" onclick="noteModalOpen('${h.ticker}', ${JSON.stringify(noteText).replace(/</g,'\\u003c')})">${noteDisplay}</td>
         </tr>`;
     }).join('');
