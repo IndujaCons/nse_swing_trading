@@ -3493,7 +3493,11 @@ def _api_mom20_performance_inner(user_id):
             _hist = json.load(_hf)
         realized_pnl = _retrospective_realized_pnl(_hist)
         for rb in _hist:
-            buy_tot  = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("buys",  []))
+            # buys + top_ups — a top-up previously vanished here, understating
+            # cumulative capital deployed (same bug already fixed in
+            # api_mom20_rebuild_portfolio / _retrospective_realized_pnl).
+            buy_tot  = sum(t.get("qty", 0) * t.get("price", 0)
+                          for t in rb.get("buys", []) + rb.get("top_ups", []))
             sell_tot = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("sells", []))
             net = buy_tot - sell_tot
             if net > 0:
@@ -5480,7 +5484,9 @@ def api_portfolio_summary():
                     _hist = json.load(_f)
                 _realized = _retrospective_realized_pnl(_hist)
                 for _rb in _hist:
-                    _buy  = sum(t.get("qty", 0) * t.get("price", 0) for t in _rb.get("buys",  []))
+                    # buys + top_ups — same fix as _api_mom20_performance_inner
+                    _buy  = sum(t.get("qty", 0) * t.get("price", 0)
+                               for t in _rb.get("buys", []) + _rb.get("top_ups", []))
                     _sell = sum(t.get("qty", 0) * t.get("price", 0) for t in _rb.get("sells", []))
                     if _buy - _sell > 0:
                         _init_cap += _buy - _sell
