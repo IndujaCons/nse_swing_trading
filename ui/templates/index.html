@@ -9767,17 +9767,26 @@ async function mom20LoadBasket() {
             document.getElementById('basket-per-slot').textContent = 'Error';
             return;
         }
-        // If user already typed a capital override, use it instead of API value
+        // If user already typed a capital override, use it instead of API value.
+        // Must recompute overflow_entries (β > 1.2) the same way as entries (β ≤ 1.2)
+        // — previously only `entries` was rescaled here, so overflow rows kept
+        // showing qty/capital from the server's original (saved-capital) response.
         const override = _mom20ParseCapitalInput();
         if (override >= 1000 && override !== d.total_capital) {
             d.total_capital    = override;
             d.capital_per_slot = override / 20;
-            d.entries = d.entries.map(e => {
+            const _rescale = e => {
                 const qty = e.price > 0 ? Math.floor(d.capital_per_slot / e.price) : 0;
                 return {...e, qty, capital_allocated: Math.round(qty * e.price)};
-            });
+            };
+            d.entries = d.entries.map(_rescale);
+            if (d.overflow_entries) d.overflow_entries = d.overflow_entries.map(_rescale);
             const maxP = Math.max(...d.entries.map(e => e.price || 0), 0);
             d.min_capital    = Math.round(20 * maxP);
+            // total_to_deploy stays entries-only, matching the server's own
+            // data/mom20_basket.py:330 scope — overflow (β>1.2) picks are
+            // optional/opt-in, intentionally excluded from this total both
+            // server- and client-side, not something this fix should widen.
             d.total_to_deploy = d.entries.reduce((s,e) => s + e.capital_allocated, 0);
         }
         _mom20BasketData = d;
