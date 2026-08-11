@@ -5459,6 +5459,7 @@ def api_portfolio_summary():
         mom20_pct = None
         mom20_invested = 0.0
         mom20_err = None
+        dividends_amount = 0.0
         try:
             with open(mom20_portfolio_path(uid)) as _f:
                 _pf = json.load(_f)
@@ -5478,6 +5479,10 @@ def api_portfolio_summary():
                 _init_cap = compute_initial_capital(_hist)  # shared with Tracker + the daily email
             except Exception:
                 pass
+            # Dividends — same figure as the Dashboard Tracker's Returns%, so this
+            # page's Mom20% matches it exactly (data/dividends.py, refreshed via the
+            # Tracker's "💰 Dividends" button).
+            dividends_amount = load_dividend_ledger(uid).get("totals", {}).get("grand", 0)
             _te, _tc = 0.0, 0.0
             for _h in basket:
                 _ep = _h.get("entry_price", 0)
@@ -5488,7 +5493,7 @@ def api_portfolio_summary():
             _init_cap = _init_cap or _te
             mom20_invested = _init_cap
             if _init_cap > 0:
-                mom20_pct = round((_unreal + _realized) / _init_cap * 100, 2)
+                mom20_pct = round((_unreal + _realized + dividends_amount) / _init_cap * 100, 2)
         except Exception as _e:
             mom20_err = str(_e)
 
@@ -5497,32 +5502,6 @@ def api_portfolio_summary():
         options_pct = None
         if options_amt is not None and mom20_invested > 0:
             options_pct = round(float(options_amt) / mom20_invested * 100, 2)
-
-        # ── ETF ────────────────────────────────────────────────────────────────
-        etf_pct = None
-        _etf_gain_inr, _etf_cost_inr = 0.0, 0.0
-        try:
-            _open_pos, _etf_hist = [], []
-            try:
-                with open(etf_positions_path(uid)) as _f:
-                    _open_pos = json.load(_f)
-            except Exception:
-                pass
-            try:
-                with open(etf_history_path(uid)) as _f:
-                    _etf_hist = json.load(_f)
-            except Exception:
-                pass
-            _real_etf  = sum(r.get("pnl_abs", 0) for r in _etf_hist)
-            _open_cost = sum(p.get("qty", 0) * p.get("entry_price", 0) for p in _open_pos)
-            _closed_cost = sum(r.get("qty", 0) * r.get("entry_price", 0) for r in _etf_hist)
-            _total_etf_cost = _open_cost + _closed_cost
-            if _total_etf_cost > 0:
-                etf_pct = round(_real_etf / _total_etf_cost * 100, 2)
-                _etf_gain_inr = _real_etf
-                _etf_cost_inr = _total_etf_cost
-        except Exception:
-            pass
 
         # ── TechMo ─────────────────────────────────────────────────────────────
         techmo_pct = None
@@ -5573,9 +5552,6 @@ def api_portfolio_summary():
                 _total_cap_inr  += mom20_invested
             if options_amt is not None:
                 _total_gain_inr += float(options_amt)   # already absolute INR P&L
-            if etf_pct is not None and _etf_cost_inr > 0:
-                _total_gain_inr += _etf_gain_inr
-                _total_cap_inr  += _etf_cost_inr
             if techmo_pct is not None and _t_cost_usd > 0:
                 _total_gain_inr += _t_gain_usd * _fx
                 _total_cap_inr  += _t_cost_usd * _fx
@@ -5585,16 +5561,16 @@ def api_portfolio_summary():
             pass
 
         rows.append({
-            "user_id":        uid,
-            "name":           name,
-            "mom20_pct":      mom20_pct,
-            "mom20_invested": round(mom20_invested, 2),
-            "options_pct":    options_pct,
-            "options_amount": options_amt,
-            "etf_pct":        etf_pct,
-            "techmo_pct":     techmo_pct,
-            "total_pct":      total_pct,
-            "_err":           mom20_err,   # debug: non-null means mom20 read failed
+            "user_id":          uid,
+            "name":             name,
+            "mom20_pct":        mom20_pct,
+            "mom20_invested":   round(mom20_invested, 2),
+            "dividends_amount": round(dividends_amount, 2),
+            "options_pct":      options_pct,
+            "options_amount":   options_amt,
+            "techmo_pct":       techmo_pct,
+            "total_pct":        total_pct,
+            "_err":             mom20_err,   # debug: non-null means mom20 read failed
         })
 
     return jsonify({"success": True, "rows": rows})

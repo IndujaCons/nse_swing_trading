@@ -10765,11 +10765,11 @@ function _mergeSummaryRows(rows) {
             const g = map[key];
             // Mom20: take whichever has data
             if (g.mom20_pct === null && r.mom20_pct !== null) {
-                g.mom20_pct      = r.mom20_pct;
-                g.mom20_invested = r.mom20_invested;
+                g.mom20_pct         = r.mom20_pct;
+                g.mom20_invested    = r.mom20_invested;
+                g.dividends_amount  = r.dividends_amount;
             }
-            // ETF / TechMo: take whichever has data
-            if (g.etf_pct    === null && r.etf_pct    !== null) g.etf_pct    = r.etf_pct;
+            // TechMo: take whichever has data
             if (g.techmo_pct === null && r.techmo_pct !== null) g.techmo_pct = r.techmo_pct;
             // Options: carry over saved amount from whichever row has it
             if (!g.options_user_id && r.mom20_invested > 0) {
@@ -10783,7 +10783,7 @@ function _mergeSummaryRows(rows) {
     return order.map(k => {
         const g = map[k];
         g.options_user_id = g.options_user_id || g.user_id;
-        const parts = [g.mom20_pct, g.options_pct, g.etf_pct, g.techmo_pct]
+        const parts = [g.mom20_pct, g.options_pct, g.techmo_pct]
             .filter(x => x !== null && x !== undefined);
         g.total_pct = parts.length ? Math.round(parts.reduce((a,b) => a+b, 0) * 100) / 100 : null;
         return g;
@@ -10815,11 +10815,18 @@ function renderSummary() {
     const cards = rows.map((r, i) => {
         const optUid  = r.options_user_id;
         const optId   = `opt-inp-${optUid}`;
-        const hasData = r.mom20_pct !== null || r.etf_pct !== null || r.techmo_pct !== null;
+        const hasData = r.mom20_pct !== null || r.techmo_pct !== null;
         const totalColor = !hasData ? 'var(--text-muted)'
                          : (r.total_pct >= 0 ? '#26a69a' : '#ef5350');
         const totalSign  = r.total_pct !== null && r.total_pct >= 0 ? '+' : '';
         const totalText  = r.total_pct !== null ? `${totalSign}${r.total_pct.toFixed(2)}%` : '—';
+
+        // Informational only — already folded into mom20_pct above, not a separate
+        // addend to Total (mirrors the Dashboard Tracker's own Dividends tile, which
+        // has the same relationship to its Returns%).
+        const divSubtext = r.dividends_amount > 0
+            ? `<span style="font-size:8px;color:var(--text-muted);">Div ₹${Math.round(r.dividends_amount).toLocaleString('en-IN')} incl.</span>`
+            : '';
 
         const optInput = `
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:110px;">
@@ -10859,11 +10866,9 @@ function renderSummary() {
 
             <!-- Strategy pills -->
             <div style="display:flex;align-items:center;gap:16px;flex:1;justify-content:space-evenly;padding:0 16px;">
-                ${pill('Mom20', _fmtPct(r.mom20_pct))}
+                ${pill('Mom20', _fmtPct(r.mom20_pct), divSubtext)}
                 ${divider()}
                 ${optInput}
-                ${divider()}
-                ${pill('ETF', _fmtPct(r.etf_pct))}
                 ${divider()}
                 ${pill('TechMo', _fmtPct(r.techmo_pct))}
             </div>
@@ -10882,7 +10887,7 @@ function renderSummary() {
             ${cards}
         </div>
         <div style="margin-top:14px;font-size:10px;color:var(--text-muted);padding-left:2px;">
-            ETF % = realized P&amp;L only (no live prices) &nbsp;·&nbsp; Options % = ₹ amount ÷ Mom20 invested &nbsp;·&nbsp; Total = simple sum
+            Mom20 % includes dividends &nbsp;·&nbsp; Options % = ₹ amount ÷ Mom20 invested &nbsp;·&nbsp; Total = simple sum
         </div>`;
 }
 
