@@ -351,7 +351,13 @@ class LiveSignalsEngine:
 
     # ── Phase 3 helpers — disk-cached baseline + intraday patch ───────────────
 
-    _BASELINE_MAX_AGE_HOURS = 48  # accept yesterday's snapshot if today's hasn't run
+    # The refresh_n200_baseline.sh cron only runs weekdays (0 8,16 * * 1-5), so the
+    # gap from Friday 16:00 to Monday 08:00 is ~64h. A flat 48h cutoff wrongly
+    # treated that Friday cache as stale for the first ~16h of every Monday,
+    # forcing every live scan onto the slow full-fetch path right when the week's
+    # first users show up. 76h covers a normal weekend with ~12h margin; a 3+ day
+    # holiday weekend would still (correctly) fall back to a full fetch.
+    _BASELINE_MAX_AGE_HOURS = 76
 
     def _try_load_cached_baseline(self, tickers):
         """Look for a recent data_store/cache/n200_baseline_<date>.pkl.
@@ -515,10 +521,39 @@ class LiveSignalsEngine:
         except Exception:
             bench_raw = nifty_raw  # fallback to Nifty 50
 
-        # Chunked N200 bulk fetch.
-        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
+        # Chunked N200 bulk fetch. Chunks are submitted to ONE shared executor and
+        # run concurrently (CHUNK_PARALLELISM at a time) — previously each chunk got
+        # its own single-worker executor and was awaited before the next one was even
+        # submitted, so ~14 chunks ran strictly one-after-another. That's invisible on
+        # a fast, low-latency connection but multiplies badly under real per-request
+        # latency: the same fetch that took 7.8s in dev took 34.3s from the EC2 box's
+        # own cron log (2026-08-10), pure per-chunk latency with nothing to hide it
+        # behind. Concurrency here doesn't change per-chunk cost, just overlaps it.
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout, as_completed
         CHUNK_SIZE = 15
-        CHUNK_TIMEOUT = 25  # seconds
+        CHUNK_TIMEOUT = 25  # seconds, per chunk (unchanged)
+        CHUNK_PARALLELISM = 2  # deliberately conservative, not a guess: each chunk
+                                # already fans out its own internal threads=True across
+                                # up to 15 symbols, so outer parallelism compounds
+                                # multiplicatively, not additively. 5 concurrent chunks
+                                # (~75 simultaneous requests) reproducibly triggered
+                                # silent Yahoo rate-limiting — chunks came back EMPTY
+                                # rather than raising, so it read as a data gap, not a
+                                # timeout (no exception, no log line — only a low
+                                # bulk_data count gives it away). 2 verified cleanly
+                                # (14/14 chunks populated, full 200-ticker universe) in
+                                # an isolated test; later same-session retests at both 2
+                                # and 3 degraded, most likely from cumulative rate-limit
+                                # pressure built up by heavy testing that same session,
+                                # not a code defect — but this was NOT independently
+                                # reconfirmed clean after that, so treat this number as
+                                # a considered starting point, not a fully proven one.
+                                # After deploying, check n200_baseline.log and a live
+                                # scan's bulk_data population count before trusting this
+                                # further. Any missing ticker still safely falls through
+                                # to the per-ticker _slice_daily() fallback below — nothing
+                                # is silently lost, only potentially slower than intended
+                                # if this number needs to come down further.
         total = len(tickers)
         yf_tickers = [f"{t}.NS" for t in tickers]
         bulk_data = {}
@@ -528,36 +563,58 @@ class LiveSignalsEngine:
                                progress=False, auto_adjust=True,
                                group_by='ticker', threads=True, timeout=15)
 
-        for chunk_start in range(0, len(yf_tickers), CHUNK_SIZE):
-            chunk = yf_tickers[chunk_start:chunk_start + CHUNK_SIZE]
-            if progress_callback:
-                progress_callback(chunk_start, total, "fetching prices…")
-            chunk_df = None
+        chunks = [yf_tickers[i:i + CHUNK_SIZE] for i in range(0, len(yf_tickers), CHUNK_SIZE)]
+        if progress_callback:
+            progress_callback(0, total, "fetching prices…")
+
+        # Overall wall-clock budget for the whole batch: enough waves to drain all
+        # chunks through CHUNK_PARALLELISM workers, each wave getting a full
+        # CHUNK_TIMEOUT. E.g. 14 chunks / 5 workers = 3 waves -> 75s worst case,
+        # vs. the old fully-sequential worst case of 14 * 25s = 350s.
+        import math as _math
+        _waves = _math.ceil(len(chunks) / CHUNK_PARALLELISM) if chunks else 1
+        batch_timeout = CHUNK_TIMEOUT * _waves
+
+        with ThreadPoolExecutor(max_workers=CHUNK_PARALLELISM) as _ex:
+            future_to_chunk = {_ex.submit(_fetch_chunk, chunk): (i, chunk)
+                               for i, chunk in enumerate(chunks)}
+            done_count = 0
             try:
-                with ThreadPoolExecutor(max_workers=1) as _ex:
-                    chunk_df = _ex.submit(_fetch_chunk, chunk).result(timeout=CHUNK_TIMEOUT)
-            except FutTimeout:
-                print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} "
-                      f"timed out after {CHUNK_TIMEOUT}s — falling back to per-ticker for {chunk}")
-                continue
-            except Exception as e:
-                print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} fetch failed: {e}")
-                continue
-            if chunk_df is None or chunk_df.empty:
-                continue
-            try:
-                if isinstance(chunk_df.columns, pd.MultiIndex):
-                    for sym in chunk:
-                        if sym in chunk_df.columns.get_level_values(0):
-                            sub = chunk_df[sym].dropna(how='all')
+                completed_iter = as_completed(future_to_chunk, timeout=batch_timeout)
+                for future in completed_iter:
+                    i, chunk = future_to_chunk[future]
+                    chunk_start = i * CHUNK_SIZE
+                    done_count += 1
+                    if progress_callback:
+                        progress_callback(min(done_count * CHUNK_SIZE, total), total, "fetching prices…")
+                    try:
+                        chunk_df = future.result()
+                    except Exception as e:
+                        print(f"[live_signals] chunk {chunk_start}-{chunk_start+len(chunk)} fetch failed: {e}")
+                        continue
+                    if chunk_df is None or chunk_df.empty:
+                        continue
+                    try:
+                        if isinstance(chunk_df.columns, pd.MultiIndex):
+                            for sym in chunk:
+                                if sym in chunk_df.columns.get_level_values(0):
+                                    sub = chunk_df[sym].dropna(how='all')
+                                    if len(sub) > 0:
+                                        bulk_data[sym] = sub
+                        elif len(chunk) == 1:
+                            sub = chunk_df.dropna(how='all')
                             if len(sub) > 0:
-                                bulk_data[sym] = sub
-                elif len(chunk) == 1:
-                    sub = chunk_df.dropna(how='all')
-                    if len(sub) > 0:
-                        bulk_data[chunk[0]] = sub
-            except (KeyError, AttributeError):
-                continue
+                                bulk_data[chunk[0]] = sub
+                    except (KeyError, AttributeError):
+                        continue
+            except FutTimeout:
+                # Some chunks never completed within the batch budget — whatever
+                # DID complete and get processed above is kept; the rest fall
+                # through to the caller's per-ticker _slice_daily() fallback,
+                # same as an individual chunk timeout did before this change.
+                unfinished = sum(1 for f in future_to_chunk if not f.done())
+                print(f"[live_signals] bulk fetch batch timed out after {batch_timeout}s — "
+                      f"{unfinished} chunk(s) still in flight, remaining tickers fall back to per-ticker")
 
         return nifty_raw, bench_raw, bulk_data
 
