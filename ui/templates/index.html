@@ -9936,10 +9936,19 @@ function mom20RecalcCapital() {
     }
     const N = 20;
     const perSlot = newCap / N;
-    const entries = _mom20BasketData.entries.map(e => {
+    const _rescale = e => {
         const qty = e.price > 0 ? Math.floor(perSlot / e.price) : 0;
         return {...e, qty, capital_allocated: Math.round(qty * e.price)};
-    });
+    };
+    const entries = _mom20BasketData.entries.map(_rescale);
+    // Overflow (β > 1.2) rows must rescale the same way — this is the actual
+    // live-typing path (bound to the capital input's Enter/blur), separate
+    // from mom20LoadBasket()'s own override-rescale block. That one was fixed
+    // for overflow_entries already; this one was missed, so overflow rows kept
+    // showing qty/capital from the last full server fetch's capital.
+    const overflow_entries = _mom20BasketData.overflow_entries
+        ? _mom20BasketData.overflow_entries.map(_rescale)
+        : _mom20BasketData.overflow_entries;
     const maxPrice = Math.max(...entries.map(e => e.price || 0), 0);
     const updated = {
         ..._mom20BasketData,
@@ -9948,6 +9957,7 @@ function mom20RecalcCapital() {
         min_capital: Math.round(N * maxPrice),
         total_to_deploy: entries.reduce((s,e) => s + e.capital_allocated, 0),
         entries,
+        overflow_entries,
     };
     _mom20BasketData = updated;
     _renderMom20Basket(updated);
