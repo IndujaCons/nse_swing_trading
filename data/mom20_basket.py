@@ -17,7 +17,7 @@ import io
 import math
 import os
 import json
-from datetime import date
+from datetime import date, datetime
 
 N_SLOTS    = 20   # Mom20 top-N
 BUFFER_OUT = 40   # hold if rank <= this
@@ -440,6 +440,26 @@ def _detect_positions_csv(fieldnames: list) -> bool:
     return has_instrument and has_avg and not has_action
 
 
+def _normalize_trade_date(date_raw: str) -> str:
+    """Normalize a Zerodha CSV date/time string to ISO YYYY-MM-DD.
+
+    The order book's 'Time' column is 'DD/MM/YY HH:MM' (e.g. '12/08/26 14:30',
+    India day-first) — stored raw before this, it broke downstream: server-side
+    `entry_date[:10]` truncated mid-string and the client's `new Date(...)`
+    either misread day/month (both would-be values <=12) or failed outright,
+    rendering as "Invalid-Date" in the tracker. Falls back to today if no
+    known format matches, rather than propagating an unparseable string.
+    """
+    date_raw = (date_raw or "").strip()
+    for fmt in ("%d/%m/%y %H:%M", "%d/%m/%Y %H:%M", "%Y-%m-%d %H:%M:%S",
+                "%Y-%m-%d", "%d-%m-%Y"):
+        try:
+            return datetime.strptime(date_raw, fmt).date().isoformat()
+        except ValueError:
+            continue
+    return date.today().isoformat()
+
+
 def parse_trade_book(csv_content: str) -> list:
     """
     Parse Zerodha order book / trade book CSV export, or a holdings/positions
@@ -525,7 +545,7 @@ def parse_trade_book(csv_content: str) -> list:
             "action":     "BUY" if "BUY" in action else "SELL",
             "qty":        qty,
             "price":      round(price, 2),
-            "trade_date": date_raw,
+            "trade_date": _normalize_trade_date(date_raw),
         })
     return trades
 
