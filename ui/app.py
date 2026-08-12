@@ -5290,6 +5290,45 @@ def api_techmo_chart_user(user_id):
     total_cost = sum((h.get("qty") or h.get("shares", 0)) * h.get("entry_price", 0) for h in basket)
     yf_syms    = tickers + ["QQQ"]
 
+    # Realized P&L, date-indexed — previously omitted entirely, so this chart's
+    # legend % only ever reflected unrealized return on currently-open positions
+    # (matches the "Unreal: +$X" figure, not the top "RETURNS" tile, which is
+    # (unrealized + realized) / total_cost — same total_cost as above). Walk
+    # history chronologically so each chart date reflects only what was ACTUALLY
+    # realized by then, not the current running total applied retroactively.
+    realized_checkpoints = []  # sorted [(date_str YYYY-MM-DD, cumulative_realized), ...]
+    try:
+        with open(techmo_history_path(user_id)) as f:
+            hist = json.load(f)
+        # rebalance_date comes straight from the uploaded IBKR CSV's own date
+        # column (api_techmo_upload_tradebook: trades[0]["date"]) — format isn't
+        # guaranteed ISO, so normalize via pandas before sorting/comparing as
+        # strings, rather than assume it's already YYYY-MM-DD.
+        parsed = []
+        for rb in hist:
+            ts = pd.to_datetime(rb.get("rebalance_date", ""), errors="coerce")
+            if pd.isna(ts):
+                continue
+            parsed.append((ts.strftime("%Y-%m-%d"), rb))
+        parsed.sort(key=lambda x: x[0])
+        cum = 0.0
+        for date_str, rb in parsed:
+            for s in rb.get("sells", []):
+                cum += s.get("pnl", 0)
+            realized_checkpoints.append((date_str, cum))
+    except Exception:
+        pass
+
+    def _realized_as_of(date_str):
+        """Cumulative realized P&L from all rebalances on or before date_str."""
+        val = 0.0
+        for d, cum in realized_checkpoints:
+            if d <= date_str:
+                val = cum
+            else:
+                break
+        return val
+
     try:
         raw = yf.download(yf_syms, start=tracking_since, progress=False,
                           auto_adjust=True, group_by="ticker", threads=True)
@@ -5315,7 +5354,8 @@ def api_techmo_chart_user(user_id):
              else h.get("entry_price", 0))
             for h in basket
         )
-        port_pct.append(round((val - total_cost) / total_cost * 100, 3) if total_cost else 0)
+        date_str = dt.strftime("%Y-%m-%d")
+        port_pct.append(round((val - total_cost + _realized_as_of(date_str)) / total_cost * 100, 3) if total_cost else 0)
         qqq_pct.append(round((float(qqq_s.loc[dt]) / base_qqq - 1) * 100, 3)
                        if base_qqq and dt in qqq_s.index else (qqq_pct[-1] if qqq_pct else 0))
 
