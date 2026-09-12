@@ -8,7 +8,7 @@ import json
 import csv
 from datetime import date
 
-CONST_DIR = '/Users/jay/Desktop/relative_strength/nse_const'
+CONST_DIR = '/Users/jay/dev/relative_strength/nse_const'
 
 # Load current Nifty 200 (as of Mar 17, 2026)
 with open(f'{CONST_DIR}/ind_nifty200list.csv') as f:
@@ -20,10 +20,42 @@ print(f"Current Nifty 200: {len(current)} stocks")
 # All reconstitutions, newest first (for backward walk)
 # Verified manually from PDF text
 #
-# NOTE: Feb 2026 (eff 2026-03-27) is NOT included because it hasn't taken effect yet
-# (today is 2026-03-17). The current CSV reflects the pre-Feb-2026 composition.
+# NOTE on "Sep 2026" below: its true NSE effective date is 2026-09-30 (close of
+# 2026-09-29), per ind_prs10082026.pdf. Applied here as effective 2026-09-12
+# (the date this entry was added) at explicit user request — user did not want
+# the 7 excluded names remaining eligible for live entries during the ~18-day
+# gap before NSE's official effective date. This is a deliberate, known
+# deviation from the true historical PIT record for the 2026-09-12..2026-09-30
+# window: any backtest whose date range crosses that window will see this
+# reconstitution ~18 days earlier than NSE actually applied it. Not an error —
+# do not "fix" this back to 2026-09-30 without checking with the user first.
+#
+# NOTE on "Feb 2026" below: reconstructed 2026-09-12 by diffing nifty200_pit.json's
+# own "2025-10-01" and "2026-03-30" snapshots — the RECONSTITUTIONS list here had
+# gone stale (was missing this entry entirely) relative to the JSON already on
+# disk, which had evidently been advanced through a since-lost script version.
+# The excluded/included lists below are recovered from that diff, not re-verified
+# against the original Feb 2026 PDF text — cross-check against ind_prs23022026.pdf
+# if this ever needs auditing.
 
 RECONSTITUTIONS = [
+    {
+        "label": "Sep 2026 (applied early, see NOTE above — true NSE effective date 2026-09-30)",
+        "effective_date": "2026-09-12",
+        "excluded": ["ALKEM", "COROMANDEL", "HUDCO", "KPITTECH", "SHREECEM",
+                      "TATAELXSI", "TATAINVEST"],
+        "included": ["APARINDS", "MAHABANK", "HINDCOPPER", "LICI", "MEESHO",
+                      "NLCINDIA", "VAML"],
+        "note": "Source: ind_prs10082026.pdf, section 14 'Nifty 200'",
+    },
+    {
+        "label": "Feb 2026 (reconstructed from pit.json diff, see NOTE above)",
+        "effective_date": "2026-03-30",
+        "excluded": ["ACC", "BAJAJHFL", "BHARTIHEXA", "IGL", "IRB", "ITCHOTELS",
+                      "LICI", "NTPCGREEN", "SONACOMS", "TATATECH", "TORNTPOWER"],
+        "included": ["GROWW", "GVT&D", "ICICIAMC", "LAURUSLABS", "LENSKART",
+                      "LGEINDIA", "MCX", "RADICO", "TATACAP", "TATAINVEST", "TMCV"],
+    },
     {
         "label": "Aug 2025",
         "effective_date": "2025-09-30",
