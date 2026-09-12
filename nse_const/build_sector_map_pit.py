@@ -122,6 +122,9 @@ MANUAL_OVERRIDES = {
     "IREDA":      "NIFTY ENERGY",
     "WAAREEENER": "NIFTY ENERGY",
     "NYKAA":      "NIFTY CONSUMPTION",
+    "VAML":       "NIFTY METAL",
+    # APARINDS and MEESHO already have entries further below (PIT historical-only
+    # section) — not duplicated here, see those for rationale.
 
     # PIT historical-only — known-defunct or moved indices:
     "ABIRLANUVO":  "NIFTY INFRA",              # Aditya Birla Nuvo (demerged into Grasim)

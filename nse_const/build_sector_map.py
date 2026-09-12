@@ -103,6 +103,9 @@ MANUAL_OVERRIDES = {
     "IREDA":      ("NIFTY ENERGY",     "Indian Renewable Energy Dev Agency — green energy financier"),
     "WAAREEENER": ("NIFTY ENERGY",     "Waaree Energies — solar; energy"),
     "NYKAA":      ("NIFTY CONSUMPTION","Nykaa (FSN E-commerce) — beauty/online retail; consumption"),
+    "APARINDS":   ("NIFTY ENERGY",     "Apar Industries — power cables/conductors; matches the existing build_sector_map_pit.py classification for this ticker"),
+    "MEESHO":     ("NIFTY CONSUMPTION","Meesho — social-commerce/e-commerce marketplace; consumption, alongside NYKAA/SWIGGY/LENSKART"),
+    "VAML":       ("NIFTY METAL",      "Vedanta Aluminium Metal Ltd — aluminium smelting/production; not yet in niftyindices' METAL CSV (newly demerged/listed), classified by core business"),
 }
 
 # Precedence: first match wins → encodes "most specific first"

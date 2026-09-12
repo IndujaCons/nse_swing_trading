@@ -35456,5 +35456,807 @@
       "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
       "primary_sector": "NIFTY HEALTHCARE"
     }
+  },
+  "2026-09-12": {
+    "360ONE": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "ABB": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INDIA MFG;NIFTY MNC",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "ABCAPITAL": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "ADANIENSOL": {
+      "listed_in_indices": "NIFTY ENERGY",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "ADANIENT": {
+      "listed_in_indices": "NIFTY METAL",
+      "primary_sector": "NIFTY METAL"
+    },
+    "ADANIGREEN": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INFRA",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "ADANIPORTS": {
+      "listed_in_indices": "NIFTY INFRA",
+      "primary_sector": "NIFTY INFRA"
+    },
+    "ADANIPOWER": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "AMBUJACEM": {
+      "listed_in_indices": "NIFTY INFRA;NIFTY MNC",
+      "primary_sector": "NIFTY INFRA"
+    },
+    "APARINDS": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "APLAPOLLO": {
+      "listed_in_indices": "NIFTY METAL;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY METAL"
+    },
+    "APOLLOHOSP": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY CONSUMPTION;NIFTY INFRA",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "ASHOKLEY": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY INFRA;NIFTY INDIA MFG;NIFTY MNC",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "ASIANPAINT": {
+      "listed_in_indices": "NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "ASTRAL": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "ATGL": {
+      "listed_in_indices": "NIFTY OIL & GAS;NIFTY ENERGY",
+      "primary_sector": "NIFTY OIL & GAS"
+    },
+    "AUBANK": {
+      "listed_in_indices": "NIFTY PVT BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PVT BANK"
+    },
+    "AUROPHARMA": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "AXISBANK": {
+      "listed_in_indices": "NIFTY PVT BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PVT BANK"
+    },
+    "BAJAJ-AUTO": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY CONSUMPTION;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "BAJAJFINSV": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "BAJAJHLDNG": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "BAJFINANCE": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "BANKBARODA": {
+      "listed_in_indices": "NIFTY PSU BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PSU BANK"
+    },
+    "BANKINDIA": {
+      "listed_in_indices": "NIFTY PSU BANK",
+      "primary_sector": "NIFTY PSU BANK"
+    },
+    "BDL": {
+      "listed_in_indices": "NIFTY INDIA DEFENCE",
+      "primary_sector": "NIFTY INDIA DEFENCE"
+    },
+    "BEL": {
+      "listed_in_indices": "NIFTY INDIA DEFENCE;NIFTY INDIA MFG;NIFTY PSE",
+      "primary_sector": "NIFTY INDIA DEFENCE"
+    },
+    "BHARATFORG": {
+      "listed_in_indices": "NIFTY INDIA DEFENCE;NIFTY AUTO;NIFTY INFRA;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA DEFENCE"
+    },
+    "BHARTIARTL": {
+      "listed_in_indices": "NIFTY CONSUMPTION;NIFTY INFRA",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "BHEL": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INDIA MFG;NIFTY PSE",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "BIOCON": {
+      "listed_in_indices": "NIFTY HEALTHCARE",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "BLUESTARCO": {
+      "listed_in_indices": "NIFTY CONSUMER DURABLES;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY CONSUMER DURABLES"
+    },
+    "BOSCHLTD": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY INDIA MFG;NIFTY MNC",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "BPCL": {
+      "listed_in_indices": "NIFTY OIL & GAS;NIFTY ENERGY;NIFTY INFRA;NIFTY INDIA MFG;NIFTY PSE",
+      "primary_sector": "NIFTY OIL & GAS"
+    },
+    "BRITANNIA": {
+      "listed_in_indices": "NIFTY FMCG;NIFTY CONSUMPTION;NIFTY MNC",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "BSE": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "CANBK": {
+      "listed_in_indices": "NIFTY PSU BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PSU BANK"
+    },
+    "CGPOWER": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INFRA;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "CHOLAFIN": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "CIPLA": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "COALINDIA": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY PSE",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "COCHINSHIP": {
+      "listed_in_indices": "NIFTY INDIA DEFENCE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA DEFENCE"
+    },
+    "COFORGE": {
+      "listed_in_indices": "NIFTY IT",
+      "primary_sector": "NIFTY IT"
+    },
+    "COLPAL": {
+      "listed_in_indices": "NIFTY FMCG;NIFTY MNC",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "CONCOR": {
+      "listed_in_indices": "NIFTY PSE",
+      "primary_sector": "NIFTY PSE"
+    },
+    "CUMMINSIND": {
+      "listed_in_indices": "NIFTY INFRA;NIFTY INDIA MFG;NIFTY MNC",
+      "primary_sector": "NIFTY INFRA"
+    },
+    "DABUR": {
+      "listed_in_indices": "NIFTY FMCG",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "DIVISLAB": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "DIXON": {
+      "listed_in_indices": "NIFTY CONSUMER DURABLES;NIFTY CONSUMPTION;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY CONSUMER DURABLES"
+    },
+    "DLF": {
+      "listed_in_indices": "NIFTY REALTY;NIFTY CONSUMPTION;NIFTY INFRA",
+      "primary_sector": "NIFTY REALTY"
+    },
+    "DMART": {
+      "listed_in_indices": "NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "DRREDDY": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "EICHERMOT": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY CONSUMPTION;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "ENRIN": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INDIA MFG;NIFTY MNC",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "ETERNAL": {
+      "listed_in_indices": "NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "EXIDEIND": {
+      "listed_in_indices": "NIFTY AUTO",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "FEDERALBNK": {
+      "listed_in_indices": "NIFTY PVT BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PVT BANK"
+    },
+    "FORTIS": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INFRA",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "GAIL": {
+      "listed_in_indices": "NIFTY OIL & GAS;NIFTY ENERGY;NIFTY INFRA;NIFTY PSE",
+      "primary_sector": "NIFTY OIL & GAS"
+    },
+    "GLENMARK": {
+      "listed_in_indices": "NIFTY HEALTHCARE",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "GMRAIRPORT": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY INFRA"
+    },
+    "GODFRYPHLP": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "GODREJCP": {
+      "listed_in_indices": "NIFTY FMCG;NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "GODREJPROP": {
+      "listed_in_indices": "NIFTY REALTY",
+      "primary_sector": "NIFTY REALTY"
+    },
+    "GRASIM": {
+      "listed_in_indices": "NIFTY INFRA",
+      "primary_sector": "NIFTY INFRA"
+    },
+    "GROWW": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "GVT&D": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "HAL": {
+      "listed_in_indices": "NIFTY INDIA DEFENCE;NIFTY INDIA MFG;NIFTY PSE",
+      "primary_sector": "NIFTY INDIA DEFENCE"
+    },
+    "HAVELLS": {
+      "listed_in_indices": "NIFTY CONSUMER DURABLES;NIFTY CONSUMPTION;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY CONSUMER DURABLES"
+    },
+    "HCLTECH": {
+      "listed_in_indices": "NIFTY IT",
+      "primary_sector": "NIFTY IT"
+    },
+    "HDFCAMC": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "HDFCBANK": {
+      "listed_in_indices": "NIFTY PVT BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PVT BANK"
+    },
+    "HDFCLIFE": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "HEROMOTOCO": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "HINDALCO": {
+      "listed_in_indices": "NIFTY METAL;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY METAL"
+    },
+    "HINDCOPPER": {
+      "listed_in_indices": "NIFTY METAL;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY METAL"
+    },
+    "HINDPETRO": {
+      "listed_in_indices": "NIFTY OIL & GAS;NIFTY ENERGY;NIFTY INFRA;NIFTY PSE",
+      "primary_sector": "NIFTY OIL & GAS"
+    },
+    "HINDUNILVR": {
+      "listed_in_indices": "NIFTY FMCG;NIFTY CONSUMPTION;NIFTY MNC",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "HINDZINC": {
+      "listed_in_indices": "NIFTY METAL;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY METAL"
+    },
+    "HYUNDAI": {
+      "listed_in_indices": "NIFTY INDIA MFG;NIFTY MNC",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "ICICIAMC": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "ICICIBANK": {
+      "listed_in_indices": "NIFTY PVT BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PVT BANK"
+    },
+    "ICICIGI": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "IDEA": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "IDFCFIRSTB": {
+      "listed_in_indices": "NIFTY PVT BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PVT BANK"
+    },
+    "INDHOTEL": {
+      "listed_in_indices": "NIFTY CONSUMPTION;NIFTY INFRA",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "INDIANB": {
+      "listed_in_indices": "NIFTY PSU BANK",
+      "primary_sector": "NIFTY PSU BANK"
+    },
+    "INDIGO": {
+      "listed_in_indices": "NIFTY CONSUMPTION;NIFTY INFRA",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "INDUSINDBK": {
+      "listed_in_indices": "NIFTY PVT BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PVT BANK"
+    },
+    "INDUSTOWER": {
+      "listed_in_indices": "NIFTY INFRA",
+      "primary_sector": "NIFTY INFRA"
+    },
+    "INFY": {
+      "listed_in_indices": "NIFTY IT",
+      "primary_sector": "NIFTY IT"
+    },
+    "IOC": {
+      "listed_in_indices": "NIFTY OIL & GAS;NIFTY ENERGY;NIFTY INFRA;NIFTY INDIA MFG;NIFTY PSE",
+      "primary_sector": "NIFTY OIL & GAS"
+    },
+    "IRCTC": {
+      "listed_in_indices": "NIFTY PSE",
+      "primary_sector": "NIFTY PSE"
+    },
+    "IREDA": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "IRFC": {
+      "listed_in_indices": "NIFTY FIN SERVICE;NIFTY PSE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "ITC": {
+      "listed_in_indices": "NIFTY FMCG;NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "JINDALSTEL": {
+      "listed_in_indices": "NIFTY METAL;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY METAL"
+    },
+    "JIOFIN": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "JSWENERGY": {
+      "listed_in_indices": "NIFTY ENERGY",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "JSWSTEEL": {
+      "listed_in_indices": "NIFTY METAL;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY METAL"
+    },
+    "JUBLFOOD": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "KALYANKJIL": {
+      "listed_in_indices": "NIFTY CONSUMER DURABLES",
+      "primary_sector": "NIFTY CONSUMER DURABLES"
+    },
+    "KEI": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "KOTAKBANK": {
+      "listed_in_indices": "NIFTY PVT BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PVT BANK"
+    },
+    "LAURUSLABS": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "LENSKART": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "LGEINDIA": {
+      "listed_in_indices": "NIFTY CONSUMER DURABLES",
+      "primary_sector": "NIFTY CONSUMER DURABLES"
+    },
+    "LICHSGFIN": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "LICI": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "LODHA": {
+      "listed_in_indices": "NIFTY REALTY",
+      "primary_sector": "NIFTY REALTY"
+    },
+    "LT": {
+      "listed_in_indices": "NIFTY INFRA",
+      "primary_sector": "NIFTY INFRA"
+    },
+    "LTF": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "LTM": {
+      "listed_in_indices": "NIFTY IT",
+      "primary_sector": "NIFTY IT"
+    },
+    "LUPIN": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "M&M": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY CONSUMPTION;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "M&MFIN": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "MAHABANK": {
+      "listed_in_indices": "NIFTY PSU BANK",
+      "primary_sector": "NIFTY PSU BANK"
+    },
+    "MANKIND": {
+      "listed_in_indices": "NIFTY HEALTHCARE",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "MARICO": {
+      "listed_in_indices": "NIFTY FMCG",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "MARUTI": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY CONSUMPTION;NIFTY INDIA MFG;NIFTY MNC",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "MAXHEALTH": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY CONSUMPTION;NIFTY INFRA",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "MAZDOCK": {
+      "listed_in_indices": "NIFTY INDIA DEFENCE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA DEFENCE"
+    },
+    "MCX": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "MEESHO": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "MFSL": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "MOTHERSON": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY INFRA;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "MOTILALOFS": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "MPHASIS": {
+      "listed_in_indices": "NIFTY IT",
+      "primary_sector": "NIFTY IT"
+    },
+    "MRF": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "MUTHOOTFIN": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "NATIONALUM": {
+      "listed_in_indices": "NIFTY METAL",
+      "primary_sector": "NIFTY METAL"
+    },
+    "NAUKRI": {
+      "listed_in_indices": "NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY IT"
+    },
+    "NESTLEIND": {
+      "listed_in_indices": "NIFTY FMCG;NIFTY CONSUMPTION;NIFTY MNC",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "NHPC": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY PSE",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "NLCINDIA": {
+      "listed_in_indices": "NIFTY ENERGY",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "NMDC": {
+      "listed_in_indices": "NIFTY METAL;NIFTY PSE",
+      "primary_sector": "NIFTY METAL"
+    },
+    "NTPC": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INFRA;NIFTY PSE",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "NYKAA": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "OBEROIRLTY": {
+      "listed_in_indices": "NIFTY REALTY",
+      "primary_sector": "NIFTY REALTY"
+    },
+    "OFSS": {
+      "listed_in_indices": "NIFTY IT;NIFTY MNC",
+      "primary_sector": "NIFTY IT"
+    },
+    "OIL": {
+      "listed_in_indices": "NIFTY OIL & GAS;NIFTY ENERGY;NIFTY PSE",
+      "primary_sector": "NIFTY OIL & GAS"
+    },
+    "ONGC": {
+      "listed_in_indices": "NIFTY OIL & GAS;NIFTY ENERGY;NIFTY INFRA;NIFTY PSE",
+      "primary_sector": "NIFTY OIL & GAS"
+    },
+    "PAGEIND": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "PATANJALI": {
+      "listed_in_indices": "NIFTY FMCG",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "PAYTM": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "PERSISTENT": {
+      "listed_in_indices": "NIFTY IT",
+      "primary_sector": "NIFTY IT"
+    },
+    "PFC": {
+      "listed_in_indices": "NIFTY FIN SERVICE;NIFTY PSE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "PHOENIXLTD": {
+      "listed_in_indices": "NIFTY REALTY",
+      "primary_sector": "NIFTY REALTY"
+    },
+    "PIDILITIND": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "PIIND": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "PNB": {
+      "listed_in_indices": "NIFTY PSU BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PSU BANK"
+    },
+    "POLICYBZR": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "POLYCAB": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "POWERGRID": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INFRA;NIFTY PSE",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "POWERINDIA": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY MNC",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "PREMIERENE": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "PRESTIGE": {
+      "listed_in_indices": "NIFTY REALTY",
+      "primary_sector": "NIFTY REALTY"
+    },
+    "RADICO": {
+      "listed_in_indices": "NIFTY FMCG",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "RECLTD": {
+      "listed_in_indices": "NIFTY FIN SERVICE;NIFTY PSE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "RELIANCE": {
+      "listed_in_indices": "NIFTY OIL & GAS;NIFTY ENERGY;NIFTY INFRA;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY OIL & GAS"
+    },
+    "RVNL": {
+      "listed_in_indices": "NIFTY PSE",
+      "primary_sector": "NIFTY PSE"
+    },
+    "SAIL": {
+      "listed_in_indices": "NIFTY METAL",
+      "primary_sector": "NIFTY METAL"
+    },
+    "SBICARD": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "SBILIFE": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "SBIN": {
+      "listed_in_indices": "NIFTY PSU BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PSU BANK"
+    },
+    "SHRIRAMFIN": {
+      "listed_in_indices": "NIFTY FIN SERVICE",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "SIEMENS": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INDIA MFG;NIFTY MNC",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "SOLARINDS": {
+      "listed_in_indices": "NIFTY INDIA DEFENCE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA DEFENCE"
+    },
+    "SRF": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "SUNPHARMA": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "SUPREMEIND": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "SUZLON": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY INFRA;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "SWIGGY": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "TATACAP": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY FIN SERVICE"
+    },
+    "TATACOMM": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "TATACONSUM": {
+      "listed_in_indices": "NIFTY FMCG;NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "TATAPOWER": {
+      "listed_in_indices": "NIFTY ENERGY;NIFTY CONSUMPTION;NIFTY INFRA",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "TATASTEEL": {
+      "listed_in_indices": "NIFTY METAL;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY METAL"
+    },
+    "TCS": {
+      "listed_in_indices": "NIFTY IT",
+      "primary_sector": "NIFTY IT"
+    },
+    "TECHM": {
+      "listed_in_indices": "NIFTY IT",
+      "primary_sector": "NIFTY IT"
+    },
+    "TIINDIA": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "TITAN": {
+      "listed_in_indices": "NIFTY CONSUMER DURABLES;NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY CONSUMER DURABLES"
+    },
+    "TMCV": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "TMPV": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "TORNTPHARM": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY HEALTHCARE"
+    },
+    "TRENT": {
+      "listed_in_indices": "NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY CONSUMPTION"
+    },
+    "TVSMOTOR": {
+      "listed_in_indices": "NIFTY AUTO;NIFTY CONSUMPTION;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY AUTO"
+    },
+    "ULTRACEMCO": {
+      "listed_in_indices": "NIFTY INFRA",
+      "primary_sector": "NIFTY INFRA"
+    },
+    "UNIONBANK": {
+      "listed_in_indices": "NIFTY PSU BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PSU BANK"
+    },
+    "UNITDSPR": {
+      "listed_in_indices": "NIFTY FMCG;NIFTY CONSUMPTION;NIFTY MNC",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "UPL": {
+      "listed_in_indices": "NIFTY INDIA MFG",
+      "primary_sector": "NIFTY INDIA MFG"
+    },
+    "VAML": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY METAL"
+    },
+    "VBL": {
+      "listed_in_indices": "NIFTY FMCG;NIFTY CONSUMPTION",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "VEDL": {
+      "listed_in_indices": "NIFTY METAL;NIFTY INDIA MFG;NIFTY MNC",
+      "primary_sector": "NIFTY METAL"
+    },
+    "VMM": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY FMCG"
+    },
+    "VOLTAS": {
+      "listed_in_indices": "NIFTY CONSUMER DURABLES;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY CONSUMER DURABLES"
+    },
+    "WAAREEENER": {
+      "listed_in_indices": "",
+      "primary_sector": "NIFTY ENERGY"
+    },
+    "WIPRO": {
+      "listed_in_indices": "NIFTY IT",
+      "primary_sector": "NIFTY IT"
+    },
+    "YESBANK": {
+      "listed_in_indices": "NIFTY PVT BANK;NIFTY BANK",
+      "primary_sector": "NIFTY PVT BANK"
+    },
+    "ZYDUSLIFE": {
+      "listed_in_indices": "NIFTY HEALTHCARE;NIFTY INDIA MFG",
+      "primary_sector": "NIFTY HEALTHCARE"
+    }
   }
 }
