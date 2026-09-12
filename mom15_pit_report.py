@@ -40,9 +40,20 @@ BETA_DRIFT_HOLD   = False          # held stocks with β>cap are NOT forced out 
 NO_52W_FILTER     = False          # skip 52-week high proximity filter (test flag)
 FIFTY2W_PCT       = 20.0           # max % below 52-week high allowed for new entries (test flag: --52w-threshold)
 LIVE_SECTOR_CAP   = False          # sector cap: holds pre-approved, only entries gated (matches live basket)
+PROFIT_TRIM_TRIGGER_PCT = 25.0     # unrealized gain from entry that triggers a trim (test flag: --profit-trim)
+PROFIT_TRIM_FRACTION    = 0.25     # fraction of shares sold when triggered
+VOL_WINDOW_DAYS = 252          # trading-day lookback for the momentum vol denominator (test flag: --vol-window)
+VOL_WEEKLY_3Y   = False        # 3yr weekly-sampled vol instead of daily window (test flag: --vol-weekly, MSCI style)
+SKIP_1M         = False        # skip ~1 month on both return legs, classical 12-2 convention (test flag: --skip-1m)
+SKIP_DAYS       = 21           # ~1 trading month, used only when SKIP_1M is set
+SKIP_12M_ONLY   = False        # with SKIP_1M: skip only the 12m leg, leave 3m leg unshifted (classical Option A)
+SKIP_3M_ONLY    = False        # with SKIP_1M: skip only the 3m leg, leave 12m leg unshifted (Option C)
+EMA20_EXT_FILTER = False       # require entries within [0%, 10%] of EMA20 (test flag: --ema20-ext-filter)
+EMA20_EXT_MIN    = 0.0
+EMA20_EXT_MAX    = 10.0
 LONG_PD      = 252            # 12m in trading days
 SHORT_PD     = 63             # 3m in trading days
-WARMUP_DAYS  = 450            # extra history before START_DATE for warmup
+WARMUP_DAYS  = 1150           # extra history before START_DATE for warmup (covers --vol-weekly's 756-trading-day / ~3yr window)
 
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 CACHE_FILE   = os.path.join(BASE_DIR, 'data', 'cache', 'mom15_daily.pkl')
@@ -351,6 +362,7 @@ def fetch_ticker(ticker, start, end, us_mode=False):
         df = pd.DataFrame()
     if not df.empty:
         df.index = df.index.tz_localize(None) if df.index.tzinfo else df.index
+        df = df.dropna(subset=["Close"])
     return df
 
 def load_or_fetch_data(tickers, fetch_start, fetch_end, refresh=False, cache_file=None, us_mode=False):
@@ -393,14 +405,34 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
                 if prev in idx_map:
                     ci = idx_map[prev]
                     break
-        if ci is None or ci < LONG_PD + 20:
+        min_ci = LONG_PD + 20 + (SKIP_DAYS if SKIP_1M else 0)
+        min_ci = max(min_ci, (756 if VOL_WEEKLY_3Y else VOL_WINDOW_DAYS) + 20)
+        if ci is None or ci < min_ci:
             continue
 
         closes = df["Close"].values.astype(float)
-        p_now   = closes[ci]
-        p_12m   = closes[ci - LONG_PD]
-        p_3m    = closes[ci - SHORT_PD]
-        if p_now <= 0 or p_12m <= 0 or p_3m <= 0:
+        p_now = closes[ci]  # actual execution/display price — always "today", regardless of --skip-1m
+        if SKIP_1M and SKIP_3M_ONLY:
+            p_ref_12 = p_now
+            p_12m    = closes[ci - LONG_PD]
+            p_ref_3  = closes[ci - SKIP_DAYS]
+            p_3m     = closes[ci - SKIP_DAYS - SHORT_PD]
+        elif SKIP_1M and SKIP_12M_ONLY:
+            p_ref_12 = closes[ci - SKIP_DAYS]
+            p_12m    = closes[ci - SKIP_DAYS - LONG_PD]
+            p_ref_3  = p_now
+            p_3m     = closes[ci - SHORT_PD]
+        elif SKIP_1M:
+            p_ref_12 = closes[ci - SKIP_DAYS]
+            p_12m    = closes[ci - SKIP_DAYS - LONG_PD]
+            p_ref_3  = p_ref_12
+            p_3m     = closes[ci - SKIP_DAYS - SHORT_PD]
+        else:
+            p_ref_12 = p_now
+            p_12m    = closes[ci - LONG_PD]
+            p_ref_3  = p_now
+            p_3m     = closes[ci - SHORT_PD]
+        if p_now <= 0 or p_ref_12 <= 0 or p_ref_3 <= 0 or p_12m <= 0 or p_3m <= 0:
             continue
 
         # ADDV filter: median daily dollar volume over trailing ADDV_WINDOW bars
@@ -411,10 +443,17 @@ def compute_scores(day, stock_data, date_to_iloc, pit_data, nifty50_data,
             if addv < ADDV_MIN:
                 continue
 
-        ret_12 = p_now / p_12m - 1
-        ret_3  = p_now / p_3m  - 1
-        log_r  = np.diff(np.log(np.maximum(closes[ci-LONG_PD:ci+1], 0.01)))
-        sigma  = float(np.std(log_r)) * np.sqrt(252)
+        ret_12 = p_ref_12 / p_12m - 1
+        ret_3  = p_ref_3  / p_3m  - 1
+        if VOL_WEEKLY_3Y:
+            weekly_closes = closes[max(0, ci - 756):ci + 1:5]
+            if len(weekly_closes) < 30:
+                continue
+            log_r = np.diff(np.log(np.maximum(weekly_closes, 0.01)))
+            sigma = float(np.std(log_r)) * np.sqrt(52)
+        else:
+            log_r = np.diff(np.log(np.maximum(closes[ci - VOL_WINDOW_DAYS:ci + 1], 0.01)))
+            sigma = float(np.std(log_r)) * np.sqrt(252)
         if sigma < 0.01:
             continue
 
@@ -613,10 +652,23 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         no_eps=False, beta_drift_hold=False, no_52w=False, live_sector_cap=False,
         dip_entry=False, mq500=False, variability_cap_pct=None, value_yield_floor_pct=None,
         monthly_override=False, overlay_exit=None, overlay_cadence="daily",
-        profit_growth_filter=False, fifty2w_pct=20.0):
+        profit_growth_filter=False, fifty2w_pct=20.0, profit_trim=False,
+        profit_trim_trigger_pct=25.0, profit_trim_once=False, profit_trim_fraction=0.25,
+        vol_window_days=252, vol_weekly_3y=False, skip_1m=False, skip_days=21,
+        ema20_ext_filter=False, skip_12m_only=False, skip_3m_only=False,
+        entry_only_skip=False):
     # Override constants for Mom20 / Overflow / N500 / QQQ / SP500 variants
-    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD, NO_52W_FILTER, LIVE_SECTOR_CAP, FIFTY2W_PCT
+    global MAX_SLOTS, BUFFER_IN, BUFFER_OUT, BETA_CAP, BETA_MIN, ADDV_MIN, W12, W3, START_DATE, PARABOLIC_FILTER, NO_EPS_FILTER, BETA_DRIFT_HOLD, NO_52W_FILTER, LIVE_SECTOR_CAP, FIFTY2W_PCT, PROFIT_TRIM_TRIGGER_PCT, PROFIT_TRIM_FRACTION, VOL_WINDOW_DAYS, VOL_WEEKLY_3Y, SKIP_1M, SKIP_DAYS, EMA20_EXT_FILTER, SKIP_12M_ONLY, SKIP_3M_ONLY
     PARABOLIC_FILTER = parabolic_filter
+    PROFIT_TRIM_TRIGGER_PCT = profit_trim_trigger_pct
+    PROFIT_TRIM_FRACTION = profit_trim_fraction
+    VOL_WINDOW_DAYS = vol_window_days
+    VOL_WEEKLY_3Y = vol_weekly_3y
+    SKIP_1M = skip_1m
+    SKIP_DAYS = skip_days
+    EMA20_EXT_FILTER = ema20_ext_filter
+    SKIP_12M_ONLY = skip_12m_only
+    SKIP_3M_ONLY = skip_3m_only
     NO_EPS_FILTER    = no_eps
     BETA_DRIFT_HOLD  = beta_drift_hold
     NO_52W_FILTER    = no_52w
@@ -684,6 +736,23 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         extra.append(f"ADDV≥₹{ADDV_MIN/1e7:.0f}Cr")
     if sip > 0:
         extra.append(f"SIP ₹{sip/1e5:.0f}L/mo")
+    if profit_trim:
+        extra.append(f"Profit-Trim {PROFIT_TRIM_FRACTION*100:.0f}%@{PROFIT_TRIM_TRIGGER_PCT:.0f}%")
+    if vol_weekly_3y:
+        extra.append("VolWeekly3Y")
+    elif vol_window_days != 252:
+        extra.append(f"VolWin {vol_window_days}d")
+    if skip_1m:
+        if skip_3m_only:
+            extra.append("Skip1M(3m-only)")
+        elif skip_12m_only:
+            extra.append("Skip1M(12m-only)")
+        else:
+            extra.append("Skip1M(12-2,bothlegs)")
+        if entry_only_skip:
+            extra.append("EntryOnly(ExitsNoSkip)")
+    if ema20_ext_filter:
+        extra.append(f"EMA20Ext[{EMA20_EXT_MIN:.0f}-{EMA20_EXT_MAX:.0f}%]")
     extra_label = (" | " + " | ".join(extra)) if extra else ""
     print(f"=== {label} | {regime_label}{extra_label} ===")
     print(f"    top_n={MAX_SLOTS} buffer_in={BUFFER_IN} buffer_out={BUFFER_OUT} beta_cap={BETA_CAP}")
@@ -872,6 +941,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     portfolio = {}            # ticker → {entry_date, entry_price, shares, entry_cost}
     overlay_below_streak = {}  # ticker -> consecutive monitoring-days below EMA50 (--overlay-exit ema50_2d only)
     all_trades = []           # closed trades
+    profit_trim_trades = []   # partial-exit trims (kept separate from all_trades so WR/PF stay comparable to baseline)
+    profit_trim_done = set()  # tickers already trimmed this holding period (--profit-trim-once only)
     total_charges = 0.0
     _sip_total = 0.0          # cumulative SIP injected
     _xirr_flows = []          # (date, amount) — negative=outflow for XIRR
@@ -1049,6 +1120,23 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         # Beta-drift hold: use full-universe rank (no cap) for exit decisions
         if BETA_DRIFT_HOLD and ticker_rank_display:
             ticker_rank_unfiltered = ticker_rank_display
+
+        # Entry-only skip: entries use the skip-1m-adjusted formula (SKIP_1M/SKIP_3M_ONLY/
+        # SKIP_12M_ONLY as set by --skip-1m flags), but exits/holds are evaluated on the
+        # plain no-skip formula — recompute ticker_rank_unfiltered from a temporarily-
+        # unskipped pass (test flag: --entry-only-skip, inert unless --skip-1m is also set).
+        if entry_only_skip and SKIP_1M:
+            old_skip_1m = SKIP_1M
+            SKIP_1M = False
+            scores_noskip = compute_scores(rebal_day, stock_data, date_to_iloc, pit_data,
+                                           n50_raw, n50_iloc, eps_db, quality_eps_db=quality_eps_db,
+                                           variability_cap_pct=variability_cap_pct,
+                                           value_yield_floor_pct=value_yield_floor_pct,
+                                           profit_growth_filter=profit_growth_filter)
+            SKIP_1M = old_skip_1m
+            if scores_noskip:
+                ranked_noskip = sorted(scores_noskip.items(), key=lambda x: -x[1]["composite"])
+                ticker_rank_unfiltered = {t: r+1 for r, (t, _) in enumerate(ranked_noskip)}
 
         # Dip-entry check: entries only when Nifty200 daily close < SMA20
         # Must run before new_set building so gate is available at entry loops.
@@ -1262,6 +1350,7 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                 f"{hold_days}d",
             ))
             del portfolio[t]
+            profit_trim_done.discard(t)
 
         print(f"\n  EXITS ({len(exit_rows)})")
         if exit_rows:
@@ -1273,10 +1362,61 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         else:
             print("    —")
 
+        # ── PROFIT TRIM (test flag — inert unless --profit-trim passed, zero effect
+        # on the frozen default --mom20 spec). Checked fresh every rebalance: any
+        # position still held after EXITS above whose unrealized gain from its
+        # original entry price is >= PROFIT_TRIM_TRIGGER_PCT gets PROFIT_TRIM_FRACTION
+        # of its shares sold at this rebalance's close. Entry price/date on the
+        # remaining shares is unchanged, so a position that keeps running can trim
+        # again at a later rebalance. Freed cash pools into `cash` before ENTRIES
+        # below, funding fresh buy-ins the same cycle. Skipped during regime-off,
+        # same "hold everything, no churn" rule as EXITS.
+        trim_rows = []
+        if profit_trim and not (regime_off and not regime_exit):
+            for t in sorted(portfolio.keys()):
+                if profit_trim_once and t in profit_trim_done:
+                    continue
+                pos = portfolio[t]
+                cp = pos.get("curr_price", pos["entry_price"])
+                pnl_pct = (cp / pos["entry_price"] - 1) * 100
+                if pnl_pct < PROFIT_TRIM_TRIGGER_PCT:
+                    continue
+                trim_shares = int(pos["shares"] * PROFIT_TRIM_FRACTION)
+                if trim_shares <= 0:
+                    continue
+                buy_val_t   = pos["entry_price"] * trim_shares
+                sell_val_t  = cp * trim_shares
+                chg_t       = calc_charges(buy_val_t, sell_val_t)
+                gross_pnl_t = (cp - pos["entry_price"]) * trim_shares
+                net_pnl_t   = gross_pnl_t - chg_t
+                cash += sell_val_t - chg_t
+                total_charges += chg_t
+                pos["shares"] -= trim_shares
+                profit_trim_done.add(t)
+                profit_trim_trades.append({
+                    "ticker": t, "date": rebal_day, "entry_price": pos["entry_price"],
+                    "trim_price": cp, "shares": trim_shares, "gross_pnl": gross_pnl_t,
+                    "charges": chg_t, "net_pnl": net_pnl_t,
+                })
+                trim_rows.append((
+                    t, f"{pos['entry_price']:,.1f}", f"{cp:,.1f}", trim_shares,
+                    inr(gross_pnl_t), pct(pnl_pct), pos["shares"],
+                ))
+
+        print(f"\n  PROFIT TRIM ({len(trim_rows)})")
+        if trim_rows:
+            print_table(
+                ["Ticker","Entry₹","Trim₹","QtySold","Gross P&L","P&L%","Remaining"],
+                trim_rows, [10, 10, 10, 8, 12, 8, 10]
+            )
+        else:
+            print("    —")
+
         # ── ENTRIES ──────────────────────────────────────────────────────────
         to_buy = new_set - current_set
         entry_rows = []
         skipped_52w = []
+        skipped_ema20ext = []
 
         for t in sorted(to_buy, key=lambda t: ticker_rank.get(t, 9999)):
             if regime_off:
@@ -1301,6 +1441,12 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
                                         f"{high_52w:,.1f}", f"{dist_from_high:.1f}%"))
                     continue
 
+            # EMA20-extension filter: require entry within [EMA20_EXT_MIN, EMA20_EXT_MAX]% of the 20-day EMA
+            ext = ema20_ext(stock_data, date_to_iloc, t, rebal_day)
+            if EMA20_EXT_FILTER and ext is not None and not (EMA20_EXT_MIN <= ext <= EMA20_EXT_MAX):
+                skipped_ema20ext.append((t, ticker_rank[t], f"{ep:,.1f}", f"{ext:.1f}%"))
+                continue
+
             shares = int(per_slot // ep)
             if shares == 0:
                 continue
@@ -1318,7 +1464,6 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
             overlay_below_streak[t] = 0  # fresh holding period — no carryover from a prior one
             r12, r3 = s['ret_12m'], s['ret_3m']
             para_warn = r12 > 3.0 and r3 > 0 and (r3 / r12) > 0.5
-            ext = ema20_ext(stock_data, date_to_iloc, t, rebal_day)
             ext_str = pct(ext) if ext is not None else "—"
             entry_rows.append((
                 t,
@@ -1338,6 +1483,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         if skipped_52w:
             print(f"  [52w filter blocked {len(skipped_52w)}: "
                   + ", ".join(f"{r[0]}({r[4]})" for r in skipped_52w) + "]")
+        if skipped_ema20ext:
+            print(f"  [EMA20-ext filter blocked {len(skipped_ema20ext)}: "
+                  + ", ".join(f"{r[0]}({r[3]})" for r in skipped_ema20ext) + "]")
         if skipped_parabolic:
             parts = [f"{t}(12m:{r12*100:+.0f}%,3m:{r3*100:+.0f}%,ratio:{r3/r12:.2f})"
                      for t, r12, r3 in skipped_parabolic]
@@ -1541,6 +1689,9 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
     print(f"  Total charges : {inr(total_charges)}")
     print(f"  Closed net P&L: {inr(closed_pnl)}")
     print(f"  Open unreal   : {inr(open_pnl)}")
+    if profit_trim:
+        trim_net_pnl = sum(tr["net_pnl"] for tr in profit_trim_trades)
+        print(f"  Profit Trims  : {len(profit_trim_trades)}  |  Net P&L booked: {inr(trim_net_pnl)}")
 
     # Per-year returns
     print()
@@ -1584,6 +1735,8 @@ def run(refresh=False, mom20=False, overflow=False, use_regime=True, beta_cap_ov
         nav_csv = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), csv_name)
         pd.DataFrame(rebal_nav).to_csv(nav_csv, index=False)
         print(f"  Rebalance NAV exported → {csv_name} ({len(rebal_nav)} rows)")
+
+    return {"all_trades": all_trades, "stock_data": stock_data, "date_to_iloc": date_to_iloc}
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Mom15 / Mom20 PIT Backtest Report")
@@ -1664,6 +1817,41 @@ if __name__ == "__main__":
     parser.add_argument("--profit-growth-filter", action="store_true",
                         help="Exclude names whose annual Net Profit isn't growing both YoY and vs "
                              "3 years ago, as a binary gate (test flag, inert unless passed)")
+    parser.add_argument("--profit-trim", action="store_true",
+                        help=f"Sell {PROFIT_TRIM_FRACTION*100:.0f}%% of a holding's shares at each "
+                             f"rebalance once its unrealized gain from entry hits the trigger "
+                             f"(--profit-trim-trigger, default {PROFIT_TRIM_TRIGGER_PCT:.0f}%%); freed "
+                             f"cash funds fresh entries the same cycle (test flag, inert unless passed)")
+    parser.add_argument("--profit-trim-trigger", dest="profit_trim_trigger_pct", type=float,
+                        default=25.0, help="Unrealized gain %% from entry that triggers --profit-trim (default: 25)")
+    parser.add_argument("--profit-trim-once", action="store_true",
+                        help="With --profit-trim: trim a holding at most once per holding period "
+                             "(default without this flag: re-arms every rebalance it stays above trigger)")
+    parser.add_argument("--profit-trim-fraction", type=float, default=0.25,
+                        help="Fraction of shares sold when --profit-trim triggers (default: 0.25)")
+    parser.add_argument("--vol-window", dest="vol_window_days", type=int, default=252,
+                        help="Trading-day lookback for the momentum vol denominator (default: 252 = 12mo)")
+    parser.add_argument("--vol-weekly", action="store_true",
+                        help="Use 3yr weekly-sampled vol instead of the daily window (MSCI Risk-Adjusted "
+                             "style; overrides --vol-window)")
+    parser.add_argument("--skip-1m", action="store_true",
+                        help="Skip the most recent ~1 month (21 trading days) on both the 12m and 3m "
+                             "return legs (classical 12-2 convention, applied symmetrically to both legs)")
+    parser.add_argument("--skip-days", type=int, default=21,
+                        help="Trading days skipped when --skip-1m is set (default: 21 = ~1 month)")
+    parser.add_argument("--ema20-ext-filter", action="store_true",
+                        help="Require new entries within 0%%-10%% above the 20-day EMA (skip if more "
+                             "extended or below the EMA)")
+    parser.add_argument("--skip-12m-only", action="store_true",
+                        help="With --skip-1m: skip only the 12m leg (classical Carhart/French "
+                             "convention), leave the 3m leg unshifted (default without this flag: "
+                             "skip both legs)")
+    parser.add_argument("--skip-3m-only", action="store_true",
+                        help="With --skip-1m: skip only the 3m leg, leave the 12m leg unshifted")
+    parser.add_argument("--entry-only-skip", action="store_true",
+                        help="With --skip-1m: apply the skip-adjusted formula to entry "
+                             "candidates only; exits/holds are evaluated on the plain "
+                             "no-skip formula")
     args = parser.parse_args()
     # `--no-regime` (legacy) takes precedence and forces 'none'.
     regime_filter = "none" if args.no_regime else args.regime
@@ -1683,4 +1871,10 @@ if __name__ == "__main__":
         variability_cap_pct=args.quality_variability_cap,
         value_yield_floor_pct=args.value_yield_floor, monthly_override=args.monthly,
         overlay_exit=args.overlay_exit, overlay_cadence=args.overlay_cadence,
-        profit_growth_filter=args.profit_growth_filter, fifty2w_pct=args.fifty2w_pct)
+        profit_growth_filter=args.profit_growth_filter, fifty2w_pct=args.fifty2w_pct,
+        profit_trim=args.profit_trim, profit_trim_trigger_pct=args.profit_trim_trigger_pct,
+        profit_trim_once=args.profit_trim_once, profit_trim_fraction=args.profit_trim_fraction,
+        vol_window_days=args.vol_window_days, vol_weekly_3y=args.vol_weekly, skip_1m=args.skip_1m,
+        skip_days=args.skip_days, ema20_ext_filter=args.ema20_ext_filter,
+        skip_12m_only=args.skip_12m_only, skip_3m_only=args.skip_3m_only,
+        entry_only_skip=args.entry_only_skip)

@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config.settings import (
     LIVE_SIGNALS_CACHE_FILE, LIVE_POSITIONS_FILE, LIVE_SIGNALS_HISTORY_FILE,
-    get_cache_ttl, load_config
+    DATA_STORE_PATH, get_cache_ttl, load_config
 )
 from sector_mapping import STOCK_SECTOR_MAP, load_n200_sector_map
 
@@ -618,6 +618,236 @@ class LiveSignalsEngine:
 
         return nifty_raw, bench_raw, bulk_data
 
+    # ==================== Skip1M Live Signals (research scan only) ====================
+    # Standalone, read-only ranked screener for "full Option C" (skip-1m, 3m-leg only,
+    # 25-day skip — validated in mom15_pit_report.py via
+    # `--mom20 --skip-1m --skip-3m-only --skip-days 25`). Deliberately NOT wired into
+    # Mom20's basket/portfolio/exit logic anywhere — no holdings, no buffer rule, no
+    # entries/exits, just a fresh ranked scan of the universe every time it's called
+    # (subject to its own short cache). One global result, not per-user.
+
+    _SKIP1M_CACHE_FILE = os.path.join(os.path.dirname(__file__), "cache", "skip1m_signals_cache.json")
+    _SKIP1M_LOG_FILE = os.path.join(DATA_STORE_PATH, "skip1m_scan_log.json")
+    _SKIP1M_LOG_RETENTION_DAYS = 180
+
+    def _load_skip1m_log(self):
+        try:
+            with open(self._SKIP1M_LOG_FILE, 'r') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+
+    def _append_skip1m_log(self, date_str, entry):
+        """Write/overwrite today's snapshot into the running log, deduped by
+        date (a same-day re-scan updates in place, never duplicates), and
+        trim to the most recent _SKIP1M_LOG_RETENTION_DAYS dates."""
+        log = self._load_skip1m_log()
+        log[date_str] = entry
+        if len(log) > self._SKIP1M_LOG_RETENTION_DAYS:
+            keep = sorted(log.keys(), reverse=True)[:self._SKIP1M_LOG_RETENTION_DAYS]
+            log = {k: log[k] for k in keep}
+        os.makedirs(os.path.dirname(self._SKIP1M_LOG_FILE), exist_ok=True)
+        with open(self._SKIP1M_LOG_FILE, 'w') as f:
+            json.dump(log, f)
+
+    def _load_skip1m_cache(self):
+        try:
+            with open(self._SKIP1M_CACHE_FILE, 'r') as f:
+                data = json.load(f)
+            last = datetime.fromisoformat(data["last_updated"])
+            ttl = get_cache_ttl()
+            if (datetime.now() - last).total_seconds() < ttl * 60:
+                return data
+        except Exception:
+            pass
+        return None
+
+    def _save_skip1m_cache(self, data):
+        os.makedirs(os.path.dirname(self._SKIP1M_CACHE_FILE), exist_ok=True)
+        with open(self._SKIP1M_CACHE_FILE, 'w') as f:
+            json.dump(data, f)
+
+    def scan_skip1m_signals(self, force_refresh=False, progress_callback=None):
+        """Rank the Nifty200 universe under the skip-1m (3m-leg, 25-day) formula.
+
+        Same filters as production Mom20 (β≤1.2 vs Nifty200, TTM EPS growth,
+        sector cap ≤4, 52-week-high proximity ≤20% for the top-20 cut, EMA200
+        regime shown as an informational badge) — only the momentum formula
+        differs. Returns a flat ranked list (no holdings concept) plus a
+        `top20` boolean per row.
+        """
+        if not force_refresh:
+            cached = self._load_skip1m_cache()
+            if cached is not None:
+                return cached
+
+        from data.strategies.skip1m_mom20 import compute_skip1m_features
+        from sector_mapping import load_n200_sector_map
+
+        tickers = get_scan_tickers(200)
+        total = len(tickers)
+        end_date = datetime.now() + timedelta(days=1)
+        daily_start = end_date - timedelta(days=500)
+
+        nifty_raw, bench_raw, bulk_data = self._fetch_baseline(
+            tickers, daily_start, end_date, progress_callback)
+
+        # EMA200 regime — informational only, same check as scan_entry_signals's
+        # mom20_regime_on. Not used to gate/filter anything here.
+        mom20_regime_on = False
+        if not bench_raw.empty and len(bench_raw) >= 200:
+            n200_close = float(bench_raw["Close"].iloc[-1])
+            n200_ema200 = float(bench_raw["Close"].ewm(span=200, adjust=False).mean().iloc[-1])
+            if not pd.isna(n200_ema200) and n200_close >= n200_ema200:
+                mom20_regime_on = True
+
+        bench_ret_series = None
+        bench_var = 0.0
+        if not bench_raw.empty and len(bench_raw) >= 253:
+            bench_close_series = bench_raw["Close"].astype(float)
+            if bench_close_series.index.tz is not None:
+                bench_close_series.index = bench_close_series.index.tz_localize(None)
+            bench_ret_series = bench_close_series.pct_change().iloc[-252:]
+            bench_var = float(np.var(bench_ret_series.values))
+
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
+
+        def _slice_daily(yf_sym):
+            df = bulk_data.get(yf_sym, pd.DataFrame())
+            if df.empty or len(df) < 210:
+                try:
+                    with ThreadPoolExecutor(max_workers=1) as _e:
+                        df = _e.submit(
+                            lambda: yf.Ticker(yf_sym).history(start=daily_start, end=end_date)
+                        ).result(timeout=10)
+                except (FutTimeout, Exception):
+                    df = pd.DataFrame()
+            if not df.empty and df.index.tz is not None:
+                df = df.copy()
+                df.index = df.index.tz_localize(None)
+            if not df.empty:
+                # yfinance occasionally returns a NaN close for the latest bar (seen
+                # both here and in mom15_pit_report.py's backtest fetch) — drop any
+                # such row rather than let NaN silently propagate into price/returns.
+                df = df.dropna(subset=["Close"])
+            return df
+
+        skip1m_raw = []
+        for idx, ticker in enumerate(tickers):
+            if progress_callback:
+                progress_callback(idx + 1, total, ticker)
+            daily = _slice_daily(f"{ticker}.NS")
+            if daily.empty or len(daily) < 210:
+                continue
+            closes = daily["Close"]
+            highs = daily["High"]
+            i = len(daily) - 1
+            price = float(closes.iloc[i])
+            feat = compute_skip1m_features(ticker, closes, i, price, bench_ret_series, bench_var, highs=highs)
+            if feat is not None:
+                skip1m_raw.append(feat)
+
+        # EPS filter — mirrors _mom20_eps_passes in scan_entry_signals (same source file,
+        # duplicated rather than imported so this stays fully independent of that method).
+        _eps_db = {}
+        _eps_path = os.path.join(os.path.dirname(__file__), "quarterly_eps.json")
+        if os.path.exists(_eps_path):
+            try:
+                with open(_eps_path) as _ef:
+                    _eps_db = json.load(_ef)
+            except Exception:
+                pass
+
+        def _eps_passes(ticker):
+            if ticker not in _eps_db:
+                return True
+            d = _eps_db[ticker]
+            if not isinstance(d, dict):
+                return True
+            _MON = {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,
+                    'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12}
+            def _qkey(p):
+                parts = p.split()
+                return (int(parts[1]), _MON.get(parts[0], 0))
+            quarterly = d.get("quarterly", {})
+            sorted_q = sorted([p for p in quarterly if _MON.get(p.split()[0], 0)], key=_qkey)
+            if len(sorted_q) >= 8:
+                ttm_now  = sum(quarterly[p] for p in sorted_q[-4:])
+                ttm_prev = sum(quarterly[p] for p in sorted_q[-8:-4])
+                if abs(ttm_prev) < 0.01:
+                    return True
+                return (ttm_now / ttm_prev - 1) > 0.0
+            annual = d.get("annual", {})
+            sorted_a = sorted([p for p in annual if _MON.get(p.split()[0], 0)], key=_qkey)
+            if len(sorted_a) < 2:
+                return True
+            latest, prev = annual[sorted_a[-1]], annual[sorted_a[-2]]
+            if abs(prev) < 0.01:
+                return True
+            return (latest / prev - 1) > 0.0
+
+        result = {"success": True, "last_updated": datetime.now().isoformat(),
+                  "mom20_regime": "ON" if mom20_regime_on else "OFF", "signals": []}
+
+        if len(skip1m_raw) < 5:
+            self._save_skip1m_cache(result)
+            return result
+
+        eligible = [d for d in skip1m_raw if d.get("beta") is not None and abs(d["beta"]) <= 1.2]
+        if len(eligible) < 5:
+            eligible = skip1m_raw
+        eligible = [d for d in eligible if _eps_passes(d["ticker"])]
+        if len(eligible) < 5:
+            eligible = [d for d in skip1m_raw if d.get("beta") is not None and abs(d["beta"]) <= 1.2]
+
+        mr_12_arr = np.array([d["mr_12"] for d in eligible])
+        mr_3_arr  = np.array([d["mr_3"] for d in eligible])
+        z_12 = (mr_12_arr - mr_12_arr.mean()) / mr_12_arr.std() if mr_12_arr.std() > 0 else np.zeros_like(mr_12_arr)
+        z_3  = (mr_3_arr  - mr_3_arr.mean())  / mr_3_arr.std()  if mr_3_arr.std()  > 0 else np.zeros_like(mr_3_arr)
+        weighted_z = 0.5 * z_12 + 0.5 * z_3
+        for idx_m, d in enumerate(eligible):
+            z = weighted_z[idx_m]
+            d["norm_score"] = (1 + z) if z >= 0 else 1 / (1 - z)
+        eligible.sort(key=lambda d: -d["norm_score"])
+
+        # Sector cap + 52w-high, "fresh start" selection (no holdings) — mirrors the
+        # is_fresh path in mom20_basket.generate_basket: BUFFER_IN_ENTRY = N_SLOTS,
+        # walk ranked list, skip >20% off 52w-high, cap 4 per sector, fill from next-best.
+        sector_map = load_n200_sector_map()
+        SECTOR_CAP = 4
+        N_SLOTS = 20
+        sec_counts = {}
+        top20_set = set()
+        for d in eligible:
+            if len(top20_set) >= N_SLOTS:
+                break
+            high_52w = d.get("high_52w")
+            if high_52w and d["price"] < high_52w * 0.80:
+                continue
+            sec = sector_map.get(d["ticker"])
+            if sec is None or sec_counts.get(sec, 0) < SECTOR_CAP:
+                top20_set.add(d["ticker"])
+                if sec:
+                    sec_counts[sec] = sec_counts.get(sec, 0) + 1
+
+        signals = []
+        for rank_i, d in enumerate(eligible):
+            signals.append({
+                "ticker": d["ticker"],
+                "rank": rank_i + 1,
+                "sector": sector_map.get(d["ticker"], "—"),
+                "price": d["price"],
+                "ret_12m": round(d["ret_12m"] * 100, 1),
+                "ret_3m": round(d["ret_3m"] * 100, 1),
+                "beta": round(abs(d["beta"]), 2) if d.get("beta") is not None else None,
+                "momentum_score": round(d["norm_score"], 3),
+                "ema20_ext": d.get("ema20_ext"),
+                "top20": d["ticker"] in top20_set,
+            })
+        result["signals"] = signals
+        self._save_skip1m_cache(result)
+        self._append_skip1m_log(datetime.now().strftime("%Y-%m-%d"), result)
+        return result
 
     def scan_entry_signals(self, force_refresh=False, progress_callback=None, scan_date=None, ltp_map=None):
         """Scan for J, T, and R entry signals across Nifty 50/100.

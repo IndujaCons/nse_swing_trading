@@ -226,6 +226,41 @@ def get_live_signals_data():
         }), 500
 
 
+@app.route("/api/skip1m-signals", methods=["GET"])
+def get_skip1m_signals():
+    """Skip1M research scan — ranked Nifty200 universe under 'full Option C'
+    (skip-1m, 3m-leg only, 25-day skip). Read-only, not connected to any
+    real Mom20 basket, portfolio, or user capital. One global result."""
+    try:
+        data = live_signals_scanner.scan_skip1m_signals(force_refresh=False)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route("/api/skip1m-signals/history", methods=["GET"])
+def get_skip1m_signals_history():
+    """Running log of past Skip1M scan snapshots, newest first. Optional
+    ?limit=N (default 20) caps how many dated entries are returned."""
+    try:
+        limit = request.args.get("limit", default=20, type=int)
+        log = live_signals_scanner._load_skip1m_log()
+        dates = sorted(log.keys(), reverse=True)[:limit]
+        return jsonify({
+            "success": True,
+            "dates": dates,
+            "history": {d: log[d] for d in dates}
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
 def _get_connected_broker():
     """Return first connected Zerodha broker, or None."""
     for uid, broker in brokers.items():
