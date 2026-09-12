@@ -10801,8 +10801,9 @@ async function loadSummary() {
 function _renderSkip1mTable(d) {
     const body = document.getElementById('skip1m-body');
     const regimeEl = document.getElementById('skip1m-regime');
-    regimeEl.textContent = 'Nifty200 regime: ' + (d.mom20_regime || '—') + ' (informational)';
-    const rows = (d.signals || []).slice(0, 50);
+    regimeEl.textContent = 'Nifty200 regime: ' + (d.mom20_regime || '—') + ' (informational)'
+        + (d.skip_reference_date ? ` | 3m return measured as of ${d.skip_reference_date} (today is ${d.scan_date}, most recent 25 trading days skipped)` : '');
+    const rows = d.signals || [];
     if (rows.length === 0) {
         body.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:12px;">No data.</div>';
         return;

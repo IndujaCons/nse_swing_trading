@@ -692,6 +692,15 @@ class LiveSignalsEngine:
         nifty_raw, bench_raw, bulk_data = self._fetch_baseline(
             tickers, daily_start, end_date, progress_callback)
 
+        # Exact calendar dates behind the skip, for study purposes — every NSE stock
+        # shares this trading calendar, so one representative date (from the Nifty200
+        # benchmark series) applies uniformly across the whole scan.
+        scan_date = None
+        skip_reference_date = None
+        if not bench_raw.empty and len(bench_raw) > 25:
+            scan_date = bench_raw.index[-1].strftime("%Y-%m-%d")
+            skip_reference_date = bench_raw.index[-1 - 25].strftime("%Y-%m-%d")
+
         # EMA200 regime — informational only, same check as scan_entry_signals's
         # mom20_regime_on. Not used to gate/filter anything here.
         mom20_regime_on = False
@@ -787,7 +796,9 @@ class LiveSignalsEngine:
             return (latest / prev - 1) > 0.0
 
         result = {"success": True, "last_updated": datetime.now().isoformat(),
-                  "mom20_regime": "ON" if mom20_regime_on else "OFF", "signals": []}
+                  "mom20_regime": "ON" if mom20_regime_on else "OFF",
+                  "scan_date": scan_date, "skip_reference_date": skip_reference_date,
+                  "signals": []}
 
         if len(skip1m_raw) < 5:
             self._save_skip1m_cache(result)
