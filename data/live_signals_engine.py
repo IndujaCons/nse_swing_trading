@@ -283,6 +283,10 @@ class LiveSignalsEngine:
         try:
             nifty = yf.Ticker("^NSEI").history(
                 start=end_date - timedelta(days=120), end=end_date)
+            if not nifty.empty:
+                # Same NaN-latest-bar yfinance quirk fixed elsewhere in this file —
+                # a NaN Close here isn't caught by the `is None` check below.
+                nifty = nifty.dropna(subset=["Close"])
             if nifty.empty or len(nifty) < 30:
                 return {}
             nifty_closes = nifty["Close"]
@@ -296,6 +300,8 @@ class LiveSignalsEngine:
             try:
                 sec_data = yf.Ticker(symbol).history(
                     start=end_date - timedelta(days=120), end=end_date)
+                if not sec_data.empty:
+                    sec_data = sec_data.dropna(subset=["Close"])
                 if sec_data.empty or len(sec_data) < 30:
                     continue
                 sec_closes = sec_data["Close"]
@@ -321,7 +327,7 @@ class LiveSignalsEngine:
                 rs_10d = rs_at(max(rs_period, last - 10))
                 rs_20d = rs_at(max(rs_period, last - 20))
 
-                if rs_today is None:
+                if rs_today is None or rs_today != rs_today:  # None or NaN
                     continue
 
                 delta_5d = round(rs_today - rs_5d, 2) if rs_5d is not None else 0
@@ -1013,6 +1019,16 @@ class LiveSignalsEngine:
             if not df.empty and df.index.tz is not None:
                 df = df.copy()
                 df.index = df.index.tz_localize(None)
+            if not df.empty:
+                # yfinance's bulk fetch sometimes returns a row with Close (and other
+                # OHLC) NaN but Volume populated, which _fetch_baseline's dropna(how='all')
+                # doesn't catch (not ALL columns are NaN). A NaN price serializes into the
+                # JSON response as a literal `NaN` token, which is invalid per the JSON
+                # spec — the browser's JSON.parse() throws on it, surfacing as "Refresh
+                # failed" even though the server-side request itself returns 200 OK.
+                # Same class of issue already fixed in mom15_pit_report.py's fetch_ticker
+                # and this file's other _slice_daily (scan_skip1m_signals).
+                df = df.dropna(subset=["Close"])
             return df
 
         for idx, ticker in enumerate(tickers):
