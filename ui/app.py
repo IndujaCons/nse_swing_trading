@@ -4059,7 +4059,7 @@ def api_mom20_chart(user_id):
             for s in rb.get("sells", []):
                 current_h.pop(s.get("ticker"), None)
             # Apply buys (add or accumulate)
-            for b in rb.get("buys", []):
+            for b in rb.get("buys", []) + rb.get("top_ups", []):
                 t     = b.get("ticker")
                 qty   = b.get("qty", 0)
                 price = b.get("price", 0)
@@ -4077,13 +4077,7 @@ def api_mom20_chart(user_id):
 
         # Match header formula: net new capital injected across ALL rebalances.
         # Pure rebalances (sells fund buys) contribute 0; top-ups contribute their net.
-        initial_capital = 0.0
-        for rb in _hist:
-            buy_tot  = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("buys",  []))
-            sell_tot = sum(t.get("qty", 0) * t.get("price", 0) for t in rb.get("sells", []))
-            net = buy_tot - sell_tot
-            if net > 0:
-                initial_capital += net
+        initial_capital = compute_initial_capital(_hist)  # shared with the tracker tile
 
     # Fallback: seed the timeline from current basket
     if not holdings_timeline and basket:
