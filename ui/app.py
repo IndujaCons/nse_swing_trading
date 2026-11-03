@@ -4207,6 +4207,20 @@ def api_mom20_chart(user_id):
 
     sorted_realized = sorted(hist_realized_by_date.items())
 
+    # Dividends accrue by ex-date, so the chart's Returns match the tracker tile
+    # (which is price P&L + dividends).
+    _div_ledger = load_dividend_ledger(user_id)
+    _div_events = sorted(
+        (ev["ex_date"], ev["amount"])
+        for sect in ("open", "closed")
+        for rec in (_div_ledger.get(sect) or {}).values()
+        for ev in rec.get("events", [])
+    )
+    _div_total = _div_ledger.get("totals", {}).get("grand", 0)
+
+    def _div_offset(dt_str):
+        return sum(amt for ex, amt in _div_events if ex <= dt_str)
+
     def _realized_offset(dt_str):
         offset = 0.0
         for rd, pnl in sorted_realized:
@@ -4240,7 +4254,8 @@ def api_mom20_chart(user_id):
     port_pct = [
         round(
             (v - _cost_basis_for_date(d.strftime("%Y-%m-%d"))
-             + _realized_offset(d.strftime("%Y-%m-%d"))) / base_port * 100,
+             + _realized_offset(d.strftime("%Y-%m-%d"))
+             + _div_offset(d.strftime("%Y-%m-%d"))) / base_port * 100,
             3,
         )
         for v, d in zip(port_values, all_dates)
@@ -4258,7 +4273,7 @@ def api_mom20_chart(user_id):
             )
             realized_now  = sum(s.get("pnl", 0) for rb in _hist for s in rb.get("sells", []))
             port_pct[-1]  = round(
-                (current_val_now - cost_basis_now + realized_now) / base_port * 100, 3
+                (current_val_now - cost_basis_now + realized_now + _div_total) / base_port * 100, 3
             )
         except Exception:
             pass
