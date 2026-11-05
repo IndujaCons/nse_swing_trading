@@ -39,22 +39,26 @@ from data.mom20_basket import compute_initial_capital
 _OPTIONS_HEDGE_FILE = os.path.join(_ROOT, "data_store", "options_hedge.json")
 
 # ── NSE holidays 2026 ──────────────────────────────────────────────────────────
+# Weekday closures only. Verified against actual ^NSEI trading days (Jan–5 Nov)
+# and published NSE/BSE calendars (Nov–Dec). The previous hand-typed list was
+# wrong on 16 dates, which silently skipped the email on days NSE traded
+# (incl. 2026-11-05) and would have sent it on real holidays.
 NSE_HOLIDAYS_2026 = {
+    date(2026, 1, 15),   # Maharashtra municipal elections
     date(2026, 1, 26),   # Republic Day
-    date(2026, 3, 2),    # Mahashivratri
-    date(2026, 3, 31),   # Eid ul-Fitr
-    date(2026, 4, 2),    # Ram Navami
-    date(2026, 4, 6),    # Mahavir Jayanti
-    date(2026, 4, 10),   # Good Friday
+    date(2026, 3, 3),    # Holi
+    date(2026, 3, 26),   # Ram Navami
+    date(2026, 3, 31),   # Mahavir Jayanti
+    date(2026, 4, 3),    # Good Friday
     date(2026, 4, 14),   # Dr. Ambedkar Jayanti
     date(2026, 5, 1),    # Maharashtra Day
-    date(2026, 8, 15),   # Independence Day
-    date(2026, 8, 27),   # Ganesh Chaturthi
-    date(2026, 10, 2),   # Gandhi Jayanti / Dussehra
-    date(2026, 10, 21),  # Diwali Laxmi Puja
-    date(2026, 10, 22),  # Diwali Balipratipada
-    date(2026, 11, 5),   # Guru Nanak Jayanti
-    date(2026, 11, 25),  # Christmas (observed)
+    date(2026, 5, 28),   # Bakri Id
+    date(2026, 6, 26),   # Muharram
+    date(2026, 9, 14),   # Ganesh Chaturthi
+    date(2026, 10, 2),   # Gandhi Jayanti
+    date(2026, 10, 20),  # Dussehra
+    date(2026, 11, 10),  # Diwali Balipratipada
+    date(2026, 11, 24),  # Guru Nanak Jayanti
     date(2026, 12, 25),  # Christmas
 }
 
